@@ -9,4 +9,10 @@ export type DbUser = {
   password: string;
   role: number;
 };
-
+export type DbMenu =   {
+  id: number;
+  piatto: string;
+  prezzo: number;
+  cucina: string;
+  disponibile: string;
+};

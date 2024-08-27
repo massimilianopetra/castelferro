@@ -1,22 +1,20 @@
-import { auth } from '@/auth';
+
+import DashboardLinks from '@/app/ui/dashboard/dashboard-links';
 
 export default async function Page() {
 
-    const session = await auth();
 
     return (
         <main>
             <div className="flex flex-wrap flex-col">
                 <div className='text-center '>
                     <p className="text-5xl py-4">
-                        Dashboard
+                        Home
                     </p>
                 </div>
-                <div className=''>
-                    <p>
-                        Logged user: {`${session?.user?.name}`}
-                    </p>
-                </div>
+
+                <DashboardLinks/>
+
             </div>
         </main>
 
