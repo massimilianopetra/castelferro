@@ -66,7 +66,7 @@ const menu = [
   },
   {
     id: 3,
-    piatto: 'Antipasto Equino',
+    piatto: 'Antipasto equino',
     prezzo: '5,0',
     cucina: 'antipasti'
     disponibile: "Y"
@@ -122,14 +122,14 @@ const menu = [
   },
   {
     id: 11,
-    piatto: 'Arrosto di asino',
+    piatto: 'Arrosto d`asino',
     prezzo: '9,0',
     cucina: 'secondi'
     disponibile: "Y"
   },
   {
     id: 12,
-    piatto: 'Stracotto di asino',
+    piatto: 'Stracotto d`asino',
     prezzo: '9,0',
     cucina: 'secondi'
     disponibile: "Y"
@@ -220,7 +220,7 @@ const menu = [
   },
   {
     id: 25,
-    piatto: 'Dolcetto di Ovada DOC',
+    piatto: 'Dolcetto d`Ovada DOC',
     prezzo: '7,0',
     cucina: 'bevande'
     disponibile: "Y"
