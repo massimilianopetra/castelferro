@@ -16,7 +16,7 @@ async function getUser(email: string): Promise<DbUser | undefined> {
   }
 }
  
-export const { auth, signIn, signOut } = NextAuth({
+export const { handlers: { GET, POST }, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   providers: [
     Credentials({

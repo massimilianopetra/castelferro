@@ -1,9 +1,15 @@
-import { auth } from '@/auth';
+'use client'
+
+import { useState, useEffect } from 'react';
+import { useSession} from 'next-auth/react'
 
 export default async function Page() {
 
-    const session = await auth();
+    const { data: session } = useSession();
+
+    console.log("*********************");
     console.log(session?.user?.name);
+    console.log("*********************");
 
     if ((session?.user?.name == "Primi") || (session?.user?.name == "SuperUser"))
 

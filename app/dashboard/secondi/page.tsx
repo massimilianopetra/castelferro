@@ -1,9 +1,15 @@
-import { auth } from '@/auth';
+'use client'
+
+import { useState, useEffect } from 'react';
+import { useSession} from 'next-auth/react'
 
 export default async function Page() {
 
-    const session = await auth();
+    const { data: session } = useSession();
+
+    console.log("*********************");
     console.log(session?.user?.name);
+    console.log("*********************");
 
     if ((session?.user?.name == "Secondi") || (session?.user?.name == "SuperUser"))
 
@@ -12,7 +18,7 @@ export default async function Page() {
                 <div className="flex flex-wrap flex-col">
                     <div className='text-center '>
                         <p className="text-5xl py-4">
-                            Secondi
+                        Secondi
                         </p>
                     </div>
                     <div className=''>
