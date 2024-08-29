@@ -9,6 +9,8 @@ import { Button } from '@mui/material';
 import RemoveIcon from '@mui/icons-material/Remove';
 import AddIcon from '@mui/icons-material/Add';
 
+import AddCircleIcon from '@mui/icons-material/AddCircle';
+import RemoveCircleSharpIcon from '@mui/icons-material/RemoveCircleSharp';
 
 import type { Consumazioni } from '@/app/lib/definitions';
 
@@ -28,9 +30,9 @@ export default function TabellaCucina({ item }: { item: Consumazioni[] }) {
                             <TableRow>
                                 <TableCell align="left">{row.piatto}</TableCell>
                                 <TableCell align="left">
-                                    <Button size="medium" variant="contained" startIcon={<AddIcon />} />
+                                    <Button size="large" variant="contained" startIcon={<AddCircleIcon />} />
                                     &nbsp;&nbsp;&nbsp;{row.quantita}&nbsp;&nbsp;&nbsp;
-                                    <Button  size="medium" variant="outlined" startIcon={<RemoveIcon />} />
+                                    <Button  size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
                                 </TableCell>
                             </TableRow>
                         ))}
