@@ -28,9 +28,9 @@ export default function TabellaCucina({ item }: { item: Consumazioni[] }) {
                             <TableRow>
                                 <TableCell align="left">{row.piatto}</TableCell>
                                 <TableCell align="left">
-                                    <Button startIcon={<AddIcon />} />
-                                    {row.quantita}
-                                    <Button startIcon={<RemoveIcon />} />
+                                    <Button size="medium" variant="contained" startIcon={<AddIcon />} />
+                                    &nbsp;&nbsp;&nbsp;{row.quantita}&nbsp;&nbsp;&nbsp;
+                                    <Button  size="medium" variant="outlined" startIcon={<RemoveIcon />} />
                                 </TableCell>
                             </TableRow>
                         ))}
