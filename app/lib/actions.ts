@@ -40,7 +40,7 @@ export async function getMenu(): Promise<DbMenu[] | undefined> {
 export async function getConsumazioni(cucina: string): Promise<Consumazioni[] | undefined> {
   console.log("getMenu");
   try {
-      const menus = await sql<DbMenu>`SELECT * FROM menus  WHERE cucina = ${cucina}`;
+      const menus = await sql<DbMenu>`SELECT * FROM menus  WHERE cucina = ${cucina} OR cucina = 'All'`;
       const consumazioni:Consumazioni[] = menus.rows.map((item) => ({piatto : item.piatto, quantita: 0}));
       return consumazioni;
   } catch (error) {

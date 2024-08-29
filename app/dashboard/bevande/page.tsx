@@ -1,15 +1,48 @@
-'use client'
+'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession} from 'next-auth/react'
+import { useSession } from 'next-auth/react'
+import { Button, TextField } from '@mui/material';
+import type { Consumazioni } from '@/app/lib/definitions';
+import { getConsumazioni } from '@/app/lib/actions';
+import TabellaCucina from '@/app/ui/dashboard/TabellaCucina';
 
-export default async function Page() {
+import RemoveIcon from '@mui/icons-material/Remove';
+import AddIcon from '@mui/icons-material/Add';
 
+export default function Page() {
+
+    const [products, setProducts] = useState<Consumazioni[]>([]);
     const { data: session } = useSession();
 
-    console.log("*********************");
-    console.log(session?.user?.name);
-    console.log("*********************");
+    useEffect(() => {
+        const fetchData = async () => {
+            const c = await getConsumazioni('Bevande');
+            if (c) setProducts(c);
+        };
+
+        const fetchAuth = async () => {
+            //const session = await auth();
+        };
+
+        fetchData();
+        fetchAuth();
+    }, []);
+    const [numero, setNumero] = useState<number | string>('');
+
+    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setNumero(event.target.value);
+    };
+
+    const handleButtonClick = async () => {
+        const num = Number(numero);
+        if (isNaN(num)) {
+            alert('Inserisci un numero comanda valido');
+            return;
+        }
+
+        console.log(`Numero comanda: ${numero}`);
+    };
 
     if ((session?.user?.name == "Bevande") || (session?.user?.name == "SuperUser"))
 
@@ -17,14 +50,31 @@ export default async function Page() {
             <main>
                 <div className="flex flex-wrap flex-col">
                     <div className='text-center '>
-                        <p className="text-5xl py-4">
+                        <p className="text-5xl font-bold py-4">
                             Bevande
                         </p>
+
                     </div>
-                    <div className=''>
-                        <p>
-                            Ciao bello
-                        </p>
+                    <div className='text-center '>
+                        <TextField
+                            className="p-2"
+                            label="Numero Comanda"
+                            variant="outlined"
+                            value={numero}
+                            onChange={handleInputChange}
+                            sx={{
+                                input: {
+                                    textAlign: 'right', // Allinea il testo a destra
+                                },
+                            }}
+                            type="number"
+                        />
+                        <p>&nbsp;</p>
+                        <Button variant="contained" onClick={handleButtonClick}>Conferma</Button>
+
+                    </div>
+                    <div>
+                        <TabellaCucina item={products}/>
                     </div>
                 </div>
             </main>
