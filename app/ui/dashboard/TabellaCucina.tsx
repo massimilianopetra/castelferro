@@ -5,11 +5,14 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import { Button} from '@mui/base/Button';
+import { Button } from '@mui/material';
+import RemoveIcon from '@mui/icons-material/Remove';
+import AddIcon from '@mui/icons-material/Add';
+
 
 import type { Consumazioni } from '@/app/lib/definitions';
 
-export default function TabellaCucina({item}:{item: Consumazioni[]}) {
+export default function TabellaCucina({ item }: { item: Consumazioni[] }) {
     return (
         <div>
             <TableContainer component={Paper}>
@@ -24,7 +27,11 @@ export default function TabellaCucina({item}:{item: Consumazioni[]}) {
                         {item.map((row) => (
                             <TableRow>
                                 <TableCell align="left">{row.piatto}</TableCell>
-                                <TableCell align="left"><Button>+</Button> {row.quantita} <Button>-</Button></TableCell>
+                                <TableCell align="left">
+                                    <Button startIcon={<AddIcon />} />
+                                    {row.quantita}
+                                    <Button startIcon={<RemoveIcon />} />
+                                </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
