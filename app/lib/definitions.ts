@@ -16,3 +16,8 @@ export type DbMenu =   {
   cucina: string;
   disponibile: string;
 };
+
+export type Consumazioni =   {
+  piatto: string;
+  quantita: number;
+};
