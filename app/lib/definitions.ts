@@ -17,7 +17,11 @@ export type DbMenu =   {
   disponibile: string;
 };
 
-export type Consumazioni =   {
+export type DbConsumazioni =   {
+  id: number;
+  id_comanda: number;
+  id_piatto: number;
   piatto: string;
   quantita: number;
+  cucina: string;
 };

@@ -18,6 +18,7 @@ const links = [
   { name: 'Dolci', href: '/dashboard/dolci', icon: UserGroupIcon },
   { name: 'Primi', href: '/dashboard/primi', icon: UserGroupIcon },
   { name: 'Secondi', href: '/dashboard/secondi', icon: UserGroupIcon },
+  { name: 'Birre', href: '/dashboard/birre', icon: UserGroupIcon },
 ];
 
 export default function NavLinks() {

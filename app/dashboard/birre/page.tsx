@@ -14,7 +14,7 @@ export default function Page() {
 
     useEffect(() => {
         const fetchData = async () => {
-            const c = await getConsumazioni('Secondi');
+            const c = await getConsumazioni('Birre');
             if (c) setProducts(c);
         };
 
@@ -41,14 +41,14 @@ export default function Page() {
         console.log(`Numero comanda: ${numero}`);
     };
 
-    if ((session?.user?.name == "Secondi") || (session?.user?.name == "SuperUser"))
+    if ((session?.user?.name == "Birre") || (session?.user?.name == "SuperUser"))
 
         return (
             <main>
                 <div className="flex flex-wrap flex-col">
                     <div className='text-center '>
                         <p className="text-5xl font-bold py-4">
-                        Secondi
+                            Bevande
                         </p>
 
                     </div>

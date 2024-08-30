@@ -6,7 +6,6 @@ import { menu } from '../lib/placeholder-data';
 const client = await db.connect();
 
 async function seedUsers() {
-  // await client.sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
   await client.sql`
     CREATE TABLE IF NOT EXISTS users (
        id INTEGER PRIMARY KEY,
@@ -61,12 +60,28 @@ async function seedMenu() {
   return insertedMenu;
 }
 
+async function seedConsumazioni() {
+  await client.sql`
+    CREATE TABLE IF NOT EXISTS users (
+       id SERIAL PRIMARY KEY,
+       id_comanda INTEGER,
+       id_piatto INTEGER,
+       piatto VARCHAR(255) NOT NULL,
+       quantita INTEGER,
+       cucina VARCHAR(255) NOT NULL
+     );
+   `;
+
+  console.log(`CREATD TABLE consumazioni`);
+}
+
 export async function GET() {
 
   try {
     await client.sql`BEGIN`;
     await seedUsers();
     await seedMenu();
+    await seedConsumazioni();
     await client.sql`COMMIT`;
 
     return Response.json({ message: 'Database seeded successfully' });

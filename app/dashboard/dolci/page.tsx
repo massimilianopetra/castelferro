@@ -3,16 +3,13 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
 import { Button, TextField } from '@mui/material';
-import type { Consumazioni } from '@/app/lib/definitions';
+import type { DbConsumazioni } from '@/app/lib/definitions';
 import { getConsumazioni } from '@/app/lib/actions';
 import TabellaCucina from '@/app/ui/dashboard/TabellaCucina';
 
-import RemoveIcon from '@mui/icons-material/Remove';
-import AddIcon from '@mui/icons-material/Add';
-
 export default function Page() {
 
-    const [products, setProducts] = useState<Consumazioni[]>([]);
+    const [products, setProducts] = useState<DbConsumazioni[]>([]);
     const { data: session } = useSession();
 
     useEffect(() => {

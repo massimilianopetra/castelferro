@@ -39,6 +39,12 @@ const users = [
   },
   {
     id: 7,
+    name: 'Birre',
+    email: 'birre@castelferro.it',
+    password: 'birre$'
+  },
+  {
+    id: 8,
     name: 'SuperUser',
     email: 'superuser@castelferro.it',
     password: 'superuser$'
@@ -264,7 +270,7 @@ const menu = [
     id: 31,
     piatto: 'Birra artigianale 0,4lt',
     prezzo: 4.00,
-    cucina: 'Bevande',
+    cucina: 'Birre',
     disponibile: "Y"
   },
   {
