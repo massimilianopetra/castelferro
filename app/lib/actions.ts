@@ -37,7 +37,7 @@ export async function getMenu(): Promise<DbMenu[] | undefined> {
 }
 
 export async function getConsumazioni(cucina: string): Promise<DbConsumazioni[] | undefined> {
-  console.log("getMenu");
+  console.log("getConsumazioni");
   try {
     const menus = await sql<DbMenu>`SELECT * FROM menus  WHERE cucina = ${cucina} OR cucina = 'All'`;
     const consumazioni: DbConsumazioni[] = menus.rows.map((item) => ({
