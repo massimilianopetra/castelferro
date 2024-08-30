@@ -6,15 +6,13 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { Button } from '@mui/material';
-import RemoveIcon from '@mui/icons-material/Remove';
-import AddIcon from '@mui/icons-material/Add';
 
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RemoveCircleSharpIcon from '@mui/icons-material/RemoveCircleSharp';
 
-import type { Consumazioni } from '@/app/lib/definitions';
+import type { DbConsumazioni } from '@/app/lib/definitions';
 
-export default function TabellaCucina({ item }: { item: Consumazioni[] }) {
+export default function TabellaCucina({ item }: { item: DbConsumazioni[] }) {
     return (
         <div>
             <TableContainer component={Paper}>
