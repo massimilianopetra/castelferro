@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSession } from 'next-auth/react'
 import { Button, TextField } from '@mui/material';
 import type { DbConsumazioni } from '@/app/lib/definitions';
@@ -8,41 +8,17 @@ import { getConsumazioni } from '@/app/lib/actions';
 import TabellaCucina from '@/app/ui/dashboard/TabellaCucina';
 import CircularProgress from '@mui/material/CircularProgress';
 
+
 export default function Page() {
 
     const [phase, setPhase] = useState('iniziale');
     const [products, setProducts] = useState<DbConsumazioni[]>([]);
     const [numero, setNumero] = useState<number | string>('');
     const { data: session } = useSession();
-/*
-    useEffect(() => {
-        const fetchData = async () => {
-            const c = await getConsumazioni('Primi');
-            if (c) setProducts(c);
-        };
-
-        const fetchAuth = async () => {
-            //const session = await auth();
-        };
-
-        fetchData();
-        fetchAuth();
-    }, []);*/
-
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setNumero(event.target.value);
     };
-/*
-    const handleButtonClick = async () => {
-        const num = Number(numero);
-        if (isNaN(num)) {
-            alert('Inserisci un numero comanda valido');
-            return;
-        }
-
-        console.log(`Numero comanda: ${numero}`);
-    };*/
 
     const handleButtonClickCarica = async () => {
         const num = Number(numero);
@@ -124,7 +100,7 @@ export default function Page() {
                 <div className="flex flex-wrap flex-col">
                     <div className='text-center '>
                         <p className="text-5xl font-bold py-4">
-                        Primi
+                            Primi
                         </p>
 
                     </div>
@@ -143,16 +119,15 @@ export default function Page() {
                             type="number"
                         />
                         <p>&nbsp;</p>
-                        <Button variant="contained" onClick={handleButtonClickCarica}>Conferma</Button>
+                        <Button variant="contained" onClick={handleButtonClickCarica}>Carica Comanda</Button>
                         &nbsp;
                         {phase == 'caricato' ?
                             <Button variant="contained" onClick={handleButtonClickInvia}>Invia Comanda</Button> :
                             <Button variant="contained" onClick={handleButtonClickInvia} disabled>Invia Comanda</Button>
                         }
+
                     </div>
-                    <div>
-                        <TabellaCucina item={products}/>
-                    </div>
+                    {renderPhaseContent()}
                 </div>
             </main>
 

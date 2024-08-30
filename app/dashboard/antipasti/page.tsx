@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useSession } from 'next-auth/react'
 import { Button, TextField } from '@mui/material';
 import type { DbConsumazioni } from '@/app/lib/definitions';
@@ -15,17 +15,6 @@ export default function Page() {
     const [products, setProducts] = useState<DbConsumazioni[]>([]);
     const [numero, setNumero] = useState<number | string>('');
     const { data: session } = useSession();
-
-    /*
-    useEffect(() => {
-        const fetchData = async () => {
-            const c = await getConsumazioni('Antipasti');
-            if (c) setProducts(c);
-        };
-
-        fetchData();
-    }, []);
-    */
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setNumero(event.target.value);
