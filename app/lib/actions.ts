@@ -36,21 +36,56 @@ export async function getMenu(): Promise<DbMenu[] | undefined> {
   }
 }
 
-export async function getConsumazioni(cucina: string): Promise<DbConsumazioni[] | undefined> {
+export async function getConsumazioni(cucina: string, comanda: number = -1): Promise<DbConsumazioni[] | undefined> {
   console.log("getConsumazioni");
   try {
     const menus = await sql<DbMenu>`SELECT * FROM menus  WHERE cucina = ${cucina} OR cucina = 'All'`;
-    const consumazioni: DbConsumazioni[] = menus.rows.map((item) => ({
+    const consumazioni_menu: DbConsumazioni[] = menus.rows.map((item) => ({
       id: -1,
-      id_comanda: -1,
+      id_comanda: comanda,
       id_piatto: item.id,
-      piatto: item.piatto, 
+      piatto: item.piatto,
       quantita: 0,
-      cucina: item.cucina
+      cucina: item.cucina,
+      data: ""
     }));
-    return consumazioni;
+    if (comanda != -1) {
+      console.log(`Richiesta comanda n. ${comanda}`)
+      // Ricerca consumazioni esistenti con codice comanda
+      const cosumazioni_tavolo = await sql<DbConsumazioni>`SELECT * FROM consumazioni  WHERE (cucina = ${cucina} OR cucina = 'All') AND id_comanda = ${comanda}`;
+      // Fonde consumazioni esistenti con lista piatti menu della cucina
+      const consumazioni = consumazioni_menu.map(t1 => ({ ...t1, ...cosumazioni_tavolo.rows.find(t2 => t2.id_piatto === t1.id_piatto) }));
+      return consumazioni;
+    }
+
+    return consumazioni_menu;
   } catch (error) {
     console.error('Failed to fetch consumazioni:', error);
     throw new Error('Failed to fetch consumazioni.');
   }
+}
+
+export async function sendConsumazioni(c: DbConsumazioni[]) {
+
+  console.log('sendConsumazioni');
+  const d = new Date()
+  var date_format_str = d.getFullYear().toString()+"-"+((d.getMonth()+1).toString().length==2?(d.getMonth()+1).toString():"0"+(d.getMonth()+1).toString())+"-"+(d.getDate().toString().length==2?d.getDate().toString():"0"+d.getDate().toString())+" "+(d.getHours().toString().length==2?d.getHours().toString():"0"+d.getHours().toString())+":"+((parseInt(d.getMinutes()/1)*1).toString().length==2?(parseInt(d.getMinutes()/1)*1).toString():"0"+(parseInt(d.getMinutes()/1)*1).toString())+":00";
+console.log(date_format_str);
+
+  c.map(async (item) => {
+    if (item.id == -1) {
+      return await sql`
+         INSERT INTO consumazioni (id_comanda, id_piatto, piatto, quantita, cucina, data)
+         VALUES (${item.id_comanda}, ${item.id_piatto}, ${item.piatto}, ${item.quantita}, ${item.cucina},${date_format_str})
+         ON CONFLICT (id) DO NOTHING;
+      `;
+    } else {
+      return await sql`
+         UPDATE consumazioni
+         SET quantita = ${item.quantita},
+             data = ${date_format_str}
+         WHERE id = ${item.id};
+      `;
+    }
+  });
 }

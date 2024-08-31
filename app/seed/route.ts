@@ -15,7 +15,7 @@ async function seedUsers() {
      );
    `;
 
-  console.log(`CREATD TABLE users`);
+  console.log(`CREATED TABLE users`);
 
   const insertedUsers = await Promise.all(
     users.map(async (user) => {
@@ -43,7 +43,7 @@ async function seedMenu() {
      );
    `;
 
-   console.log(`CREATD TABLE menus`);
+   console.log(`CREATED TABLE menus`);
 
 
   const insertedMenu = await Promise.all(
@@ -62,17 +62,18 @@ async function seedMenu() {
 
 async function seedConsumazioni() {
   await client.sql`
-    CREATE TABLE IF NOT EXISTS users (
+    CREATE TABLE IF NOT EXISTS consumazioni (
        id SERIAL PRIMARY KEY,
        id_comanda INTEGER,
        id_piatto INTEGER,
        piatto VARCHAR(255) NOT NULL,
        quantita INTEGER,
-       cucina VARCHAR(255) NOT NULL
+       cucina VARCHAR(255) NOT NULL,
+       data VARCHAR(32)
      );
    `;
 
-  console.log(`CREATD TABLE consumazioni`);
+  console.log(`CREATED TABLE consumazioni`);
 }
 
 export async function GET() {

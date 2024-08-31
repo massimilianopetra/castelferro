@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useSession } from 'next-auth/react'
 import { Button, TextField } from '@mui/material';
 import type { DbConsumazioni } from '@/app/lib/definitions';
-import { getConsumazioni } from '@/app/lib/actions';
+import { getConsumazioni, sendConsumazioni } from '@/app/lib/actions';
 import TabellaCucina from '@/app/ui/dashboard/TabellaCucina';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -29,10 +29,9 @@ export default function Page() {
         }
 
         const fetchData = async () => {
-            const c = await getConsumazioni('Birre');
+            const c = await getConsumazioni('Birre',num);
             if (c) setProducts(c);
         };
-
 
         setPhase('caricamento');
         fetchData();
@@ -42,8 +41,37 @@ export default function Page() {
     };
 
     const handleButtonClickInvia = async () => {
+
+        sendConsumazioni(products);
         setPhase('inviato');
         console.log(`Numero comanda: ${numero}`);
+    };
+
+    const handleAdd = (id: number) => {
+        const newProducts = products.map((item) => {
+            if (item.id_piatto == id) {
+                console.log(item);
+                return ({ ...item, quantita: item.quantita+1 });
+            }
+            else
+                return (item);
+        });
+        setProducts(newProducts);
+    };
+
+    const handleRemove = (id: number) => {
+        const newProducts = products.map((item) => {
+            if (item.id_piatto == id) {
+                console.log(item);
+                if (item.quantita > 0)
+                    return ({ ...item, quantita: item.quantita-1});
+                else
+                    return ({ ...item});
+            }
+            else
+                return (item);
+        });
+        setProducts(newProducts);
     };
 
     const renderPhaseContent = () => {
@@ -74,7 +102,7 @@ export default function Page() {
                 return (
                     <>
                         <div>
-                            <TabellaCucina item={products} />
+                            <TabellaCucina item={products} onAdd={handleAdd} onRemove={handleRemove}  />
                         </div>
                     </>
                 );

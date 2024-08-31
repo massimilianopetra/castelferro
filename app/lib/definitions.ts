@@ -24,4 +24,5 @@ export type DbConsumazioni =   {
   piatto: string;
   quantita: number;
   cucina: string;
+  data: string;
 };

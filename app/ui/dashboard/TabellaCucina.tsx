@@ -12,7 +12,7 @@ import RemoveCircleSharpIcon from '@mui/icons-material/RemoveCircleSharp';
 
 import type { DbConsumazioni } from '@/app/lib/definitions';
 
-export default function TabellaCucina({ item }: { item: DbConsumazioni[] }) {
+export default function TabellaCucina({ item,onAdd,onRemove }: { item: DbConsumazioni[],onAdd:(id:number) => void,onRemove:(id:number) => void }) {
     return (
         <div>
             <TableContainer component={Paper}>
@@ -28,9 +28,9 @@ export default function TabellaCucina({ item }: { item: DbConsumazioni[] }) {
                             <TableRow>
                                 <TableCell align="left">{row.piatto}</TableCell>
                                 <TableCell align="left">
-                                    <Button size="large" variant="contained" startIcon={<AddCircleIcon />} />
+                                    <Button onClick={() => onAdd(row.id_piatto)} size="large" variant="contained" startIcon={<AddCircleIcon />} />
                                     &nbsp;&nbsp;&nbsp;{row.quantita}&nbsp;&nbsp;&nbsp;
-                                    <Button  size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
+                                    <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
                                 </TableCell>
                             </TableRow>
                         ))}
