@@ -69,7 +69,7 @@ export async function sendConsumazioni(c: DbConsumazioni[]) {
 
   console.log('sendConsumazioni');
   const d = new Date()
-  var date_format_str = d.getFullYear().toString()+"-"+((d.getMonth()+1).toString().length==2?(d.getMonth()+1).toString():"0"+(d.getMonth()+1).toString())+"-"+(d.getDate().toString().length==2?d.getDate().toString():"0"+d.getDate().toString())+" "+(d.getHours().toString().length==2?d.getHours().toString():"0"+d.getHours().toString())+":"+((parseInt(d.getMinutes()/1)*1).toString().length==2?(parseInt(d.getMinutes()/1)*1).toString():"0"+(parseInt(d.getMinutes()/1)*1).toString())+":00";
+  var date_format_str = d.getFullYear().toString()+"-"+((d.getMonth()+1).toString().length==2?(d.getMonth()+1).toString():"0"+(d.getMonth()+1).toString())+"-"+(d.getDate().toString().length==2?d.getDate().toString():"0"+d.getDate().toString())+" "+(d.getHours().toString().length==2?d.getHours().toString():"0"+d.getHours().toString())+":"+(d.getMinutes().toString().length==2?d.getMinutes().toString():"0"+d.getMinutes().toString())+":00";
 console.log(date_format_str);
 
   c.map(async (item) => {

@@ -29,7 +29,7 @@ export default function Page() {
         }
 
         const fetchData = async () => {
-            const c = await getConsumazioni('Antipasti',num);
+            const c = await getConsumazioni('Secondi',num);
             if (c) setProducts(c);
         };
 
