@@ -43,7 +43,6 @@ export default function Page() {
             const gg = { ...fiera, stato: 'CHIUSA' }
             setFiera(gg);
             updateFiera(gg.giornata,gg.stato);
-            
         }
     };
 
