@@ -2,7 +2,7 @@
 
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
-import type { DbMenu, DbConsumazioni } from '@/app/lib/definitions';
+import type { DbMenu, DbConsumazioni, DbFiera } from '@/app/lib/definitions';
 import { sql } from '@vercel/postgres';
 
 
@@ -69,8 +69,8 @@ export async function sendConsumazioni(c: DbConsumazioni[]) {
 
   console.log('sendConsumazioni');
   const d = new Date()
-  var date_format_str = d.getFullYear().toString()+"-"+((d.getMonth()+1).toString().length==2?(d.getMonth()+1).toString():"0"+(d.getMonth()+1).toString())+"-"+(d.getDate().toString().length==2?d.getDate().toString():"0"+d.getDate().toString())+" "+(d.getHours().toString().length==2?d.getHours().toString():"0"+d.getHours().toString())+":"+(d.getMinutes().toString().length==2?d.getMinutes().toString():"0"+d.getMinutes().toString())+":00";
-console.log(date_format_str);
+  var date_format_str = d.getFullYear().toString() + "-" + ((d.getMonth() + 1).toString().length == 2 ? (d.getMonth() + 1).toString() : "0" + (d.getMonth() + 1).toString()) + "-" + (d.getDate().toString().length == 2 ? d.getDate().toString() : "0" + d.getDate().toString()) + " " + (d.getHours().toString().length == 2 ? d.getHours().toString() : "0" + d.getHours().toString()) + ":" + (d.getMinutes().toString().length == 2 ? d.getMinutes().toString() : "0" + d.getMinutes().toString()) + ":00";
+  console.log(date_format_str);
 
   c.map(async (item) => {
     if (item.id == -1) {
@@ -88,4 +88,27 @@ console.log(date_format_str);
       `;
     }
   });
+}
+
+export async function updateFiera(giornata: number, stato: string) {
+
+  console.log('updateFiera');
+
+  return await sql`
+           UPDATE fiera
+           SET giornata = ${giornata},
+               stato = ${stato}
+           WHERE id = 1;
+        `;
+}
+
+export async function getFiera(): Promise<DbFiera | undefined> {
+  console.log("getFiera");
+  try {
+    const gg = await sql<DbFiera>`SELECT * FROM fiera WHERE id = 1`;
+    return gg.rows[0];
+  } catch (error) {
+    console.error('Failed to fetch fiera:', error);
+    throw new Error('Failed to fetch fiera.');
+  }
 }

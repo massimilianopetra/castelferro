@@ -43,7 +43,7 @@ async function seedMenu() {
      );
    `;
 
-   console.log(`CREATED TABLE menus`);
+  console.log(`CREATED TABLE menus`);
 
 
   const insertedMenu = await Promise.all(
@@ -76,6 +76,25 @@ async function seedConsumazioni() {
   console.log(`CREATED TABLE consumazioni`);
 }
 
+async function seedFiera() {
+  await client.sql`
+    CREATE TABLE IF NOT EXISTS fiera (
+       id SERIAL PRIMARY KEY,
+       giornata INTEGER,
+       stato VARCHAR(32)
+     );
+   `;
+
+  await client.sql`
+           INSERT INTO fiera (id, giornata, stato)
+           VALUES (1,1,'CHIUSA')
+           ON CONFLICT (id) DO NOTHING;
+    `;
+
+  console.log(`CREATED TABLE fiera`);
+}
+
+
 export async function GET() {
 
   try {
@@ -83,6 +102,7 @@ export async function GET() {
     await seedUsers();
     await seedMenu();
     await seedConsumazioni();
+    await seedFiera();
     await client.sql`COMMIT`;
 
     return Response.json({ message: 'Database seeded successfully' });

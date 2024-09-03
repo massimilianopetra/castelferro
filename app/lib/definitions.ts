@@ -26,3 +26,9 @@ export type DbConsumazioni =   {
   cucina: string;
   data: string;
 };
+
+export type DbFiera =   {
+  id: number;
+  giornata: number;
+  stato: string;
+};
