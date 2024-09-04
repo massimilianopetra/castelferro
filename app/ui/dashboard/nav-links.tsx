@@ -6,6 +6,12 @@ import {
   CakeIcon,
   CurrencyEuroIcon,
 } from '@heroicons/react/24/outline';
+import LocalDrinkIcon from '@mui/icons-material/LocalDrink';
+import SportsBarIcon from '@mui/icons-material/SportsBar';
+import DinnerDiningIcon from '@mui/icons-material/DinnerDining';
+import RestaurantOutlinedIcon from '@mui/icons-material/RestaurantOutlined';
+import KebabDiningOutlinedIcon from '@mui/icons-material/KebabDiningOutlined';
+
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
@@ -15,12 +21,12 @@ import clsx from 'clsx';
 const links = [
   { name: 'Home', href: '/dashboard', icon: HomeIcon },
   { name: 'Casse', href: '/dashboard/casse', icon: CurrencyEuroIcon  },
-  { name: 'Antipasti', href: '/dashboard/antipasti', icon: UserGroupIcon },
-  { name: 'Primi', href: '/dashboard/primi', icon: UserGroupIcon },
-  { name: 'Secondi', href: '/dashboard/secondi', icon: UserGroupIcon },
+  { name: 'Antipasti', href: '/dashboard/antipasti', icon: KebabDiningOutlinedIcon },
+  { name: 'Primi', href: '/dashboard/primi', icon: DinnerDiningIcon },
+  { name: 'Secondi', href: '/dashboard/secondi', icon: RestaurantOutlinedIcon },
   { name: 'Dolci', href: '/dashboard/dolci', icon: CakeIcon },
-  { name: 'Bevande', href: '/dashboard/bevande', icon: UserGroupIcon },
-  { name: 'Birre', href: '/dashboard/birre', icon: UserGroupIcon },
+  { name: 'Bevande', href: '/dashboard/bevande', icon: LocalDrinkIcon },
+  { name: 'Birre', href: '/dashboard/birre', icon: SportsBarIcon },
 ];
 
 export default function NavLinks() {

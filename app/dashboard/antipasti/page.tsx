@@ -139,9 +139,9 @@ export default function Page() {
                 <main>
                     <div className="flex flex-wrap flex-col">
                         <div className='text-center '>
-                            <p className="text-5xl py-4">
-                                La giornata non è stata ancora aperta!
-                            </p>
+                            <div className="text-5xl py-4 text-yellow-800 rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300" role="alert">
+                                <span className="font-medium">Warning alert!</span> La giornata non è stata ancora aperta!
+                            </div>
                         </div>
                     </div>
                 </main>
@@ -172,7 +172,7 @@ export default function Page() {
                                 type="number"
                             />
                             <p>&nbsp;</p>
-                            <Button variant="contained" onClick={handleButtonClickCarica}>Carica Foglitto</Button>
+                            <Button variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
                         </div>
                         {renderPhaseContent()}
                         &nbsp;
