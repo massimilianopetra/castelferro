@@ -38,15 +38,15 @@ export default function Page() {
             return;
         }
 
-        const fetchData = async () => {
+            const fetchData = async () => {
             const c = await getConsumazioni('Antipasti', num);
             if (c) setProducts(c);
+            setPhase('caricato');
         };
 
         setPhase('caricamento');
         fetchData();
-        setPhase('caricato');
-
+    
         console.log(`Numero foglietto: ${numero}`);
     };
 
@@ -55,6 +55,7 @@ export default function Page() {
         sendConsumazioni(products);
         setPhase('inviato');
         console.log(`Numero foglietto: ${numero}`);
+        setProducts([]);  
     };
 
     const handleAdd = (id: number) => {
@@ -172,14 +173,15 @@ export default function Page() {
                             />
                             <p>&nbsp;</p>
                             <Button variant="contained" onClick={handleButtonClickCarica}>Carica Foglitto</Button>
-                            &nbsp;
+                        </div>
+                        {renderPhaseContent()}
+                        &nbsp;
+                        <div className='text-center '>
                             {phase == 'caricato' ?
                                 <Button variant="contained" onClick={handleButtonClickInvia}>Invia Comanda</Button> :
                                 <Button variant="contained" onClick={handleButtonClickInvia} disabled>Invia Comanda</Button>
                             }
-
                         </div>
-                        {renderPhaseContent()}
                     </div>
                 </main>
 

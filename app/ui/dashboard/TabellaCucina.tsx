@@ -16,7 +16,7 @@ export default function TabellaCucina({ item,onAdd,onRemove }: { item: DbConsuma
     return (
         <div>
             <TableContainer component={Paper}>
-                <Table sx={{ minWidth: 450 }} aria-label="simple table">
+                <Table sx={{ minWidth: 500 }} aria-label="simple table">
                     <TableHead>
                         <TableRow>
                             <TableCell className="font-bold" align="left">Piatto</TableCell>
@@ -28,9 +28,9 @@ export default function TabellaCucina({ item,onAdd,onRemove }: { item: DbConsuma
                             <TableRow>
                                 <TableCell align="left">{row.piatto}</TableCell>
                                 <TableCell align="left">
-                                    <Button onClick={() => onAdd(row.id_piatto)} size="large" variant="contained" startIcon={<AddCircleIcon />} />
-                                    &nbsp;&nbsp;&nbsp;{row.quantita}&nbsp;&nbsp;&nbsp;
-                                    <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
+                                    <Button onClick={() => onAdd(row.id_piatto)} size="medium" variant="contained" startIcon={<AddCircleIcon />} />
+                                    &nbsp;{row.quantita}&nbsp;
+                                    <Button onClick={() => onRemove(row.id_piatto)} size="medium" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
                                 </TableCell>
                             </TableRow>
                         ))}
