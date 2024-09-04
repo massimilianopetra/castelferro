@@ -105,8 +105,8 @@ export default function Page() {
                             <p className="text-5xl py-4">
                                 Caricamento in corso ...
                             </p>
+                            <CircularProgress />
                         </div>
-                        <CircularProgress />
                     </>
                 );
             case 'caricato':

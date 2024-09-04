@@ -2,7 +2,9 @@
 
 import {
   UserGroupIcon,
-  HomeIcon,
+  HomeIcon, 
+  CakeIcon,
+  CurrencyEuroIcon,
 } from '@heroicons/react/24/outline';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -12,12 +14,12 @@ import clsx from 'clsx';
 // Depending on the size of the application, this would be stored in a database.
 const links = [
   { name: 'Home', href: '/dashboard', icon: HomeIcon },
+  { name: 'Casse', href: '/dashboard/casse', icon: CurrencyEuroIcon  },
   { name: 'Antipasti', href: '/dashboard/antipasti', icon: UserGroupIcon },
-  { name: 'Bevande', href: '/dashboard/bevande', icon: UserGroupIcon },
-  { name: 'Casse', href: '/dashboard/casse', icon: UserGroupIcon },
-  { name: 'Dolci', href: '/dashboard/dolci', icon: UserGroupIcon },
   { name: 'Primi', href: '/dashboard/primi', icon: UserGroupIcon },
   { name: 'Secondi', href: '/dashboard/secondi', icon: UserGroupIcon },
+  { name: 'Dolci', href: '/dashboard/dolci', icon: CakeIcon },
+  { name: 'Bevande', href: '/dashboard/bevande', icon: UserGroupIcon },
   { name: 'Birre', href: '/dashboard/birre', icon: UserGroupIcon },
 ];
 
