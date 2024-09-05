@@ -12,7 +12,7 @@ import clsx from 'clsx';
 const links = [
   { name: 'Home', href: '/dashboard', icon: HomeIcon },
   { name: 'Gestione Menu', href: '/dashboard/menus', icon: HomeIcon },
-  { name: 'Apertura-Chiusura Giornata Sagra', href: '/dashboard/fiera', icon: HomeIcon },
+  { name: 'Apertura-Chiusura Giornata Sagra', href: '/dashboard/sagra', icon: HomeIcon },
 
 ];
 

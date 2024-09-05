@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
 import { Button, TextField } from '@mui/material';
 import type { DbConsumazioni, DbFiera } from '@/app/lib/definitions';
-import { getConsumazioni, sendConsumazioni, getFiera } from '@/app/lib/actions';
+import { getConsumazioni, sendConsumazioni, getGiornoSagra } from '@/app/lib/actions';
 import TabellaCucina from '@/app/ui/dashboard/TabellaCucina';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -15,12 +15,12 @@ export default function Page() {
     const [products, setProducts] = useState<DbConsumazioni[]>([]);
     const [numero, setNumero] = useState<number | string>('');
     const { data: session } = useSession();
-    const [fiera, setFiera] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
+    const [sagra, getSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
 
     useEffect(() => {
         const fetchData = async () => {
-            const gg = await getFiera();
-            if (gg) setFiera(gg);
+            const gg = await getGiornoSagra();
+            if (gg) getSagra(gg);
         };
 
         fetchData();
@@ -39,7 +39,7 @@ export default function Page() {
         }
 
             const fetchData = async () => {
-            const c = await getConsumazioni('Antipasti', num);
+            const c = await getConsumazioni('Antipasti', num,sagra.giornata);
             if (c) setProducts(c);
             setPhase('caricato');
         };
@@ -134,7 +134,7 @@ export default function Page() {
 
     if ((session?.user?.name == "Antipasti") || (session?.user?.name == "SuperUser"))
 
-        if (fiera.stato == 'CHIUSA')
+        if (sagra.stato == 'CHIUSA')
             return (
                 <main>
                     <div className="flex flex-wrap flex-col">

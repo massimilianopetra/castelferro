@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
 import type { DbFiera } from '@/app/lib/definitions';
-import { getFiera, updateFiera } from '@/app/lib/actions';
+import { getGiornoSagra, updateGiornoSagra } from '@/app/lib/actions';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RemoveCircleSharpIcon from '@mui/icons-material/RemoveCircleSharp';
 import { Button } from '@mui/material';
@@ -31,40 +31,40 @@ function GetDay({i}:{i:number}) {
   }
 
 export default function Page() {
-    const [fiera, setFiera] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
+    const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
     const { data: session } = useSession();
 
     useEffect(() => {
         const fetchData = async () => {
-            const gg = await getFiera();
-            if (gg) setFiera(gg);
+            const gg = await getGiornoSagra();
+            if (gg) setSagra(gg);
         };
 
         fetchData();
     }, []);
 
     const handleAdd = () => {
-        const gg = { ...fiera, giornata: fiera.giornata + 1 }
-        setFiera(gg);
+        const gg = { ...sagra, giornata: sagra.giornata + 1 }
+        setSagra(gg);
     };
 
     const handleRemove = () => {
-        if (fiera.giornata > 1) {
-            const gg = { ...fiera, giornata: fiera.giornata - 1 }
-            setFiera(gg);
+        if (sagra.giornata > 1) {
+            const gg = { ...sagra, giornata: sagra.giornata - 1 }
+            setSagra(gg);
         }
     };
 
     const handleClick = () => {
-        console.log(fiera);
-        if (fiera.stato == 'CHIUSA') {
-            const gg = { ...fiera, stato: 'APERTA' }
-            setFiera(gg);
-            updateFiera(gg.giornata,gg.stato);
+        console.log(sagra);
+        if (sagra.stato == 'CHIUSA') {
+            const gg = { ...sagra, stato: 'APERTA' }
+            setSagra(gg);
+            updateGiornoSagra(gg.giornata,gg.stato);
         } else {
-            const gg = { ...fiera, stato: 'CHIUSA' }
-            setFiera(gg);
-            updateFiera(gg.giornata,gg.stato);
+            const gg = { ...sagra, stato: 'CHIUSA' }
+            setSagra(gg);
+            updateGiornoSagra(gg.giornata,gg.stato);
         }
     };
 
@@ -87,17 +87,17 @@ export default function Page() {
                     <div className='text-center'>
                         <p className="text-5xl py-4"></p>
                         <p className="text-5xl py-4"></p>
-                        <h1 className="text-2xl py-4">Giornata: &nbsp;&nbsp;&nbsp;{fiera.giornata}&nbsp;&nbsp;&nbsp;&nbsp;</h1>
+                        <h1 className="text-2xl py-4">Giornata: &nbsp;&nbsp;&nbsp;{sagra.giornata}&nbsp;&nbsp;&nbsp;&nbsp;</h1>
                         <p className="text-5xl py-4"></p>  
                         <p className="text-5xl py-4"></p>
-                        <div className='text-center '><p ><GetDay i={fiera.giornata}/>&nbsp;&nbsp;</p></div>
+                        <div className='text-center '><p ><GetDay i={sagra.giornata}/>&nbsp;&nbsp;</p></div>
                         <p className="text-5xl py-4"></p>
                         <p className="text-5xl py-4"></p>
-                        <Button onClick={() => handleAdd() } disabled={fiera.stato=='APERTA'} size="large" variant="contained" startIcon={<AddCircleIcon />} />
+                        <Button onClick={() => handleAdd() } disabled={sagra.stato=='APERTA'} size="large" variant="contained" startIcon={<AddCircleIcon />} />
                         &nbsp;&nbsp;&nbsp;
-                        <Button onClick={() => handleRemove()} disabled={fiera.stato=='APERTA'} size="large" variant="contained" startIcon={<RemoveCircleSharpIcon />} />
+                        <Button onClick={() => handleRemove()} disabled={sagra.stato=='APERTA'} size="large" variant="contained" startIcon={<RemoveCircleSharpIcon />} />
                         &nbsp;&nbsp;&nbsp;
-                        {fiera.stato == 'CHIUSA' ? <Button variant="contained" onClick={() => handleClick()}>APRI</Button> :
+                        {sagra.stato == 'CHIUSA' ? <Button variant="contained" onClick={() => handleClick()}>APRI</Button> :
                             <Button variant="contained" onClick={() => handleClick()} >CHIUDI</Button>}
                     </div>
                     

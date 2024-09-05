@@ -69,11 +69,27 @@ async function seedConsumazioni() {
        piatto VARCHAR(255) NOT NULL,
        quantita INTEGER,
        cucina VARCHAR(255) NOT NULL,
+       giorno INTEGER,
        data VARCHAR(32)
      );
    `;
 
   console.log(`CREATED TABLE consumazioni`);
+}
+
+async function seedConti() {
+  await client.sql`
+    CREATE TABLE IF NOT EXISTS conti (
+       id SERIAL PRIMARY KEY,
+       id_comanda INTEGER,
+       stato VARCHAR(32),
+       totale REAL,
+       giorno INTEGER,
+       data VARCHAR(32)
+     );
+   `;
+
+  console.log(`CREATED TABLE conti`);
 }
 
 async function seedFiera() {

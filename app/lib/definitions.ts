@@ -24,6 +24,28 @@ export type DbConsumazioni =   {
   piatto: string;
   quantita: number;
   cucina: string;
+  giorno: number;
+  data: string;
+};
+
+export type DbConsumazioniPrezzo =   {
+  id: number;
+  id_comanda: number;
+  id_piatto: number;
+  piatto: string;
+  prezzo_unitario: number;
+  quantita: number;
+  cucina: string;
+  giorno: number;
+  data: string;
+};
+
+export type DbConti =   {
+  id: number;
+  id_comanda: number;
+  stato: string;
+  totale: number;
+  giorno: number;
   data: string;
 };
 
