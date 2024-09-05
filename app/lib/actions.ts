@@ -2,8 +2,9 @@
 
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
-import type { DbMenu, DbConsumazioniPrezzo, DbConsumazioni, DbFiera } from '@/app/lib/definitions';
+import type { DbMenu, DbConsumazioniPrezzo, DbConsumazioni, DbFiera, DbConti } from '@/app/lib/definitions';
 import { sql } from '@vercel/postgres';
+import { today } from './utils';
 
 
 export async function authenticate(
@@ -99,8 +100,7 @@ export async function getConsumazioniCassa(comanda: number = -1, giornata: numbe
 
 export async function sendConsumazioni(c: DbConsumazioni[]) {
   console.log('sendConsumazioni');
-  const d = new Date()
-  var date_format_str = d.getFullYear().toString() + "-" + ((d.getMonth() + 1).toString().length == 2 ? (d.getMonth() + 1).toString() : "0" + (d.getMonth() + 1).toString()) + "-" + (d.getDate().toString().length == 2 ? d.getDate().toString() : "0" + d.getDate().toString()) + " " + (d.getHours().toString().length == 2 ? d.getHours().toString() : "0" + d.getHours().toString()) + ":" + (d.getMinutes().toString().length == 2 ? d.getMinutes().toString() : "0" + d.getMinutes().toString()) + ":00";
+  const date_format_str = today();
   console.log(date_format_str);
 
   c.map(async (item) => {
@@ -120,6 +120,59 @@ export async function sendConsumazioni(c: DbConsumazioni[]) {
     }
   });
 }
+
+export async function getConto(foglietto: number, giorno: number): Promise<DbConti | undefined> {
+  console.log("getConto");
+  try {
+    const c = await sql<DbConti>`SELECT * FROM conti  WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`;
+    return c.rows[0];
+  } catch (error) {
+    console.error('Failed to fetch conto:', error);
+    throw new Error('Failed to fetch conto.');
+  }
+}
+
+export async function apriConto(foglietto: number, giorno: number, totale: number) {
+
+  const date_format_str = today();
+
+  const current = await sql<DbConti>`SELECT * FROM conti  WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`;
+
+  if (current.rows[0]) {
+    console.log(`Apertura conto foglietto n. ${foglietto} giorno n. ${giorno}`);
+    return await sql`
+    UPDATE conti
+    SET stato = 'APERTO',
+        totale = ${totale},
+        data = ${date_format_str}
+    WHERE id = ${current.rows[0].id};
+    `;
+  } else {
+    console.log(`Inserimento conto foglietto n. ${foglietto} giorno n. ${giorno}`);
+    return await sql`INSERT INTO conti (id_comanda, stato, totale, giorno, data)
+    VALUES (${foglietto}, 'APERTO', ${totale},${giorno},${date_format_str})
+    ON CONFLICT (id) DO NOTHING;
+    `;
+  }
+
+}
+
+export async function chiudiConto(foglietto: number, giorno: number) {
+
+  const current = await sql<DbConti>`SELECT * FROM conti  WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`;
+
+  if (current.rows[0]) {
+    console.log(`Chiusura conto foglietto n. ${foglietto} giorno n. ${giorno}`);
+    return await sql`
+    UPDATE conti
+    SET stato = 'CHIUSO'
+    WHERE id = ${current.rows[0].id};
+    `;
+  } else {
+    console.log(`Il conto foglietto n. ${foglietto} giorno n. ${giorno} non risulta paerto`);
+  }
+}
+
 
 export async function updateGiornoSagra(giornata: number, stato: string) {
 

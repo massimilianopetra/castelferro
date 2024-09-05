@@ -119,6 +119,7 @@ export async function GET() {
     await seedMenu();
     await seedConsumazioni();
     await seedFiera();
+    await seedConti();
     await client.sql`COMMIT`;
 
     return Response.json({ message: 'Database seeded successfully' });

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
 import { Button, TextField } from '@mui/material';
 import type { DbConsumazioniPrezzo, DbFiera } from '@/app/lib/definitions';
-import { getConsumazioniCassa, sendConsumazioni, getGiornoSagra } from '@/app/lib/actions';
+import { getConsumazioniCassa, sendConsumazioni, getGiornoSagra, apriConto, getConto, chiudiConto } from '@/app/lib/actions';
 import TabellaConto from '@/app/ui/dashboard/TabellaConto';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -41,7 +41,17 @@ export default function Page() {
         const fetchData = async () => {
             const c = await getConsumazioniCassa(num, sagra.giornata);
             if (c) setProducts(c);
-            setPhase('caricato');
+            const conto = await getConto(num, sagra.giornata);
+            if (conto?.stato == 'APERTO') {
+                setPhase('aperto');
+            }
+            else if (conto?.stato == 'CHIUSO') {
+                setPhase('chiuso');
+            }
+            else {
+                setPhase('caricato');
+            }
+
         };
 
         setPhase('caricamento');
@@ -50,19 +60,47 @@ export default function Page() {
         console.log(`Numero foglietto: ${numero}`);
     };
 
-    const handleButtonClickInvia = async () => {
+    const handleAggiorna = async () => {
 
-        sendConsumazioni(products);
-        setPhase('inviato');
-        console.log(`Numero foglietto: ${numero}`);
-        setProducts([]);
+        console.log(`Aggiornamento n. foglietto: ${numero}`);
+        const fetchData = async () => {
+            setPhase('caricamento');
+            const c = await sendConsumazioni(products);
+            setPhase('caricato');
+        };
+        fetchData();
+    };
+
+    const handleApri = async () => {
+
+        const fetchData = async () => {
+            setPhase('elaborazione');
+            var totale = 0;
+
+            for (let i of products) {
+                totale += i.quantita * i.prezzo_unitario;
+            }
+            const c = await apriConto(Number(numero), sagra.giornata, totale);
+            setPhase('aperto');
+        };
+        fetchData();
+    };
+
+    const handleAChiudi = async () => {
+
+        const fetchData = async () => {
+            setPhase('elaborazione');
+            const c = await chiudiConto(Number(numero), sagra.giornata);
+            setPhase('chiuso');
+        };
+        fetchData();
     };
 
     const handleAdd = (id: number) => {
         const newProducts = products.map((item) => {
             if (item.id_piatto == id) {
                 console.log(item);
-                return ({ ...item, quantita: item.quantita + 1 });
+                return ({ ...item, quantita: item.quantita + 1, cucina: "Casse" });
             }
             else
                 return (item);
@@ -75,7 +113,7 @@ export default function Page() {
             if (item.id_piatto == id) {
                 console.log(item);
                 if (item.quantita > 0)
-                    return ({ ...item, quantita: item.quantita - 1 });
+                    return ({ ...item, quantita: item.quantita - 1, cucina: "Casse" });
                 else
                     return ({ ...item });
             }
@@ -98,11 +136,11 @@ export default function Page() {
                         </div>
                         &nbsp;
                         <div className='text-center '>
-                            <Button variant="contained" onClick={handleButtonClickInvia} disabled>Apri Conto</Button>
+                            <Button variant="contained" onClick={handleApri} disabled>Apri Conto</Button>
                             &nbsp;&nbsp;
-                            <Button variant="contained" onClick={handleButtonClickInvia} disabled>Chiudi Conto</Button>
+                            <Button variant="contained" onClick={handleAChiudi} disabled>Chiudi Conto</Button>
                             &nbsp;&nbsp;
-                            <Button variant="contained" onClick={handleButtonClickInvia} disabled>Aggiorna Conto</Button>
+                            <Button variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
                         </div>
                     </>
                 );
@@ -143,11 +181,11 @@ export default function Page() {
                         </div>
                         &nbsp;
                         <div className='text-center '>
-                            <Button variant="contained" onClick={handleButtonClickInvia}>Apri Conto</Button>
+                            <Button variant="contained" onClick={handleApri}>Apri Conto</Button>
                             &nbsp;&nbsp;
-                            <Button variant="contained" onClick={handleButtonClickInvia} disabled>Chiudi Conto</Button>
+                            <Button variant="contained" onClick={handleAChiudi} disabled>Chiudi Conto</Button>
                             &nbsp;&nbsp;
-                            <Button variant="contained" onClick={handleButtonClickInvia}>Aggiorna Conto</Button>
+                            <Button variant="contained" onClick={handleAggiorna}>Aggiorna Conto</Button>
                         </div>
                     </>
                 );
@@ -163,11 +201,11 @@ export default function Page() {
                             <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
                         </div>
                         <div className='text-center '>
-                            <Button variant="contained" onClick={handleButtonClickInvia} disabled>Apri Conto</Button>
+                            <Button variant="contained" onClick={handleApri} disabled>Apri Conto</Button>
                             &nbsp;&nbsp;
-                            <Button variant="contained" onClick={handleButtonClickInvia}>Chiudi Conto</Button>
+                            <Button variant="contained" onClick={handleAChiudi}>Chiudi Conto</Button>
                             &nbsp;&nbsp;
-                            <Button variant="contained" onClick={handleButtonClickInvia} disabled>Aggiorna Conto</Button>
+                            <Button variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
                         </div>
                     </>
                 );

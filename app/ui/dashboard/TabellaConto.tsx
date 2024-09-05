@@ -39,7 +39,9 @@ export default function TabellaCucina({ item, onAdd, onRemove }: { item: DbConsu
                     </TableHead>
                     <TableBody>
                         {item.map((row) => (
-                            <TableRow>
+                            <TableRow sx={{
+                                backgroundColor: row.quantita > 0 ?  "rgba(144, 238, 144, 0.3)" : "white",
+                              }}>
                                 <TableCell align="left">{row.piatto}</TableCell>
                                 <TableCell align="left">
                                     <Button onClick={() => onAdd(row.id_piatto)} size="medium" variant="contained" startIcon={<AddCircleIcon />} />
