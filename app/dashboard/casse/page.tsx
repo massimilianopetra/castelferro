@@ -129,7 +129,7 @@ export default function Page() {
                 console.log('iniziale');
                 return (
                     <>
-                        <div className='text-center '>
+                        <div className='text-center'>
                             <p className="text-5xl py-4">
                                 Caricare un numero foglietto!!
                             </p>
@@ -172,13 +172,16 @@ export default function Page() {
                 return (
                     <>
                         <div className='text-center '>
-                            <p className="text-3xl py-4">
-                                Conto Caricato per Consultazione/Modifiche
+                            <p className="text-3xl py-4 font-extralight">
+                                Conto numero <span className="font-extrabold  text-blue-800">{numero}</span> caricato per Consultazione/Modifiche
                             </p>
                         </div>
                         <div>
                             <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
                         </div>
+                        <p className="text-3xl py-4 font-extralight text-center">
+                                Conto numero <span className="font-extrabold  text-blue-800">{numero}</span> caricato per Consultazione/Modifiche
+                            </p>
                         &nbsp;
                         <div className='text-center '>
                             <Button variant="contained" onClick={handleApri}>Apri Conto</Button>
@@ -193,12 +196,17 @@ export default function Page() {
                 return (
                     <>
                         <div className='text-center '>
-                            <p className="text-3xl py-4">
-                                Conto Aperto
+                        <p className="text-3xl py-4 font-extralight">
+                                Conto Aperto numero <span className="font-extrabold">{numero}</span>  
                             </p>
                         </div>
                         <div>
                             <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
+                        </div>
+                        <div className='text-center '>
+                            <p className="text-3xl py-4 font-extralight">
+                                Conto Aperto numero <span className="font-extrabold">{numero}</span>  
+                            </p>
                         </div>
                         <div className='text-center '>
                             <Button variant="contained" onClick={handleApri} disabled>Apri Conto</Button>
@@ -207,16 +215,15 @@ export default function Page() {
                             &nbsp;&nbsp;
                             <Button variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
                         </div>
+ 
                     </>
                 );
             case 'chiuso':
                 return (
                     <>
-                        <div className='text-center '>
-                            <p className="text-5xl py-4">
-                                Conto chiuso!!
-                            </p>
-                        </div>
+                    <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50  text-center" role="alert">
+                        <span className="text-xl font-semibold">Dark alert!</span> Conto chiuso.
+                    </div>
                     </>
                 );
             default:
@@ -231,8 +238,8 @@ export default function Page() {
                 <main>
                     <div className="flex flex-wrap flex-col">
                         <div className='text-center '>
-                            <div className="text-5xl py-4 text-yellow-800 rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300" role="alert">
-                                <span className="font-medium">Warning alert!</span> La giornata non è stata ancora aperta!
+                             <div className="p-4 mb-4 text-xl text-yellow-800 rounded-lg bg-yellow-50" role="alert">
+                                <span className="text-xl font-semibold">Warning alert!</span> La giornata non è stata ancora aperta!
                             </div>
                         </div>
                     </div>
@@ -245,11 +252,7 @@ export default function Page() {
                     <div className="flex flex-wrap flex-col">
                         <div className='text-center '>
                             <p className="text-5xl font-bold py-4">
-                                Casse
-                            </p>
-
-                        </div>
-                        <div className='text-center '>
+                                Casse  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
                             <TextField
                                 className="p-2"
                                 label="Numero Foglietto"
@@ -263,8 +266,10 @@ export default function Page() {
                                 }}
                                 type="number"
                             />
-                            <p>&nbsp;</p>
+                          
                             <Button variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
+                            </p>
+                            
                         </div>
                         {renderPhaseContent()}
 
@@ -277,9 +282,9 @@ export default function Page() {
             <main>
                 <div className="flex flex-wrap flex-col">
                     <div className='text-center '>
-                        <p className="text-5xl py-4">
-                            Utente non autorizzato
-                        </p>
+                        <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
+                            <span className="text-xl font-semibold">Danger alert!</span> Utente non autorizzato.
+                        </div>
                     </div>
                 </div>
             </main>

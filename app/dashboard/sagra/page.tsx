@@ -71,6 +71,22 @@ export default function Page() {
     //const session = await auth();
     //console.log(session?.user?.name);
 
+                //<div className="p-4 mb-4 text-xl font-extralight text-blue-800 rounded-lg bg-blue-50" role="alert">
+                //<span className="text-xl font-semibold ">Info alert!</span> Change a few things up and try submitting again.
+                //</div>
+                //<div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
+                //  <span className="text-xl font-semibold">Danger alert!</span> Change a few things up and try submitting again.
+                //</div>
+                //<div className="p-4 mb-4 text-xl text-green-800 rounded-lg bg-green-50" role="alert">
+                //  <span className="text-xl font-semibold">Success alert!</span> Change a few things up and try submitting again.
+                //</div>
+                //<div className="p-4 mb-4 text-xl text-yellow-800 rounded-lg bg-yellow-50" role="alert">
+                //  <span className="text-xl font-semibold">Warning alert!</span> Change a few things up and try submitting again.
+                //</div>
+                //<div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50" role="alert">
+                // <span className="text-xl font-semibold">Dark alert!</span> Change a few things up and try submitting again.
+                //</div>
+
     console.log("*********************");
     console.log(session?.user?.name);
     console.log("*********************");
@@ -85,7 +101,6 @@ export default function Page() {
                         </p>
                     </div>
                     <div className='text-center'>
-                        <p className="text-5xl py-4"></p>
                         <p className="text-5xl py-4"></p>
                         <h1 className="text-2xl py-4">Giornata: &nbsp;&nbsp;&nbsp;{sagra.giornata}&nbsp;&nbsp;&nbsp;&nbsp;</h1>
                         <p className="text-5xl py-4"></p>  
@@ -111,9 +126,9 @@ export default function Page() {
             <main>
                 <div className="flex flex-wrap flex-col">
                     <div className='text-center '>
-                        <p className="text-5xl py-4">
-                            Utente non autorizzato
-                        </p>
+                        <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
+                            <span className="text-xl font-semibold">Danger alert!</span> Utente non autorizzato.
+                        </div>
                     </div>
                 </div>
             </main>

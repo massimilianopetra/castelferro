@@ -139,8 +139,8 @@ export default function Page() {
                 <main>
                     <div className="flex flex-wrap flex-col">
                         <div className='text-center '>
-                            <div className="text-5xl py-4 text-yellow-800 rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300" role="alert">
-                                <span className="font-medium">Warning alert!</span> La giornata non è stata ancora aperta!
+                             <div className="p-4 mb-4 text-xl text-yellow-800 rounded-lg bg-yellow-50" role="alert">
+                                <span className="text-xl font-semibold">Warning alert!</span> La giornata non è stata ancora aperta!
                             </div>
                         </div>
                     </div>
@@ -191,9 +191,9 @@ export default function Page() {
             <main>
                 <div className="flex flex-wrap flex-col">
                     <div className='text-center '>
-                        <p className="text-5xl py-4">
-                            Utente non autorizzato
-                        </p>
+                        <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
+                            <span className="text-xl font-semibold">Danger alert!</span> Utente non autorizzato.
+                        </div>
                     </div>
                 </div>
             </main>
