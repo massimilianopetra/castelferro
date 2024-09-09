@@ -130,6 +130,11 @@ export default function Page() {
                 return (
                     <>
                         <div className='text-center'>
+                        <br></br> 
+                        <br></br>
+                        <br></br>
+                        <br></br>
+                        <br></br>
                             <p className="text-5xl py-4">
                                 Caricare un numero foglietto!!
                             </p>
@@ -148,6 +153,11 @@ export default function Page() {
                 return (
                     <>
                         <div className='text-center '>
+                        <br></br> 
+                        <br></br>
+                        <br></br>
+                        <br></br>
+                        <br></br>
                             <p className="text-5xl py-4">
                                 Caricamento in corso ...
                             </p>
@@ -160,6 +170,11 @@ export default function Page() {
                 return (
                     <>
                         <div className='text-center '>
+                        <br></br> 
+                        <br></br>
+                        <br></br>
+                        <br></br>
+                        <br></br>
                             <p className="text-5xl py-4">
                                 Elaborazione in corso ...
                             </p>
@@ -170,16 +185,19 @@ export default function Page() {
                 );
             case 'caricato':
                 return (
-                    <>
-                        <div className='text-center '>
-                            <p className="text-3xl py-4 font-extralight">
+                    <><div className="text-center">
+                        <br></br> 
+                        <br></br>
+                        <br></br>
+                        <br></br>
+                            <p className="text-3xl py-4 font-extralight; text-end">
                                 Conto numero <span className="font-extrabold  text-blue-800">{numero}</span> caricato per Consultazione/Modifiche
                             </p>
                         </div>
                         <div>
                             <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
                         </div>
-                        <p className="text-3xl py-4 font-extralight text-center">
+                        <p className="text-3xl py-4 font-extralight; text-end">
                                 Conto numero <span className="font-extrabold  text-blue-800">{numero}</span> caricato per Consultazione/Modifiche
                             </p>
                         &nbsp;
@@ -195,17 +213,21 @@ export default function Page() {
             case 'aperto':
                 return (
                     <>
-                        <div className='text-center '>
-                        <p className="text-3xl py-4 font-extralight">
-                                Conto Aperto numero <span className="font-extrabold">{numero}</span>  
+                        <div>
+                        <br></br> 
+                        <br></br>
+                        <br></br>
+                        <br></br>
+                        <p className="text-3xl py-4 font-extralight; text-end">
+                                Conto Aperto numero <span className="font-extrabold text-blue-800">{numero}&nbsp;&nbsp;&nbsp;</span>  
                             </p>
                         </div>
                         <div>
                             <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
                         </div>
                         <div className='text-center '>
-                            <p className="text-3xl py-4 font-extralight">
-                                Conto Aperto numero <span className="font-extrabold">{numero}</span>  
+                            <p className="text-3xl py-4 font-extralight; text-end">
+                                Conto Aperto numero <span className="font-extrabold text-blue-800">{numero}&nbsp;&nbsp;&nbsp;</span>  
                             </p>
                         </div>
                         <div className='text-center '>
@@ -249,11 +271,17 @@ export default function Page() {
         else
             return (
                 <main>
-                    <div className="flex flex-wrap flex-col">
-                        <div className='text-center '>
-                            <p className="text-5xl font-bold py-4">
-                                Casse  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
-                            <TextField
+                    <div className="fixed p-1 mb-1 text-2xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
+                         <ul className="flex rounded-full">
+                            <li className="flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
+                                <a className="text-center block text-white font-extralight ">
+                                    Casse
+                                </a>
+                            </li>
+                            <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4">
+                                <a>
+                                    <div className='text-center text-emerald-600'>
+                                    <TextField
                                 className="p-2"
                                 label="Numero Foglietto"
                                 variant="outlined"
@@ -266,14 +294,16 @@ export default function Page() {
                                 }}
                                 type="number"
                             />
-                          
-                            <Button variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
-                            </p>
-                            
-                        </div>
-                        {renderPhaseContent()}
-
+                                    </div>
+                                </a>
+                            </li>
+                            <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
+                                <Button variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
+                            </li>
+                        </ul>
                     </div>
+                {renderPhaseContent()}
+
                 </main>
 
             )

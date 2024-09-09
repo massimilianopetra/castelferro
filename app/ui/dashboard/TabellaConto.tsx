@@ -29,7 +29,7 @@ export default function TabellaCucina({ item, onAdd, onRemove }: { item: DbConsu
             <TableContainer component={Paper}>
                 <Table  sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
                     <TableHead>
-                        <TableRow className=" text-gray-800 rounded-lg bg-gray-50 ">
+                        <TableRow className=" text-gray-800 rounded-lg bg-gray-50">
                             <TableCell align="left"><p className="text-lg font-bold">Piatto</p></TableCell>
                             <TableCell className="text-lg font-bold" align="center"><p className="font-bold">Quantità</p></TableCell>
                             <TableCell className="text-lg font-bold" align="right"><p className="font-bold">Prezzo Totale</p></TableCell>
