@@ -34,7 +34,7 @@ export default function DashboardLinks() {
               },
             )}
           >
-            <LinkIcon className="w-6" />
+            <LinkIcon className="w-5" />
             <p>{link.name}</p>
           </Link>
         );
