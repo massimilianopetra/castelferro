@@ -2,18 +2,23 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
-import { Button, TextField } from '@mui/material';
+import { Button, Tabs, TextField } from '@mui/material';
 import type { DbConsumazioniPrezzo, DbFiera } from '@/app/lib/definitions';
 import { getConsumazioniCassa, sendConsumazioni, getGiornoSagra, apriConto, getConto, chiudiConto } from '@/app/lib/actions';
 import TabellaConto from '@/app/ui/dashboard/TabellaConto';
 import CircularProgress from '@mui/material/CircularProgress';
-
+import ReplyIcon from '@mui/icons-material/Reply';
+import ReplyAllIcon from '@mui/icons-material/ReplyAll';
+import Filter1Icon from '@mui/icons-material/Filter1';
+import Filter1Icon2 from '@mui/icons-material/Filter2';
+import Filter1Icon3 from '@mui/icons-material/Filter3';
 
 export default function Page() {
 
     const [phase, setPhase] = useState('iniziale');
     const [products, setProducts] = useState<DbConsumazioniPrezzo[]>([]);
     const [numero, setNumero] = useState<number | string>('');
+    const [numeroFoglietto, setNumeroFoglietto] = useState<number | string>('');
     const { data: session } = useSession();
     const [sagra, getSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
 
@@ -33,7 +38,7 @@ export default function Page() {
     const handleButtonClickCarica = async () => {
         const num = Number(numero);
 
-        if (isNaN(num) || num < 1) {
+        if (isNaN(num) || num < 1 || num > 9999 ) {
             alert('Inserisci un numero foglietto valido');
             return;
         }
@@ -43,12 +48,14 @@ export default function Page() {
             if (c) setProducts(c);
             const conto = await getConto(num, sagra.giornata);
             if (conto?.stato == 'APERTO') {
+                setNumeroFoglietto(numero);
                 setPhase('aperto');
             }
             else if (conto?.stato == 'CHIUSO') {
                 setPhase('chiuso');
             }
             else {
+                setNumeroFoglietto(numero);
                 setPhase('caricato');
             }
 
@@ -129,7 +136,7 @@ export default function Page() {
                 console.log('iniziale');
                 return (
                     <>
-                        <div className='text-center'>
+                        <div className='z-0 text-center'>
                         <br></br> 
                         <br></br>
                         <br></br>
@@ -139,20 +146,12 @@ export default function Page() {
                                 Caricare un numero foglietto!!
                             </p>
                         </div>
-                        &nbsp;
-                        <div className='text-center '>
-                            <Button variant="contained" onClick={handleApri} disabled>Apri Conto</Button>
-                            &nbsp;&nbsp;
-                            <Button variant="contained" onClick={handleAChiudi} disabled>Chiudi Conto</Button>
-                            &nbsp;&nbsp;
-                            <Button variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
-                        </div>
                     </>
                 );
             case 'caricamento':
                 return (
                     <>
-                        <div className='text-center '>
+                        <div className='z-0 text-center'>
                         <br></br> 
                         <br></br>
                         <br></br>
@@ -169,8 +168,7 @@ export default function Page() {
             case 'elaborazione':
                 return (
                     <>
-                        <div className='text-center '>
-                        <br></br> 
+                        <div className='z-0 text-center '>
                         <br></br>
                         <br></br>
                         <br></br>
@@ -185,64 +183,89 @@ export default function Page() {
                 );
             case 'caricato':
                 return (
-                    <><div className="text-center">
-                        <br></br> 
-                        <br></br>
-                        <br></br>
-                        <br></br>
-                            <p className="text-3xl py-4 font-extralight; text-end">
-                                Conto numero <span className="font-extrabold  text-blue-800">{numero}</span> caricato per Consultazione/Modifiche
+                    <>
+                        <div className="z-0 text-center">
+                        <div className="z-0 xl:text-2xl xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
+                            <p>Ultimi conti aperti: &nbsp;                         
+                            <Button size="small" className= "rounded-full" variant="contained" onClick={handleAChiudi} startIcon={<Filter1Icon/>}>num-1</Button>
+                            &nbsp;&nbsp;
+                            <Button size="small" className= "rounded-full "variant="contained" onClick={handleAChiudi} startIcon={<Filter1Icon2 />}>num-2</Button>
+                            &nbsp;&nbsp;
+                            <Button size="small" className= "rounded-full" variant="contained" onClick={handleAChiudi} startIcon={<Filter1Icon3 />}>num-3</Button>&nbsp;&nbsp;
                             </p>
                         </div>
-                        <div>
-                            <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
+                            <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
+                                <p >
+                                    Conto aperto da: <span className="font-extrabold text-blue-800">hh:mm:ss&nbsp;&nbsp;&nbsp;</span>  
+                                </p>
+                                <p >
+                                    Nome Cameriere: <span className="font-extrabold text-blue-800">Fausto Coppi&nbsp;&nbsp;&nbsp;</span>  
+                                </p>
+                                <p >
+                                    Conto caricato per Consultazione/Modifiche numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>  
+                                </p>
+                            </div>
+                            <div>
+                                <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
+                            </div>
+                            <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
+                            <p >
+                                Conto caricato per Consultazione/Modifiche numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>  
+                            </p>                            
                         </div>
-                        <p className="text-3xl py-4 font-extralight; text-end">
-                                Conto numero <span className="font-extrabold  text-blue-800">{numero}</span> caricato per Consultazione/Modifiche
-                            </p>
-                        &nbsp;
+                            &nbsp;
                         <div className='text-center '>
-                            <Button variant="contained" onClick={handleApri}>Apri Conto</Button>
+                                <Button variant="contained" onClick={handleApri}>Apri Conto</Button>
                             &nbsp;&nbsp;
-                            <Button variant="contained" onClick={handleAChiudi} disabled>Chiudi Conto</Button>
+                                <Button variant="contained" onClick={handleAChiudi} disabled>Chiudi Conto</Button>
                             &nbsp;&nbsp;
-                            <Button variant="contained" onClick={handleAggiorna}>Aggiorna Conto</Button>
+                                <Button variant="contained" onClick={handleAggiorna}>Aggiorna Conto</Button>
                         </div>
+                    </div>
                     </>
                 );
             case 'aperto':
                 return (
-                    <>
-                        <div>
+                    <><div className="z-0 text-center">
                         <br></br> 
                         <br></br>
-                        <br></br>
-                        <br></br>
-                        <p className="text-3xl py-4 font-extralight; text-end">
-                                Conto Aperto numero <span className="font-extrabold text-blue-800">{numero}&nbsp;&nbsp;&nbsp;</span>  
+                        <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
+                            <p >
+                                Conto aperto da: <span className="font-extrabold text-blue-800">hh:mm:ss&nbsp;&nbsp;&nbsp;</span>  
+                            </p>
+                            <p >
+                                Nome Cameriere: <span className="font-extrabold text-blue-800">Alfredo Binda&nbsp;&nbsp;&nbsp;</span>  
+                            </p>
+                            <p >
+                                Conto aperto numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>  
                             </p>
                         </div>
                         <div>
                             <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
                         </div>
-                        <div className='text-center '>
-                            <p className="text-3xl py-4 font-extralight; text-end">
-                                Conto Aperto numero <span className="font-extrabold text-blue-800">{numero}&nbsp;&nbsp;&nbsp;</span>  
+                        <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
+                            <p >
+                                Conto aperto numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>  
                             </p>
                         </div>
-                        <div className='text-center '>
+                        <div className="z-0 text-center">
                             <Button variant="contained" onClick={handleApri} disabled>Apri Conto</Button>
                             &nbsp;&nbsp;
                             <Button variant="contained" onClick={handleAChiudi}>Chiudi Conto</Button>
                             &nbsp;&nbsp;
                             <Button variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
                         </div>
- 
+                    </div>
                     </>
                 );
             case 'chiuso':
                 return (
                     <>
+                     <br></br> 
+                     <br></br>
+                     <br></br> 
+                     <br></br>
+                     <br></br> 
                     <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50  text-center" role="alert">
                         <span className="text-xl font-semibold">Dark alert!</span> Conto chiuso.
                     </div>
@@ -271,7 +294,7 @@ export default function Page() {
         else
             return (
                 <main>
-                    <div className="fixed p-1 mb-1 text-2xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
+                    <div className="z-50 lg:fixed xl:fixed md:fixed p-1 mb-1 text-2xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
                          <ul className="flex rounded-full">
                             <li className="flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
                                 <a className="text-center block text-white font-extralight ">
@@ -298,7 +321,7 @@ export default function Page() {
                                 </a>
                             </li>
                             <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
-                                <Button variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
+                                <Button className= "rounded-full" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
                             </li>
                         </ul>
                     </div>

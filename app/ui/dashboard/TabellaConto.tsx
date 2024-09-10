@@ -21,13 +21,13 @@ export default function TabellaCucina({ item, onAdd, onRemove }: { item: DbConsu
     }
 
     return (
-        <div>
+        <div className="z-0">
 
-           <div className="p-1 mb-1 text-2xl font-extralight text-blue-800 rounded-lg bg-blue-50 text-end">
+           <div className="z-0 p-1 mb-1 text-2xl font-extralight text-blue-800 rounded-lg bg-blue-50 text-end">
                Totale Conto: <span className="text-xl font-semibold ">{totale.toFixed(2)}</span> &euro;&nbsp;
             </div>
             <TableContainer component={Paper}>
-                <Table  sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
+                <Table  sx={{ minWidth: 150 }} size="small" aria-label="a dense table">
                     <TableHead>
                         <TableRow className=" text-gray-800 rounded-lg bg-gray-50">
                             <TableCell align="left"><p className="text-lg font-bold">Piatto</p></TableCell>
@@ -37,11 +37,11 @@ export default function TabellaCucina({ item, onAdd, onRemove }: { item: DbConsu
                     </TableHead>
                     <TableBody >
                         {item.map((row) => (
-                            <TableRow className="hover:bg-gray-50" sx={{
+                            <TableRow className="hover:bg-yellow-100" sx={{
                                 backgroundColor: row.quantita > 0 ?  "rgba(144, 238, 144, 0.3)" : "white",
                               }}>
                                 <TableCell align="left" className="text-lg font-extralight">{row.piatto}</TableCell>
-                                <TableCell align="center">
+                                <TableCell className="flex-wrap">
                                     <Button onClick={() => onAdd(row.id_piatto)} size="medium" variant="contained" startIcon={<AddCircleIcon />} />
                                     &nbsp;&nbsp;<span className="text-lg font-semibold ">{row.quantita}</span> &nbsp;&nbsp;
                                     <Button onClick={() => onRemove(row.id_piatto)} size="medium" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
