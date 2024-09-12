@@ -135,12 +135,15 @@ export async function getConto(foglietto: number, giorno: number): Promise<DbCon
 export async function getCamerieri(foglietto: number): Promise<string | undefined>  {
   try {
     console.log(`Get Camerieri foglietto n. ${foglietto}`)
+    if (foglietto < 10) {
+      return('Gratuito');
+    }
+
     const c = await sql<DbCamerieri>`SELECT * FROM camerieri  WHERE foglietto_end >= ${foglietto} AND foglietto_start <= ${foglietto}`;
     if (c)
       return (c.rows[0].nome)
   } catch (error) {
-    console.error('Failed to fetch camerieri:', error);
-    throw new Error('Failed to fetch camerieri.');
+    return ('Sconosciuto');
   }
 
   return ('Sconosciuto');
