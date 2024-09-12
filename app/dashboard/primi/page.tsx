@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
 import { Button, TextField } from '@mui/material';
-import type { DbConsumazioni, DbFiera } from '@/app/lib/definitions';
-import { getConsumazioni, sendConsumazioni, getGiornoSagra } from '@/app/lib/actions';
+import type { DbConsumazioni, DbFiera, DbConti } from '@/app/lib/definitions';
+import { getConsumazioni, sendConsumazioni, getGiornoSagra, getConto, apriConto } from '@/app/lib/actions';
 import TabellaCucina from '@/app/ui/dashboard/TabellaCucina';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -15,12 +15,12 @@ export default function Page() {
     const [products, setProducts] = useState<DbConsumazioni[]>([]);
     const [numero, setNumero] = useState<number | string>('');
     const { data: session } = useSession();
-    const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
+    const [sagra, getSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
 
     useEffect(() => {
         const fetchData = async () => {
             const gg = await getGiornoSagra();
-            if (gg) setSagra(gg);
+            if (gg) getSagra(gg);
         };
 
         fetchData();
@@ -38,15 +38,25 @@ export default function Page() {
             return;
         }
 
-            const fetchData = async () => {
-            const c = await getConsumazioni('Primi', num,sagra.giornata);
+        const fetchData = async () => {
+            const c = await getConsumazioni('Primi', num, sagra.giornata);
             if (c) setProducts(c);
-            setPhase('caricato');
+            const conto = await getConto(num, sagra.giornata);
+            if (conto) {
+                if (conto.stato == 'CHIUSO' || conto.stato == 'STAMPATO')
+                    setPhase('bloccato')
+                else 
+                    setPhase('caricato');
+            } else {
+                await apriConto(num,sagra.giornata);
+                setPhase('caricato');
+            }
+
         };
 
         setPhase('caricamento');
         fetchData();
-    
+
         console.log(`Numero foglietto: ${numero}`);
     };
 
@@ -55,7 +65,7 @@ export default function Page() {
         sendConsumazioni(products);
         setPhase('inviato');
         console.log(`Numero foglietto: ${numero}`);
-        setProducts([]);  
+        setProducts([]);
     };
 
     const handleAdd = (id: number) => {
@@ -127,6 +137,16 @@ export default function Page() {
                         </div>
                     </>
                 );
+            case 'bloccato':
+                return (
+                    <>
+                        <div className='text-center '>
+                            <p className="text-5xl py-4">
+                                Il conto risulta bloccato!!
+                            </p>
+                        </div>
+                    </>
+                );
             default:
                 return null;
         }
@@ -136,15 +156,15 @@ export default function Page() {
 
         if (sagra.stato == 'CHIUSA')
             return (
-             <main>
-                <div className="flex flex-wrap flex-col">
-                    <div className='text-center '>
-                         <div className="p-4 mb-4 text-xl text-yellow-800 rounded-lg bg-yellow-50" role="alert">
-                            <span className="text-xl font-semibold">Warning alert!</span> La giornata non è stata ancora aperta!
+                <main>
+                    <div className="flex flex-wrap flex-col">
+                        <div className='text-center '>
+                            <div className="p-4 mb-4 text-xl text-yellow-800 rounded-lg bg-yellow-50" role="alert">
+                                <span className="text-xl font-semibold">Warning alert!</span> La giornata non è stata ancora aperta!
+                            </div>
                         </div>
                     </div>
-                </div>
-            </main>
+                </main>
 
             )
         else
@@ -188,15 +208,15 @@ export default function Page() {
             )
     else
         return (
-                <main>
-                    <div className="flex flex-wrap flex-col">
-                        <div className='text-center '>
-                             <div className="p-4 mb-4 text-xl text-yellow-800 rounded-lg bg-yellow-50" role="alert">
-                                <span className="text-xl font-semibold">Warning alert!</span> La giornata non è stata ancora aperta!
-                            </div>
+            <main>
+                <div className="flex flex-wrap flex-col">
+                    <div className='text-center '>
+                        <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
+                            <span className="text-xl font-semibold">Danger alert!</span> Utente non autorizzato.
                         </div>
                     </div>
-                </main>
+                </div>
+            </main>
 
         )
 

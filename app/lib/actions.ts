@@ -132,7 +132,24 @@ export async function getConto(foglietto: number, giorno: number): Promise<DbCon
   }
 }
 
-export async function apriConto(foglietto: number, giorno: number, totale: number) {
+export async function apriConto(foglietto: number, giorno: number) {
+
+  const date_format_str = today();
+
+  const current = await sql<DbConti>`SELECT * FROM conti  WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`;
+
+  if (current.rows[0]) {
+    console.log(`Il conto foglietto n. ${foglietto} giorno n. ${giorno} risulta paerto in data: ${current.rows[0].data_apertura}`);
+  } else {
+    console.log(`Inserimento conto foglietto n. ${foglietto} giorno n. ${giorno}`);
+    return await sql`INSERT INTO conti (id_comanda, stato, totale, giorno, data_apertura, data, data_chiusura)
+    VALUES (${foglietto}, 'APERTO', 0.0,${giorno},${date_format_str},${date_format_str},'')
+    ON CONFLICT (id) DO NOTHING;
+    `;
+  }
+}
+
+export async function stampaConto(foglietto: number, giorno: number) {
 
   const date_format_str = today();
 
@@ -142,22 +159,38 @@ export async function apriConto(foglietto: number, giorno: number, totale: numbe
     console.log(`Apertura conto foglietto n. ${foglietto} giorno n. ${giorno}`);
     return await sql`
     UPDATE conti
-    SET stato = 'APERTO',
-        totale = ${totale},
+    SET stato = 'STAMPATO',
         data = ${date_format_str}
     WHERE id = ${current.rows[0].id};
     `;
   } else {
-    console.log(`Inserimento conto foglietto n. ${foglietto} giorno n. ${giorno}`);
-    return await sql`INSERT INTO conti (id_comanda, stato, totale, giorno, data)
-    VALUES (${foglietto}, 'APERTO', ${totale},${giorno},${date_format_str})
-    ON CONFLICT (id) DO NOTHING;
-    `;
+    console.log(`Il conto foglietto n. ${foglietto} giorno n. ${giorno} non risulta paerto`);
   }
-
 }
 
+export async function aggiornaConto(foglietto: number, giorno: number, totale: number) {
+
+  const date_format_str = today();
+
+  const current = await sql<DbConti>`SELECT * FROM conti  WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`;
+
+  if (current.rows[0]) {
+    console.log(`Apertura conto foglietto n. ${foglietto} giorno n. ${giorno}`);
+    return await sql`
+    UPDATE conti
+    SET totale = ${totale},
+        data = ${date_format_str}
+    WHERE id = ${current.rows[0].id};
+    `;
+  } else {
+    console.log(`Il conto foglietto n. ${foglietto} giorno n. ${giorno} non risulta paerto`);
+  }
+}
+
+
 export async function chiudiConto(foglietto: number, giorno: number) {
+
+  const date_format_str = today();
 
   const current = await sql<DbConti>`SELECT * FROM conti  WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`;
 
@@ -165,7 +198,8 @@ export async function chiudiConto(foglietto: number, giorno: number) {
     console.log(`Chiusura conto foglietto n. ${foglietto} giorno n. ${giorno}`);
     return await sql`
     UPDATE conti
-    SET stato = 'CHIUSO'
+    SET stato = 'CHIUSO',
+        data_chiusura = ${date_format_str}
     WHERE id = ${current.rows[0].id};
     `;
   } else {

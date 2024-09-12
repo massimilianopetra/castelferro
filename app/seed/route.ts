@@ -85,7 +85,9 @@ async function seedConti() {
        stato VARCHAR(32),
        totale REAL,
        giorno INTEGER,
-       data VARCHAR(32)
+       data_apertura VARCHAR(32),
+       data VARCHAR(32),
+       data_chiusura VARCHAR(32)
      );
    `;
 

@@ -46,7 +46,9 @@ export type DbConti =   {
   stato: string;
   totale: number;
   giorno: number;
+  data_apertura: string;
   data: string;
+  data_chiusura: string;
 };
 
 export type DbFiera =   {
