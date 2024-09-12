@@ -289,3 +289,27 @@ const menu = [
   },
 ];
 export { menu };
+
+const waiters = [
+  {
+    id: 1,
+    name: 'Tizio',
+    figlietto_start: 100,
+    foglietto_end: 149
+  },
+  {
+    id: 2,
+    name: 'Caio',
+    figlietto_start: 150,
+    foglietto_end: 199
+  },
+  {
+    id: 3,
+    name: 'Sempronio',
+    figlietto_start: 200,
+    foglietto_end: 249
+  },
+
+];
+
+export { waiters };

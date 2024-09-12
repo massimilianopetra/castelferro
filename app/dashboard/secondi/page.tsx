@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
-import { Button, TextField } from '@mui/material';
+import { Button, chipClasses, TextField } from '@mui/material';
 import type { DbConsumazioni, DbFiera, DbConti } from '@/app/lib/definitions';
-import { getConsumazioni, sendConsumazioni, getGiornoSagra, getConto, apriConto } from '@/app/lib/actions';
+import { getConsumazioni, sendConsumazioni, getGiornoSagra, getConto, apriConto, getCamerieri } from '@/app/lib/actions';
 import TabellaCucina from '@/app/ui/dashboard/TabellaCucina';
 import CircularProgress from '@mui/material/CircularProgress';
 
@@ -16,6 +16,7 @@ export default function Page() {
     const [numero, setNumero] = useState<number | string>('');
     const { data: session } = useSession();
     const [sagra, getSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
+    const [conto, setConto] = useState<DbConti>();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -41,14 +42,20 @@ export default function Page() {
         const fetchData = async () => {
             const c = await getConsumazioni('Secondi', num, sagra.giornata);
             if (c) setProducts(c);
-            const conto = await getConto(num, sagra.giornata);
-            if (conto) {
-                if (conto.stato == 'CHIUSO' || conto.stato == 'STAMPATO')
+            const cc = await getConto(num, sagra.giornata);
+            if (cc) {
+                setConto(cc);
+                if (cc.stato == 'CHIUSO' || cc.stato == 'STAMPATO')
                     setPhase('bloccato')
                 else 
                     setPhase('caricato');
             } else {
-                await apriConto(num,sagra.giornata);
+                const cameriere = await getCamerieri(num);
+                if (cameriere) {
+                    await apriConto(num,sagra.giornata,cameriere);
+                    const ccc = await getConto(num, sagra.giornata);
+                    setConto(ccc);
+                }
                 setPhase('caricato');
             }
 
@@ -123,6 +130,7 @@ export default function Page() {
                 return (
                     <>
                         <div>
+                            <p> Cameriere: {conto?.cameriere}</p>
                             <TabellaCucina item={products} onAdd={handleAdd} onRemove={handleRemove} />
                         </div>
                     </>

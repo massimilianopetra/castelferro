@@ -203,7 +203,7 @@ export default function Page() {
                                     Conto aperto da: <span className="font-extrabold text-blue-800">{conto?.data_apertura}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                                 <p >
-                                    Nome Cameriere: <span className="font-extrabold text-blue-800">Fausto Coppi&nbsp;&nbsp;&nbsp;</span>
+                                    Nome Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                                 <p >
                                     Conto caricato per Consultazione/Modifiche numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
@@ -235,10 +235,10 @@ export default function Page() {
                         <br></br>
                         <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
                             <p >
-                                Conto aperto da: <span className="font-extrabold text-blue-800">hh:mm:ss&nbsp;&nbsp;&nbsp;</span>
+                                Conto aperto da: <span className="font-extrabold text-blue-800">{conto?.data_apertura}&nbsp;&nbsp;&nbsp;</span>
                             </p>
                             <p >
-                                Nome Cameriere: <span className="font-extrabold text-blue-800">Alfredo Binda&nbsp;&nbsp;&nbsp;</span>
+                                Nome Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
                             </p>
                             <p >
                                 Conto stampato numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>

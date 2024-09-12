@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import { db } from '@vercel/postgres';
-import { users } from '../lib/placeholder-data';
+import { users,waiters } from '../lib/placeholder-data';
 import { menu } from '../lib/placeholder-data';
 
 const client = await db.connect();
@@ -77,6 +77,28 @@ async function seedConsumazioni() {
   console.log(`CREATED TABLE consumazioni`);
 }
 
+async function seedCamerieri() {
+  await client.sql`
+  CREATE TABLE IF NOT EXISTS camerieri (
+     id SERIAL PRIMARY KEY,
+     nome VARCHAR(64),
+     foglietto_start INTEGER,
+     foglietto_end INTEGER
+   );
+ `;
+
+ const inserted = await Promise.all(
+  waiters.map(async (item) => {
+    console.log(`VALUES ${item.id}, ${item.name}, ${item.figlietto_start}, ${item.foglietto_end}`);
+    return client.sql`
+         INSERT INTO camerieri (id, nome, foglietto_start, foglietto_end)
+         VALUES (${item.id}, ${item.name}, ${item.figlietto_start}, ${item.foglietto_end})
+         ON CONFLICT (id) DO NOTHING;
+      `;
+  }),
+);
+
+}
 async function seedConti() {
   await client.sql`
     CREATE TABLE IF NOT EXISTS conti (
@@ -84,6 +106,7 @@ async function seedConti() {
        id_comanda INTEGER,
        stato VARCHAR(32),
        totale REAL,
+       cameriere VARCHAR(64),
        giorno INTEGER,
        data_apertura VARCHAR(32),
        data VARCHAR(32),
@@ -122,6 +145,7 @@ export async function GET() {
     await seedConsumazioni();
     await seedFiera();
     await seedConti();
+    await seedCamerieri();
     await client.sql`COMMIT`;
 
     return Response.json({ message: 'Database seeded successfully' });

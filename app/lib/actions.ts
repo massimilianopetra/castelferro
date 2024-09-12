@@ -2,7 +2,7 @@
 
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
-import type { DbMenu, DbConsumazioniPrezzo, DbConsumazioni, DbFiera, DbConti } from '@/app/lib/definitions';
+import type { DbMenu, DbConsumazioniPrezzo, DbConsumazioni, DbFiera, DbConti, DbCamerieri } from '@/app/lib/definitions';
 import { sql } from '@vercel/postgres';
 import { today } from './utils';
 
@@ -132,7 +132,20 @@ export async function getConto(foglietto: number, giorno: number): Promise<DbCon
   }
 }
 
-export async function apriConto(foglietto: number, giorno: number) {
+export async function getCamerieri(foglietto: number): Promise<string | undefined>  {
+  try {
+    const c = await sql<DbCamerieri>`SELECT * FROM camerieri  WHERE foglietto_start >= ${foglietto} AND foglietto_start <= ${foglietto}`;
+    if (c)
+      return (c.rows[0].nome)
+  } catch (error) {
+    console.error('Failed to fetch camerieri:', error);
+    throw new Error('Failed to fetch camerieri.');
+  }
+
+  return ('Sconosciuto');
+}
+
+export async function apriConto(foglietto: number, giorno: number, cameriere: string) {
 
   const date_format_str = today();
 
@@ -142,8 +155,8 @@ export async function apriConto(foglietto: number, giorno: number) {
     console.log(`Il conto foglietto n. ${foglietto} giorno n. ${giorno} risulta paerto in data: ${current.rows[0].data_apertura}`);
   } else {
     console.log(`Inserimento conto foglietto n. ${foglietto} giorno n. ${giorno}`);
-    return await sql`INSERT INTO conti (id_comanda, stato, totale, giorno, data_apertura, data, data_chiusura)
-    VALUES (${foglietto}, 'APERTO', 0.0,${giorno},${date_format_str},${date_format_str},'')
+    return await sql`INSERT INTO conti (id_comanda, stato, totale, cameriere, giorno, data_apertura, data, data_chiusura)
+    VALUES (${foglietto}, 'APERTO', 0.0,${cameriere},${giorno},${date_format_str},${date_format_str},'')
     ON CONFLICT (id) DO NOTHING;
     `;
   }

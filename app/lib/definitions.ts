@@ -45,10 +45,18 @@ export type DbConti =   {
   id_comanda: number;
   stato: string;
   totale: number;
+  cameriere: string;
   giorno: number;
   data_apertura: string;
   data: string;
   data_chiusura: string;
+};
+
+export type DbCamerieri =   {
+  id: number;
+  nome: string;
+  foglietto_start: number;
+  foglietto_end: number;
 };
 
 export type DbFiera =   {
