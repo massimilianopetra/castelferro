@@ -8,12 +8,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import clsx from 'clsx';
 import { LockOpenIcon } from '@heroicons/react/20/solid';
+import AccessibilityIcon from '@mui/icons-material/Accessibility';
 
 // Map of links to display in the side navigation.
 // Depending on the size of the application, this would be stored in a database.
 const links = [
   { name: 'Gestione Menu', href: '/dashboard/menus', icon: WrenchScrewdriverIcon },
   { name: 'Apertura-Chiusura Giornata Sagra', href: '/dashboard/sagra', icon: LockOpenIcon },
+  { name: 'Gestione Camerieri', href: '/dashboard/camerieri', icon: AccessibilityIcon },
 
 ];
 

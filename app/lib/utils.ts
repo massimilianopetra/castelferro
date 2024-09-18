@@ -1,5 +1,3 @@
-
-
 export function today(): string {
 
     const d = new Date();

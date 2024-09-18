@@ -132,16 +132,32 @@ export async function getConto(foglietto: number, giorno: number): Promise<DbCon
   }
 }
 
-export async function getCamerieri(foglietto: number): Promise<string | undefined>  {
+export async function getCamerieri(foglietto: number): Promise<string | undefined> {
   try {
     console.log(`Get Camerieri foglietto n. ${foglietto}`)
+
     if (foglietto < 10) {
-      return('Gratuito');
+      return ('Gratuito');
     }
 
     const c = await sql<DbCamerieri>`SELECT * FROM camerieri  WHERE foglietto_end >= ${foglietto} AND foglietto_start <= ${foglietto}`;
     if (c)
       return (c.rows[0].nome)
+  } catch (error) {
+    return ('Sconosciuto');
+  }
+
+  return (undefined);
+}
+
+export async function getListaCamerieri(): Promise<DbCamerieri[] | undefined> {
+  try {
+    console.log(`Get Lista Camerieri`);
+
+
+    const c = await sql<DbCamerieri>`SELECT * FROM camerieri`;
+    if (c)
+      return (c.rows)
   } catch (error) {
     return ('Sconosciuto');
   }
