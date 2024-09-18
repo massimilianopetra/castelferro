@@ -159,10 +159,10 @@ export async function getListaCamerieri(): Promise<DbCamerieri[] | undefined> {
     if (c)
       return (c.rows)
   } catch (error) {
-    return ('Sconosciuto');
+    return (undefined);
   }
 
-  return ('Sconosciuto');
+  return (undefined);
 }
 
 export async function apriConto(foglietto: number, giorno: number, cameriere: string) {
