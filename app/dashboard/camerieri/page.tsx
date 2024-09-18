@@ -60,7 +60,6 @@ export default function Cucina() {
                                                             textAlign: 'right', // Allinea il testo a destra
                                                         },
                                                     }}
-                                                    type="number"
                                                 />
                                             </TableCell>
                                             <TableCell align="left">
