@@ -132,6 +132,19 @@ export async function getConto(foglietto: number, giorno: number): Promise<DbCon
   }
 }
 
+export async function getUltimiConti(giorno: number): Promise<DbConti[] | undefined> {
+  console.log("getConto");
+  try {
+    const c = await sql<DbConti>`SELECT * FROM conti  WHERE giorno = ${giorno} ORDER BY data_apertura DESC LIMIT 3`;
+    return c.rows;
+  } catch (error) {
+    console.error('Failed to fetch conto:', error);
+    throw new Error('Failed to fetch conto.');
+  }
+
+  return undefined;
+}
+
 export async function getCamerieri(foglietto: number): Promise<string | undefined> {
   try {
     console.log(`Get Camerieri foglietto n. ${foglietto}`)

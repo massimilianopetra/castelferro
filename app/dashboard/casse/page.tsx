@@ -4,8 +4,8 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
 import { Button, Tabs, TextField } from '@mui/material';
 import type { DbConsumazioniPrezzo, DbFiera, DbConti } from '@/app/lib/definitions';
-import { getConsumazioniCassa, sendConsumazioni, getGiornoSagra, getConto, chiudiConto, aggiornaConto, stampaConto } from '@/app/lib/actions';
-import { deltanow} from '@/app/lib/utils'
+import { getConsumazioniCassa, sendConsumazioni, getGiornoSagra, getConto, getUltimiConti, chiudiConto, aggiornaConto, stampaConto } from '@/app/lib/actions';
+import { deltanow } from '@/app/lib/utils'
 import TabellaConto from '@/app/ui/dashboard/TabellaConto';
 import CircularProgress from '@mui/material/CircularProgress';
 import Filter1Icon from '@mui/icons-material/Filter1';
@@ -19,13 +19,20 @@ export default function Page() {
     const [numero, setNumero] = useState<number | string>('');
     const [numeroFoglietto, setNumeroFoglietto] = useState<number | string>('');
     const [conto, setConto] = useState<DbConti>();
+    const [lastConto, setLastConto] = useState<DbConti[]>([]);
     const { data: session } = useSession();
-    const [sagra, getSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
+    const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
 
     useEffect(() => {
         const fetchData = async () => {
             const gg = await getGiornoSagra();
-            if (gg) getSagra(gg);
+            if (gg) {
+                setSagra(gg);
+                const cc = await getUltimiConti(gg.giornata);
+                if (cc) {
+                    setLastConto(cc);
+                }
+            }
         };
 
         fetchData();
@@ -89,7 +96,7 @@ export default function Page() {
                 totale += i.quantita * i.prezzo_unitario;
             }
 
-            await aggiornaConto(Number(numero), sagra.giornata,totale);
+            await aggiornaConto(Number(numero), sagra.giornata, totale);
             await stampaConto(Number(numero), sagra.giornata);
             setPhase('stampato');
         };
@@ -189,15 +196,7 @@ export default function Page() {
                 return (
                     <>
                         <div className="z-0 text-center">
-                            <div className="z-0 xl:text-2xl xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
-                                <p>Ultimi conti aperti: &nbsp;
-                                    <Button size="small" className="rounded-full" variant="contained" onClick={handleAChiudi} startIcon={<Filter1Icon />}>num-1</Button>
-                                    &nbsp;&nbsp;
-                                    <Button size="small" className="rounded-full " variant="contained" onClick={handleAChiudi} startIcon={<Filter1Icon2 />}>num-2</Button>
-                                    &nbsp;&nbsp;
-                                    <Button size="small" className="rounded-full" variant="contained" onClick={handleAChiudi} startIcon={<Filter1Icon3 />}>num-3</Button>&nbsp;&nbsp;
-                                </p>
-                            </div>
+
                             <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
                                 <p >
                                     Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span>
@@ -342,6 +341,16 @@ export default function Page() {
                                 <Button className="rounded-full" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
                             </li>
                         </ul>
+                    </div>
+                    <div className="z-0 xl:text-2xl  xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
+                        <p>Ultimi conti aperti: &nbsp;
+                            {lastConto.map((row) => (
+                                <>
+                                    <Button size="small" className="rounded-full" variant="contained" startIcon={<Filter1Icon />}>{row.id_comanda}</Button>
+                                    &nbsp;&nbsp;
+                                </>
+                            ))}
+                        </p>
                     </div>
                     {renderPhaseContent()}
 
