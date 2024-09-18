@@ -50,7 +50,19 @@ export default function Cucina() {
                                 <TableBody>
                                     {camerieri.map((row) => (
                                         <TableRow>
-                                            <TableCell align="left">{row.nome}</TableCell>
+                                            <TableCell align="left">
+                                                <TextField
+                                                    className="p-2"
+                                                    variant="outlined"
+                                                    value={row.nome}
+                                                    sx={{
+                                                        input: {
+                                                            textAlign: 'right', // Allinea il testo a destra
+                                                        },
+                                                    }}
+                                                    type="number"
+                                                />
+                                            </TableCell>
                                             <TableCell align="left">
                                                 <TextField
                                                     className="p-2"
