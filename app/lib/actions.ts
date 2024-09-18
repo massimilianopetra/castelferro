@@ -4,7 +4,7 @@ import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
 import type { DbMenu, DbConsumazioniPrezzo, DbConsumazioni, DbFiera, DbConti, DbCamerieri } from '@/app/lib/definitions';
 import { sql } from '@vercel/postgres';
-import { today } from './utils';
+import { date } from 'zod';
 
 
 export async function authenticate(
@@ -49,7 +49,7 @@ export async function getConsumazioni(cucina: string, comanda: number = -1, gior
       quantita: 0,
       cucina: item.cucina,
       giorno: giornata,
-      data: ""
+      data: 0
     }));
     if (comanda != -1) {
       console.log(`Richiesta comanda n. ${comanda}`)
@@ -80,7 +80,7 @@ export async function getConsumazioniCassa(comanda: number = -1, giornata: numbe
       quantita: 0,
       cucina: item.cucina,
       giorno: giornata,
-      data: ""
+      data: 0
     }));
     if (comanda != -1) {
       console.log(`Richiesta comanda n. ${comanda}`)
@@ -100,21 +100,21 @@ export async function getConsumazioniCassa(comanda: number = -1, giornata: numbe
 
 export async function sendConsumazioni(c: DbConsumazioni[]) {
   console.log('sendConsumazioni');
-  const date_format_str = today();
-  console.log(date_format_str);
+  const date_format_millis = Date.now();
+  console.log(date_format_millis);
 
   c.map(async (item) => {
     if (item.id == -1) {
       return await sql`
          INSERT INTO consumazioni (id_comanda, id_piatto, piatto, quantita, cucina, giorno, data)
-         VALUES (${item.id_comanda}, ${item.id_piatto}, ${item.piatto}, ${item.quantita}, ${item.cucina},${item.giorno},${date_format_str})
+         VALUES (${item.id_comanda}, ${item.id_piatto}, ${item.piatto}, ${item.quantita}, ${item.cucina},${item.giorno},${date_format_millis})
          ON CONFLICT (id) DO NOTHING;
       `;
     } else {
       return await sql`
          UPDATE consumazioni
          SET quantita = ${item.quantita},
-             data = ${date_format_str}
+             data = ${date_format_millis}
          WHERE id = ${item.id};
       `;
     }
@@ -151,7 +151,7 @@ export async function getCamerieri(foglietto: number): Promise<string | undefine
 
 export async function apriConto(foglietto: number, giorno: number, cameriere: string) {
 
-  const date_format_str = today();
+  const date_format_millis = Date.now();
 
   const current = await sql<DbConti>`SELECT * FROM conti  WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`;
 
@@ -160,7 +160,7 @@ export async function apriConto(foglietto: number, giorno: number, cameriere: st
   } else {
     console.log(`Inserimento conto foglietto n. ${foglietto} giorno n. ${giorno}`);
     return await sql`INSERT INTO conti (id_comanda, stato, totale, cameriere, giorno, data_apertura, data, data_chiusura)
-    VALUES (${foglietto}, 'APERTO', 0.0,${cameriere},${giorno},${date_format_str},${date_format_str},'')
+    VALUES (${foglietto}, 'APERTO', 0.0,${cameriere},${giorno},${date_format_millis},${date_format_millis},0)
     ON CONFLICT (id) DO NOTHING;
     `;
   }
@@ -168,7 +168,7 @@ export async function apriConto(foglietto: number, giorno: number, cameriere: st
 
 export async function stampaConto(foglietto: number, giorno: number) {
 
-  const date_format_str = today();
+  const date_format_millis = Date.now();
 
   const current = await sql<DbConti>`SELECT * FROM conti  WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`;
 
@@ -177,7 +177,7 @@ export async function stampaConto(foglietto: number, giorno: number) {
     return await sql`
     UPDATE conti
     SET stato = 'STAMPATO',
-        data = ${date_format_str}
+        data = ${date_format_millis}
     WHERE id = ${current.rows[0].id};
     `;
   } else {
@@ -187,7 +187,7 @@ export async function stampaConto(foglietto: number, giorno: number) {
 
 export async function aggiornaConto(foglietto: number, giorno: number, totale: number) {
 
-  const date_format_str = today();
+  const date_format_millis = Date.now();
 
   const current = await sql<DbConti>`SELECT * FROM conti  WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`;
 
@@ -196,7 +196,7 @@ export async function aggiornaConto(foglietto: number, giorno: number, totale: n
     return await sql`
     UPDATE conti
     SET totale = ${totale},
-        data = ${date_format_str}
+        data = ${date_format_millis}
     WHERE id = ${current.rows[0].id};
     `;
   } else {
@@ -207,7 +207,7 @@ export async function aggiornaConto(foglietto: number, giorno: number, totale: n
 
 export async function chiudiConto(foglietto: number, giorno: number) {
 
-  const date_format_str = today();
+  const date_format_millis = Date.now();
 
   const current = await sql<DbConti>`SELECT * FROM conti  WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`;
 
@@ -216,7 +216,7 @@ export async function chiudiConto(foglietto: number, giorno: number) {
     return await sql`
     UPDATE conti
     SET stato = 'CHIUSO',
-        data_chiusura = ${date_format_str}
+        data_chiusura = ${date_format_millis}
     WHERE id = ${current.rows[0].id};
     `;
   } else {

@@ -4,11 +4,10 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
 import { Button, Tabs, TextField } from '@mui/material';
 import type { DbConsumazioniPrezzo, DbFiera, DbConti } from '@/app/lib/definitions';
-import { getConsumazioniCassa, sendConsumazioni, getGiornoSagra, apriConto, getConto, chiudiConto, aggiornaConto, stampaConto } from '@/app/lib/actions';
+import { getConsumazioniCassa, sendConsumazioni, getGiornoSagra, getConto, chiudiConto, aggiornaConto, stampaConto } from '@/app/lib/actions';
+import { deltanow} from '@/app/lib/utils'
 import TabellaConto from '@/app/ui/dashboard/TabellaConto';
 import CircularProgress from '@mui/material/CircularProgress';
-import ReplyIcon from '@mui/icons-material/Reply';
-import ReplyAllIcon from '@mui/icons-material/ReplyAll';
 import Filter1Icon from '@mui/icons-material/Filter1';
 import Filter1Icon2 from '@mui/icons-material/Filter2';
 import Filter1Icon3 from '@mui/icons-material/Filter3';
@@ -135,6 +134,7 @@ export default function Page() {
     };
 
     const renderPhaseContent = () => {
+
         switch (phase) {
             case 'iniziale':
                 console.log('iniziale');
@@ -200,7 +200,7 @@ export default function Page() {
                             </div>
                             <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
                                 <p >
-                                    Conto aperto da: <span className="font-extrabold text-blue-800">{conto?.data_apertura}&nbsp;&nbsp;&nbsp;</span>
+                                    Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                                 <p >
                                     Nome Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
@@ -235,7 +235,7 @@ export default function Page() {
                         <br></br>
                         <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
                             <p >
-                                Conto aperto da: <span className="font-extrabold text-blue-800">{conto?.data_apertura}&nbsp;&nbsp;&nbsp;</span>
+                                Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span>
                             </p>
                             <p >
                                 Nome Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>

@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import { db } from '@vercel/postgres';
-import { users,waiters } from '../lib/placeholder-data';
+import { users, waiters } from '../lib/placeholder-data';
 import { menu } from '../lib/placeholder-data';
 
 const client = await db.connect();
@@ -70,7 +70,7 @@ async function seedConsumazioni() {
        quantita INTEGER,
        cucina VARCHAR(255) NOT NULL,
        giorno INTEGER,
-       data VARCHAR(32)
+       data BIGINT
      );
    `;
 
@@ -87,18 +87,20 @@ async function seedCamerieri() {
    );
  `;
 
- const inserted = await Promise.all(
-  waiters.map(async (item) => {
-    console.log(`VALUES ${item.id}, ${item.name}, ${item.figlietto_start}, ${item.foglietto_end}`);
-    return client.sql`
+  const inserted = await Promise.all(
+    waiters.map(async (item) => {
+      console.log(`VALUES ${item.id}, ${item.name}, ${item.figlietto_start}, ${item.foglietto_end}`);
+      return client.sql`
          INSERT INTO camerieri (id, nome, foglietto_start, foglietto_end)
          VALUES (${item.id}, ${item.name}, ${item.figlietto_start}, ${item.foglietto_end})
          ON CONFLICT (id) DO NOTHING;
       `;
-  }),
-);
+    }),
+  );
 
+  return inserted;
 }
+
 async function seedConti() {
   await client.sql`
     CREATE TABLE IF NOT EXISTS conti (
@@ -108,9 +110,9 @@ async function seedConti() {
        totale REAL,
        cameriere VARCHAR(64),
        giorno INTEGER,
-       data_apertura VARCHAR(32),
-       data VARCHAR(32),
-       data_chiusura VARCHAR(32)
+       data_apertura BIGINT,
+       data BIGINT,
+       data_chiusura BIGINT
      );
    `;
 

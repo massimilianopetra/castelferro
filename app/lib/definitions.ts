@@ -25,7 +25,7 @@ export type DbConsumazioni =   {
   quantita: number;
   cucina: string;
   giorno: number;
-  data: string;
+  data: number;
 };
 
 export type DbConsumazioniPrezzo =   {
@@ -37,7 +37,7 @@ export type DbConsumazioniPrezzo =   {
   quantita: number;
   cucina: string;
   giorno: number;
-  data: string;
+  data: number;
 };
 
 export type DbConti =   {
@@ -47,9 +47,9 @@ export type DbConti =   {
   totale: number;
   cameriere: string;
   giorno: number;
-  data_apertura: string;
-  data: string;
-  data_chiusura: string;
+  data_apertura: number;
+  data: number;
+  data_chiusura: number;
 };
 
 export type DbCamerieri =   {

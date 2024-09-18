@@ -295,21 +295,38 @@ const waiters = [
     id: 1,
     name: 'Tizio',
     figlietto_start: 100,
-    foglietto_end: 149
+    foglietto_end: 124
   },
   {
     id: 2,
     name: 'Caio',
-    figlietto_start: 150,
-    foglietto_end: 199
+    figlietto_start: 125,
+    foglietto_end: 149
   },
   {
     id: 3,
     name: 'Sempronio',
+    figlietto_start: 150,
+    foglietto_end: 174
+  },
+  {
+    id: 4,
+    name: 'Pippo',
+    figlietto_start: 175,
+    foglietto_end: 199
+  },
+  {
+    id: 5,
+    name: 'Pluto',
     figlietto_start: 200,
+    foglietto_end: 224
+  },
+  {
+    id: 6,
+    name: 'Paperino',
+    figlietto_start: 225,
     foglietto_end: 249
   },
-
 ];
 
 export { waiters };
