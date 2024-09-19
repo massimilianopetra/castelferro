@@ -18,9 +18,13 @@ export function deltatime(dtmillis: number | undefined): string {
         date_format_str += ":" + (mm.toString().length < 2 ? "0" + mm.toString() : mm.toString());
         date_format_str += ":" + (ss.toString().length < 2 ? "0" + ss.toString() : ss.toString());
 
-        return (date_format_str);
+        if (hh>24) {
+            return " oltre un giorno";
+        }
+        {
+            return (date_format_str);
+        }
     }
-
     return "--:--:--";
 }
 
@@ -38,7 +42,13 @@ export function deltanow(millis: number | undefined): string {
         date_format_str += ":" + (mm.toString().length < 2 ? "0" + mm.toString() : mm.toString());
         date_format_str += ":" + (ss.toString().length < 2 ? "0" + ss.toString() : ss.toString());
 
-        return (date_format_str);
+        if (hh>24) {
+            return " oltre un giorno";
+        }
+        else 
+        {
+            return (date_format_str);
+        }
     }
 
     return "--:--:--";
