@@ -163,6 +163,20 @@ export async function getCamerieri(foglietto: number): Promise<string | undefine
   return (undefined);
 }
 
+export async function updateCamerieri(c: DbCamerieri[]) {
+  console.log('updateCamerieri');
+
+  c.map(async (item) => {
+      return await sql`
+         UPDATE camerieri
+         SET nome = ${item.nome},
+             foglietto_start = ${item.foglietto_start},
+             foglietto_end = ${item.foglietto_end}
+         WHERE id = ${item.id};
+      `;
+    });
+}
+
 export async function getListaCamerieri(): Promise<DbCamerieri[] | undefined> {
   try {
     console.log(`Get Lista Camerieri`);
@@ -225,7 +239,8 @@ export async function aggiornaConto(foglietto: number, giorno: number, totale: n
     return await sql`
     UPDATE conti
     SET totale = ${totale},
-        data = ${date_format_millis}
+        data = ${date_format_millis},
+        stato = 'APERTO'
     WHERE id = ${current.rows[0].id};
     `;
   } else {

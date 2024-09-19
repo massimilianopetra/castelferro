@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react'
-import { getListaCamerieri } from '@/app/lib/actions';
+import { getListaCamerieri, updateCamerieri } from '@/app/lib/actions';
 import type { DbCamerieri } from '@/app/lib/definitions';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -12,10 +12,18 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { Button, TextField } from '@mui/material';
+import CircularProgress from '@mui/material/CircularProgress';
 
 export default function Cucina() {
 
+    const textFieldRefs = useRef<{
+        id: number;
+        name: HTMLInputElement | null;
+        foglietto_start: HTMLInputElement | null;
+        foglietto_end: HTMLInputElement | null;
+    }[]>([]);
     const [camerieri, setCamerieri] = useState<DbCamerieri[]>([]);
+    const [phase, setPhase] = useState('caricato');
     const { data: session } = useSession();
 
     useEffect(() => {
@@ -24,83 +32,135 @@ export default function Cucina() {
 
     const fetchData = async () => {
         const c = await getListaCamerieri();
-        if (c)
+        if (c) {
             setCamerieri(c);
+        }
     }
 
+    // Aggiunge i riferimenti a ogni TextField di ogni riga
+    const addToRefs = (field: 'name' | 'foglietto_start' | 'foglietto_end', el: HTMLInputElement | null, index: number) => {
+        if (!textFieldRefs.current[index]) {
+            //textFieldRefs.current[index] = { id: camerieri[index].id, name: null, foglietto_start: null, foglietto_end: null };
+            textFieldRefs.current[index] = { id: index, name: null, foglietto_start: null, foglietto_end: null };
+        }
+        textFieldRefs.current[index][field] = el;
+    };
+
+    // Funzione per raccogliere e inviare i dati aggiornati al DB
+    const handleButtonClick = async () => {
+        setPhase('caricamento');
+        const updatedData = camerieri.map((row, index) => {
+            return ({
+                ...row,
+                nome: textFieldRefs.current[index]?.name?.value || '',
+                foglietto_start: textFieldRefs.current[index]?.foglietto_start?.value ? parseInt(textFieldRefs.current[index]?.foglietto_start?.value) : 0,
+                foglietto_end: textFieldRefs.current[index]?.foglietto_end?.value ? parseInt(textFieldRefs.current[index]?.foglietto_end?.value) : 0
+            });
+        });
+
+        await updateCamerieri(updatedData);
+        setCamerieri(updatedData);
+        setPhase('caricato');
+        console.log('Dati aggiornati:', updatedData);
+
+    };
+
     if ((session?.user?.name == "SuperUser")) {
-        return (
-            <main>
-                <div className="flex flex-wrap flex-col">
-                    <div className='text-center py-4'>
-                        <p className="text-5xl py-4">
-                            Gestione Camerieri
-                        </p>
-                    </div>
-                    <div className='text-center'>
-                        <TableContainer component={Paper}>
-                            <Table sx={{ minWidth: 500 }} aria-label="simple table">
-                                <TableHead>
-                                    <TableRow>
-                                        <TableCell align="left"><p className='font-bold'>Nome</p></TableCell>
-                                        <TableCell align="left"><p className='font-bold'>Primo Foglietto</p></TableCell>
-                                        <TableCell align="left"><p className='font-bold'>Ultimo Foglietto</p></TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {camerieri.map((row) => (
-                                        <TableRow>
-                                            <TableCell align="left">
-                                                <TextField
-                                                    className="p-2"
-                                                    variant="outlined"
-                                                    value={row.nome}
-                                                    sx={{
-                                                        input: {
-                                                            textAlign: 'right', // Allinea il testo a destra
-                                                        },
-                                                    }}
-                                                />
-                                            </TableCell>
-                                            <TableCell align="left">
-                                                <TextField
-                                                    className="p-2"
-                                                    variant="outlined"
-                                                    value={row.foglietto_start}
-                                                    sx={{
-                                                        input: {
-                                                            textAlign: 'right', // Allinea il testo a destra
-                                                        },
-                                                    }}
-                                                    type="number"
-                                                />
-                                            </TableCell>
-                                            <TableCell align="left">
-                                                <TextField
-                                                    className="p-2"
-                                                    variant="outlined"
-                                                    value={row.foglietto_end}
-                                                    sx={{
-                                                        input: {
-                                                            textAlign: 'right', // Allinea il testo a destra
-                                                        },
-                                                    }}
-                                                    type="number"
-                                                />
-                                            </TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                        <div className='p-6'>
-                            <Button className="rounded-full" variant="contained">Aggiorna Lista Camerieri</Button>
+        if (phase == 'caricamento') {
+            return (
+                <main>
+                    <div className="flex flex-wrap flex-col">
+                        <div className='text-center py-4'>
+                            <p className="text-5xl py-4">
+                                Gestione Camerieri
+                            </p>
+                        </div>
+                        <div className='text-center '>
+                            <p className="text-5xl py-4">
+                                Caricamento in corso ...
+                            </p>
+                            <CircularProgress />
                         </div>
                     </div>
-                </div>
-            </main>
+                </main>
+            );
+        } else if (phase == 'caricato') {
+            return (
+                <main>
+                    <div className="flex flex-wrap flex-col">
+                        <div className='text-center py-4'>
+                            <p className="text-5xl py-4">
+                                Gestione Camerieri
+                            </p>
+                        </div>
+                        <div className='text-center'>
+                            <TableContainer component={Paper}>
+                                <Table sx={{ minWidth: 500 }} aria-label="simple table">
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell align="left"><p className='font-bold'>Nome</p></TableCell>
+                                            <TableCell align="left"><p className='font-bold'>Primo Foglietto</p></TableCell>
+                                            <TableCell align="left"><p className='font-bold'>Ultimo Foglietto</p></TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {camerieri.map((row, i) => (
+                                            <TableRow>
+                                                <TableCell align="left">
+                                                    <TextField
+                                                        className="p-2"
+                                                        variant="outlined"
+                                                        inputRef={(el) => addToRefs('name', el, i)}
+                                                        defaultValue={row.nome}
+                                                        sx={{
+                                                            input: {
+                                                                textAlign: 'right', // Allinea il testo a destra
+                                                            },
+                                                        }}
+                                                    />
+                                                </TableCell>
+                                                <TableCell align="left">
+                                                    <TextField
+                                                        className="p-2"
+                                                        variant="outlined"
+                                                        inputRef={(el) => addToRefs('foglietto_start', el, i)}
+                                                        defaultValue={row.foglietto_start}
+                                                        sx={{
+                                                            input: {
+                                                                textAlign: 'right', // Allinea il testo a destra
+                                                            },
+                                                        }}
+                                                        type="number"
+                                                    />
+                                                </TableCell>
+                                                <TableCell align="left">
+                                                    <TextField
+                                                        className="p-2"
+                                                        variant="outlined"
+                                                        inputRef={(el) => addToRefs('foglietto_end', el, i)}
+                                                        defaultValue={row.foglietto_end}
+                                                        sx={{
+                                                            input: {
+                                                                textAlign: 'right', // Allinea il testo a destra
+                                                            },
+                                                        }}
+                                                        type="number"
+                                                    />
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                    </TableBody>
+                                </Table>
+                            </TableContainer>
+                            <div className='p-6'>
+                                <Button className="rounded-full" variant="contained" onClick={handleButtonClick}>Aggiorna Lista Camerieri</Button>
+                            </div>
+                        </div>
+                    </div>
+                </main>
 
-        )
+            );
+        }
     }
     else {
         return (

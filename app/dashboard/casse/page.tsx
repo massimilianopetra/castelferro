@@ -80,8 +80,14 @@ export default function Page() {
         console.log(`Aggiornamento n. foglietto: ${numero}`);
         const fetchData = async () => {
             setPhase('caricamento');
-            const c = await sendConsumazioni(products);
-            setPhase('caricato');
+            var totale = 0;
+
+            for (let i of products) {
+                totale += i.quantita * i.prezzo_unitario;
+            }
+            await sendConsumazioni(products);
+            await aggiornaConto(Number(numero), sagra.giornata, totale);
+            setPhase('aperto');
         };
         fetchData();
     };
@@ -122,6 +128,7 @@ export default function Page() {
             else
                 return (item);
         });
+        setPhase('modificato');
         setProducts(newProducts);
     };
 
@@ -137,6 +144,7 @@ export default function Page() {
             else
                 return (item);
         });
+        setPhase('modificato');
         setProducts(newProducts);
     };
 
@@ -222,11 +230,46 @@ export default function Page() {
                                 &nbsp;&nbsp;
                                 <Button variant="contained" onClick={handleAChiudi} disabled>Chiudi Conto</Button>
                                 &nbsp;&nbsp;
-                                <Button variant="contained" onClick={handleAggiorna}>Aggiorna Conto</Button>
+                                <Button variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
                             </div>
                         </div>
                     </>
                 );
+                case 'modificato':
+                    return (
+                        <>
+                            <div className="z-0 text-center">
+    
+                                <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
+                                    <p >
+                                        Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span>
+                                    </p>
+                                    <p >
+                                        Nome Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
+                                    </p>
+                                    <p >
+                                        Conto caricato per Consultazione/Modifiche numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
+                                    </p>
+                                </div>
+                                <div>
+                                    <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
+                                </div>
+                                <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
+                                    <p >
+                                        Conto caricato per Consultazione/Modifiche numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
+                                    </p>
+                                </div>
+                                &nbsp;
+                                <div className='text-center '>
+                                    <Button variant="contained" onClick={handleStampa} disabled>Stampa Conto</Button>
+                                    &nbsp;&nbsp;
+                                    <Button variant="contained" onClick={handleAChiudi} disabled>Chiudi Conto</Button>
+                                    &nbsp;&nbsp;
+                                    <Button variant="contained" onClick={handleAggiorna}>Aggiorna Conto</Button>
+                                </div>
+                            </div>
+                        </>
+                    );
             case 'stampato':
                 return (
                     <><div className="z-0 text-center">
@@ -256,7 +299,7 @@ export default function Page() {
                             &nbsp;&nbsp;
                             <Button variant="contained" onClick={handleAChiudi}>Chiudi Conto</Button>
                             &nbsp;&nbsp;
-                            <Button variant="contained" onClick={handleAggiorna} >Aggiorna Conto</Button>
+                            <Button variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
                         </div>
                     </div>
                     </>
