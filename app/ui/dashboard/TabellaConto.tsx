@@ -29,7 +29,7 @@ export default function TabellaConto({ item, onAdd, onRemove }: { item: DbConsum
             <TableContainer component={Paper}>
                 <Table  sx={{ minWidth: 150 }} size="small" aria-label="a dense table">
                     <TableHead>
-                        <TableRow className=" text-gray-800 rounded-lg bg-gray-50">
+                        <TableRow className=" text-gray-800 rounded-lg bg-gray-100">
                             <TableCell align="left"><p className="text-lg font-bold">Piatto</p></TableCell>
                             <TableCell className="text-lg font-bold" align="center"><p className="font-bold">Quantità</p></TableCell>
                             <TableCell className="text-lg font-bold" align="right"><p className="font-bold">Prezzo Totale</p></TableCell>

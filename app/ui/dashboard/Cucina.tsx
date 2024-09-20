@@ -7,11 +7,14 @@ import type { DbConsumazioni, DbFiera, DbConti } from '@/app/lib/definitions';
 import { getConsumazioni, sendConsumazioni, getGiornoSagra, getConto, apriConto, getCamerieri } from '@/app/lib/actions';
 import TabellaCucina from '@/app/ui/dashboard/TabellaCucina';
 import CircularProgress from '@mui/material/CircularProgress';
+import Filter1Icon from '@mui/icons-material/Filter1';
 
 
-export default function Cucina({nomeCucina}:{nomeCucina: string}) {
+
+export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
 
     const [phase, setPhase] = useState('iniziale');
+    const [lastConto, setLastConto] = useState<DbConti[]>([]);
     const [products, setProducts] = useState<DbConsumazioni[]>([]);
     const [numero, setNumero] = useState<number | string>('');
     const { data: session } = useSession();
@@ -47,12 +50,12 @@ export default function Cucina({nomeCucina}:{nomeCucina: string}) {
                 setConto(cc);
                 if (cc.stato == 'CHIUSO' || cc.stato == 'STAMPATO')
                     setPhase('bloccato')
-                else 
+                else
                     setPhase('caricato');
             } else {
                 const cameriere = await getCamerieri(num);
                 if (cameriere) {
-                    await apriConto(num,sagra.giornata,cameriere);
+                    await apriConto(num, sagra.giornata, cameriere);
                     const ccc = await getConto(num, sagra.giornata);
                     setConto(ccc);
                 }
@@ -108,7 +111,12 @@ export default function Cucina({nomeCucina}:{nomeCucina: string}) {
                 console.log('iniziale');
                 return (
                     <>
-                        <div className='text-center '>
+                        <div className='z-0 text-center'>
+                            <br></br>
+                            <br></br>
+                            <br></br>
+                            <br></br>
+                            <br></br>
                             <p className="text-5xl py-4">
                                 Caricare un numero foglietto!!
                             </p>
@@ -118,19 +126,27 @@ export default function Cucina({nomeCucina}:{nomeCucina: string}) {
             case 'caricamento':
                 return (
                     <>
-                        <div className='text-center '>
+                        <div className='z-0 text-center'>
+                            <br></br>
+                            <br></br>
+                            <br></br>
+                            <br></br>
+                            <br></br>
                             <p className="text-5xl py-4">
                                 Caricamento in corso ...
                             </p>
                             <CircularProgress />
                         </div>
+
                     </>
                 );
             case 'caricato':
                 return (
                     <>
-                        <div>
-                            <p> Cameriere: {conto?.cameriere}</p>
+                        <div className="z-0 text-center">
+                            <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
+                                <p> Cameriere:  <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span> </p>
+                            </div>
                             <TabellaCucina item={products} onAdd={handleAdd} onRemove={handleRemove} />
                         </div>
                     </>
@@ -178,38 +194,54 @@ export default function Cucina({nomeCucina}:{nomeCucina: string}) {
         else
             return (
                 <main>
-                    <div className="flex flex-wrap flex-col">
-                        <div className='text-center '>
-                            <p className="text-5xl font-bold py-4">
-                                {nomeCucina}
-                            </p>
-
-                        </div>
-                        <div className='text-center '>
-                            <TextField
-                                className="p-2"
-                                label="Numero Foglietto"
-                                variant="outlined"
-                                value={numero}
-                                onChange={handleInputChange}
-                                sx={{
-                                    input: {
-                                        textAlign: 'right', // Allinea il testo a destra
-                                    },
-                                }}
-                                type="number"
-                            />
-                            <p>&nbsp;</p>
-                            <Button variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
-                        </div>
-                        {renderPhaseContent()}
-                        &nbsp;
-                        <div className='text-center '>
-                            {phase == 'caricato' ?
-                                <Button variant="contained" onClick={handleButtonClickInvia}>Invia Comanda</Button> :
-                                <Button variant="contained" onClick={handleButtonClickInvia} disabled>Invia Comanda</Button>
-                            }
-                        </div>
+                    <div className="z-50 lg:fixed xl:fixed md:fixed p-1 mb-1 text-2xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
+                        <ul className="flex rounded-full">
+                            <li className="flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
+                                <a className="text-center block text-white font-extralight ">
+                                    {nomeCucina}
+                                </a>
+                            </li>
+                            <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4">
+                                <a>
+                                    <div className='text-center text-emerald-600'>
+                                        <TextField
+                                            className="p-2"
+                                            label="Numero Foglietto"
+                                            variant="outlined"
+                                            value={numero}
+                                            onChange={handleInputChange}
+                                            sx={{
+                                                input: {
+                                                    textAlign: 'right', // Allinea il testo a destra
+                                                },
+                                            }}
+                                            type="number"
+                                        />
+                                    </div>
+                                </a>
+                            </li>
+                            <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
+                                <Button className="rounded-full" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
+                            </li>
+                        </ul>
+                    </div>
+                    <div className="z-0 xl:text-2xl  xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
+                        <p>Ultimi conti ricercati e modificati: &nbsp;
+                            {lastConto.map((row) => (
+                                <>
+                                    <Button size="small" className="rounded-full" variant="contained" startIcon={<Filter1Icon />}>{row.id_comanda}</Button>
+                                    &nbsp;&nbsp;
+                                </>
+                            ))}
+                        </p>
+                    </div>
+                    {renderPhaseContent()}
+                    &nbsp;
+                    <div className='text-center '>
+                        {phase == 'caricato' ?
+                            <Button variant="contained" onClick={handleButtonClickInvia}>Invia Comanda</Button> :
+                            <Button variant="contained" onClick={handleButtonClickInvia} disabled>Invia Comanda</Button>
+                        }
                     </div>
                 </main>
 
