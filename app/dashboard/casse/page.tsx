@@ -423,7 +423,7 @@ export default function Page() {
                         </ul>
                     </div>
                     <div className="z-0 xl:text-2xl  xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
-                        <p>Ultimi conti aperti: &nbsp;
+                        <p>Ultimi conti ricercati e modificati: &nbsp;
                             {lastConto.map((row) => (
                                 <>
                                     <Button size="small" className="rounded-full" variant="contained" startIcon={<Filter1Icon />}>{row.id_comanda}</Button>
