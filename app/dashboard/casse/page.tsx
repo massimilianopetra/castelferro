@@ -3,15 +3,15 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react'
 import { Button, Tabs, TextField } from '@mui/material';
-import type { DbConsumazioniPrezzo, DbFiera, DbConti } from '@/app/lib/definitions';
-import { getConsumazioniCassa, sendConsumazioni, getGiornoSagra, getConto, getUltimiConti, chiudiConto, aggiornaConto, stampaConto } from '@/app/lib/actions';
+import type { DbConsumazioniPrezzo, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
+import { getConsumazioniCassa, sendConsumazioni, getConto, getUltimiConti, chiudiConto, aggiornaConto, stampaConto } from '@/app/lib/actions';
+import { writeLog, getGiornoSagra, getLastLog } from '@/app/lib/actions';
 import { deltanow } from '@/app/lib/utils'
 import TabellaConto from '@/app/ui/dashboard/TabellaConto';
 import TheBill from '@/app/ui/dashboard/thebill';
 import CircularProgress from '@mui/material/CircularProgress';
 import Filter1Icon from '@mui/icons-material/Filter1';
-import Filter1Icon2 from '@mui/icons-material/Filter2';
-import Filter1Icon3 from '@mui/icons-material/Filter3';
+
 
 export default function Page() {
 
@@ -21,7 +21,7 @@ export default function Page() {
     const [numero, setNumero] = useState<number | string>('');
     const [numeroFoglietto, setNumeroFoglietto] = useState<number | string>('');
     const [conto, setConto] = useState<DbConti>();
-    const [lastConto, setLastConto] = useState<DbConti[]>([]);
+    const [lastLog, setLastLog] = useState<DbLog[]>([]);
     const { data: session } = useSession();
     const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
 
@@ -30,9 +30,9 @@ export default function Page() {
             const gg = await getGiornoSagra();
             if (gg) {
                 setSagra(gg);
-                const cc = await getUltimiConti(gg.giornata);
+                const cc = await getLastLog(gg.giornata, 'Casse');
                 if (cc) {
-                    setLastConto(cc);
+                    setLastLog(cc);
                 }
             }
         };
@@ -53,8 +53,13 @@ export default function Page() {
         }
 
         const fetchData = async () => {
+
             const c = await getConsumazioniCassa(num, sagra.giornata);
             if (c) setProducts(c);
+
+            // Logger
+            writeLog(num,sagra.giornata,'Casse','','APRI','');
+            
             const cc = await getConto(num, sagra.giornata);
             setConto(cc);
             if (cc?.stato == 'APERTO') {
@@ -424,9 +429,9 @@ export default function Page() {
                     </div>
                     <div className="z-0 xl:text-2xl  xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
                         <p>Ultimi conti ricercati e modificati: &nbsp;
-                            {lastConto.map((row) => (
+                            {lastLog.map((row) => (
                                 <>
-                                    <Button size="small" className="rounded-full" variant="contained" startIcon={<Filter1Icon />}>{row.id_comanda}</Button>
+                                    <Button size="small" className="rounded-full" variant="contained" startIcon={<Filter1Icon />}>{row.foglietto}</Button>
                                     &nbsp;&nbsp;
                                 </>
                             ))}

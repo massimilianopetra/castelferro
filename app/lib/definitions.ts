@@ -64,3 +64,14 @@ export type DbFiera =   {
   giornata: number;
   stato: string;
 };
+
+export type DbLog =   {
+  id: number;
+  foglietto: number;
+  azione: string;
+  note: string;
+  cucina: string;
+  utente: string;
+  giornata: number;
+  data: number;
+};

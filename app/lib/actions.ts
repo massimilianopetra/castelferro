@@ -2,7 +2,7 @@
 
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
-import type { DbMenu, DbConsumazioniPrezzo, DbConsumazioni, DbFiera, DbConti, DbCamerieri } from '@/app/lib/definitions';
+import type { DbMenu, DbConsumazioniPrezzo, DbConsumazioni, DbFiera, DbConti, DbCamerieri, DbLog } from '@/app/lib/definitions';
 import { sql } from '@vercel/postgres';
 import { date } from 'zod';
 
@@ -141,8 +141,6 @@ export async function getUltimiConti(giorno: number): Promise<DbConti[] | undefi
     console.error('Failed to fetch conto:', error);
     throw new Error('Failed to fetch conto.');
   }
-
-  return undefined;
 }
 
 export async function getCamerieri(foglietto: number): Promise<string | undefined> {
@@ -289,5 +287,26 @@ export async function getGiornoSagra(): Promise<DbFiera | undefined> {
   } catch (error) {
     console.error('Failed to fetch fiera:', error);
     throw new Error('Failed to fetch fiera.');
+  }
+}
+
+export async function writeLog(foglietto: number, giorno: number, cucina: string, utente: string, azione: string, note: string) {
+
+  const date_format_millis = Date.now();
+
+    console.log(`Logging ${foglietto} giorno n. ${giorno}`);
+    await sql`INSERT INTO logger (foglietto, azione, note, cucina, utente, giornata, data)
+    VALUES (${foglietto},${azione},${note},${cucina},${utente},${giorno},${date_format_millis})
+    `;
+}
+
+export async function getLastLog(giorno: number, cucina: string): Promise<DbLog[] | undefined> {
+  console.log("getConto");
+  try {
+    const c = await sql<DbLog>`SELECT * FROM logger  WHERE giornata = ${giorno} AND cucina = ${cucina} ORDER BY data DESC LIMIT 3`;
+    return c.rows;
+  } catch (error) {
+    console.error('Failed to fetch logger:', error);
+    throw new Error('Failed to fetch logger.');
   }
 }

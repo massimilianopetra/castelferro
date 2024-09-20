@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
 import { Button, TextField } from '@mui/material';
-import type { DbConsumazioni, DbFiera, DbConti } from '@/app/lib/definitions';
-import { getConsumazioni, sendConsumazioni, getGiornoSagra, getConto, apriConto, getCamerieri } from '@/app/lib/actions';
+import type { DbConsumazioni, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
+import { getConsumazioni, sendConsumazioni, getConto, apriConto, getCamerieri } from '@/app/lib/actions';
+import { writeLog, getGiornoSagra, getLastLog } from '@/app/lib/actions';
 import TabellaCucina from '@/app/ui/dashboard/TabellaCucina';
 import CircularProgress from '@mui/material/CircularProgress';
 import Filter1Icon from '@mui/icons-material/Filter1';
@@ -14,7 +15,7 @@ import Filter1Icon from '@mui/icons-material/Filter1';
 export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
 
     const [phase, setPhase] = useState('iniziale');
-    const [lastConto, setLastConto] = useState<DbConti[]>([]);
+    const [lastLog, setLastLog] = useState<DbLog[]>([]);
     const [products, setProducts] = useState<DbConsumazioni[]>([]);
     const [numero, setNumero] = useState<number | string>('');
     const { data: session } = useSession();
@@ -24,7 +25,13 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     useEffect(() => {
         const fetchData = async () => {
             const gg = await getGiornoSagra();
-            if (gg) getSagra(gg);
+            if (gg) {
+                getSagra(gg);
+                const cc = await getLastLog(gg.giornata, nomeCucina);
+                if (cc) {
+                    setLastLog(cc);
+                }
+            }
         };
 
         fetchData();
@@ -45,6 +52,10 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
         const fetchData = async () => {
             const c = await getConsumazioni(nomeCucina, num, sagra.giornata);
             if (c) setProducts(c);
+
+            // Logger
+            writeLog(num, sagra.giornata, nomeCucina, '', 'APRI', '');
+
             const cc = await getConto(num, sagra.giornata);
             if (cc) {
                 setConto(cc);
@@ -227,9 +238,9 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                     </div>
                     <div className="z-0 xl:text-2xl  xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
                         <p>Ultimi conti ricercati e modificati: &nbsp;
-                            {lastConto.map((row) => (
+                            {lastLog.map((row) => (
                                 <>
-                                    <Button size="small" className="rounded-full" variant="contained" startIcon={<Filter1Icon />}>{row.id_comanda}</Button>
+                                    <Button size="small" className="rounded-full" variant="contained" startIcon={<Filter1Icon />}>{row.foglietto}</Button>
                                     &nbsp;&nbsp;
                                 </>
                             ))}
@@ -239,8 +250,8 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                     &nbsp;
                     <div className='text-center '>
                         {phase == 'caricato' ?
-                            <Button variant="contained" onClick={handleButtonClickInvia}>Invia Comanda</Button> :
-                            <Button variant="contained" onClick={handleButtonClickInvia} disabled>Invia Comanda</Button>
+                            <Button variant="contained" onClick={handleButtonClickInvia}>Invia</Button> :
+                            <Button variant="contained" onClick={handleButtonClickInvia} disabled>Invia </Button>
                         }
                     </div>
                 </main>

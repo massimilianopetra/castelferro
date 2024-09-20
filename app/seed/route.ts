@@ -98,6 +98,8 @@ async function seedCamerieri() {
     }),
   );
 
+  console.log(`CREATED TABLE camerieri`);
+
   return inserted;
 }
 
@@ -137,6 +139,23 @@ async function seedFiera() {
   console.log(`CREATED TABLE fiera`);
 }
 
+async function seedLog() {
+  await client.sql`
+    CREATE TABLE IF NOT EXISTS logger (
+       id SERIAL PRIMARY KEY,
+       foglietto INTEGER,
+       azione VARCHAR(32),
+       note VARCHAR(128),
+       cucina VARCHAR(32),
+       utente VARCHAR(128),
+       giornata INTEGER,
+       data BIGINT
+     );
+   `;
+
+   console.log(`CREATED TABLE logger`);
+}
+
 
 export async function GET() {
 
@@ -148,6 +167,7 @@ export async function GET() {
     await seedFiera();
     await seedConti();
     await seedCamerieri();
+    await seedLog();
     await client.sql`COMMIT`;
 
     return Response.json({ message: 'Database seeded successfully' });
