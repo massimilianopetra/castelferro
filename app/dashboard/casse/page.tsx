@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react'
 import { Button, Tabs, TextField } from '@mui/material';
 import type { DbConsumazioniPrezzo, DbFiera, DbConti } from '@/app/lib/definitions';
 import { getConsumazioniCassa, sendConsumazioni, getGiornoSagra, getConto, getUltimiConti, chiudiConto, aggiornaConto, stampaConto } from '@/app/lib/actions';
 import { deltanow } from '@/app/lib/utils'
 import TabellaConto from '@/app/ui/dashboard/TabellaConto';
+import TheBill from '@/app/ui/dashboard/thebill';
 import CircularProgress from '@mui/material/CircularProgress';
 import Filter1Icon from '@mui/icons-material/Filter1';
 import Filter1Icon2 from '@mui/icons-material/Filter2';
@@ -14,6 +15,7 @@ import Filter1Icon3 from '@mui/icons-material/Filter3';
 
 export default function Page() {
 
+    const printRef = useRef<HTMLDivElement | null>(null);
     const [phase, setPhase] = useState('iniziale');
     const [products, setProducts] = useState<DbConsumazioniPrezzo[]>([]);
     const [numero, setNumero] = useState<number | string>('');
@@ -107,6 +109,29 @@ export default function Page() {
             setPhase('stampato');
         };
         fetchData();
+        print();
+    };
+
+    const print = () => {
+        const printArea = printRef.current;
+
+        if (!printArea) return; // Se il riferimento non esiste, interrompe l'esecuzione.
+
+        const newWindow = window.open("", "", "width=600,height=400");
+
+        // Verifica se newWindow non è null prima di proseguire
+        if (newWindow) {
+            newWindow.document.write('<html><head><title>Stampa Documento</title>');
+            newWindow.document.write('</head><body >');
+            newWindow.document.write(printArea.innerHTML);
+            newWindow.document.write('</body></html>');
+            newWindow.document.close();
+            newWindow.focus();
+            newWindow.print();
+            newWindow.close();
+        } else {
+            console.error("Impossibile aprire la finestra di stampa.");
+        }
     };
 
     const handleAChiudi = async () => {
@@ -233,75 +258,87 @@ export default function Page() {
                                 <Button variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
                             </div>
                         </div>
+
+                        {/* Sezione che verrà stampata */}
+                        <div ref={printRef} className="hidden">
+                            <TheBill item={products} />
+                        </div>
+
                     </>
                 );
-                case 'modificato':
-                    return (
-                        <>
-                            <div className="z-0 text-center">
-    
-                                <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
-                                    <p >
-                                        Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span>
-                                    </p>
-                                    <p >
-                                        Nome Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
-                                    </p>
-                                    <p >
-                                        Conto caricato per Consultazione/Modifiche numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
-                                    </p>
-                                </div>
-                                <div>
-                                    <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
-                                </div>
-                                <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
-                                    <p >
-                                        Conto caricato per Consultazione/Modifiche numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
-                                    </p>
-                                </div>
-                                &nbsp;
-                                <div className='text-center '>
-                                    <Button variant="contained" onClick={handleStampa} disabled>Stampa Conto</Button>
-                                    &nbsp;&nbsp;
-                                    <Button variant="contained" onClick={handleAChiudi} disabled>Chiudi Conto</Button>
-                                    &nbsp;&nbsp;
-                                    <Button variant="contained" onClick={handleAggiorna}>Aggiorna Conto</Button>
-                                </div>
+            case 'modificato':
+                return (
+                    <>
+                        <div className="z-0 text-center">
+
+                            <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
+                                <p >
+                                    Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span>
+                                </p>
+                                <p >
+                                    Nome Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
+                                </p>
+                                <p >
+                                    Conto caricato per Consultazione/Modifiche numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
+                                </p>
                             </div>
-                        </>
-                    );
+                            <div>
+                                <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
+                            </div>
+                            <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
+                                <p >
+                                    Conto caricato per Consultazione/Modifiche numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
+                                </p>
+                            </div>
+                            &nbsp;
+                            <div className='text-center '>
+                                <Button variant="contained" onClick={handleStampa} disabled>Stampa Conto</Button>
+                                &nbsp;&nbsp;
+                                <Button variant="contained" onClick={handleAChiudi} disabled>Chiudi Conto</Button>
+                                &nbsp;&nbsp;
+                                <Button variant="contained" onClick={handleAggiorna}>Aggiorna Conto</Button>
+                            </div>
+                        </div>
+                    </>
+                );
             case 'stampato':
                 return (
-                    <><div className="z-0 text-center">
-                        <br></br>
-                        <br></br>
-                        <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
-                            <p >
-                                Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span>
-                            </p>
-                            <p >
-                                Nome Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
-                            </p>
-                            <p >
-                                Conto stampato numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
-                            </p>
-                        </div>
-                        <div>
-                            <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
-                        </div>
-                        <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
-                            <p >
-                                Conto stampato numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
-                            </p>
-                        </div>
+                    <>
                         <div className="z-0 text-center">
-                            <Button variant="contained" onClick={handleStampa} >Stampa Conto</Button>
-                            &nbsp;&nbsp;
-                            <Button variant="contained" onClick={handleAChiudi}>Chiudi Conto</Button>
-                            &nbsp;&nbsp;
-                            <Button variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
+                            <br></br>
+                            <br></br>
+                            <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
+                                <p >
+                                    Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span>
+                                </p>
+                                <p >
+                                    Nome Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
+                                </p>
+                                <p >
+                                    Conto stampato numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
+                                </p>
+                            </div>
+                            <div>
+                                <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
+                            </div>
+                            <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
+                                <p >
+                                    Conto stampato numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
+                                </p>
+                            </div>
+                            <div className="z-0 text-center">
+                                <Button variant="contained" onClick={handleStampa} >Stampa Conto</Button>
+                                &nbsp;&nbsp;
+                                <Button variant="contained" onClick={handleAChiudi}>Chiudi Conto</Button>
+                                &nbsp;&nbsp;
+                                <Button variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
+                            </div>
                         </div>
-                    </div>
+
+                        {/* Sezione che verrà stampata */}
+                        <div ref={printRef} className="hidden">
+                            <TheBill item={products} />
+                        </div>
                     </>
                 );
             case 'chiuso':
