@@ -166,14 +166,14 @@ export async function updateCamerieri(c: DbCamerieri[]) {
   console.log('updateCamerieri');
 
   c.map(async (item) => {
-      return await sql`
+    return await sql`
          UPDATE camerieri
          SET nome = ${item.nome},
              foglietto_start = ${item.foglietto_start},
              foglietto_end = ${item.foglietto_end}
          WHERE id = ${item.id};
       `;
-    });
+  });
 }
 
 export async function getListaCamerieri(): Promise<DbCamerieri[] | undefined> {
@@ -309,8 +309,8 @@ export async function writeLog(foglietto: number, giorno: number, cucina: string
 
   const date_format_millis = Date.now();
 
-    console.log(`Logging ${foglietto} giorno n. ${giorno}`);
-    await sql`INSERT INTO logger (foglietto, azione, note, cucina, utente, giornata, data)
+  console.log(`Logging ${foglietto} giorno n. ${giorno}`);
+  await sql`INSERT INTO logger (foglietto, azione, note, cucina, utente, giornata, data)
     VALUES (${foglietto},${azione},${note},${cucina},${utente},${giorno},${date_format_millis})
     `;
 }
@@ -318,7 +318,17 @@ export async function writeLog(foglietto: number, giorno: number, cucina: string
 export async function getLastLog(giorno: number, cucina: string): Promise<DbLog[] | undefined> {
   console.log("getConto");
   try {
-    const c = await sql<DbLog>`SELECT * FROM logger  WHERE giornata = ${giorno} AND cucina = ${cucina} ORDER BY data DESC LIMIT 3`;
+    const c = await sql<DbLog>`WITH ranked_data AS (
+    SELECT *,
+           ROW_NUMBER() OVER (PARTITION BY foglietto ORDER BY data DESC) AS rn
+    FROM logger
+    WHERE cucina = ${cucina} AND giornata = ${giorno}
+    )
+    SELECT *
+    FROM ranked_data
+    WHERE rn = 1
+    ORDER BY data DESC
+    LIMIT 3;`;
     return c.rows;
   } catch (error) {
     console.error('Failed to fetch logger:', error);
