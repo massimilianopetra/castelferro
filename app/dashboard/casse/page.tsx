@@ -6,7 +6,7 @@ import { Button, Tabs, TextField } from '@mui/material';
 import type { DbConsumazioniPrezzo, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
 import { getConsumazioniCassa, sendConsumazioni, getConto, getUltimiConti, chiudiConto, aggiornaConto, stampaConto } from '@/app/lib/actions';
 import { writeLog, getGiornoSagra, getLastLog } from '@/app/lib/actions';
-import { deltanow } from '@/app/lib/utils'
+import { deltanow, milltodatestring } from '@/app/lib/utils'
 import TabellaConto from '@/app/ui/dashboard/TabellaConto';
 import TheBill from '@/app/ui/dashboard/thebill';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -349,19 +349,22 @@ export default function Page() {
             case 'chiuso':
                 return (
                     <>
+                    <main>
                         <br></br>
                         <br></br>
                         <br></br>
                         <br></br>
                         <br></br>
                         <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50  text-center" role="alert">
-                            <span className="text-xl font-semibold">Dark alert!</span> Conto chiuso alle: {conto?.data_chiusura} totale: {conto?.totale}.
+                            <span className="text-xl font-semibold">Dark alert!</span> Conto {conto?.id_comanda} chiuso in data: {milltodatestring(conto?.data_chiusura)} totale: {conto?.totale} Euro.
                         </div>
+                    </main>
                     </>
                 );
             case 'none':
                 return (
                     <>
+                    <main>
                         <br></br>
                         <br></br>
                         <br></br>
@@ -370,6 +373,7 @@ export default function Page() {
                         <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50  text-center" role="alert">
                             <span className="text-xl font-semibold">Dark alert!</span> Conto non esistente.
                         </div>
+                    </main>
                     </>
                 );
 

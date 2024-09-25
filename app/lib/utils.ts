@@ -6,9 +6,20 @@ export function today(): string {
     return (date_format_str);
 }
 
-export function deltatime(dtmillis: number | undefined): string {
+export function milltodatestring(dtmillis: number | undefined): string {
+    if (dtmillis){
+        const birthday = new Date(dtmillis);
+        return  "zz"+birthday.toLocaleString("en-GB")+"zz";
+    }
+    return "--:--:--";
 
-    if (dtmillis) {
+    
+}
+export function deltatime(dtmillistart: number | undefined, dtmilliend: number | undefined): string {
+
+    if (dtmillistart && dtmilliend) {
+
+        const dtmillis = dtmilliend - dtmillistart;
 
         const ss = Math.trunc(dtmillis / 1000) % 60;
         const mm = Math.trunc(dtmillis / 60000) % 60;
@@ -19,7 +30,7 @@ export function deltatime(dtmillis: number | undefined): string {
         date_format_str += ":" + (ss.toString().length < 2 ? "0" + ss.toString() : ss.toString());
 
         if (hh>24) {
-            return " oltre un giorno";
+            return " troppo! ";
         }
         {
             return (date_format_str);
