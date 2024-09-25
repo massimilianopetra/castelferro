@@ -9,6 +9,7 @@ import { writeLog, getGiornoSagra, getLastLog } from '@/app/lib/actions';
 import TabellaCucina from '@/app/ui/dashboard/TabellaCucina';
 import CircularProgress from '@mui/material/CircularProgress';
 import Filter1Icon from '@mui/icons-material/Filter1';
+import { deltanow } from '@/app/lib/utils';
 
 
 
@@ -21,6 +22,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     const { data: session } = useSession();
     const [sagra, getSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
     const [conto, setConto] = useState<DbConti>();
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -57,6 +59,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
             writeLog(num, sagra.giornata, nomeCucina, '', 'APRI', '');
 
             const cc = await getConto(num, sagra.giornata);
+            setNumero(num);
             if (cc) {
                 setConto(cc);
                 if (cc.stato == 'CHIUSO' || cc.stato == 'STAMPATO')
@@ -155,10 +158,23 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                 return (
                     <>
                         <div className="z-0 text-center">
-                            <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
-                                <p> Cameriere:  <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span> </p>
+                        <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
+                                <p >
+                                    Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span>
+                                </p>
+                                <p >
+                                    Nome Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
+                                </p>
+                                <p >
+                                    Conto caricato per Consultazione/Modifiche: <span className="font-extrabold text-blue-800">{numero}&nbsp;&nbsp;&nbsp;</span>
+                                </p>
                             </div>
                             <TabellaCucina item={products} onAdd={handleAdd} onRemove={handleRemove} />
+                            <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
+                                <p >
+                                    Conto caricato per Consultazione/Modifiche: <span className="font-extrabold text-blue-800">{numero}&nbsp;&nbsp;&nbsp;</span>
+                                </p>
+                            </div>
                         </div>
                     </>
                 );
@@ -237,7 +253,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                         </ul>
                     </div>
                     <div className="z-0 xl:text-2xl  xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
-                        <p>Ultimi conti ricercati e modificati: &nbsp;
+                        <p>Ultimi ricercati e modificati: &nbsp;
                             {lastLog.map((row) => (
                                 <>
                                     <Button size="small" className="rounded-full" variant="contained" startIcon={<Filter1Icon />}>{row.foglietto}</Button>
