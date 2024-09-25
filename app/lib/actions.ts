@@ -5,6 +5,7 @@ import { AuthError } from 'next-auth';
 import type { DbMenu, DbConsumazioniPrezzo, DbConsumazioni, DbFiera, DbConti, DbCamerieri, DbLog } from '@/app/lib/definitions';
 import { sql } from '@vercel/postgres';
 import { date } from 'zod';
+import exp from 'constants';
 
 
 export async function authenticate(
@@ -180,7 +181,7 @@ export async function getListaCamerieri(): Promise<DbCamerieri[] | undefined> {
     console.log(`Get Lista Camerieri`);
 
 
-    const c = await sql<DbCamerieri>`SELECT * FROM camerieri`;
+    const c = await sql<DbCamerieri>`SELECT * FROM camerieri ORDER BY foglietto_start`;
     if (c)
       return (c.rows)
   } catch (error) {
@@ -188,6 +189,20 @@ export async function getListaCamerieri(): Promise<DbCamerieri[] | undefined> {
   }
 
   return (undefined);
+}
+
+export async function addCamerieri(nome: string, foglietto_start: number, foglietto_end: number) {
+  console.log("Add camerieri")
+  return await sql`INSERT INTO camerieri (nome,foglietto_start,foglietto_end)
+  VALUES (${nome},${foglietto_start},${foglietto_end})
+  ON CONFLICT (id) DO NOTHING;
+  `;
+}
+
+export async function delCamerieri(id: number) {
+  console.log(`Del camerieri ${id}`);
+  await sql`DELETE FROM camerieri
+  WHERE id=${id};`
 }
 
 export async function apriConto(foglietto: number, giorno: number, cameriere: string) {

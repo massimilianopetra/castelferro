@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react'
-import { getListaCamerieri, updateCamerieri } from '@/app/lib/actions';
+import { getListaCamerieri, updateCamerieri, addCamerieri, delCamerieri } from '@/app/lib/actions';
 import type { DbCamerieri } from '@/app/lib/definitions';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -11,7 +11,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import { Button, TextField } from '@mui/material';
+import { Button, TextField, Checkbox } from '@mui/material';
 import CircularProgress from '@mui/material/CircularProgress';
 
 export default function Cucina() {
@@ -22,6 +22,7 @@ export default function Cucina() {
         foglietto_start: HTMLInputElement | null;
         foglietto_end: HTMLInputElement | null;
     }[]>([]);
+    const [selected, setSelected] = useState<number[]>([]);
     const [camerieri, setCamerieri] = useState<DbCamerieri[]>([]);
     const [phase, setPhase] = useState('caricato');
     const { data: session } = useSession();
@@ -46,6 +47,15 @@ export default function Cucina() {
         textFieldRefs.current[index][field] = el;
     };
 
+    // Funzione per gestire la selezione dei checkbox
+    const handleSelect = (id: number) => {
+        setSelected(prevSelected =>
+            prevSelected.includes(id)
+                ? prevSelected.filter(recordId => recordId !== id)
+                : [...prevSelected, id]
+        );
+    };
+
     // Funzione per raccogliere e inviare i dati aggiornati al DB
     const handleButtonClick = async () => {
         setPhase('caricamento');
@@ -62,6 +72,33 @@ export default function Cucina() {
         setCamerieri(updatedData);
         setPhase('caricato');
         console.log('Dati aggiornati:', updatedData);
+
+    };
+
+    // Funzione per eliminare i crecord camerieri
+    const handleButtonElimina = async () => {
+        setPhase('caricamento');
+        selected.forEach(async (id) => {
+            console.log(id);
+            await delCamerieri(id);
+        });
+        const c = await getListaCamerieri();
+        if (c) {
+            setCamerieri(c);
+        }
+        setPhase('caricato');
+    };
+
+    // Funzione per eliminare i crecord camerieri
+    const handleButtonAggiungi = async () => {
+        setPhase('caricamento');
+        var maxfoglietto = Math.max(...camerieri.map((row) => {return(row.foglietto_end)}),99);
+        await addCamerieri('NuovoCameriere',maxfoglietto+1,maxfoglietto+25);
+        const c = await getListaCamerieri();
+        if (c) {
+            setCamerieri(c);
+        }
+        setPhase('caricato');
 
     };
 
@@ -98,6 +135,7 @@ export default function Cucina() {
                                 <Table sx={{ minWidth: 500 }} aria-label="simple table">
                                     <TableHead>
                                         <TableRow>
+                                            <TableCell align="left"><p className='font-bold'>N.</p></TableCell>
                                             <TableCell align="left"><p className='font-bold'>Nome</p></TableCell>
                                             <TableCell align="left"><p className='font-bold'>Primo Foglietto</p></TableCell>
                                             <TableCell align="left"><p className='font-bold'>Ultimo Foglietto</p></TableCell>
@@ -106,6 +144,13 @@ export default function Cucina() {
                                     <TableBody>
                                         {camerieri.map((row, i) => (
                                             <TableRow>
+                                                <TableCell>
+                                                    {i + 1}
+                                                    <Checkbox
+                                                        checked={selected.includes(row.id)}
+                                                        onClick={() => handleSelect(row.id)}
+                                                    />
+                                                </TableCell>
                                                 <TableCell align="left">
                                                     <TextField
                                                         className="p-2"
@@ -153,7 +198,11 @@ export default function Cucina() {
                                 </Table>
                             </TableContainer>
                             <div className='p-6'>
+                                <Button className="rounded-full" variant="contained" onClick={handleButtonAggiungi}>Aggiungi Nuovo Cameriere</Button>
+                                &nbsp;&nbsp;&nbsp;
                                 <Button className="rounded-full" variant="contained" onClick={handleButtonClick}>Aggiorna Lista Camerieri</Button>
+                                &nbsp;&nbsp;&nbsp;
+                                <Button className="rounded-full" variant="contained" onClick={handleButtonElimina}>Elimina Camerieri Selezionati</Button>
                             </div>
                         </div>
                     </div>
