@@ -7,9 +7,9 @@ export function today(): string {
 }
 
 export function milltodatestring(dtmillis: number | undefined): string {
+    console.log(dtmillis);
     if (dtmillis){
-        const birthday = new Date(dtmillis);
-        return  "zz"+birthday.toLocaleString("en-GB")+"zz";
+        return  new Date(+dtmillis).toLocaleString();
     }
     return "--:--:--";
 

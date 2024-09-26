@@ -58,7 +58,7 @@ export default function Page() {
             const cc = await getConto(num, sagra.giornata);
             setConto(cc);
             if (cc?.stato == 'APERTO') {
-                setNumeroFoglietto(numero);
+                setNumeroFoglietto(num.toString());
                 await writeLog(num, sagra.giornata, 'Casse', '', 'APRI', ''); // Logger
                 const cc = await getLastLog(sagra.giornata, 'Casse');
                 if (cc) {
@@ -66,7 +66,7 @@ export default function Page() {
                 }
                 setPhase('aperto');
             } else if (cc?.stato == 'STAMPATO') {
-                setNumeroFoglietto(numero);
+                setNumeroFoglietto(num.toString());
                 await writeLog(num, sagra.giornata, 'Casse', '', 'APRI', ''); // Logger
                 const cc = await getLastLog(sagra.giornata, 'Casse');
                 if (cc) {
@@ -76,7 +76,7 @@ export default function Page() {
             } else if (cc?.stato == 'CHIUSO') {
                 setPhase('chiuso');
             } else {
-                setNumeroFoglietto(numero);
+                setNumeroFoglietto(num.toString());
                 setPhase('none');
             }
         };
