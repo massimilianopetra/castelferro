@@ -205,6 +205,12 @@ export async function delCamerieri(id: number) {
   WHERE id=${id};`
 }
 
+export async function listConti(stato: string, giornata: number) :  Promise<DbConti[] | undefined>{
+  const current = await sql<DbConti>`SELECT * FROM conti  WHERE stato = ${stato} AND giorno = ${giornata} AND id_comanda > 10 ORDER BY data_apertura`;
+
+  return current.rows;
+}
+
 export async function apriConto(foglietto: number, giorno: number, cameriere: string) {
 
   const date_format_millis = Date.now();
