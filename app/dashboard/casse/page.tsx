@@ -44,9 +44,7 @@ export default function Page() {
         setNumero(event.target.value);
     };
 
-    const handleButtonClickCarica = async () => {
-        const num = Number(numero);
-
+    async function carica(num: number) {
         if (isNaN(num) || num < 1 || num > 9999) {
             alert('Inserisci un numero foglietto valido');
             return;
@@ -57,16 +55,23 @@ export default function Page() {
             const c = await getConsumazioniCassa(num, sagra.giornata);
             if (c) setProducts(c);
 
-            // Logger
-            writeLog(num,sagra.giornata,'Casse','','APRI','');
-            
             const cc = await getConto(num, sagra.giornata);
             setConto(cc);
             if (cc?.stato == 'APERTO') {
                 setNumeroFoglietto(numero);
+                await writeLog(num, sagra.giornata, 'Casse', '', 'APRI', ''); // Logger
+                const cc = await getLastLog(sagra.giornata, 'Casse');
+                if (cc) {
+                    setLastLog(cc);
+                }
                 setPhase('aperto');
             } else if (cc?.stato == 'STAMPATO') {
                 setNumeroFoglietto(numero);
+                await writeLog(num, sagra.giornata, 'Casse', '', 'APRI', ''); // Logger
+                const cc = await getLastLog(sagra.giornata, 'Casse');
+                if (cc) {
+                    setLastLog(cc);
+                }
                 setPhase('stampato');
             } else if (cc?.stato == 'CHIUSO') {
                 setPhase('chiuso');
@@ -76,10 +81,19 @@ export default function Page() {
             }
         };
 
+        const cc = await getLastLog(sagra.giornata, 'Casse');
+        if (cc) {
+            setLastLog(cc);
+        }
         setPhase('caricamento');
         fetchData();
 
         console.log(`Numero foglietto: ${numero}`);
+
+    }
+    const handleButtonClickCarica = () => {
+        const num = Number(numero);
+        carica(num);
     };
 
     const handleAggiorna = async () => {
@@ -407,12 +421,12 @@ export default function Page() {
                                 <a>
                                     <div className='text-center text-emerald-600'>
                                         <TextField
-                                            autoFocus 
+                                            autoFocus
                                             className="p-2"
                                             label="Numero Foglietto"
                                             variant="outlined"
                                             value={numero}
-                                            onChange={handleInputChange}                                            
+                                            onChange={handleInputChange}
                                             sx={{
                                                 input: {
                                                     textAlign: 'right', // Allinea il testo a destra
@@ -432,7 +446,7 @@ export default function Page() {
                         <p>Ultimi conti ricercati e modificati: &nbsp;
                             {lastLog.map((row) => (
                                 <>
-                                    <Button size="small" className="rounded-full" variant="contained" startIcon={<Filter1Icon />}>{row.foglietto}</Button>
+                                    <Button size="small" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
                                     &nbsp;&nbsp;
                                 </>
                             ))}

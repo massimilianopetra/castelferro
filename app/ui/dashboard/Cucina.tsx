@@ -43,9 +43,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
         setNumero(event.target.value);
     };
 
-    const handleButtonClickCarica = async () => {
-        const num = Number(numero);
-
+    async function carica(num: number) {
         if (isNaN(num) || num < 1) {
             alert('Inserisci un numero foglietto valido');
             return;
@@ -55,21 +53,31 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
             const c = await getConsumazioni(nomeCucina, num, sagra.giornata);
             if (c) setProducts(c);
 
-            // Logger
-            writeLog(num, sagra.giornata, nomeCucina, '', 'APRI', '');
-
             const cc = await getConto(num, sagra.giornata);
             setNumero(num);
             if (cc) {
                 setConto(cc);
-                if (cc.stato == 'CHIUSO' || cc.stato == 'STAMPATO')
+                if (cc.stato == 'CHIUSO' || cc.stato == 'STAMPATO') {
                     setPhase('bloccato')
-                else
+                }
+                else {
+                    await writeLog(num, sagra.giornata, nomeCucina, '', 'APRI', ''); // Logger
+                    const cc = await getLastLog(sagra.giornata, nomeCucina);
+                    if (cc) {
+                        setLastLog(cc);
+                    }
                     setPhase('caricato');
+                }
+
             } else {
                 const cameriere = await getCamerieri(num);
                 if (cameriere) {
                     await apriConto(num, sagra.giornata, cameriere);
+                    await writeLog(num, sagra.giornata, nomeCucina, '', 'APRI', ''); // Logger
+                    const cc = await getLastLog(sagra.giornata, nomeCucina);
+                    if (cc) {
+                        setLastLog(cc);
+                    }
                     const ccc = await getConto(num, sagra.giornata);
                     setConto(ccc);
                 }
@@ -78,10 +86,19 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
 
         };
 
+        const cc = await getLastLog(sagra.giornata, nomeCucina);
+        if (cc) {
+            setLastLog(cc);
+        }
         setPhase('caricamento');
         fetchData();
 
         console.log(`Numero foglietto: ${numero}`);
+    }
+
+    const handleButtonClickCarica = () => {
+        const num = Number(numero);
+        carica(num);
     };
 
     const handleButtonClickInvia = async () => {
@@ -158,7 +175,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                 return (
                     <>
                         <div className="z-0 text-center">
-                        <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
+                            <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
                                 <p >
                                     Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
@@ -256,7 +273,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                         <p>Ultimi ricercati e modificati: &nbsp;
                             {lastLog.map((row) => (
                                 <>
-                                    <Button size="small" className="rounded-full" variant="contained" startIcon={<Filter1Icon />}>{row.foglietto}</Button>
+                                    <Button size="small" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
                                     &nbsp;&nbsp;
                                 </>
                             ))}
