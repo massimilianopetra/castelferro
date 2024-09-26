@@ -15,6 +15,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
+import { BLOCKED_PAGES } from 'next/dist/shared/lib/constants';
 
 export default function Page() {
 
@@ -46,24 +47,25 @@ export default function Page() {
       function createData(
         giornata: string,
         incasso: number,
+        incassopos: number,
         conti: number,
         coperti: number,
         spesamediaperconti: number,
         spesamediacoperto: number,
         mediacopertiperconto: number,
       ) {
-        return { giornata, incasso, conti, coperti, spesamediaperconti, spesamediacoperto, mediacopertiperconto};
+        return { giornata, incasso, incassopos, conti, coperti, spesamediaperconti, spesamediacoperto, mediacopertiperconto};
       }
 
       const rows = [
-        createData('Giovedi - 1gg', 12000, 202, 1223, 45.5, 30.3, 3),
-        createData('Venerdì - 2gg', 12000, 202, 1223, 45.5, 30.3, 3),
-        createData('Sabato  - 3gg', 22000, 202, 1223, 45.5, 30.3, 3),
-        createData('Domenica - 4gg', 12000, 202, 1223, 45.5, 30.3, 3),
-        createData('Lunedì - 5gg', 12000, 202, 1223, 45.5, 30.3, 3),
-        createData('Martedì - 6gg', 12000, 202, 1223, 45.5, 30.3, 3),
-        createData('Mercoledì - 7gg', 12000, 202, 1223, 45.5, 30.3, 3),
-        createData('Giovedì - 8gg', 12000, 202, 1223, 45.5, 30.3, 3),
+        createData('Giovedi - 1gg', 12000, 3000, 202, 1223, 45.5, 30.3, 3),
+        createData('Venerdì - 2gg', 12000, 3000, 202, 1223, 45.5, 30.3, 3),
+        createData('Sabato  - 3gg', 212000, 3000, 202, 1223, 45.5, 30.3, 3),
+        createData('Domenica - 4gg', 12000, 3000, 202, 1223, 45.5, 30.3, 3),
+        createData('Lunedì - 5gg', 12000, 3000, 202, 1223, 45.5, 30.3, 3),
+        createData('Martedì - 6gg', 12000, 3000, 202, 1223, 45.5, 30.3, 3),
+        createData('Mercoledì - 7gg',12000, 3000, 202, 1223, 45.5, 30.3, 3),
+        createData('Giovedì - 8gg', 12000, 3000, 202, 1223, 45.5, 30.3, 3),
 
         
       ];
@@ -124,9 +126,9 @@ export default function Page() {
             <StyledTableCell align="right" className="font-bold ">Incasso&nbsp;</StyledTableCell>
             <StyledTableCell align="right" className="font-bold ">Conti&nbsp;</StyledTableCell>
             <StyledTableCell align="right" className="font-bold ">Coperti&nbsp;</StyledTableCell>
-            <StyledTableCell align="right" className="font-bold ">Media<br></br>Conto</StyledTableCell>
-            <StyledTableCell align="right" className="font-bold ">Media<br></br>Coperto</StyledTableCell>
-            <StyledTableCell align="right" className="font-bold ">Media Coperto<br></br>Conto</StyledTableCell>
+            <StyledTableCell align="right" className="font-bold ">Costo Medio<br></br>x Conto</StyledTableCell>
+            <StyledTableCell align="right" className="font-bold ">Costo Medio<br></br>x Coperto</StyledTableCell>
+            <StyledTableCell align="right" className="font-bold ">Media Coperti<br></br>x Conto</StyledTableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -135,7 +137,7 @@ export default function Page() {
               <StyledTableCell component="th" scope="row" className="font-bold ">
                 {row.giornata}
               </StyledTableCell>
-              <StyledTableCell align="right">{row.incasso}&nbsp;&euro;</StyledTableCell>
+              <StyledTableCell align="right"><b>{row.incasso}&nbsp;&euro;&nbsp;</b><small>POS{row.incassopos}&nbsp;&euro;</small></StyledTableCell>
               <StyledTableCell align="right">{row.conti}</StyledTableCell>
               <StyledTableCell align="right">{row.coperti}</StyledTableCell>
               <StyledTableCell align="right">{row.spesamediaperconti}&nbsp;&euro;</StyledTableCell>
@@ -145,12 +147,12 @@ export default function Page() {
           ))}
           <TableRow>
             <TableCell rowSpan={5} />
-            <TableCell colSpan={2} className="text-xl  font-extralight ">Incasso totale</TableCell>
-            <TableCell align="right" className="text-xl  font-extralight ">130000&nbsp;&euro;</TableCell>
+            <TableCell colSpan={2} className="text-xl  font-extralight "><b>Incasso totale</b></TableCell>
+            <TableCell align="right" className="text-xl  font-extralight "><b>130000&nbsp;&euro;</b><br></br><small>POS 29293&nbsp;&euro;</small></TableCell>
           </TableRow>
           <TableRow>
             <TableCell colSpan={2} className="text-xl  font-extralight ">Coperti totali</TableCell>
-            <TableCell align="right" className="text-xl  font-extralight ">12550</TableCell>
+            <TableCell align="right" className="text-xl  font-extralight ">12550<br></br><small>Media coperti x giornata: 1239&nbsp;</small></TableCell>
           </TableRow>
           <TableRow>
             <TableCell colSpan={2} className="text-xl  font-extralight ">Spesa media a persona</TableCell>
