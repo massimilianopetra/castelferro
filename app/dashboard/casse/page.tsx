@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react'
-import { Button, Tabs, TextField } from '@mui/material';
+import { Button, ButtonGroup, Tabs, TextField } from '@mui/material';
 import type { DbConsumazioniPrezzo, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
 import { getConsumazioniCassa, sendConsumazioni, getConto, getUltimiConti, chiudiConto, aggiornaConto, stampaConto } from '@/app/lib/actions';
 import { writeLog, getGiornoSagra, getLastLog } from '@/app/lib/actions';
@@ -272,7 +272,14 @@ export default function Page() {
                             <div className='text-center '>
                                 <Button variant="contained" onClick={handleStampa}>Stampa Conto</Button>
                                 &nbsp;&nbsp;
-                                <Button variant="contained" onClick={handleAChiudi} disabled>Chiudi Conto</Button>
+                                <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
+                                &nbsp;Chiudi conto&nbsp;&nbsp;
+                                    <ButtonGroup variant="contained" aria-label="xccc">
+                                        <Button variant="contained" onClick={handleAChiudi} disabled>  POS  </Button>
+                                        <Button variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
+                                    </ButtonGroup>       
+                                &nbsp;&nbsp;
+                                </ul>
                                 &nbsp;&nbsp;
                                 <Button variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
                             </div>
@@ -310,12 +317,20 @@ export default function Page() {
                                 </p>
                             </div>
                             &nbsp;
-                            <div className='text-center '>
+                            <div className='text-center'>
                                 <Button variant="contained" onClick={handleStampa} disabled>Stampa Conto</Button>
                                 &nbsp;&nbsp;
-                                <Button variant="contained" onClick={handleAChiudi} disabled>Chiudi Conto</Button>
+                                <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
+                                &nbsp;Chiudi conto&nbsp;&nbsp;
+                                    <ButtonGroup variant="contained" aria-label="xccc">
+                                        <Button variant="contained" onClick={handleAChiudi} disabled>  POS  </Button>
+                                        <Button variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
+                                    </ButtonGroup>       
+                                &nbsp;&nbsp;
+                                </ul>
                                 &nbsp;&nbsp;
                                 <Button variant="contained" onClick={handleAggiorna}>Aggiorna Conto</Button>
+                
                             </div>
                         </div>
                     </>
@@ -348,7 +363,14 @@ export default function Page() {
                             <div className="z-0 text-center">
                                 <Button variant="contained" onClick={handleStampa} >Stampa Conto</Button>
                                 &nbsp;&nbsp;
-                                <Button variant="contained" onClick={handleAChiudi}>Chiudi Conto</Button>
+                                <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
+                                &nbsp;Chiudi conto&nbsp;&nbsp;
+                                    <ButtonGroup variant="contained" aria-label="xccc">
+                                        <Button variant="contained" onClick={handleAChiudi} >  POS  </Button>
+                                        <Button variant="contained" onClick={handleAChiudi} >Contanti</Button>
+                                    </ButtonGroup>       
+                                &nbsp;&nbsp;
+                                </ul>
                                 &nbsp;&nbsp;
                                 <Button variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
                             </div>
