@@ -44,7 +44,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     };
 
     async function carica(num: number) {
-        if (isNaN(num) || num < 1) {
+        if (isNaN(num) || num < 1 || num > 9999) {
             alert('Inserisci un numero foglietto valido');
             return;
         }
