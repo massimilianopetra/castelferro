@@ -183,13 +183,13 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                     Nome Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                                 <p >
-                                    Conto caricato per Consultazione/Modifiche: <span className="font-extrabold text-blue-800">{numero}&nbsp;&nbsp;&nbsp;</span>
+                                Conto x Consultazione/Modifiche: <span className="font-extrabold text-blue-800">{numero}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                             </div>
                             <TabellaCucina item={products} onAdd={handleAdd} onRemove={handleRemove} />
                             <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
                                 <p >
-                                    Conto caricato per Consultazione/Modifiche: <span className="font-extrabold text-blue-800">{numero}&nbsp;&nbsp;&nbsp;</span>
+                                Conto x Consultazione/Modifiche: <span className="font-extrabold text-blue-800">{numero}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                             </div>
                         </div>
@@ -238,14 +238,14 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
         else
             return (
                 <main>
-                    <div className="z-50 lg:fixed xl:fixed md:fixed p-1 mb-1 text-2xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
+                    <div className="z-50 lg:fixed xl:fixed md:fixed p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
                         <ul className="flex rounded-full">
-                            <li className="flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
+                            <li className="flex-1 mr-2 text-3xl md:text-5xl font-bold py-4 rounded-full">
                                 <a className="text-center block text-white font-extralight ">
                                     {nomeCucina}
                                 </a>
                             </li>
-                            <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4">
+                            <li className="text-right flex-1 mr-2 text-3xl md:text-5xl  text-white font-bold py-4">
                                 <a>
                                     <div className='text-center text-emerald-600'>
                                         <TextField
@@ -264,13 +264,13 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                     </div>
                                 </a>
                             </li>
-                            <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
-                                <Button className="rounded-full" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
+                            <li className="text-left flex-1 mr-2 text-3xl md:text-5xl font-bold py-4 rounded-full">
+                                <Button className="rounded-full" size="medium" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
                             </li>
                         </ul>
                     </div>
                     <div className="z-0 xl:text-2xl  xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
-                        <p>Ultimi ricercati e modificati: &nbsp;
+                        <p>Ultimi ricercati: &nbsp;
                             {lastLog.map((row) => (
                                 <>
                                     <Button size="small" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>

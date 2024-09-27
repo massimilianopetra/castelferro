@@ -69,13 +69,13 @@ export default function Page() {
                     <div className="flex flex-wrap flex-col">
                         <div className='text-center py-4'>
                             <p className="text-5xl py-4">
-                            Lista Conti Apetri e Chiusi
+                                Verifica conti 
                             </p>
                         </div>
                         <div className='text-center'>
                             <h2 className='font-extrabold'>Conti Aperti</h2>
-                            <TableContainer component={Paper}>
-                                <Table sx={{ minWidth: 500 }} aria-label="simple table">
+                            <TableContainer component={Paper} >
+                                <Table sx={{ minWidth: 500 }} aria-label="a dense table">
                                     <TableHead>
                                         <TableRow>
                                             <TableCell align="left"><p className='font-bold'>N. Foglietto</p></TableCell>
@@ -99,7 +99,7 @@ export default function Page() {
                             <br/><br/>
                             <h2 className='font-extrabold'>Conti Chiusi</h2>
                             <TableContainer component={Paper}>
-                                <Table sx={{ minWidth: 500 }} aria-label="simple table">
+                                <Table sx={{ minWidth: 500 }} aria-label="a dense table">
                                     <TableHead>
                                         <TableRow>
                                             <TableCell align="left"><p className='font-bold'>N. Foglietto</p></TableCell>
