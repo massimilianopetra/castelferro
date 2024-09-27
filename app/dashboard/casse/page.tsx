@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react'
-import { Button, Tabs, TextField } from '@mui/material';
+import { Button, TextField } from '@mui/material';
 import type { DbConsumazioniPrezzo, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
-import { getConsumazioniCassa, sendConsumazioni, getConto, getUltimiConti, chiudiConto, aggiornaConto, stampaConto } from '@/app/lib/actions';
+import { getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto, aggiornaConto, stampaConto } from '@/app/lib/actions';
 import { writeLog, getGiornoSagra, getLastLog } from '@/app/lib/actions';
 import { deltanow, milltodatestring } from '@/app/lib/utils'
 import TabellaConto from '@/app/ui/dashboard/TabellaConto';
@@ -44,7 +44,7 @@ export default function Page() {
         setNumero(event.target.value);
     };
 
-    async function carica(num: number) {
+    const carica = async (num: number) => {
         if (isNaN(num) || num < 1 || num > 9999) {
             alert('Inserisci un numero foglietto valido');
             return;
@@ -363,31 +363,31 @@ export default function Page() {
             case 'chiuso':
                 return (
                     <>
-                    <main>
-                        <br></br>
-                        <br></br>
-                        <br></br>
-                        <br></br>
-                        <br></br>
-                        <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50  text-center" role="alert">
-                            <span className="text-xl font-semibold">Dark alert!</span> Conto {conto?.id_comanda} chiuso in data: {milltodatestring(conto?.data_chiusura)} totale: {conto?.totale} Euro.
-                        </div>
-                    </main>
+                        <main>
+                            <br></br>
+                            <br></br>
+                            <br></br>
+                            <br></br>
+                            <br></br>
+                            <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50  text-center" role="alert">
+                                <span className="text-xl font-semibold">Dark alert!</span> Conto {conto?.id_comanda} chiuso in data: {milltodatestring(conto?.data_chiusura)} totale: {conto?.totale} Euro.
+                            </div>
+                        </main>
                     </>
                 );
             case 'none':
                 return (
                     <>
-                    <main>
-                        <br></br>
-                        <br></br>
-                        <br></br>
-                        <br></br>
-                        <br></br>
-                        <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50  text-center" role="alert">
-                            <span className="text-xl font-semibold">Dark alert!</span> Conto non esistente.
-                        </div>
-                    </main>
+                        <main>
+                            <br></br>
+                            <br></br>
+                            <br></br>
+                            <br></br>
+                            <br></br>
+                            <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50  text-center" role="alert">
+                                <span className="text-xl font-semibold">Dark alert!</span> Conto non esistente.
+                            </div>
+                        </main>
                     </>
                 );
 
@@ -396,9 +396,9 @@ export default function Page() {
         }
     };
 
-    if ((session?.user?.name == "Casse") || (session?.user?.name == "SuperUser"))
+    if ((session?.user?.name == "Casse") || (session?.user?.name == "SuperUser")) {
 
-        if (sagra.stato == 'CHIUSA')
+        if (sagra.stato == 'CHIUSA') {
             return (
                 <main>
                     <div className="flex flex-wrap flex-col">
@@ -411,7 +411,7 @@ export default function Page() {
                 </main>
 
             )
-        else
+        } else {
             return (
                 <main>
                     <div className="z-50 lg:fixed xl:fixed md:fixed p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
@@ -461,7 +461,8 @@ export default function Page() {
                 </main>
 
             )
-    else
+        }
+    } else {
         return (
             <main>
                 <div className="flex flex-wrap flex-col">
@@ -472,7 +473,6 @@ export default function Page() {
                     </div>
                 </div>
             </main>
-
         )
-
+    }
 }

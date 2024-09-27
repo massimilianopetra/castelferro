@@ -69,7 +69,7 @@ export default function Page() {
                     <div className="flex flex-wrap flex-col">
                         <div className='text-center py-4'>
                             <p className="text-5xl py-4">
-                                Gestione Camerieri
+                            Lista Conti Apetri e Chiusi
                             </p>
                         </div>
                         <div className='text-center'>
