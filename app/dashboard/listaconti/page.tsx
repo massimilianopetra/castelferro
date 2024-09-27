@@ -1,25 +1,25 @@
 'use client';
 
-import { useState, useEffect} from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
-import { sql } from '@vercel/postgres';
+import Link from 'next/link'
 import type { DbConti, DbFiera } from '@/app/lib/definitions';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
+import TableCell, { tableCellClasses } from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
+import { styled } from '@mui/material/styles';
 import CircularProgress from '@mui/material/CircularProgress';
-import {getGiornoSagra, listConti} from '@/app/lib/actions';
+import { getGiornoSagra, listConti } from '@/app/lib/actions';
 import { deltanow, milltodatestring } from '@/app/lib/utils';
 
 export default function Page() {
 
     const [phase, setPhase] = useState('caricamento');
-    const [contoA, setContoA] = useState<DbConti[]>([]);
-    const [contoC, setContoC] = useState<DbConti[]>([]);
+    const [conti, setConti] = useState<DbConti[]>([]);
     const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
     const { data: session } = useSession();
 
@@ -31,18 +31,33 @@ export default function Page() {
         const gg = await getGiornoSagra();
         if (gg) {
             setSagra(gg);
-            const ccA = await listConti('APERTO', gg.giornata);
+            const ccA = await listConti('*', gg.giornata);
             if (ccA) {
-                setContoA(ccA);
+                setConti(ccA);
             }
-            const ccC = await listConti('CHIUSO', gg.giornata);
-            if (ccC) {
-                setContoC(ccC);
-            }
-
             setPhase('caricato');
         }
     }
+
+    const StyledTableCell = styled(TableCell)(({ theme }) => ({
+        [`&.${tableCellClasses.head}`]: {
+            backgroundColor: theme.palette.common.black,
+            color: theme.palette.common.white,
+        },
+        [`&.${tableCellClasses.body}`]: {
+            fontSize: 14,
+        },
+    }));
+
+    const StyledTableRow = styled(TableRow)(({ theme }) => ({
+        '&:nth-of-type(odd)': {
+            backgroundColor: theme.palette.action.hover,
+        },
+        // hide last border
+        '&:last-child td, &:last-child th': {
+            border: 0,
+        },
+    }));
 
     if ((session?.user?.name == "SuperUser")) {
         if (phase == 'caricamento') {
@@ -69,62 +84,47 @@ export default function Page() {
                     <div className="flex flex-wrap flex-col">
                         <div className='text-center py-4'>
                             <p className="text-5xl py-4">
-                                Verifica conti 
+                                Verifica conti
                             </p>
                         </div>
                         <div className='text-center'>
-                            <h2 className='font-extrabold'>Conti Aperti</h2>
+                            <h2 className='font-extrabold'>Conti Giornata {sagra.giornata}</h2>
                             <TableContainer component={Paper} >
                                 <Table sx={{ minWidth: 500 }} aria-label="a dense table">
                                     <TableHead>
                                         <TableRow>
-                                            <TableCell align="left"><p className='font-bold'>N. Foglietto</p></TableCell>
-                                            <TableCell align="left"><p className='font-bold'>Aperto da</p></TableCell>
+                                            <StyledTableCell align="left"><p className='font-bold'>N. Foglietto</p></StyledTableCell>
+                                            <StyledTableCell align="left"><p className='font-bold'>Stato</p></StyledTableCell>
+                                            <StyledTableCell align="left"><p className='font-bold'>Aperto da</p></StyledTableCell>
+                                            <StyledTableCell align="left"><p className='font-bold'>Chiuso in data</p></StyledTableCell>
+                                            <StyledTableCell align="left"><p className='font-bold'>Totale</p></StyledTableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        {contoA.map((row, i) => (
-                                            <TableRow>
-                                                <TableCell align="left">
-                                                    <p>{row.id_comanda}</p>
-                                                </TableCell>
-                                                <TableCell align="left">
+                                        {conti.map((row, i) => (
+                                            <StyledTableRow>
+                                                <StyledTableCell align="left">
+                                                    <Link href={`/dashboard/casse/${row.id_comanda}`}>{row.id_comanda}</Link>
+                                                </StyledTableCell>
+                                                <StyledTableCell align="left">
+                                                    <p>{row.stato}</p>
+                                                </StyledTableCell>
+                                                <StyledTableCell align="left">
                                                     <p>{deltanow(row.data_apertura)}</p>
-                                                </TableCell>
-                                            </TableRow>
+                                                </StyledTableCell>
+                                                <StyledTableCell align="left">
+                                                    <p>{row.stato.includes('CHIUSO') ? milltodatestring(row.data_chiusura) : '----' }</p>
+                                                </StyledTableCell>
+                                                <StyledTableCell align="left">
+                                                    <p>{row.totale} &euro;</p>
+                                                </StyledTableCell>
+                                            </StyledTableRow>
                                         ))}
                                     </TableBody>
                                 </Table>
                             </TableContainer>
-                            <br/><br/>
-                            <h2 className='font-extrabold'>Conti Chiusi</h2>
-                            <TableContainer component={Paper}>
-                                <Table sx={{ minWidth: 500 }} aria-label="a dense table">
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell align="left"><p className='font-bold'>N. Foglietto</p></TableCell>
-                                            <TableCell align="left"><p className='font-bold'>Chiuso in data</p></TableCell>
-                                            <TableCell align="left"><p className='font-bold'>Totale</p></TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {contoC.map((row, i) => (
-                                            <TableRow>
-                                                <TableCell align="left">
-                                                    <p>{row.id_comanda}</p>
-                                                </TableCell>
-                                                <TableCell align="left">
-                                                    <p>{milltodatestring(row.data_chiusura)}</p>
-                                                </TableCell>
-                                                <TableCell align="left">
-                                                    <p>{row.totale.toFixed(2)}&euro;</p>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-                            <h2 className='font-extrabold'>Totale incasso giornata {sagra.giornata}: {contoC.reduce((accumulator, current) => accumulator + current.totale, 0).toFixed(2)}&euro;</h2>
+                            <br /><br />
+
                         </div>
                     </div>
                 </main>

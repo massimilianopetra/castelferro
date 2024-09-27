@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react'
-import { Button, TextField } from '@mui/material';
+import { useRouter } from 'next/navigation';
+import { Button, ButtonGroup, TextField } from '@mui/material';
 import type { DbConsumazioniPrezzo, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
 import { getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto, aggiornaConto, stampaConto } from '@/app/lib/actions';
 import { writeLog, getGiornoSagra, getLastLog } from '@/app/lib/actions';
@@ -15,6 +16,7 @@ import Filter1Icon from '@mui/icons-material/Filter1';
 
 export default function Page({ params }: { params: { foglietto: string } }) {
 
+  const router = useRouter();
   const printRef = useRef<HTMLDivElement | null>(null);
   const [phase, setPhase] = useState('iniziale');
   const [products, setProducts] = useState<DbConsumazioniPrezzo[]>([]);
@@ -27,14 +29,6 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
   useEffect(() => {
     const fetchData = async () => {
-      const gg = await getGiornoSagra();
-      if (gg) {
-        setSagra(gg);
-        const cc = await getLastLog(gg.giornata, 'Casse');
-        if (cc) {
-          setLastLog(cc);
-        }
-      }
 
       const num = +params.foglietto;
       if (isNaN(num) || num < 1 || num > 9999) {
@@ -42,32 +36,45 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         return;
       }
 
-      const c = await getConsumazioniCassa(num, sagra.giornata);
-      if (c) setProducts(c);
+      const gg = await getGiornoSagra();
+      if (gg) {
+        setSagra(gg);
+        const log = await getLastLog(gg.giornata, 'Casse');
+        if (log) {
+          setLastLog(log);
+        }
 
-      const cc = await getConto(num, sagra.giornata);
-      setConto(cc);
-      if (cc?.stato == 'APERTO') {
-        setNumeroFoglietto(num.toString());
-        await writeLog(num, sagra.giornata, 'Casse', '', 'APRI', ''); // Logger
-        const cc = await getLastLog(sagra.giornata, 'Casse');
-        if (cc) {
-          setLastLog(cc);
+
+        const c = await getConsumazioniCassa(num, gg.giornata);
+        if (c) setProducts(c);
+
+        //console.log(`estrazione conto ${num} giornata: ${gg.giornata}`);
+        const cc = await getConto(num, gg.giornata);
+        //console.log('record: ');
+        //console.log(cc);
+        setConto(cc);
+        if (cc?.stato == 'APERTO') {
+          setNumeroFoglietto(num.toString());
+          await writeLog(num, gg.giornata, 'Casse', '', 'APRI', ''); // Logger
+          const cc = await getLastLog(gg.giornata, 'Casse');
+          if (cc) {
+            setLastLog(cc);
+          }
+          setPhase('aperto');
+        } else if (cc?.stato == 'STAMPATO') {
+          setNumeroFoglietto(num.toString());
+          await writeLog(num, gg.giornata, 'Casse', '', 'APRI', ''); // Logger
+          const cc = await getLastLog(gg.giornata, 'Casse');
+          if (cc) {
+            setLastLog(cc);
+          }
+          setPhase('stampato');
+        } else if (cc?.stato == 'CHIUSO' || cc?.stato == 'CHIUSOPOS') {
+          setPhase('chiuso');
+        } else {
+          setNumeroFoglietto(num.toString());
+          setPhase('none');
         }
-        setPhase('aperto');
-      } else if (cc?.stato == 'STAMPATO') {
-        setNumeroFoglietto(num.toString());
-        await writeLog(num, sagra.giornata, 'Casse', '', 'APRI', ''); // Logger
-        const cc = await getLastLog(sagra.giornata, 'Casse');
-        if (cc) {
-          setLastLog(cc);
-        }
-        setPhase('stampato');
-      } else if (cc?.stato == 'CHIUSO') {
-        setPhase('chiuso');
-      } else {
-        setNumeroFoglietto(num.toString());
-        setPhase('none');
       }
     };
 
@@ -78,13 +85,17 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     setNumero(event.target.value);
   };
 
+  async function carica(num: number) {
+    router.push(`/dashboard/casse/${num}`);
+  }
+
   const handleButtonClickCarica = () => {
-    const num = Number(numero);
+    router.push(`/dashboard/casse/${numero}`);
   };
 
   const handleAggiorna = async () => {
 
-    console.log(`Aggiornamento n. foglietto: ${numero}`);
+    console.log(`Aggiornamento n. foglietto: ${numeroFoglietto}`);
     const fetchData = async () => {
       setPhase('caricamento');
       var totale = 0;
@@ -93,7 +104,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         totale += i.quantita * i.prezzo_unitario;
       }
       await sendConsumazioni(products);
-      await aggiornaConto(Number(numero), sagra.giornata, totale);
+      await aggiornaConto(Number(numeroFoglietto), sagra.giornata, totale);
       setPhase('aperto');
     };
     fetchData();
@@ -109,8 +120,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         totale += i.quantita * i.prezzo_unitario;
       }
 
-      await aggiornaConto(Number(numero), sagra.giornata, totale);
-      await stampaConto(Number(numero), sagra.giornata);
+      await aggiornaConto(Number(numeroFoglietto), sagra.giornata, totale);
+      await stampaConto(Number(numeroFoglietto), sagra.giornata);
       setPhase('stampato');
     };
     fetchData();
@@ -143,7 +154,21 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
     const fetchData = async () => {
       setPhase('elaborazione');
-      const c = await chiudiConto(Number(numero), sagra.giornata);
+      const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata);
+      const cc = await getConto(Number(numeroFoglietto), sagra.giornata);
+      setConto(cc);
+      setPhase('chiuso');
+    };
+    fetchData();
+  };
+
+  const handleAChiudiPos = async () => {
+
+    const fetchData = async () => {
+      setPhase('elaborazione');
+      const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata, true);
+      const cc = await getConto(Number(numeroFoglietto), sagra.giornata);
+      setConto(cc);
       setPhase('chiuso');
     };
     fetchData();
@@ -258,7 +283,14 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               <div className='text-center '>
                 <Button variant="contained" onClick={handleStampa}>Stampa Conto</Button>
                 &nbsp;&nbsp;
-                <Button variant="contained" onClick={handleAChiudi} disabled>Chiudi Conto</Button>
+                <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
+                  &nbsp;Chiudi conto&nbsp;&nbsp;
+                  <ButtonGroup variant="contained" aria-label="xccc">
+                    <Button variant="contained" onClick={handleAChiudiPos} disabled>  POS  </Button>
+                    <Button variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
+                  </ButtonGroup>
+                  &nbsp;&nbsp;
+                </ul>
                 &nbsp;&nbsp;
                 <Button variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
               </div>
@@ -296,12 +328,20 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 </p>
               </div>
               &nbsp;
-              <div className='text-center '>
+              <div className='text-center'>
                 <Button variant="contained" onClick={handleStampa} disabled>Stampa Conto</Button>
                 &nbsp;&nbsp;
-                <Button variant="contained" onClick={handleAChiudi} disabled>Chiudi Conto</Button>
+                <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
+                  &nbsp;Chiudi conto&nbsp;&nbsp;
+                  <ButtonGroup variant="contained" aria-label="xccc">
+                    <Button variant="contained" onClick={handleAChiudiPos} disabled>  POS  </Button>
+                    <Button variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
+                  </ButtonGroup>
+                  &nbsp;&nbsp;
+                </ul>
                 &nbsp;&nbsp;
                 <Button variant="contained" onClick={handleAggiorna}>Aggiorna Conto</Button>
+
               </div>
             </div>
           </>
@@ -334,7 +374,14 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               <div className="z-0 text-center">
                 <Button variant="contained" onClick={handleStampa} >Stampa Conto</Button>
                 &nbsp;&nbsp;
-                <Button variant="contained" onClick={handleAChiudi}>Chiudi Conto</Button>
+                <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
+                  &nbsp;Chiudi conto&nbsp;&nbsp;
+                  <ButtonGroup variant="contained" aria-label="xccc">
+                    <Button variant="contained" onClick={handleAChiudiPos} >  POS  </Button>
+                    <Button variant="contained" onClick={handleAChiudi} >Contanti</Button>
+                  </ButtonGroup>
+                  &nbsp;&nbsp;
+                </ul>
                 &nbsp;&nbsp;
                 <Button variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
               </div>

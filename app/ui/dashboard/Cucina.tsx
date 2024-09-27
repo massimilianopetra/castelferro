@@ -57,7 +57,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
             setNumero(num);
             if (cc) {
                 setConto(cc);
-                if (cc.stato == 'CHIUSO' || cc.stato == 'STAMPATO') {
+                if (cc.stato == 'CHIUSO' || cc.stato == 'STAMPATO' || cc.stato == 'CHIUSOPOS') {
                     setPhase('bloccato')
                 }
                 else {

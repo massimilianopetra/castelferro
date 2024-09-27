@@ -205,10 +205,15 @@ export async function delCamerieri(id: number) {
   WHERE id=${id};`
 }
 
-export async function listConti(stato: string, giornata: number) :  Promise<DbConti[] | undefined>{
-  const current = await sql<DbConti>`SELECT * FROM conti  WHERE stato = ${stato} AND giorno = ${giornata} AND id_comanda > 10 ORDER BY data_apertura`;
+export async function listConti(stato: string, giornata: number): Promise<DbConti[] | undefined> {
 
-  return current.rows;
+  if (stato == '*') {
+    const current = await sql<DbConti>`SELECT * FROM conti  WHERE giorno = ${giornata} ORDER BY data_apertura`;
+    return current.rows;
+  } else {
+    const current = await sql<DbConti>`SELECT * FROM conti  WHERE stato = ${stato} AND giorno = ${giornata} ORDER BY data_apertura`;
+    return current.rows;
+  }
 }
 
 export async function apriConto(foglietto: number, giorno: number, cameriere: string) {
@@ -268,7 +273,7 @@ export async function aggiornaConto(foglietto: number, giorno: number, totale: n
 }
 
 
-export async function chiudiConto(foglietto: number, giorno: number) {
+export async function chiudiConto(foglietto: number, giorno: number, pos: boolean = false) {
 
   const date_format_millis = Date.now();
 
@@ -276,12 +281,21 @@ export async function chiudiConto(foglietto: number, giorno: number) {
 
   if (current.rows[0]) {
     console.log(`Chiusura conto foglietto n. ${foglietto} giorno n. ${giorno}`);
-    return await sql`
-    UPDATE conti
-    SET stato = 'CHIUSO',
-        data_chiusura = ${date_format_millis}
-    WHERE id = ${current.rows[0].id};
-    `;
+    if (pos) {
+      return await sql`
+                      UPDATE conti
+                      SET stato = 'CHIUSOPOS',
+                      data_chiusura = ${date_format_millis}
+                      WHERE id = ${current.rows[0].id};
+                      `;
+    } else {
+      return await sql`
+                      UPDATE conti
+                      SET stato = 'CHIUSO',
+                      data_chiusura = ${date_format_millis}
+                      WHERE id = ${current.rows[0].id};
+      `;
+    }
   } else {
     console.log(`Il conto foglietto n. ${foglietto} giorno n. ${giorno} non risulta paerto`);
   }
