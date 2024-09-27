@@ -183,13 +183,13 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                     Nome Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                                 <p >
-                                    Conto caricato per Consultazione/Modifiche: <span className="font-extrabold text-blue-800">{numero}&nbsp;&nbsp;&nbsp;</span>
+                                Conto x Consultazione/Modifiche: <span className="font-extrabold text-blue-800">{numero}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                             </div>
                             <TabellaCucina item={products} onAdd={handleAdd} onRemove={handleRemove} />
                             <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
                                 <p >
-                                    Conto caricato per Consultazione/Modifiche: <span className="font-extrabold text-blue-800">{numero}&nbsp;&nbsp;&nbsp;</span>
+                                Conto x Consultazione/Modifiche: <span className="font-extrabold text-blue-800">{numero}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                             </div>
                         </div>
@@ -270,7 +270,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                         </ul>
                     </div>
                     <div className="z-0 xl:text-2xl  xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
-                        <p>Ultimi ricercati e modificati: &nbsp;
+                        <p>Ultimi ricercati: &nbsp;
                             {lastLog.map((row) => (
                                 <>
                                     <Button size="small" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
