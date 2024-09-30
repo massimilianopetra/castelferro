@@ -177,7 +177,7 @@ export default function Page() {
                       <StyledTableCell component="th" scope="row" className="font-bold ">
                         {row.giornata}
                       </StyledTableCell>
-                      <StyledTableCell align="right"><b>{row.incasso.toFixed(2)}&nbsp;&euro;&nbsp;</b><small>POS{row.incassopos.toFixed(2)}&nbsp;&euro;</small></StyledTableCell>
+                      <StyledTableCell align="right"><b>{row.incasso.toFixed(2)}&nbsp;&euro;</b><br></br><small>&nbsp;POS&nbsp;{row.incassopos.toFixed(2)}&nbsp;&euro;</small></StyledTableCell>
                       <StyledTableCell align="right">{row.conti}</StyledTableCell>
                       <StyledTableCell align="right">{row.coperti}</StyledTableCell>
                       <StyledTableCell align="right">{row.spesamediaperconti.toFixed(2)}&nbsp;&euro;</StyledTableCell>

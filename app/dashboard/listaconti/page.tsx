@@ -15,6 +15,7 @@ import { styled } from '@mui/material/styles';
 import CircularProgress from '@mui/material/CircularProgress';
 import { getGiornoSagra, listConti } from '@/app/lib/actions';
 import { deltanow, milltodatestring } from '@/app/lib/utils';
+import { DataGrid, GridRowsProp, GridColDef } from '@mui/x-data-grid';
 
 export default function Page() {
 
@@ -22,6 +23,23 @@ export default function Page() {
     const [conti, setConti] = useState<DbConti[]>([]);
     const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
     const { data: session } = useSession();
+
+    const rows: GridRowsProp = [
+        { id: 1, col1: '123', col2: 'Aperto', col3: '05:51:48', col4: '----', col5: '13.5 €' },
+        { id: 2, col1: '124', col2: 'CHIUSO', col3: '----', col4: '26/09/2024, 12:15:13', col5: '23.5 €' },
+        { id: 3, col1: '125', col2: 'Aperto', col3: '15:51:48', col4: '----', col5: '33.5 €'},
+        { id: 4, col1: '126', col2: 'CHIUSO', col3: '----', col4: '26/09/2024, 13:15:13', col5: '44.5 €' },
+        { id: 5, col1: '127', col2: 'CHIUSO', col3: '----', col4: '26/09/2024, 14:15:13', col5: '55.5 €' },
+      ];
+      
+      const columns: GridColDef[] = [
+        { field: 'col1', headerName: 'N. Foglietto', width: 150 },
+        { field: 'col2', headerName: 'Stato', width: 150 },
+        { field: 'col3', headerName: 'Aperto da', width: 150 },
+        { field: 'col4', headerName: 'Chiuso in data', width: 150 },
+        { field: 'col5', headerName: 'Totale', width: 150 },
+    
+    ];
 
     useEffect(() => {
         fetchData();
@@ -81,14 +99,19 @@ export default function Page() {
         } else if (phase == 'caricato') {
             return (
                 <main>
+
                     <div className="flex flex-wrap flex-col">
                         <div className='text-center py-4'>
                             <p className="text-5xl py-4">
                                 Verifica conti
                             </p>
                         </div>
+                        <div style={{ height: 300, width: '100%' }}>
+                            <DataGrid rows={rows} columns={columns} />
+                        </div>
                         <div className='text-center'>
                             <h2 className='font-extrabold'>Conti Giornata {sagra.giornata}</h2>
+                            
                             <TableContainer component={Paper} >
                                 <Table sx={{ minWidth: 500 }} aria-label="a dense table">
                                     <TableHead>

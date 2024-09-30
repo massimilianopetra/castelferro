@@ -12,6 +12,7 @@
     "@mui/base": "5.0.0-beta.40",
     "@mui/icons-material": "^6.0.0",
     "@mui/material": "^6.0.0",
+    "@mui/x-data-grid": "^7.18.0",
     "@tailwindcss/forms": "^0.5.7",
     "@vercel/postgres": "^0.8.0",
     "autoprefixer": "10.4.19",
