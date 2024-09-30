@@ -2,10 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
-import type { DbConti, DbFiera } from '@/app/lib/definitions';
 import CircularProgress from '@mui/material/CircularProgress';
-import { listConti } from '@/app/lib/actions';
-import { deltanow, milltodatestring } from '@/app/lib/utils';
+import { listConti, listConsumazioni } from '@/app/lib/actions';
 import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import Table from '@mui/material/Table';
@@ -44,7 +42,7 @@ export default function Page() {
     },
   }));
 
-  type RecordCruscotto =   {
+  type RecordCruscotto = {
     giornata: string;
     incasso: number;
     incassopos: number;
@@ -90,13 +88,19 @@ export default function Page() {
     for (var i = 0; i < 8; i++) {
       const conti = await listConti('CHIUSO', i + 1);
       const contiPos = await listConti('CHIUSOPOS', i + 1);
+      const cosumazioni = await listConsumazioni(1, i + 1);
 
       var sum = conti?.reduce((accumulator, currentValue) => {
         return accumulator + currentValue.totale;
       }, 0);
+
       var sumPos = contiPos?.reduce((accumulator, currentValue) => {
         return accumulator + currentValue.totale;
       }, 0);
+
+      var numCoperti = 0
+      if (cosumazioni)
+        numCoperti = cosumazioni?.length
 
       var numConti = 0;
 
@@ -105,7 +109,21 @@ export default function Page() {
       if (conti) numConti += conti.length;
       if (contiPos) numConti += contiPos.length;
 
-      rows[i] = { ...rows[i], incasso: sum + sumPos, incassopos: sumPos, conti: numConti }
+      var mediaperconti = 0
+      var mediacopertiperconto = 0
+      if (numConti > 0) {
+        mediaperconti = (sum + sumPos) / numConti
+        mediacopertiperconto = numCoperti / numConti
+      }
+
+      var mediapercoperto = 0
+      if (numCoperti > 0)
+        mediapercoperto = (sum + sumPos) / numCoperti
+
+      rows[i] = {
+        ...rows[i], incasso: sum + sumPos, incassopos: sumPos,
+        conti: numConti, coperti: numCoperti, spesamediaperconti: mediaperconti, spesamediacoperto: mediapercoperto, mediacopertiperconto: mediacopertiperconto
+      }
 
     }
     setRecord(rows);
@@ -159,26 +177,44 @@ export default function Page() {
                       <StyledTableCell component="th" scope="row" className="font-bold ">
                         {row.giornata}
                       </StyledTableCell>
-                      <StyledTableCell align="right"><b>{row.incasso}&nbsp;&euro;&nbsp;</b><small>POS{row.incassopos}&nbsp;&euro;</small></StyledTableCell>
+                      <StyledTableCell align="right"><b>{row.incasso.toFixed(2)}&nbsp;&euro;&nbsp;</b><small>POS{row.incassopos.toFixed(2)}&nbsp;&euro;</small></StyledTableCell>
                       <StyledTableCell align="right">{row.conti}</StyledTableCell>
                       <StyledTableCell align="right">{row.coperti}</StyledTableCell>
-                      <StyledTableCell align="right">{row.spesamediaperconti}&nbsp;&euro;</StyledTableCell>
-                      <StyledTableCell align="right">{row.spesamediacoperto}&nbsp;&euro;</StyledTableCell>
-                      <StyledTableCell align="right">{row.mediacopertiperconto}</StyledTableCell>
+                      <StyledTableCell align="right">{row.spesamediaperconti.toFixed(2)}&nbsp;&euro;</StyledTableCell>
+                      <StyledTableCell align="right">{row.spesamediacoperto.toFixed(2)}&nbsp;&euro;</StyledTableCell>
+                      <StyledTableCell align="right">{row.mediacopertiperconto.toFixed(2)}</StyledTableCell>
                     </StyledTableRow>
                   ))}
                   <TableRow>
                     <TableCell rowSpan={5} />
                     <TableCell colSpan={2} className="text-xl  font-extralight "><b>Incasso totale</b></TableCell>
-                    <TableCell align="right" className="text-xl  font-extralight "><b>130000&nbsp;&euro;</b><br></br><small>POS 29293&nbsp;&euro;</small></TableCell>
+                    <TableCell align="right" className="text-xl  font-extralight ">
+                      <b>
+                        {record.reduce((accumulator, currentValue) => {
+                          return accumulator + currentValue.incasso;
+                        }, 0).toFixed(2)}&nbsp;&euro;
+                      </b><br></br><small>POS {record.reduce((accumulator, currentValue) => {
+                        return accumulator + currentValue.incassopos;
+                      }, 0).toFixed(2)}&nbsp;&euro;&nbsp;</small>
+                    </TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell colSpan={2} className="text-xl  font-extralight ">Coperti totali</TableCell>
-                    <TableCell align="right" className="text-xl  font-extralight ">12550<br></br><small>Media coperti x giornata: 1239&nbsp;</small></TableCell>
+                    <TableCell align="right" className="text-xl  font-extralight ">{record.reduce((accumulator, currentValue) => {
+                      return accumulator + currentValue.coperti;
+                    }, 0)}<br></br><small>Media coperti x giornata: {(record.reduce((accumulator, currentValue) => {
+                      return accumulator + currentValue.coperti;
+                    }, 0) / record.length).toFixed(2)}&nbsp;</small></TableCell>
                   </TableRow>
                   <TableRow>
                     <TableCell colSpan={2} className="text-xl  font-extralight ">Spesa media a persona</TableCell>
-                    <TableCell align="right" className="text-xl  font-extralight ">20.2&nbsp;&euro;</TableCell>
+                    <TableCell align="right" className="text-xl  font-extralight ">
+                    {(record.reduce((accumulator, currentValue) => {
+                          return accumulator + currentValue.incasso;
+                        }, 0)/record.reduce((accumulator, currentValue) => {
+                          return accumulator + currentValue.coperti;
+                        }, 0)).toFixed(2)}&nbsp;&euro;
+                    </TableCell>
                   </TableRow>
                 </TableBody>
               </Table>

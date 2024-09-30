@@ -216,6 +216,17 @@ export async function listConti(stato: string, giornata: number): Promise<DbCont
   }
 }
 
+export async function listConsumazioni(id_piatto : number, giornata: number): Promise<DbConsumazioni[] | undefined> {
+
+  if (id_piatto == -1) {
+    const current = await sql<DbConsumazioni>`SELECT * FROM consumazioni  WHERE giorno = ${giornata}`;
+    return current.rows;
+  } else {
+    const current = await sql<DbConsumazioni>`SELECT * FROM consumazioni  WHERE giorno = ${giornata} AND id_piatto = ${id_piatto}`;
+    return current.rows;
+  }
+}
+
 export async function apriConto(foglietto: number, giorno: number, cameriere: string) {
 
   const date_format_millis = Date.now();
