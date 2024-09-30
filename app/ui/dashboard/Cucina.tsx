@@ -19,6 +19,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     const [lastLog, setLastLog] = useState<DbLog[]>([]);
     const [products, setProducts] = useState<DbConsumazioni[]>([]);
     const [numero, setNumero] = useState<number | string>('');
+    const [numeroFoglietto, setNumeroFoglietto] = useState<number | string>('');
     const { data: session } = useSession();
     const [sagra, getSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
     const [conto, setConto] = useState<DbConti>();
@@ -54,7 +55,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
             if (c) setProducts(c);
 
             const cc = await getConto(num, sagra.giornata);
-            setNumero(num);
+            setNumeroFoglietto(num);
             if (cc) {
                 setConto(cc);
                 if (cc.stato == 'CHIUSO' || cc.stato == 'STAMPATO' || cc.stato == 'CHIUSOPOS') {
@@ -93,7 +94,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
         setPhase('caricamento');
         fetchData();
 
-        console.log(`Numero foglietto: ${numero}`);
+        console.log(`Numero foglietto: ${numeroFoglietto}`);
     }
 
     const handleButtonClickCarica = () => {
@@ -102,10 +103,10 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     };
 
     const handleButtonClickInvia = async () => {
-
+        numeroFoglietto
         sendConsumazioni(products);
         setPhase('inviato');
-        console.log(`Numero foglietto: ${numero}`);
+        console.log(`Numero foglietto: ${numeroFoglietto}`);
         setProducts([]);
     };
 
@@ -183,13 +184,13 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                     Nome Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                                 <p >
-                                Conto x Consultazione/Modifiche: <span className="font-extrabold text-blue-800">{numero}&nbsp;&nbsp;&nbsp;</span>
+                                Conto x Consultazione/Modifiche: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                             </div>
-                            <TabellaCucina item={products} onAdd={handleAdd} onRemove={handleRemove} />
+                            <TabellaCucina item={products} onAdd={handleAdd} onRemove={handleRemove} />numeroFoglietto
                             <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
                                 <p >
-                                Conto x Consultazione/Modifiche: <span className="font-extrabold text-blue-800">{numero}&nbsp;&nbsp;&nbsp;</span>
+                                Conto x Consultazione/Modifiche: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                             </div>
                         </div>
