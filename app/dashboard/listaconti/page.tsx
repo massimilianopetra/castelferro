@@ -15,7 +15,7 @@ import { styled } from '@mui/material/styles';
 import CircularProgress from '@mui/material/CircularProgress';
 import { getGiornoSagra, listConti } from '@/app/lib/actions';
 import { deltanow, milltodatestring } from '@/app/lib/utils';
-import { DataGrid, GridRowsProp, GridColDef } from '@mui/x-data-grid';
+import { DataGrid, GridToolbar, GridColDef } from '@mui/x-data-grid';
 
 export default function Page() {
 
@@ -24,20 +24,20 @@ export default function Page() {
     const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
     const { data: session } = useSession();
 
-    /* const rows: GridRowsProp = [
-        { id: 1, col1: 'GridRowsProp', col2: 'Aperto', col3: '05:51:48', col4: '----', col5: '13.5 €' },
-        { id: 2, col1: '124', col2: 'CHIUSO', col3: '----', col4: '26/09/2024, 12:15:13', col5: '23.5 €' },
-        { id: 3, col1: '125', col2: 'Aperto', col3: '15:51:48', col4: '----', col5: '33.5 €' },
-        { id: 4, col1: '126', col2: 'CHIUSO', col3: '----', col4: '26/09/2024, 13:15:13', col5: '44.5 €' },
-        { id: 5, col1: '127', col2: 'CHIUSO', col3: '----', col4: '26/09/2024, 14:15:13', col5: '55.5 €' },
-    ]; */
-
     const columns: GridColDef[] = [
-        { field: 'col1', headerName: 'N. Foglietto', width: 150 },
-        { field: 'col2', headerName: 'Stato', width: 150 },
-        { field: 'col3', headerName: 'Aperto da', width: 150 },
-        { field: 'col4', headerName: 'Chiuso in data', width: 150 },
-        { field: 'col5', headerName: 'Totale', width: 150 },
+        {
+            field: 'col1', headerName: 'N. Foglietto', renderCell: (params) => (
+                <Link href={`/dashboard/casse/${params.value}`} passHref>
+                    {params.value}
+                </Link>
+
+            )
+        },
+        { field: 'col2', headerName: 'Stato' },
+        { field: 'col3', headerName: 'Cameriere', width: 200 },
+        { field: 'col4', headerName: 'Aperto da', width: 150 },
+        { field: 'col5', headerName: 'Chiuso in data', width: 200 },
+        { field: 'col6', headerName: 'Totale', align: 'right' }
 
     ];
 
@@ -52,13 +52,15 @@ export default function Page() {
             const conti = await listConti('*', gg.giornata);
             if (conti) {
                 const cc = conti.map((item) => {
+                    // id: <Link href={`/dashboard/casse/${item.id}`}>{item.id}</Link>
                     return {
                         id: item.id,
                         col1: item.id_comanda,
                         col2: item.stato,
-                        col3: deltanow(item.data_apertura),
-                        col4: item.stato.includes('CHIUSO') ? milltodatestring(item.data_chiusura) : '----',
-                        col5: item.totale+' €'
+                        col3: item.cameriere,
+                        col4: deltanow(item.data_apertura),
+                        col5: item.stato.includes('CHIUSO') ? milltodatestring(item.data_chiusura) : '----',
+                        col6: (item.totale.toFixed(2) + ' €')
                     }
                 });
 
@@ -120,8 +122,8 @@ export default function Page() {
 
                         <div className='text-center'>
                             <h2 className='font-extrabold'>Conti Giornata {sagra.giornata}</h2>
-                            <DataGrid rows={rows} columns={columns} />
-                            
+                            <DataGrid rows={rows} columns={columns} slots={{ toolbar: GridToolbar }} />
+
                             <br /><br />
 
                         </div>
