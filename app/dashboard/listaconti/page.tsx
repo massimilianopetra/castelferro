@@ -20,25 +20,25 @@ import { DataGrid, GridRowsProp, GridColDef } from '@mui/x-data-grid';
 export default function Page() {
 
     const [phase, setPhase] = useState('caricamento');
-    const [conti, setConti] = useState<DbConti[]>([]);
+    const [rows, setRows] = useState<any[]>([]);
     const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
     const { data: session } = useSession();
 
-    const rows: GridRowsProp = [
-        { id: 1, col1: '123', col2: 'Aperto', col3: '05:51:48', col4: '----', col5: '13.5 €' },
+    /* const rows: GridRowsProp = [
+        { id: 1, col1: 'GridRowsProp', col2: 'Aperto', col3: '05:51:48', col4: '----', col5: '13.5 €' },
         { id: 2, col1: '124', col2: 'CHIUSO', col3: '----', col4: '26/09/2024, 12:15:13', col5: '23.5 €' },
-        { id: 3, col1: '125', col2: 'Aperto', col3: '15:51:48', col4: '----', col5: '33.5 €'},
+        { id: 3, col1: '125', col2: 'Aperto', col3: '15:51:48', col4: '----', col5: '33.5 €' },
         { id: 4, col1: '126', col2: 'CHIUSO', col3: '----', col4: '26/09/2024, 13:15:13', col5: '44.5 €' },
         { id: 5, col1: '127', col2: 'CHIUSO', col3: '----', col4: '26/09/2024, 14:15:13', col5: '55.5 €' },
-      ];
-      
-      const columns: GridColDef[] = [
+    ]; */
+
+    const columns: GridColDef[] = [
         { field: 'col1', headerName: 'N. Foglietto', width: 150 },
         { field: 'col2', headerName: 'Stato', width: 150 },
         { field: 'col3', headerName: 'Aperto da', width: 150 },
         { field: 'col4', headerName: 'Chiuso in data', width: 150 },
         { field: 'col5', headerName: 'Totale', width: 150 },
-    
+
     ];
 
     useEffect(() => {
@@ -49,9 +49,20 @@ export default function Page() {
         const gg = await getGiornoSagra();
         if (gg) {
             setSagra(gg);
-            const ccA = await listConti('*', gg.giornata);
-            if (ccA) {
-                setConti(ccA);
+            const conti = await listConti('*', gg.giornata);
+            if (conti) {
+                const cc = conti.map((item) => {
+                    return {
+                        id: item.id,
+                        col1: item.id_comanda,
+                        col2: item.stato,
+                        col3: deltanow(item.data_apertura),
+                        col4: item.stato.includes('CHIUSO') ? milltodatestring(item.data_chiusura) : '----',
+                        col5: item.totale+' €'
+                    }
+                });
+
+                setRows(cc);
             }
             setPhase('caricato');
         }
@@ -106,46 +117,11 @@ export default function Page() {
                                 Verifica conti
                             </p>
                         </div>
-                        <div style={{ height: 300, width: '100%' }}>
-                            <DataGrid rows={rows} columns={columns} />
-                        </div>
+
                         <div className='text-center'>
                             <h2 className='font-extrabold'>Conti Giornata {sagra.giornata}</h2>
+                            <DataGrid rows={rows} columns={columns} />
                             
-                            <TableContainer component={Paper} >
-                                <Table sx={{ minWidth: 500 }} aria-label="a dense table">
-                                    <TableHead>
-                                        <TableRow>
-                                            <StyledTableCell align="left"><p className='font-bold'>N. Foglietto</p></StyledTableCell>
-                                            <StyledTableCell align="left"><p className='font-bold'>Stato</p></StyledTableCell>
-                                            <StyledTableCell align="left"><p className='font-bold'>Aperto da</p></StyledTableCell>
-                                            <StyledTableCell align="left"><p className='font-bold'>Chiuso in data</p></StyledTableCell>
-                                            <StyledTableCell align="left"><p className='font-bold'>Totale</p></StyledTableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {conti.map((row, i) => (
-                                            <StyledTableRow>
-                                                <StyledTableCell align="left">
-                                                    <Link href={`/dashboard/casse/${row.id_comanda}`}>{row.id_comanda}</Link>
-                                                </StyledTableCell>
-                                                <StyledTableCell align="left">
-                                                    <p>{row.stato}</p>
-                                                </StyledTableCell>
-                                                <StyledTableCell align="left">
-                                                    <p>{deltanow(row.data_apertura)}</p>
-                                                </StyledTableCell>
-                                                <StyledTableCell align="left">
-                                                    <p>{row.stato.includes('CHIUSO') ? milltodatestring(row.data_chiusura) : '----' }</p>
-                                                </StyledTableCell>
-                                                <StyledTableCell align="left">
-                                                    <p>{row.totale} &euro;</p>
-                                                </StyledTableCell>
-                                            </StyledTableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
                             <br /><br />
 
                         </div>
