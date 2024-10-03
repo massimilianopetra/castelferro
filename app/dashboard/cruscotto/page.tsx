@@ -13,7 +13,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-
+import { BarChart } from '@mui/x-charts/BarChart';
 
 export default function Page() {
 
@@ -150,6 +150,19 @@ export default function Page() {
         </main>
       );
     } else if (phase == 'caricato') {
+
+      const incassi = record.map((row) => { return ({giornata: row.giornata, incasso:row.incasso}) });
+      console.log(incassi);
+
+      const data = [
+        { giornata: 'Giorno 1', incasso: 4000 },
+        { giornata: 'Giorno 2', incasso: 3000 },
+        { giornata: 'Giorno 3', incasso: 2000 },
+        { giornata: 'Giorno 4', incasso: 2780 },
+        { giornata: 'Giorno 5', incasso: 1890 },
+      ];
+
+      
       return (
         <main>
           <div className="flex flex-wrap flex-col">
@@ -209,16 +222,28 @@ export default function Page() {
                   <TableRow>
                     <TableCell colSpan={2} className="text-xl  font-extralight ">Spesa media a persona</TableCell>
                     <TableCell align="right" className="text-xl  font-extralight ">
-                    {(record.reduce((accumulator, currentValue) => {
-                          return accumulator + currentValue.incasso;
-                        }, 0)/record.reduce((accumulator, currentValue) => {
-                          return accumulator + currentValue.coperti;
-                        }, 0)).toFixed(2)}&nbsp;&euro;
+                      {(record.reduce((accumulator, currentValue) => {
+                        return accumulator + currentValue.incasso;
+                      }, 0) / record.reduce((accumulator, currentValue) => {
+                        return accumulator + currentValue.coperti;
+                      }, 0)).toFixed(2)}&nbsp;&euro;
                     </TableCell>
                   </TableRow>
                 </TableBody>
               </Table>
             </TableContainer>
+            <br></br>
+            <br></br>
+            <p className="text-2xl py-4">
+              Grafico Incasso
+            </p>
+            <BarChart
+              xAxis={[{ dataKey: 'giornata', label: 'Giornata', scaleType: 'band' }]}
+              series={[{ dataKey: 'incasso', label: 'Incasso', color: '#8884d8' }]}
+              width={600}
+              height={400}
+              dataset={incassi}
+            />
           </div>
         </main>
 

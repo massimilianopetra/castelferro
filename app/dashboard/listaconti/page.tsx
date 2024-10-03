@@ -4,18 +4,11 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import type { DbConti, DbFiera } from '@/app/lib/definitions';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell, { tableCellClasses } from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-import { styled } from '@mui/material/styles';
 import CircularProgress from '@mui/material/CircularProgress';
 import { getGiornoSagra, listConti } from '@/app/lib/actions';
 import { deltanow, milltodatestring } from '@/app/lib/utils';
 import { DataGrid, GridToolbar, GridColDef } from '@mui/x-data-grid';
+
 
 export default function Page() {
 
@@ -33,11 +26,11 @@ export default function Page() {
 
             ), headerClassName: 'my--theme--header'
         },
-        { field: 'col2', headerName: 'Stato',headerClassName: 'my--theme--header' },
-        { field: 'col3', headerName: 'Cameriere',headerClassName: 'my--theme--header', width: 200 },
-        { field: 'col4', headerName: 'Aperto da',headerClassName: 'my--theme--header', width: 150 },
-        { field: 'col5', headerName: 'Chiuso in data',headerClassName: 'my--theme--header', width: 200 },
-        { field: 'col6', headerName: 'Totale',headerClassName: 'my--theme--header', align: 'right' }
+        { field: 'col2', headerName: 'Stato', headerClassName: 'my--theme--header' },
+        { field: 'col3', headerName: 'Cameriere', headerClassName: 'my--theme--header', width: 200 },
+        { field: 'col4', headerName: 'Aperto da', headerClassName: 'my--theme--header', width: 150 },
+        { field: 'col5', headerName: 'Chiuso in data', headerClassName: 'my--theme--header', width: 200 },
+        { field: 'col6', headerName: 'Totale', headerClassName: 'my--theme--header', align: 'right' }
 
     ];
 
@@ -100,7 +93,7 @@ export default function Page() {
                             </p>
                         </div>
 
-                        <div className='text-center' style={{ height: 700, width: '100%' }} >
+                        <div className='text-center' style={{ height: 700, width: 'auto' }} >
                             <h2 className='font-extrabold'>Conti Giornata {sagra.giornata}</h2>
                             <DataGrid
                                 rows={rows}
@@ -108,15 +101,16 @@ export default function Page() {
                                 slots={{ toolbar: GridToolbar }}
                                 sx={{
                                     '& .my--theme--header': {
-                                      backgroundColor: 'black',
-                                      color: 'white',            // Testo bianco
-                                      fontWeight: 'bold'         // Testo in grassetto
+                                        backgroundColor: 'black',
+                                        color: 'white',            // Testo bianco
+                                        fontWeight: 'bold'         // Testo in grassetto
                                     },
-                                  }}
-                                
+                                }}
+
                             />
 
                             <br /><br />
+
 
                         </div>
                     </div>
