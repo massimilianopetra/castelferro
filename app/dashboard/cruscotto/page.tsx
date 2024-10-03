@@ -151,18 +151,9 @@ export default function Page() {
       );
     } else if (phase == 'caricato') {
 
-      const incassi = record.map((row) => { return ({giornata: row.giornata, incasso:row.incasso}) });
+      const incassi = record.map((row) => { return ({giornata: row.giornata, incasso:row.incasso, incassopos: row.incassopos}) });
       console.log(incassi);
 
-      const data = [
-        { giornata: 'Giorno 1', incasso: 4000 },
-        { giornata: 'Giorno 2', incasso: 3000 },
-        { giornata: 'Giorno 3', incasso: 2000 },
-        { giornata: 'Giorno 4', incasso: 2780 },
-        { giornata: 'Giorno 5', incasso: 1890 },
-      ];
-
-      
       return (
         <main>
           <div className="flex flex-wrap flex-col">
@@ -239,9 +230,11 @@ export default function Page() {
             </p>
             <BarChart
               xAxis={[{ dataKey: 'giornata', label: 'Giornata', scaleType: 'band' }]}
-              series={[{ dataKey: 'incasso', label: 'Incasso', color: '#8884d8' }]}
-              width={600}
-              height={400}
+              series={[{ dataKey: 'incasso', label: 'Incasso'},
+                { dataKey: 'incassopos', label: 'IncassoPos'}
+              ]}
+              width={1000}
+              height={600}
               dataset={incassi}
             />
           </div>
