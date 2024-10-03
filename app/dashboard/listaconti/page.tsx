@@ -31,13 +31,13 @@ export default function Page() {
                     {params.value}
                 </Link>
 
-            )
+            ), headerClassName: 'my--theme--header'
         },
-        { field: 'col2', headerName: 'Stato' },
-        { field: 'col3', headerName: 'Cameriere', width: 200 },
-        { field: 'col4', headerName: 'Aperto da', width: 150 },
-        { field: 'col5', headerName: 'Chiuso in data', width: 200 },
-        { field: 'col6', headerName: 'Totale', align: 'right' }
+        { field: 'col2', headerName: 'Stato',headerClassName: 'my--theme--header' },
+        { field: 'col3', headerName: 'Cameriere',headerClassName: 'my--theme--header', width: 200 },
+        { field: 'col4', headerName: 'Aperto da',headerClassName: 'my--theme--header', width: 150 },
+        { field: 'col5', headerName: 'Chiuso in data',headerClassName: 'my--theme--header', width: 200 },
+        { field: 'col6', headerName: 'Totale',headerClassName: 'my--theme--header', align: 'right' }
 
     ];
 
@@ -70,26 +70,6 @@ export default function Page() {
         }
     }
 
-    const StyledTableCell = styled(TableCell)(({ theme }) => ({
-        [`&.${tableCellClasses.head}`]: {
-            backgroundColor: theme.palette.common.black,
-            color: theme.palette.common.white,
-        },
-        [`&.${tableCellClasses.body}`]: {
-            fontSize: 14,
-        },
-    }));
-
-    const StyledTableRow = styled(TableRow)(({ theme }) => ({
-        '&:nth-of-type(odd)': {
-            backgroundColor: theme.palette.action.hover,
-        },
-        // hide last border
-        '&:last-child td, &:last-child th': {
-            border: 0,
-        },
-    }));
-
     if ((session?.user?.name == "SuperUser")) {
         if (phase == 'caricamento') {
             return (
@@ -120,9 +100,21 @@ export default function Page() {
                             </p>
                         </div>
 
-                        <div className='text-center'>
+                        <div className='text-center' style={{ height: 700, width: '100%' }} >
                             <h2 className='font-extrabold'>Conti Giornata {sagra.giornata}</h2>
-                            <DataGrid rows={rows} columns={columns} slots={{ toolbar: GridToolbar }} />
+                            <DataGrid
+                                rows={rows}
+                                columns={columns}
+                                slots={{ toolbar: GridToolbar }}
+                                sx={{
+                                    '& .my--theme--header': {
+                                      backgroundColor: 'black',
+                                      color: 'white',            // Testo bianco
+                                      fontWeight: 'bold'         // Testo in grassetto
+                                    },
+                                  }}
+                                
+                            />
 
                             <br /><br />
 
