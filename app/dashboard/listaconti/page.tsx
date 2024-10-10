@@ -102,8 +102,8 @@ export default function Page() {
                                 slots={{ toolbar: GridToolbar }}
                                 sx={{
                                     '& .my--theme--header': {
-                                        backgroundColor: 'black',
-                                        color: 'white',            // Testo bianco
+                                        backgroundColor: 'gray',
+                                        color: 'white',            // Testo blue
                                         fontWeight: 'bold'         // Testo in grassetto
                                     },
                                 }}
