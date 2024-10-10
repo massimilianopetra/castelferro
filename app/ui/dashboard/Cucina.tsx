@@ -78,7 +78,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                 const cameriere = await getCamerieri(num);
                 if (cameriere) {
                     await apriConto(num, sagra.giornata, cameriere);
-                    await writeLog(num, sagra.giornata, nomeCucina, '', 'INIT', ''); // Logger
+                    await writeLog(num, sagra.giornata, nomeCucina, '', 'START', ''); // Logger
                     const cc = await getLastLog(sagra.giornata, nomeCucina);
                     if (cc) {
                         setLastLog(cc);
