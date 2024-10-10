@@ -8,7 +8,24 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { getGiornoSagra, listConti } from '@/app/lib/actions';
 import { deltanow, milltodatestring } from '@/app/lib/utils';
 import { DataGrid, GridToolbar, GridColDef } from '@mui/x-data-grid';
+import { styled } from '@mui/material/styles';
 
+const StyledDataGrid = styled(DataGrid)({
+    '& .MuiDataGrid-columnHeader': {
+        backgroundColor: 'black', // Sfondo nero per l'header
+        color: 'white',           // Testo bianco
+    },
+    '& .MuiDataGrid-columnHeaderTitle': {
+        fontWeight: 'bold',       // Testo in grassetto
+    },
+    "& .MuiDataGrid-sortIcon": {
+        color: "white",
+    },
+    "& .MuiDataGrid-menuIconButton": {
+        opacity: 1,
+        color: "white"
+    },
+});
 
 export default function Page() {
 
@@ -24,13 +41,13 @@ export default function Page() {
                     {params.value}
                 </Link>
 
-            ), headerClassName: 'my--theme--header'
+            )
         },
-        { field: 'col2', headerName: 'Stato', headerClassName: 'my--theme--header' },
-        { field: 'col3', headerName: 'Cameriere', headerClassName: 'my--theme--header', width: 200 },
-        { field: 'col4', headerName: 'Aperto da', headerClassName: 'my--theme--header', width: 150 },
-        { field: 'col5', headerName: 'Chiuso in data', headerClassName: 'my--theme--header', width: 200 },
-        { field: 'col6', headerName: 'Totale', headerClassName: 'my--theme--header', align: 'right' }
+        { field: 'col2', headerName: 'Stato' },
+        { field: 'col3', headerName: 'Cameriere', width: 200 },
+        { field: 'col4', headerName: 'Aperto da', width: 150 },
+        { field: 'col5', headerName: 'Chiuso in data', width: 200 },
+        { field: 'col6', headerName: 'Totale', type: "number", align: 'right' }
 
     ];
 
@@ -54,7 +71,7 @@ export default function Page() {
                         col4: deltanow(item.data_apertura),
                         col5: item.stato.includes('CHIUSO') ? milltodatestring(item.data_chiusura) : '----',
                         // col6: (item.totale.toFixed(2) + ' €')
-                        col6: (item.totale.toFixed(2) + ' €')
+                        col6: item.totale.toFixed(2)
                     }
                 });
 
@@ -96,17 +113,10 @@ export default function Page() {
 
                         <div className='text-center' style={{ height: 700, width: 'auto' }} >
                             <h2 className='font-extrabold'>Conti Giornata {sagra.giornata}</h2>
-                            <DataGrid
+                            <StyledDataGrid
                                 rows={rows}
                                 columns={columns}
                                 slots={{ toolbar: GridToolbar }}
-                                sx={{
-                                    '& .my--theme--header': {
-                                        backgroundColor: 'gray',
-                                        color: 'white',            // Testo blue
-                                        fontWeight: 'bold'         // Testo in grassetto
-                                    },
-                                }}
 
                             />
 
