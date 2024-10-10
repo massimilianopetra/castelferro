@@ -18,6 +18,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     const [phase, setPhase] = useState('iniziale');
     const [lastLog, setLastLog] = useState<DbLog[]>([]);
     const [products, setProducts] = useState<DbConsumazioni[]>([]);
+    const [iniProducts, setIniProducts] = useState<DbConsumazioni[]>([]);
     const [numero, setNumero] = useState<number | string>('');
     const [numeroFoglietto, setNumeroFoglietto] = useState<number | string>('');
     const { data: session } = useSession();
@@ -52,7 +53,10 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
 
         const fetchData = async () => {
             const c = await getConsumazioni(nomeCucina, num, sagra.giornata);
-            if (c) setProducts(c);
+            if (c) {
+                setProducts(c);
+                setIniProducts(c);
+            }
 
             const cc = await getConto(num, sagra.giornata);
             setNumeroFoglietto(num);
@@ -62,7 +66,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                     setPhase('bloccato')
                 }
                 else {
-                    await writeLog(num, sagra.giornata, nomeCucina, '', 'APRI', ''); // Logger
+                    await writeLog(num, sagra.giornata, nomeCucina, '', 'OPEN', ''); // Logger
                     const cc = await getLastLog(sagra.giornata, nomeCucina);
                     if (cc) {
                         setLastLog(cc);
@@ -74,7 +78,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                 const cameriere = await getCamerieri(num);
                 if (cameriere) {
                     await apriConto(num, sagra.giornata, cameriere);
-                    await writeLog(num, sagra.giornata, nomeCucina, '', 'APRI', ''); // Logger
+                    await writeLog(num, sagra.giornata, nomeCucina, '', 'INIT', ''); // Logger
                     const cc = await getLastLog(sagra.giornata, nomeCucina);
                     if (cc) {
                         setLastLog(cc);
@@ -103,11 +107,34 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     };
 
     const handleButtonClickInvia = async () => {
-        numeroFoglietto
+        // numeroFoglietto
+        console.log(`Aggiornamento Numero foglietto: ${numeroFoglietto} da ${nomeCucina}`);
+        const logArray = products.map((item) => {
+            const orig = iniProducts.find(o => o.id_piatto == item.id_piatto);
+            if (orig) {
+                if (item.quantita > orig.quantita) {
+                    return ({id: item.id_comanda,message:`Aggiunti: ${item.quantita-orig.quantita} ${item.piatto}`});
+                    
+                } else if  (item.quantita < orig.quantita) {
+                    return({id: item.id_comanda,message:`Eliminati: ${orig.quantita-item.quantita} ${item.piatto}`});
+                } else {
+                    return ({id: -1, message:``});
+                }
+            }
+
+            return {id: -1, message:``};
+        });
+
+        for (var index=0; index<logArray.length; index++) {
+            if (logArray[index].id != -1) {
+                await writeLog(logArray[index].id, sagra.giornata, nomeCucina, '', 'UPDATE', logArray[index].message);
+            }
+        }
+        
         sendConsumazioni(products);
         setPhase('inviato');
-        console.log(`Numero foglietto: ${numeroFoglietto}`);
         setProducts([]);
+        setIniProducts([]);
     };
 
     const handleAdd = (id: number) => {

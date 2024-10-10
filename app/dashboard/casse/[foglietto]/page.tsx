@@ -55,7 +55,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         setConto(cc);
         if (cc?.stato == 'APERTO') {
           setNumeroFoglietto(num.toString());
-          await writeLog(num, gg.giornata, 'Casse', '', 'APRI', ''); // Logger
+          await writeLog(num, gg.giornata, 'Casse', '', 'OPEN', ''); // Logger
           const cc = await getLastLog(gg.giornata, 'Casse');
           if (cc) {
             setLastLog(cc);
@@ -63,7 +63,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           setPhase('aperto');
         } else if (cc?.stato == 'STAMPATO') {
           setNumeroFoglietto(num.toString());
-          await writeLog(num, gg.giornata, 'Casse', '', 'APRI', ''); // Logger
+          await writeLog(num, gg.giornata, 'Casse', '', 'OPEN', ''); // Logger
           const cc = await getLastLog(gg.giornata, 'Casse');
           if (cc) {
             setLastLog(cc);

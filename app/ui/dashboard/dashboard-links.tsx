@@ -11,6 +11,7 @@ import { LockOpenIcon } from '@heroicons/react/20/solid';
 import AccessibilityIcon from '@mui/icons-material/Accessibility';
 import EuroIcon from '@mui/icons-material/Euro';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import AutoStoriesIcon from '@mui/icons-material/AutoStories';
 
 // Map of links to display in the side navigation.
 // Depending on the size of the application, this would be stored in a database.
@@ -20,6 +21,7 @@ const links = [
   { name: 'Gestione Camerieri', href: '/dashboard/camerieri', icon: AccessibilityIcon },
   { name: 'Verifica conti (aperti e chiusi)', href: '/dashboard/listaconti', icon: CheckCircleOutlineIcon },
   { name: 'Cruscotto di sintesi', href: '/dashboard/cruscotto', icon: EuroIcon },
+  { name: 'Logs', href: '/dashboard/logs', icon: AutoStoriesIcon },
 ];
 
 export default function DashboardLinks() {

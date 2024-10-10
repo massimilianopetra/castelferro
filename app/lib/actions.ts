@@ -216,7 +216,14 @@ export async function listConti(stato: string, giornata: number): Promise<DbCont
   }
 }
 
-export async function listConsumazioni(id_piatto : number, giornata: number): Promise<DbConsumazioni[] | undefined> {
+export async function listLog(giornata: number): Promise<DbLog[] | undefined> {
+
+  const current = await sql<DbLog>`SELECT * FROM logger  WHERE giornata = ${giornata} ORDER BY data DESC`;
+  return current.rows;
+
+}
+
+export async function listConsumazioni(id_piatto: number, giornata: number): Promise<DbConsumazioni[] | undefined> {
 
   if (id_piatto == -1) {
     const current = await sql<DbConsumazioni>`SELECT * FROM consumazioni  WHERE giorno = ${giornata}`;
