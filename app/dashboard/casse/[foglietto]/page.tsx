@@ -20,6 +20,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   const printRef = useRef<HTMLDivElement | null>(null);
   const [phase, setPhase] = useState('iniziale');
   const [products, setProducts] = useState<DbConsumazioniPrezzo[]>([]);
+  const [iniProducts, setIniProducts] = useState<DbConsumazioniPrezzo[]>([]);
   const [numero, setNumero] = useState<number | string>('');
   const [numeroFoglietto, setNumeroFoglietto] = useState<number | string>('');
   const [conto, setConto] = useState<DbConti>();
@@ -46,7 +47,10 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
 
         const c = await getConsumazioniCassa(num, gg.giornata);
-        if (c) setProducts(c);
+        if (c) {
+          setProducts(c);
+          setIniProducts(c);
+        }
 
         //console.log(`estrazione conto ${num} giornata: ${gg.giornata}`);
         const cc = await getConto(num, gg.giornata);
@@ -122,6 +126,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
       await aggiornaConto(Number(numeroFoglietto), sagra.giornata, totale);
       await stampaConto(Number(numeroFoglietto), sagra.giornata);
+      await writeLog(Number(numeroFoglietto),sagra.giornata,'Casse','','PRINT','Stampa conto');
       setPhase('stampato');
     };
     fetchData();
@@ -156,6 +161,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       setPhase('elaborazione');
       const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata);
       const cc = await getConto(Number(numeroFoglietto), sagra.giornata);
+      await writeLog(Number(numeroFoglietto),sagra.giornata,'Casse','','CLOSE','Pagato contanti');
       setConto(cc);
       setPhase('chiuso');
     };
@@ -168,6 +174,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       setPhase('elaborazione');
       const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata, true);
       const cc = await getConto(Number(numeroFoglietto), sagra.giornata);
+      await writeLog(Number(numeroFoglietto),sagra.giornata,'Casse','','CLOSE','Pagato POS');
       setConto(cc);
       setPhase('chiuso');
     };
