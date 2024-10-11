@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect} from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Button, TextField } from '@mui/material';
+import { Button, Snackbar, TextField } from '@mui/material';
 import type { DbFiera, DbLog } from '@/app/lib/definitions';
 import { getGiornoSagra, getLastLog } from '@/app/lib/actions';
 import Filter1Icon from '@mui/icons-material/Filter1';
@@ -13,6 +13,7 @@ export default function Page() {
 
     const router = useRouter();
     const [numero, setNumero] = useState<number | string>('');
+    const [openSnackbar, setOpenSnackbar] = useState(false);
     const [lastLog, setLastLog] = useState<DbLog[]>([]);
     const { data: session } = useSession();
     const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
@@ -41,9 +42,17 @@ export default function Page() {
     }
 
     const handleButtonClickCarica = () => {
-        //const num = Number(numero);
-        //carica(num);
+        const num = Number(numero);
+        if (isNaN(num) || num < 1 || num > 9999) {
+            setOpenSnackbar(true);
+            return;
+        }
+
         router.push(`/dashboard/casse/${numero}`);
+    };
+
+    const handleClose = () => {
+        setOpenSnackbar(false);
     };
 
     if ((session?.user?.name == "Casse") || (session?.user?.name == "SuperUser"))
@@ -105,6 +114,14 @@ export default function Page() {
                                 </>
                             ))}
                         </p>
+                    </div>
+                    <div>
+                        <Snackbar
+                            open={openSnackbar}
+                            autoHideDuration={6000}
+                            onClose={handleClose}
+                            message="Inserisci un numero foglietto valido"
+                        />
                     </div>
                 </main>
 

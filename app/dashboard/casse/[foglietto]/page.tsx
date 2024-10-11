@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation';
-import { Button, ButtonGroup, TextField } from '@mui/material';
+import { Button, ButtonGroup, Snackbar, TextField } from '@mui/material';
 import type { DbConsumazioniPrezzo, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
 import { getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto, aggiornaConto, stampaConto } from '@/app/lib/actions';
 import { writeLog, getGiornoSagra, getLastLog } from '@/app/lib/actions';
@@ -19,6 +19,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   const router = useRouter();
   const printRef = useRef<HTMLDivElement | null>(null);
   const [phase, setPhase] = useState('iniziale');
+  const [openSnackbar, setOpenSnackbar] = useState(false);
   const [products, setProducts] = useState<DbConsumazioniPrezzo[]>([]);
   const [iniProducts, setIniProducts] = useState<DbConsumazioniPrezzo[]>([]);
   const [numero, setNumero] = useState<number | string>('');
@@ -31,12 +32,6 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   useEffect(() => {
     const fetchData = async () => {
 
-      const num = +params.foglietto;
-      if (isNaN(num) || num < 1 || num > 9999) {
-        alert('Inserisci un numero foglietto valido');
-        return;
-      }
-
       const gg = await getGiornoSagra();
       if (gg) {
         setSagra(gg);
@@ -45,6 +40,11 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           setLastLog(log);
         }
 
+        const num = +params.foglietto;
+        if (isNaN(num) || num < 1 || num > 9999) {
+          setOpenSnackbar(true);
+          return;
+        }
 
         const c = await getConsumazioniCassa(num, gg.giornata);
         if (c) {
@@ -94,6 +94,12 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   }
 
   const handleButtonClickCarica = () => {
+    const num = Number(numero);
+    if (isNaN(num) || num < 1 || num > 9999) {
+        setOpenSnackbar(true);
+        return;
+    }
+
     router.push(`/dashboard/casse/${numero}`);
   };
 
@@ -126,7 +132,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
       await aggiornaConto(Number(numeroFoglietto), sagra.giornata, totale);
       await stampaConto(Number(numeroFoglietto), sagra.giornata);
-      await writeLog(Number(numeroFoglietto),sagra.giornata,'Casse','','PRINT','Stampa conto');
+      await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'PRINT', 'Stampa conto');
       setPhase('stampato');
     };
     fetchData();
@@ -161,7 +167,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       setPhase('elaborazione');
       const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata);
       const cc = await getConto(Number(numeroFoglietto), sagra.giornata);
-      await writeLog(Number(numeroFoglietto),sagra.giornata,'Casse','','CLOSE','Pagato contanti');
+      await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', 'Pagato contanti');
       setConto(cc);
       setPhase('chiuso');
     };
@@ -174,7 +180,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       setPhase('elaborazione');
       const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata, true);
       const cc = await getConto(Number(numeroFoglietto), sagra.giornata);
-      await writeLog(Number(numeroFoglietto),sagra.giornata,'Casse','','CLOSE','Pagato POS');
+      await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', 'Pagato POS');
       setConto(cc);
       setPhase('chiuso');
     };
@@ -208,6 +214,10 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     });
     setPhase('modificato');
     setProducts(newProducts);
+  };
+
+  const handleClose = () => {
+    setOpenSnackbar(false);
   };
 
   const renderPhaseContent = () => {
@@ -497,6 +507,14 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             </p>
           </div>
           {renderPhaseContent()}
+          <div>
+            <Snackbar
+              open={openSnackbar}
+              autoHideDuration={6000}
+              message="Inserisci un numero foglietto valido"
+              onClose={handleClose}
+            />
+          </div>
 
         </main>
 

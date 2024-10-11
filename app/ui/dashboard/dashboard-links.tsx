@@ -22,6 +22,7 @@ const links = [
   { name: 'Verifica conti (aperti e chiusi)', href: '/dashboard/listaconti', icon: CheckCircleOutlineIcon },
   { name: 'Cruscotto di sintesi', href: '/dashboard/cruscotto', icon: EuroIcon },
   { name: 'Logs', href: '/dashboard/logs', icon: AutoStoriesIcon },
+  
 ];
 
 export default function DashboardLinks() {

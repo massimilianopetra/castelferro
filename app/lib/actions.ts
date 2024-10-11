@@ -373,3 +373,15 @@ export async function getLastLog(giorno: number, cucina: string): Promise<DbLog[
     throw new Error('Failed to fetch logger.');
   }
 }
+
+export async function clearLog() {
+  await sql`TRUNCATE TABLE logger`;
+}
+
+export async function clearConti() {
+  await sql`TRUNCATE TABLE conti`;
+}
+
+export async function clearConsumazioni() {
+  await sql`TRUNCATE TABLE consumazioni`;
+}
