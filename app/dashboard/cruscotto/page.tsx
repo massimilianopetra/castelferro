@@ -24,7 +24,7 @@ export default function Page() {
 
   const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
-     /* backgroundColor: theme.palette.common.black,*/
+      /* backgroundColor: theme.palette.common.black,*/
       color: theme.palette.common.white,
     },
     [`&.${tableCellClasses.body}`]: {
@@ -151,7 +151,7 @@ export default function Page() {
       );
     } else if (phase == 'caricato') {
 
-      const incassi = record.map((row) => { return ({giornata: row.giornata, incasso:row.incasso, incassopos: row.incassopos}) });
+      const incassi = record.map((row) => { return ({ giornata: row.giornata, incasso: row.incasso, incassopos: row.incassopos }) });
       console.log(incassi);
 
       return (
@@ -225,18 +225,20 @@ export default function Page() {
             </TableContainer>
             <br></br>
             <br></br>
-            <p className="text-2xl py-4">
-              Grafico Incasso
-            </p>
-            <BarChart
-              xAxis={[{ dataKey: 'giornata', label: 'Giornata', scaleType: 'band' }]}
-              series={[{ dataKey: 'incasso', label: 'Incasso'},
-                { dataKey: 'incassopos', label: 'IncassoPos'}
-              ]}
-              width={1000}
-              height={600}
-              dataset={incassi}
-            />
+            <div className='hidden sm:block'>
+              <p className="text-2xl py-4">
+                Grafico Incasso
+              </p>
+              <BarChart 
+                xAxis={[{ dataKey: 'giornata', label: 'Giornata', scaleType: 'band' }]}
+                series={[{ dataKey: 'incasso', label: 'Incasso' },
+                { dataKey: 'incassopos', label: 'IncassoPos' }
+                ]}
+                width={1000}
+                height={600}
+                dataset={incassi}
+              />
+            </div>
           </div>
         </main>
 

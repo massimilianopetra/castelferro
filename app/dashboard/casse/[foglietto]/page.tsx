@@ -298,7 +298,9 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               </div>
               &nbsp;
               <div className='text-center '>
-                <Button variant="contained" onClick={handleStampa}>Stampa Conto</Button>
+                { +numeroFoglietto > 10 ? <Button variant="contained" onClick={handleStampa} >Stampa Conto</Button> :
+                <Button variant="contained" onClick={handleStampa} disabled >Stampa Conto</Button>
+                }
                 &nbsp;&nbsp;
                 <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
                   &nbsp;Chiudi conto&nbsp;&nbsp;
@@ -389,7 +391,9 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 </p>
               </div>
               <div className="z-0 text-center">
-                <Button variant="contained" onClick={handleStampa} >Stampa Conto</Button>
+                { +numeroFoglietto > 10 ? <Button variant="contained" onClick={handleStampa} >Stampa Conto</Button> :
+                <Button variant="contained" onClick={handleStampa} disabled >Stampa Conto</Button>
+                }
                 &nbsp;&nbsp;
                 <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
                   &nbsp;Chiudi conto&nbsp;&nbsp;
