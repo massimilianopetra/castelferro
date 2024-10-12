@@ -12,6 +12,7 @@ import AccessibilityIcon from '@mui/icons-material/Accessibility';
 import EuroIcon from '@mui/icons-material/Euro';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
+import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 
 // Map of links to display in the side navigation.
 // Depending on the size of the application, this would be stored in a database.
@@ -21,7 +22,7 @@ const links = [
   { name: 'Gestione Camerieri', href: '/dashboard/camerieri', icon: AccessibilityIcon },
   { name: 'Verifica conti (aperti e chiusi)', href: '/dashboard/listaconti', icon: CheckCircleOutlineIcon },
   { name: 'Cruscotto di sintesi', href: '/dashboard/cruscotto', icon: EuroIcon },
-  { name: 'Cruscotto di sintesi: conti omaggio', href: '/dashboard/cruscottogratis', icon: EuroIcon },
+  { name: 'Cruscotto di sintesi: conti omaggio', href: '/dashboard/cruscottogratis', icon: CardGiftcardIcon },
   { name: 'Logs', href: '/dashboard/logs', icon: AutoStoriesIcon },
   
 ];
