@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
-import { Button, TextField } from '@mui/material';
+import { Button, Snackbar, TextField } from '@mui/material';
 import type { DbConsumazioni, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
 import { getConsumazioni, sendConsumazioni, getConto, apriConto, getCamerieri } from '@/app/lib/actions';
 import { writeLog, getGiornoSagra, getLastLog } from '@/app/lib/actions';
@@ -19,6 +19,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     const [lastLog, setLastLog] = useState<DbLog[]>([]);
     const [products, setProducts] = useState<DbConsumazioni[]>([]);
     const [iniProducts, setIniProducts] = useState<DbConsumazioni[]>([]);
+    const [openSnackbar, setOpenSnackbar] = useState(false);
     const [numero, setNumero] = useState<number | string>('');
     const [numeroFoglietto, setNumeroFoglietto] = useState<number | string>('');
     const { data: session } = useSession();
@@ -44,10 +45,14 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setNumero(event.target.value);
     };
+    
+    const handleClose = () => {
+        setOpenSnackbar(false);
+    };
 
     async function carica(num: number) {
         if (isNaN(num) || num < 1 || num > 9999) {
-            alert('Inserisci un numero foglietto valido');
+            setOpenSnackbar(true);
             return;
         }
 
@@ -314,6 +319,14 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                             <Button variant="contained" onClick={handleButtonClickInvia}>Invia</Button> :
                             <Button variant="contained" onClick={handleButtonClickInvia} disabled>Invia </Button>
                         }
+                    </div>
+                    <div>
+                        <Snackbar
+                            open={openSnackbar}
+                            autoHideDuration={6000}
+                            onClose={handleClose}
+                            message="Inserisci un numero foglietto valido"
+                        />
                     </div>
                 </main>
 
