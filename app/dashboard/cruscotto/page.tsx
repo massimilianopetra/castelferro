@@ -24,7 +24,7 @@ export default function Page() {
 
   const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
-      /* backgroundColor: theme.palette.common.black,*/
+       backgroundColor: theme.palette.common.black,
       color: theme.palette.common.white,
     },
     [`&.${tableCellClasses.body}`]: {
@@ -164,7 +164,7 @@ export default function Page() {
             </div>
             <TableContainer component={Paper}>
               <Table sx={{ minWidth: 700 }} aria-label="customized table">
-                <TableHead>
+                <TableHead >
                   <TableRow>
                     <StyledTableCell className="font-bold" >GIORNATA</StyledTableCell>
                     <StyledTableCell align="right" className="font-bold ">Incasso&nbsp;</StyledTableCell>

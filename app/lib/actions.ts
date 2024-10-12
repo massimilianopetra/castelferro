@@ -216,6 +216,28 @@ export async function listConti(stato: string, giornata: number): Promise<DbCont
   }
 }
 
+export async function listContiGratis (stato: string, giornata: number): Promise<DbConti[] | undefined> {
+
+  if (stato == '*') {
+    const current = await sql<DbConti>`SELECT * FROM conti  WHERE giorno = ${giornata} AND id_comanda < 10 ORDER BY data_apertura`;
+    return current.rows;
+  } else {
+    const current = await sql<DbConti>`SELECT * FROM conti  WHERE stato = ${stato} AND id_comanda < 10  AND giorno = ${giornata} ORDER BY data_apertura`;
+    return current.rows;
+  }
+}
+
+export async function listContiGratisFogliettoN (stato: string, giornata: number, foglietto: number): Promise<DbConti[] | undefined> {
+
+  if (stato == '*') {
+    const current = await sql<DbConti>`SELECT * FROM conti  WHERE giorno = ${giornata} AND id_comanda = ${foglietto} ORDER BY data_apertura`;
+    return current.rows;
+  } else {
+    const current = await sql<DbConti>`SELECT * FROM conti  WHERE stato = ${stato} AND id_comanda = ${foglietto} AND giorno = ${giornata} ORDER BY data_apertura`;
+    return current.rows;
+  }
+}
+
 export async function listLog(giornata: number): Promise<DbLog[] | undefined> {
 
   const current = await sql<DbLog>`SELECT * FROM logger  WHERE giornata = ${giornata} ORDER BY data DESC`;
@@ -230,6 +252,28 @@ export async function listConsumazioni(id_piatto: number, giornata: number): Pro
     return current.rows;
   } else {
     const current = await sql<DbConsumazioni>`SELECT * FROM consumazioni  WHERE giorno = ${giornata} AND id_piatto = ${id_piatto}`;
+    return current.rows;
+  }
+}
+
+export async function listConsumazioniGratis (id_piatto: number, giornata: number): Promise<DbConsumazioni[] | undefined> {
+
+  if (id_piatto == -1) {
+    const current = await sql<DbConsumazioni>`SELECT * FROM consumazioni  WHERE giorno = ${giornata} AND id_comanda < 10`;
+    return current.rows;
+  } else {
+    const current = await sql<DbConsumazioni>`SELECT * FROM consumazioni  WHERE giorno = ${giornata} AND id_comanda < 10 AND id_piatto = ${id_piatto}`;
+    return current.rows;
+  }
+}
+
+export async function listConsumazioniFogliettoN (id_piatto: number, giornata: number, foglietto: number, ): Promise<DbConsumazioni[] | undefined> {
+
+  if (id_piatto == -1) {
+    const current = await sql<DbConsumazioni>`SELECT * FROM consumazioni  WHERE giorno = ${giornata} AND id_comanda = ${foglietto}`;
+    return current.rows;
+  } else {
+    const current = await sql<DbConsumazioni>`SELECT * FROM consumazioni  WHERE giorno = ${giornata} AND d_comanda = ${foglietto} AND id_piatto = ${id_piatto}`;
     return current.rows;
   }
 }

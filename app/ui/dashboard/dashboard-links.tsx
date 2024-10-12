@@ -21,6 +21,7 @@ const links = [
   { name: 'Gestione Camerieri', href: '/dashboard/camerieri', icon: AccessibilityIcon },
   { name: 'Verifica conti (aperti e chiusi)', href: '/dashboard/listaconti', icon: CheckCircleOutlineIcon },
   { name: 'Cruscotto di sintesi', href: '/dashboard/cruscotto', icon: EuroIcon },
+  { name: 'Cruscotto di sintesi: conti omaggio', href: '/dashboard/cruscottogratis', icon: EuroIcon },
   { name: 'Logs', href: '/dashboard/logs', icon: AutoStoriesIcon },
   
 ];
