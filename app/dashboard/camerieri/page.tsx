@@ -102,7 +102,7 @@ export default function Cucina() {
 
     };
 
-    if ((session?.user?.name == "SuperUser")) {
+    if ((session?.user?.name == "Casse") || (session?.user?.name == "SuperUser")) {
         if (phase == 'caricamento') {
             return (
                 <main>

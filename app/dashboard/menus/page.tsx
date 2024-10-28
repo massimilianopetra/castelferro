@@ -48,8 +48,7 @@ export default function Page() {
     console.log("*********************");
     console.log(session?.user?.name);
     console.log("*********************");
-
-    if ((session?.user?.name == "SuperUser")) {
+    if ((session?.user?.name == "Casse") || (session?.user?.name == "SuperUser")) {
         return (
             <main>
                 <div className="flex flex-wrap flex-col">
