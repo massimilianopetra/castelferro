@@ -220,7 +220,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                 Conto x Consultazione/Modifiche: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                             </div>
-                            <TabellaCucina item={products} onAdd={handleAdd} onRemove={handleRemove} />numeroFoglietto
+                            <TabellaCucina item={products} onAdd={handleAdd} onRemove={handleRemove} />
                             <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
                                 <p >
                                 Conto x Consultazione/Modifiche: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
