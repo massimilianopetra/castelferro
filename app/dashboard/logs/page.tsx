@@ -70,7 +70,19 @@ export default function Page() {
     }
 
     if ((session?.user?.name == "SuperUser")) {
-        if (phase == 'caricamento') {
+        if (sagra.stato == 'CHIUSA')  {
+            return (
+                <main>
+                    <div className="flex flex-wrap flex-col">
+                        <div className='text-center '>
+                            <div className="p-4 mb-4 text-xl text-yellow-800 rounded-lg bg-yellow-50" role="alert">
+                                <span className="text-xl font-semibold">Warning alert!</span> |Logs| La giornata non è stata ancora aperta!
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            )
+        } else if  (phase == 'caricamento') {
             return (
                 <main>
                     <div className="flex flex-wrap flex-col">

@@ -88,7 +88,7 @@ export default function Page() {
                     <div className="flex flex-wrap flex-col">
                         <div className='text-center '>
                             <div className="p-4 mb-4 text-xl text-yellow-800 rounded-lg bg-yellow-50" role="alert">
-                                <span className="text-xl font-semibold">Warning alert!</span> La giornata non è stata ancora aperta!
+                                <span className="text-xl font-semibold">Warning alert!</span> |Lista Conti Apetri e Chiusi|  La giornata non è stata ancora aperta!
                             </div>
                         </div>
                     </div>

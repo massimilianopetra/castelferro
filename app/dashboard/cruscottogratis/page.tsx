@@ -4,12 +4,8 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import CircularProgress from "@mui/material/CircularProgress";
 import {
-  listConti,
-  listConsumazioni,
   listConsumazioniGratis,
   listContiGratis,
-  listConsumazioniFogliettoN,
-  listContiGratisFogliettoN,
 } from "@/app/lib/actions";
 import * as React from "react";
 import { styled } from "@mui/material/styles";
@@ -77,6 +73,19 @@ export default function Page() {
     incassoconto7: number;
     incassoconto8: number;
     incassoconto9: number;
+    consumazioni1: number;
+    consumazioni2: number;
+    consumazioni3: number;
+    consumazioni4: number;
+    consumazioni5: number;
+    consumazioni6: number;
+    consumazioni7: number;
+    consumazioni8: number;
+    consumazioni9: number;
+    consumazionitot: number;
+    consumazionipatatine: number;
+    consumazionibirre: number;
+    consumazioniagnolotti: number
   };
 
   function createData(
@@ -91,7 +100,20 @@ export default function Page() {
     incassoconto6: number,
     incassoconto7: number,
     incassoconto8: number,
-    incassoconto9: number
+    incassoconto9: number,
+    consumazioni1: number,
+    consumazioni2: number,
+    consumazioni3: number,
+    consumazioni4: number,
+    consumazioni5: number,
+    consumazioni6: number,
+    consumazioni7: number,
+    consumazioni8: number,
+    consumazioni9: number,
+    consumazionitot: number,
+    consumazionipatatine: number,
+    consumazionibirre: number,
+    consumazioniagnolotti: number
   ) {
     return {
       giornata,
@@ -106,18 +128,31 @@ export default function Page() {
       incassoconto7,
       incassoconto8,
       incassoconto9,
+      consumazioni1,
+      consumazioni2,
+      consumazioni3,
+      consumazioni4,
+      consumazioni5,
+      consumazioni6,
+      consumazioni7,
+      consumazioni8,
+      consumazioni9,
+      consumazionitot,
+      consumazionipatatine,
+      consumazionibirre,
+      consumazioniagnolotti
     };
   }
 
   var rows = [
-    createData("Giovedi -1giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10),
-    createData("Venerdì -2giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10),
-    createData("Sabato  -3giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10),
-    createData("Domenica -4giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10),
-    createData("Lunedì -5giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10),
-    createData("Martedì -6giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10),
-    createData("Mercoledì -7giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10),
-    createData("Giovedì -8giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+    createData("Giovedi -1giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20,21,22,23),
+    createData("Venerdì -2giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20,21,22,23),
+    createData("Sabato  -3giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20,21,22,23),
+    createData("Domenica -4giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20,21,22,23),
+    createData("Lunedì -5giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20,21,22,23),
+    createData("Martedì -6giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20,21,22,23),
+    createData("Mercoledì -7giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20,21,22,23),
+    createData("Giovedì -8giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20,21,22,23),
   ];
 
   useEffect(() => {
@@ -130,8 +165,9 @@ export default function Page() {
     const cosumazioni = await listConsumazioniGratis();
 
     for (var i = 0; i < 8; i++) {
-      
 
+
+      
       var sum = conti?.reduce((accumulator, currentValue) => {
         if (currentValue.giorno == i+1) {
           return accumulator + currentValue.totale;
@@ -223,6 +259,145 @@ export default function Page() {
       }, 0);
       if (!sum9) sum9 = 0;
 
+      var sumc1 = cosumazioni?.reduce((accumulator, currentValue) => {
+        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 1)) {
+          return accumulator + currentValue.quantita;
+        } else {
+          return accumulator
+        }
+        
+      }, 0);
+      if (!sumc1) sumc1 = 0;
+
+      var sumc2 = cosumazioni?.reduce((accumulator, currentValue) => {
+        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 2)) {
+          return accumulator + currentValue.quantita;
+        } else {
+          return accumulator
+        }
+        
+      }, 0);
+      if (!sumc2) sumc2 = 0;
+    
+      var sumc3 = cosumazioni?.reduce((accumulator, currentValue) => {
+        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 3)) {
+          return accumulator + currentValue.quantita;
+        } else {
+          return accumulator
+        }
+        
+      }, 0);
+      if (!sumc3) sumc3 = 0;
+
+      var sumc4 = cosumazioni?.reduce((accumulator, currentValue) => {
+        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 4)) {
+          return accumulator + currentValue.quantita;
+        } else {
+          return accumulator
+        }
+        
+      }, 0);
+      if (!sumc4) sumc4 = 0;
+
+      var sumc5 = cosumazioni?.reduce((accumulator, currentValue) => {
+        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 5)) {
+          return accumulator + currentValue.quantita;
+        } else {
+          return accumulator
+        }
+        
+      }, 0);
+      if (!sumc5) sumc5 = 0;
+
+      var sumc6 = cosumazioni?.reduce((accumulator, currentValue) => {
+        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 6)) {
+          return accumulator + currentValue.quantita;
+        } else {
+          return accumulator
+        }
+        
+      }, 0);
+      if (!sumc6) sumc6 = 0;
+
+      var sumc7 = cosumazioni?.reduce((accumulator, currentValue) => {
+        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 7)) {
+          return accumulator + currentValue.quantita;
+        } else {
+          return accumulator
+        }
+        
+      }, 0);
+      if (!sumc7) sumc7 = 0;
+
+      var sumc8 = cosumazioni?.reduce((accumulator, currentValue) => {
+        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 8)) {
+          return accumulator + currentValue.quantita;
+        } else {
+          return accumulator
+        }
+        
+      }, 0);
+      if (!sumc8) sumc8 = 0;
+
+      var sumc9 = cosumazioni?.reduce((accumulator, currentValue) => {
+        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 9)) {
+          return accumulator + currentValue.quantita;
+        } else {
+          return accumulator
+        }
+        
+      }, 0);
+      if (!sumc9) sumc9 = 0;
+
+
+      var sumct = cosumazioni?.reduce((accumulator, currentValue) => {
+        if ((currentValue.giorno == i+1)) {
+          return accumulator + currentValue.quantita;
+        } else {
+          return accumulator
+        }
+        
+      }, 0);
+      if (!sumct) sumct = 0;
+
+      var sumcpatatine = cosumazioni?.reduce((accumulator, currentValue) => {
+        if ((currentValue.giorno == i+1) && 
+        (currentValue.id_comanda == 1) &&
+        (currentValue.piatto == "Patatine fritte")) {
+          return accumulator + currentValue.quantita;
+        } else {
+          return accumulator
+        }
+        
+      }, 0);
+      if (!sumcpatatine) sumcpatatine = 0;
+
+      var sumcbirre = cosumazioni?.reduce((accumulator, currentValue) => {
+        if ((currentValue.giorno == i+1) && 
+        (currentValue.id_comanda == 1) &&
+        (currentValue.piatto == "Birra artigianale 0,4lt")) {
+          return accumulator + currentValue.quantita;
+        } else {
+          return accumulator
+        }
+        
+      }, 0);
+      if (!sumcbirre) sumcbirre = 0;
+
+      var sumcagnolotti = cosumazioni?.reduce((accumulator, currentValue) => {
+        if ((currentValue.giorno == i+1) && 
+            (currentValue.id_comanda == 1) && 
+            ((currentValue.piatto == "Agnolotti al butto e/o formaggio") ||
+            (currentValue.piatto == "Agnolotti al vino") ||
+            (currentValue.piatto == "Agnolotti al sugo"))) {
+          return accumulator + currentValue.quantita;
+        } else {
+          return accumulator
+        }
+        
+      }, 0);
+      if (!sumcagnolotti) sumcagnolotti = 0;
+
       rows[i] = {
         ...rows[i],
         incasso: sum,
@@ -236,6 +411,20 @@ export default function Page() {
         incassoconto7: sum7,
         incassoconto8: sum8,
         incassoconto9: sum9,
+        consumazioni1: sumc1,
+        consumazioni2: sumc2,
+        consumazioni3: sumc3,
+        consumazioni4: sumc4,
+        consumazioni5: sumc5,
+        consumazioni6: sumc6,
+        consumazioni7: sumc7,
+        consumazioni8: sumc8,
+        consumazioni9: sumc9,
+        consumazionitot: sumct,
+        consumazionipatatine:sumcpatatine,
+        consumazionibirre:sumcbirre,
+        consumazioniagnolotti:sumcagnolotti,
+        
       };
     }
     setRecord(rows);
@@ -374,69 +563,69 @@ export default function Page() {
                         {row.incassoconto1.toFixed(2)}&nbsp;&euro;
                         <br></br>
                         <b>
-                          <small>N.Cons. xxxx&nbsp;&nbsp;</small>
+                          <small>N.Cons. {row.consumazioni1.toFixed(0)}&nbsp;&nbsp;</small>
                         </b>
                         <br></br>
-                        <small>Birre xxxx&nbsp;&nbsp;</small>
+                        <small>Birre {row.consumazionibirre.toFixed(0)}&nbsp;&nbsp;</small>
                         <br></br>
-                        <small>Patatine xxxx&nbsp;&nbsp;</small>
+                        <small>Patatine {row.consumazionipatatine.toFixed(0)}&nbsp;&nbsp;</small>
                         <br></br>
-                        <small>Agnolotti xxxx&nbsp;&nbsp;</small>
+                        <small>Agnolotti {row.consumazioniagnolotti.toFixed(0)}&nbsp;&nbsp;</small>
                       </StyledTableCell>
                       <StyledTableCell align="right">
                         {row.incassoconto2.toFixed(2)}&nbsp;&euro;
                         <br></br>
                         <b>
-                          <small>N.Cons. xxxx&nbsp;&nbsp;</small>
+                          <small>N.Cons. {row.consumazioni2.toFixed(0)}&nbsp;&nbsp;</small>
                         </b>
                       </StyledTableCell>
                       <StyledTableCell align="right">
                         {row.incassoconto3.toFixed(2)}&nbsp;&euro;
                         <br></br>
                         <b>
-                          <small>N.Cons. xxxx&nbsp;&nbsp;</small>
+                          <small>N.Cons.{row.consumazioni3.toFixed(0)}&nbsp;&nbsp;</small>
                         </b>
                       </StyledTableCell>
                       <StyledTableCell align="right">
                         {row.incassoconto4.toFixed(2)}&nbsp;&euro;
                         <br></br>
                         <b>
-                          <small>N.Cons. xxxx&nbsp;&nbsp;</small>
+                          <small>N.Cons. {row.consumazioni4.toFixed(0)}&nbsp;&nbsp;</small>
                         </b>
                       </StyledTableCell>
                       <StyledTableCell align="right">
                         {row.incassoconto5.toFixed(2)}&nbsp;&euro;
                         <br></br>
                         <b>
-                          <small>N.Cons. xxxx&nbsp;&nbsp;</small>
+                          <small>N.Cons. {row.consumazioni5.toFixed(0)}&nbsp;&nbsp;</small>
                         </b>
                       </StyledTableCell>
                       <StyledTableCell align="right">
                         {row.incassoconto6.toFixed(2)}&nbsp;&euro;
                         <br></br>
                         <b>
-                          <small>N.Cons. xxxx&nbsp;&nbsp;</small>
+                        <small>N.Cons. {row.consumazioni6.toFixed(0)}&nbsp;&nbsp;</small>
                         </b>
                       </StyledTableCell>
                       <StyledTableCell align="right">
                         {row.incassoconto7.toFixed(2)}&nbsp;&euro;
                         <br></br>
                         <b>
-                          <small>N.Cons. xxxx&nbsp;&nbsp;</small>
+                        <small>N.Cons. {row.consumazioni7.toFixed(0)}&nbsp;&nbsp;</small>
                         </b>
                       </StyledTableCell>
                       <StyledTableCell align="right">
                         {row.incassoconto8.toFixed(2)}&nbsp;&euro;
                         <br></br>
                         <b>
-                          <small>N.Cons. xxxx&nbsp;&nbsp;</small>
+                        <small>N.Cons. {row.consumazioni8.toFixed(0)}&nbsp;&nbsp;</small>
                         </b>
                       </StyledTableCell>
                       <StyledTableCell align="right">
                         {row.incassoconto9.toFixed(2)}&nbsp;&euro;
                         <br></br>
                         <b>
-                          <small>N.Cons. xxxx&nbsp;&nbsp;</small>
+                        <small>N.Cons. {row.consumazioni9.toFixed(0)}&nbsp;&nbsp;</small>
                         </b>
                       </StyledTableCell>
                     </StyledTableRow>
@@ -462,7 +651,12 @@ export default function Page() {
                         &nbsp;&euro;
                       </b>
                       <br></br>
-                      <small>N.Cons. xxxx&nbsp;</small>
+                      <small>N.Cons.     {record
+                          .reduce((accumulator, currentValue) => {
+                            return accumulator + currentValue.consumazionitot;
+                          }, 0)
+                          .toFixed(0)}
+                        &nbsp;</small>
                     </TableCell>
                   </TableRow>
                 </TableBody>
