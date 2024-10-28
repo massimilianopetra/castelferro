@@ -125,67 +125,101 @@ export default function Page() {
   }, []);
 
   const fetchData = async () => {
-    for (var i = 0; i < 8; i++) {
-      const conti = await listContiGratis("APERTO", i + 1);
-      const conto1 = await listContiGratisFogliettoN("APERTO", i + 1, 1);
-      const conto2 = await listContiGratisFogliettoN("APERTO", i + 1, 2);
-      const conto3 = await listContiGratisFogliettoN("APERTO", i + 1, 3);
-      const conto4 = await listContiGratisFogliettoN("APERTO", i + 1, 4);
-      const conto5 = await listContiGratisFogliettoN("APERTO", i + 1, 5);
-      const conto6 = await listContiGratisFogliettoN("APERTO", i + 1, 6);
-      const conto7 = await listContiGratisFogliettoN("APERTO", i + 1, 7);
-      const conto8 = await listContiGratisFogliettoN("APERTO", i + 1, 8);
-      const conto9 = await listContiGratisFogliettoN("APERTO", i + 1, 9);
 
-      const cosumazioni = await listConsumazioniGratis(1, i + 1);
+    const conti = await listContiGratis();
+    const cosumazioni = await listConsumazioniGratis();
+
+    for (var i = 0; i < 8; i++) {
+      
 
       var sum = conti?.reduce((accumulator, currentValue) => {
-        return accumulator + currentValue.totale;
+        if (currentValue.giorno == i+1) {
+          return accumulator + currentValue.totale;
+        } else {
+          return accumulator
+        }
+        
       }, 0);
       if (!sum) sum = 0;
 
-      var sum1 = conto1?.reduce((accumulator, currentValue) => {
-        return accumulator + currentValue.totale;
+      var sum1 = conti?.reduce((accumulator, currentValue) => {
+        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 1)) {
+          return accumulator + currentValue.totale;
+        } else {
+          return accumulator
+        }
       }, 0);
       if (!sum1) sum1 = 0;
 
-      var sum2 = conto2?.reduce((accumulator, currentValue) => {
-        return accumulator + currentValue.totale;
+      var sum2 = conti?.reduce((accumulator, currentValue) => {
+        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 2)) {
+          return accumulator + currentValue.totale;
+        } else {
+          return accumulator
+        }
       }, 0);
       if (!sum2) sum2 = 0;
 
-      var sum3 = conto3?.reduce((accumulator, currentValue) => {
-        return accumulator + currentValue.totale;
+      var sum3 = conti?.reduce((accumulator, currentValue) => {
+        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 3)) {
+          return accumulator + currentValue.totale;
+        } else {
+          return accumulator
+        }
       }, 0);
       if (!sum3) sum3 = 0;
 
-      var sum4 = conto4?.reduce((accumulator, currentValue) => {
-        return accumulator + currentValue.totale;
+      var sum4 = conti?.reduce((accumulator, currentValue) => {
+        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 4)) {
+          return accumulator + currentValue.totale;
+        } else {
+          return accumulator
+        }
       }, 0);
       if (!sum4) sum4 = 0;
 
-      var sum5 = conto5?.reduce((accumulator, currentValue) => {
-        return accumulator + currentValue.totale;
+      var sum5 = conti?.reduce((accumulator, currentValue) => {
+        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 5)) {
+          return accumulator + currentValue.totale;
+        } else {
+          return accumulator
+        }
       }, 0);
       if (!sum5) sum5 = 0;
 
-      var sum6 = conto6?.reduce((accumulator, currentValue) => {
-        return accumulator + currentValue.totale;
+      var sum6 = conti?.reduce((accumulator, currentValue) => {
+        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 6)) {
+          return accumulator + currentValue.totale;
+        } else {
+          return accumulator
+        }
       }, 0);
       if (!sum6) sum6 = 0;
 
-      var sum7 = conto7?.reduce((accumulator, currentValue) => {
-        return accumulator + currentValue.totale;
+      var sum7 = conti?.reduce((accumulator, currentValue) => {
+        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 7)) {
+          return accumulator + currentValue.totale;
+        } else {
+          return accumulator
+        }
       }, 0);
       if (!sum7) sum7 = 0;
 
-      var sum8 = conto8?.reduce((accumulator, currentValue) => {
-        return accumulator + currentValue.totale;
+      var sum8 = conti?.reduce((accumulator, currentValue) => {
+        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 8)) {
+          return accumulator + currentValue.totale;
+        } else {
+          return accumulator
+        }
       }, 0);
       if (!sum8) sum8 = 0;
 
-      var sum9 = conto9?.reduce((accumulator, currentValue) => {
-        return accumulator + currentValue.totale;
+      var sum9 = conti?.reduce((accumulator, currentValue) => {
+        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 9)) {
+          return accumulator + currentValue.totale;
+        } else {
+          return accumulator
+        }
       }, 0);
       if (!sum9) sum9 = 0;
 

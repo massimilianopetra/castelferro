@@ -3,8 +3,9 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
 import type { DbMenu } from '@/app/lib/definitions';
-import { getMenu } from '@/app/lib/actions';
+import { getMenu, updatetMenu } from '@/app/lib/actions';
 import TabellaMenu from '@/app/ui/dashboard/TabellaMenu';
+import { Button } from '@mui/material';
 
 
 export default function Page() {
@@ -25,15 +26,18 @@ export default function Page() {
         fetchAuth();
     }, []);
 
-    const handleToggle = (id: number, d: string) => {
+    const handleToggle = (id: number) => {
         const newProducts = products.map((item) => {
             if (item.id == id) {
                 console.log(item);
-                if (item.disponibile == "N")
+                if (item.disponibile == "N") {
+                    updatetMenu({ ...item, disponibile: "Y" });
                     return ({ ...item, disponibile: "Y" });
-                else
+                }
+                else {
+                    updatetMenu({ ...item, disponibile: "N" });
                     return ({ ...item, disponibile: "N" });
-
+                }
             }
             else
                 return (item);
@@ -41,6 +45,8 @@ export default function Page() {
         setProducts(newProducts);
     };
 
+    const handleButtonClickInvia = async () => {
+    }
 
     //const session = await auth();
     //console.log(session?.user?.name);
@@ -59,6 +65,11 @@ export default function Page() {
                     </div>
                     <div>
                         <TabellaMenu item={products} onToggle={handleToggle} />
+                    </div>
+                    <div className='text-center '>
+                        <br></br>
+                        <br></br>
+                        <Button variant="contained" onClick={handleButtonClickInvia}>Tutto Disponibile</Button>
                     </div>
 
                 </div>

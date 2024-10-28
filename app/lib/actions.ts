@@ -30,7 +30,7 @@ export async function authenticate(
 export async function getMenu(): Promise<DbMenu[] | undefined> {
   console.log("getMenu");
   try {
-    const menus = await sql<DbMenu>`SELECT * FROM menus`;
+    const menus = await sql<DbMenu>`SELECT * FROM menus ORDER BY id`;
     return menus.rows;
   } catch (error) {
     console.error('Failed to fetch menu:', error);
@@ -38,10 +38,27 @@ export async function getMenu(): Promise<DbMenu[] | undefined> {
   }
 }
 
-export async function getConsumazioni(cucina: string, comanda: number = -1, giornata: number): Promise<DbConsumazioni[] | undefined> {
+export async function updatetMenu(record: DbMenu) {
+  console.log("updateMenu");
+  return await sql`
+         UPDATE menus
+         SET disponibile = ${record.disponibile}
+         WHERE id = ${record.id};
+      `;
+}
+
+
+export async function getConsumazioni(cucina: string, comanda: number = -1, giornata: number, available = 'ALWAYS'): Promise<DbConsumazioni[] | undefined> {
   console.log("getConsumazioni");
+  var menus = undefined;
+
   try {
-    const menus = await sql<DbMenu>`SELECT * FROM menus  WHERE cucina = ${cucina} OR cucina = 'All'`;
+    if (available == 'ALWAYS') {
+      menus = await sql<DbMenu>`SELECT * FROM menus  WHERE cucina = ${cucina} OR cucina = 'All' ORDER BY id`;
+    } else {
+      menus = await sql<DbMenu>`SELECT * FROM menus  WHERE (cucina = ${cucina} OR cucina = 'All') AND disponibile = 'Y' ORDER BY id`;
+    }
+
     const consumazioni_menu: DbConsumazioni[] = menus.rows.map((item) => ({
       id: -1,
       id_comanda: comanda,
@@ -69,7 +86,7 @@ export async function getConsumazioni(cucina: string, comanda: number = -1, gior
 }
 
 export async function getConsumazioniCassa(comanda: number = -1, giornata: number): Promise<DbConsumazioniPrezzo[] | undefined> {
-  console.log("getConsumazioni");
+  console.log("getConsumazioniCassa");
   try {
     const menus = await sql<DbMenu>`SELECT * FROM menus`;
     const consumazioni_menu: DbConsumazioniPrezzo[] = menus.rows.map((item) => ({
@@ -120,6 +137,23 @@ export async function sendConsumazioni(c: DbConsumazioni[]) {
       `;
     }
   });
+
+
+}
+
+export async function updateTotaleConto(foglietto: number, giorno: number) {
+
+  // ISSUE 1: usato in fase di invio consumazioni per aggiornare il totale del conto associato
+
+  const consumazioni = await getConsumazioniCassa(foglietto, giorno);
+
+  var totale = 0;
+  if (consumazioni) {
+    for (let i of consumazioni) {
+      totale += i.quantita * i.prezzo_unitario;
+    }
+    aggiornaConto(foglietto, giorno, totale);
+  }
 }
 
 export async function getConto(foglietto: number, giorno: number): Promise<DbConti | undefined> {
@@ -216,18 +250,13 @@ export async function listConti(stato: string, giornata: number): Promise<DbCont
   }
 }
 
-export async function listContiGratis (stato: string, giornata: number): Promise<DbConti[] | undefined> {
+export async function listContiGratis(): Promise<DbConti[] | undefined> {
 
-  if (stato == '*') {
-    const current = await sql<DbConti>`SELECT * FROM conti  WHERE giorno = ${giornata} AND id_comanda < 10 ORDER BY data_apertura`;
-    return current.rows;
-  } else {
-    const current = await sql<DbConti>`SELECT * FROM conti  WHERE stato = ${stato} AND id_comanda < 10  AND giorno = ${giornata} ORDER BY data_apertura`;
-    return current.rows;
-  }
+  const current = await sql<DbConti>`SELECT * FROM conti  WHERE id_comanda < 10`;
+  return current.rows;
 }
 
-export async function listContiGratisFogliettoN (stato: string, giornata: number, foglietto: number): Promise<DbConti[] | undefined> {
+export async function listContiGratisFogliettoN(stato: string, giornata: number, foglietto: number): Promise<DbConti[] | undefined> {
 
   if (stato == '*') {
     const current = await sql<DbConti>`SELECT * FROM conti  WHERE giorno = ${giornata} AND id_comanda = ${foglietto} ORDER BY data_apertura`;
@@ -256,18 +285,13 @@ export async function listConsumazioni(id_piatto: number, giornata: number): Pro
   }
 }
 
-export async function listConsumazioniGratis (id_piatto: number, giornata: number): Promise<DbConsumazioni[] | undefined> {
+export async function listConsumazioniGratis(): Promise<DbConsumazioni[] | undefined> {
 
-  if (id_piatto == -1) {
-    const current = await sql<DbConsumazioni>`SELECT * FROM consumazioni  WHERE giorno = ${giornata} AND id_comanda < 10`;
-    return current.rows;
-  } else {
-    const current = await sql<DbConsumazioni>`SELECT * FROM consumazioni  WHERE giorno = ${giornata} AND id_comanda < 10 AND id_piatto = ${id_piatto}`;
-    return current.rows;
-  }
+  const current = await sql<DbConsumazioni>`SELECT * FROM consumazioni  WHERE id_comanda < 10`;
+  return current.rows;
 }
 
-export async function listConsumazioniFogliettoN (id_piatto: number, giornata: number, foglietto: number, ): Promise<DbConsumazioni[] | undefined> {
+export async function listConsumazioniFogliettoN(id_piatto: number, giornata: number, foglietto: number,): Promise<DbConsumazioni[] | undefined> {
 
   if (id_piatto == -1) {
     const current = await sql<DbConsumazioni>`SELECT * FROM consumazioni  WHERE giorno = ${giornata} AND id_comanda = ${foglietto}`;

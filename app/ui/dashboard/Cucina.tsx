@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
 import { Button, Snackbar, TextField } from '@mui/material';
 import type { DbConsumazioni, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
-import { getConsumazioni, sendConsumazioni, getConto, apriConto, getCamerieri } from '@/app/lib/actions';
+import { getConsumazioni, sendConsumazioni, getConto, apriConto, getCamerieri, updateTotaleConto } from '@/app/lib/actions';
 import { writeLog, getGiornoSagra, getLastLog } from '@/app/lib/actions';
 import TabellaCucina from '@/app/ui/dashboard/TabellaCucina';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -23,7 +23,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     const [numero, setNumero] = useState<number | string>('');
     const [numeroFoglietto, setNumeroFoglietto] = useState<number | string>('');
     const { data: session } = useSession();
-    const [sagra, getSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
+    const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
     const [conto, setConto] = useState<DbConti>();
 
 
@@ -31,7 +31,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
         const fetchData = async () => {
             const gg = await getGiornoSagra();
             if (gg) {
-                getSagra(gg);
+                setSagra(gg);
                 const cc = await getLastLog(gg.giornata, nomeCucina);
                 if (cc) {
                     setLastLog(cc);
@@ -57,7 +57,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
         }
 
         const fetchData = async () => {
-            const c = await getConsumazioni(nomeCucina, num, sagra.giornata);
+            const c = await getConsumazioni(nomeCucina, num, sagra.giornata, 'MUST_BE_AVAILABLE');
             if (c) {
                 setProducts(c);
                 setIniProducts(c);
@@ -137,6 +137,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
         }
         
         sendConsumazioni(products);
+        updateTotaleConto(Number(numeroFoglietto),sagra.giornata);
         setPhase('inviato');
         setProducts([]);
         setIniProducts([]);
