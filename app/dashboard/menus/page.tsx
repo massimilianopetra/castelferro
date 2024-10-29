@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
 import type { DbMenu } from '@/app/lib/definitions';
-import { getMenu, updatetMenu } from '@/app/lib/actions';
+import { getMenu, updatetMenu, setMenuAllAvailable } from '@/app/lib/actions';
 import TabellaMenu from '@/app/ui/dashboard/TabellaMenu';
 import { Button } from '@mui/material';
 
@@ -46,6 +46,11 @@ export default function Page() {
     };
 
     const handleButtonClickInvia = async () => {
+        const newProducts = products.map((item) => {
+            return ({ ...item, disponibile: "Y" });
+        });
+        await setMenuAllAvailable()
+        setProducts(newProducts);
     }
 
     //const session = await auth();

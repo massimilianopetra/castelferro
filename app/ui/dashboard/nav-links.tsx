@@ -1,9 +1,5 @@
 'use client';
 
-import {
-  UserGroupIcon,
-  CurrencyEuroIcon,
-} from '@heroicons/react/24/outline';
 import EuroIcon from '@mui/icons-material/Euro';
 import CakeIcon from '@mui/icons-material/Cake';
 import HomeIcon from '@mui/icons-material/Home';

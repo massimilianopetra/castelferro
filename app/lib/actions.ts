@@ -47,6 +47,14 @@ export async function updatetMenu(record: DbMenu) {
       `;
 }
 
+export async function setMenuAllAvailable() {
+  console.log("updateMenu");
+  return await sql`
+         UPDATE menus
+         SET disponibile = 'Y';
+      `;
+}
+
 
 export async function getConsumazioni(cucina: string, comanda: number = -1, giornata: number, available = 'ALWAYS'): Promise<DbConsumazioni[] | undefined> {
   console.log("getConsumazioni");
@@ -88,7 +96,7 @@ export async function getConsumazioni(cucina: string, comanda: number = -1, gior
 export async function getConsumazioniCassa(comanda: number = -1, giornata: number): Promise<DbConsumazioniPrezzo[] | undefined> {
   console.log("getConsumazioniCassa");
   try {
-    const menus = await sql<DbMenu>`SELECT * FROM menus`;
+    const menus = await sql<DbMenu>`SELECT * FROM menus ORDER BY id`;
     const consumazioni_menu: DbConsumazioniPrezzo[] = menus.rows.map((item) => ({
       id: -1,
       id_comanda: comanda,
