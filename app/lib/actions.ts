@@ -3,7 +3,7 @@
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
 import type { DbMenu, DbConsumazioniPrezzo, DbConsumazioni, DbFiera, DbConti, DbCamerieri, DbLog } from '@/app/lib/definitions';
-import { sql } from '@vercel/postgres';
+import { QueryResult, sql } from '@vercel/postgres';
 import { date } from 'zod';
 import exp from 'constants';
 
@@ -239,6 +239,23 @@ export async function addCamerieri(nome: string, foglietto_start: number, foglie
   VALUES (${nome},${foglietto_start},${foglietto_end})
   ON CONFLICT (id) DO NOTHING;
   `;
+}
+
+export async function listTables(): Promise<any[] | undefined> {
+  const result  = await sql`SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'`;
+  return result.rows;
+}
+
+export async function doQuery(tableName: string): Promise<any[] | undefined> {
+  try {
+    
+    const query = `SELECT * FROM ${tableName}`;
+    console.log(query)
+    const result = await sql.query(query);
+    return result.rows;
+  } catch (error) {
+    return [];
+  }
 }
 
 export async function delCamerieri(id: number) {
