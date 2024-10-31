@@ -278,6 +278,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                 <a className="text-center block text-white font-extralight ">
                                     {nomeCucina}
                                 </a>
+                                <div className="text-xs text-center text-white">SAGRA:  {sagra.stato}&nbsp;&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</div>
                             </li>
                             <li className="text-right flex-1 mr-2 text-3xl md:text-5xl  text-white font-bold py-4">
                                 <a>

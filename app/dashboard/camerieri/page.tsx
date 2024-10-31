@@ -1,31 +1,120 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
 import { getListaCamerieri, updateCamerieri, addCamerieri, delCamerieri } from '@/app/lib/actions';
 import type { DbCamerieri } from '@/app/lib/definitions';
-import Table from '@mui/material/Table';
-import TableBody from '@mui/material/TableBody';
-import TableCell from '@mui/material/TableCell';
-import TableContainer from '@mui/material/TableContainer';
-import TableHead from '@mui/material/TableHead';
-import TableRow from '@mui/material/TableRow';
-import Paper from '@mui/material/Paper';
-import { Button, TextField, Checkbox } from '@mui/material';
+
+
 import CircularProgress from '@mui/material/CircularProgress';
+import { styled } from '@mui/material/styles';
+import Button from '@mui/material/Button';
+import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/DeleteOutlined';
+import SaveIcon from '@mui/icons-material/Save';
+import CancelIcon from '@mui/icons-material/Close';
+import {
+    GridRowsProp,
+    GridRowModesModel,
+    GridRowModes,
+    DataGrid,
+    GridColDef,
+    GridToolbarContainer,
+    GridActionsCellItem,
+    GridEventListener,
+    GridRowId,
+    GridRowModel,
+    GridRowEditStopReasons,
+    GridSlots,
+    GridToolbar,
+} from '@mui/x-data-grid';
 
 export default function Cucina() {
 
-    const textFieldRefs = useRef<{
+    type RowsData = {
         id: number;
-        name: HTMLInputElement | null;
-        foglietto_start: HTMLInputElement | null;
-        foglietto_end: HTMLInputElement | null;
-    }[]>([]);
-    const [selected, setSelected] = useState<number[]>([]);
-    const [camerieri, setCamerieri] = useState<DbCamerieri[]>([]);
-    const [phase, setPhase] = useState('caricato');
+        col1: number
+        col2: string;
+        col3: number;
+        col4: number;
+        isNew: boolean;
+    };
+
+    const [rows, setRows] = useState<RowsData[]>([]);
+    const [phase, setPhase] = useState('caricamento');
+    const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
     const { data: session } = useSession();
+
+    const columns: GridColDef[] = [
+        { field: 'col1', headerName: 'N.' },
+        { field: 'col2', headerName: 'Nome', width: 400, editable: true, },
+        { field: 'col3', headerName: 'Primo', editable: true, },
+        { field: 'col4', headerName: 'Ultimo', editable: true, },
+        {
+            field: 'actions',
+            type: 'actions',
+            headerName: 'Actions',
+            width: 100,
+            cellClassName: 'actions',
+            getActions: ({ id }) => {
+                const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
+
+                if (isInEditMode) {
+                    return [
+                        <GridActionsCellItem
+                            icon={<SaveIcon />}
+                            label="Save"
+                            sx={{
+                                color: 'primary.main',
+                            }}
+                            onClick={handleSaveClick(id)}
+                        />,
+                        <GridActionsCellItem
+                            icon={<CancelIcon />}
+                            label="Cancel"
+                            className="textPrimary"
+                            onClick={handleCancelClick(id)}
+                            color="inherit"
+                        />,
+                    ];
+                }
+
+                return [
+                    <GridActionsCellItem
+                        icon={<EditIcon />}
+                        label="Edit"
+                        className="textPrimary"
+                        onClick={handleEditClick(id)}
+                        color="inherit"
+                    />,
+                    <GridActionsCellItem
+                        icon={<DeleteIcon />}
+                        label="Delete"
+                        onClick={handleDeleteClick(id)}
+                        color="inherit"
+                    />,
+                ];
+            },
+        },
+    ];
+
+    const StyledDataGrid = styled(DataGrid)({
+        '& .MuiDataGrid-columnHeader': {
+            backgroundColor: 'black', // Sfondo nero per l'header
+            color: 'white',           // Testo bianco
+        },
+        '& .MuiDataGrid-columnHeaderTitle': {
+            fontWeight: 'bold',       // Testo in grassetto
+        },
+        "& .MuiDataGrid-sortIcon": {
+            color: "white",
+        },
+        "& .MuiDataGrid-menuIconButton": {
+            opacity: 1,
+            color: "white"
+        },
+    });
 
     useEffect(() => {
         fetchData();
@@ -34,71 +123,115 @@ export default function Cucina() {
     const fetchData = async () => {
         const c = await getListaCamerieri();
         if (c) {
-            setCamerieri(c);
+            const cc = c.map((item, i) => {
+                // id: <Link href={`/dashboard/casse/${item.id}`}>{item.id}</Link>
+                return {
+                    id: item.id,
+                    col1: i + 1,
+                    col2: item.nome,
+                    col3: item.foglietto_start,
+                    col4: item.foglietto_end,
+                    isNew: false,
+                }
+            });
+
+            setRows(cc);
+            setPhase('caricato');
         }
     }
 
-    // Aggiunge i riferimenti a ogni TextField di ogni riga
-    const addToRefs = (field: 'name' | 'foglietto_start' | 'foglietto_end', el: HTMLInputElement | null, index: number) => {
-        if (!textFieldRefs.current[index]) {
-            //textFieldRefs.current[index] = { id: camerieri[index].id, name: null, foglietto_start: null, foglietto_end: null };
-            textFieldRefs.current[index] = { id: index, name: null, foglietto_start: null, foglietto_end: null };
+    interface EditToolbarProps {
+        setRows: (newRows: (oldRows: GridRowsProp) => GridRowsProp) => void;
+        setRowModesModel: (
+            newModel: (oldModel: GridRowModesModel) => GridRowModesModel,
+        ) => void;
+    }
+
+    function EditToolbar(props: EditToolbarProps) {
+        const { setRows, setRowModesModel } = props;
+
+        const maxID = rows.reduce(
+            (prev, current) => {
+                return prev.id > current.id ? prev : current
+            }
+        );
+
+        const maxN = rows.reduce(
+            (prev, current) => {
+                return prev.col1 > current.col1 ? prev : current
+            }
+        );
+
+        const handleClick = () => {
+            setRows((oldRows) => [
+                ...oldRows,
+                { id: maxID.id+1, col1: maxN.col1, col2: '', col3: '', isNew: true },
+            ]);
+            setRowModesModel((oldModel) => ({
+                ...oldModel,
+                [maxID.id+1]: { mode: GridRowModes.Edit, fieldToFocus: 'col1' },
+            }));
+        };
+
+        return (
+            <GridToolbarContainer>
+                <Button color="primary" startIcon={<AddIcon />} onClick={handleClick}>
+                    Add record
+                </Button>
+            </GridToolbarContainer>
+        );
+    }
+
+    const handleRowEditStop: GridEventListener<'rowEditStop'> = (params, event) => {
+        if (params.reason === GridRowEditStopReasons.rowFocusOut) {
+            event.defaultMuiPrevented = true;
         }
-        textFieldRefs.current[index][field] = el;
     };
 
-    // Funzione per gestire la selezione dei checkbox
-    const handleSelect = (id: number) => {
-        setSelected(prevSelected =>
-            prevSelected.includes(id)
-                ? prevSelected.filter(recordId => recordId !== id)
-                : [...prevSelected, id]
-        );
+    const handleEditClick = (id: GridRowId) => () => {
+        setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
+    };
+
+    const handleSaveClick = (id: GridRowId) => () => {
+        setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
+    };
+
+    const handleDeleteClick = (id: GridRowId) => () => {
+        setRows(rows.filter((row) => row.id !== id));
+    };
+
+    const handleCancelClick = (id: GridRowId) => () => {
+        setRowModesModel({
+            ...rowModesModel,
+            [id]: { mode: GridRowModes.View, ignoreModifications: true },
+        });
+
+        const editedRow = rows.find((row) => row.id === id);
+        if (editedRow!.isNew) {
+            setRows(rows.filter((row) => row.id !== id));
+        }
+    };
+
+    const processRowUpdate = (newRow: GridRowModel) => {
+        console.log('*********************');
+        console.log(newRow);
+        console.log('*********************');
+        const updatedRow = { ...newRow, isNew: false };
+        setRows(rows.map((row) => (row.id === newRow.id ? { ...row, col2: newRow.col2 } : row)));
+        return updatedRow;
+    };
+
+    const handleRowModesModelChange = (newRowModesModel: GridRowModesModel) => {
+        setRowModesModel(newRowModesModel);
     };
 
     // Funzione per raccogliere e inviare i dati aggiornati al DB
     const handleButtonClick = async () => {
-        setPhase('caricamento');
-        const updatedData = camerieri.map((row, index) => {
-            return ({
-                ...row,
-                nome: textFieldRefs.current[index]?.name?.value || '',
-                foglietto_start: textFieldRefs.current[index]?.foglietto_start?.value ? parseInt(textFieldRefs.current[index]?.foglietto_start?.value) : 0,
-                foglietto_end: textFieldRefs.current[index]?.foglietto_end?.value ? parseInt(textFieldRefs.current[index]?.foglietto_end?.value) : 0
-            });
+
+        rows.map((item, i) => {
+            console.log(item)
+            return
         });
-
-        await updateCamerieri(updatedData);
-        setCamerieri(updatedData);
-        setPhase('caricato');
-        console.log('Dati aggiornati:', updatedData);
-
-    };
-
-    // Funzione per eliminare i crecord camerieri
-    const handleButtonElimina = async () => {
-        setPhase('caricamento');
-        selected.forEach(async (id) => {
-            console.log(id);
-            await delCamerieri(id);
-        });
-        const c = await getListaCamerieri();
-        if (c) {
-            setCamerieri(c);
-        }
-        setPhase('caricato');
-    };
-
-    // Funzione per eliminare i crecord camerieri
-    const handleButtonAggiungi = async () => {
-        setPhase('caricamento');
-        var maxfoglietto = Math.max(...camerieri.map((row) => {return(row.foglietto_end)}),99);
-        await addCamerieri('NuovoCameriere',maxfoglietto+1,maxfoglietto+25);
-        const c = await getListaCamerieri();
-        if (c) {
-            setCamerieri(c);
-        }
-        setPhase('caricato');
 
     };
 
@@ -131,79 +264,27 @@ export default function Cucina() {
                             </p>
                         </div>
                         <div className='text-center'>
-                            <TableContainer component={Paper}>
-                                <Table sx={{ minWidth: 500 }} aria-label="simple table">
-                                    <TableHead>
-                                        <TableRow>
-                                            <TableCell align="left"><p className='font-bold'>N.</p></TableCell>
-                                            <TableCell align="left"><p className='font-bold'>Nome</p></TableCell>
-                                            <TableCell align="left"><p className='font-bold'>Primo Foglietto</p></TableCell>
-                                            <TableCell align="left"><p className='font-bold'>Ultimo Foglietto</p></TableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {camerieri.map((row, i) => (
-                                            <TableRow>
-                                                <TableCell>
-                                                    {i + 1}
-                                                    <Checkbox
-                                                        checked={selected.includes(row.id)}
-                                                        onClick={() => handleSelect(row.id)}
-                                                    />
-                                                </TableCell>
-                                                <TableCell align="left">
-                                                    <TextField
-                                                        className="p-2"
-                                                        variant="outlined"
-                                                        inputRef={(el) => addToRefs('name', el, i)}
-                                                        defaultValue={row.nome}
-                                                        sx={{
-                                                            input: {
-                                                                textAlign: 'right', // Allinea il testo a destra
-                                                            },
-                                                        }}
-                                                    />
-                                                </TableCell>
-                                                <TableCell align="left">
-                                                    <TextField
-                                                        className="p-2"
-                                                        variant="outlined"
-                                                        inputRef={(el) => addToRefs('foglietto_start', el, i)}
-                                                        defaultValue={row.foglietto_start}
-                                                        sx={{
-                                                            input: {
-                                                                textAlign: 'right', // Allinea il testo a destra
-                                                            },
-                                                        }}
-                                                        type="number"
-                                                    />
-                                                </TableCell>
-                                                <TableCell align="left">
-                                                    <TextField
-                                                        className="p-2"
-                                                        variant="outlined"
-                                                        inputRef={(el) => addToRefs('foglietto_end', el, i)}
-                                                        defaultValue={row.foglietto_end}
-                                                        sx={{
-                                                            input: {
-                                                                textAlign: 'right', // Allinea il testo a destra
-                                                            },
-                                                        }}
-                                                        type="number"
-                                                    />
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
+
+                            <DataGrid
+                                rows={rows}
+                                columns={columns}
+                                editMode="row"
+                                rowModesModel={rowModesModel}
+                                onRowModesModelChange={handleRowModesModelChange}
+                                onRowEditStop={handleRowEditStop}
+                                processRowUpdate={processRowUpdate}
+                                slots={{
+                                    toolbar: EditToolbar as GridSlots['toolbar'],
+                                }}
+                                slotProps={{
+                                    toolbar: { setRows, setRowModesModel },
+                                }}
+
+                            />
                             <div className='p-6'>
-                                <Button className="rounded-full" variant="contained" onClick={handleButtonAggiungi}>Aggiungi Nuovo Cameriere</Button>
-                                &nbsp;&nbsp;&nbsp;
-                                <Button className="rounded-full" variant="contained" onClick={handleButtonClick}>Aggiorna Lista Camerieri</Button>
-                                &nbsp;&nbsp;&nbsp;
-                                <Button className="rounded-full" variant="contained" onClick={handleButtonElimina}>Elimina Camerieri Selezionati</Button>
+                                <Button className="rounded-full" variant="contained" onClick={handleButtonClick}>Invia Lista Camerieri</Button>
                             </div>
+
                         </div>
                     </div>
                 </main>
