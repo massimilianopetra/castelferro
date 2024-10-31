@@ -176,7 +176,7 @@ export default function Cucina() {
         return (
             <GridToolbarContainer>
                 <Button color="primary" startIcon={<AddIcon />} onClick={handleClick}>
-                    Add record
+                    Aggiungi Cameriere
                 </Button>
             </GridToolbarContainer>
         );
@@ -198,6 +198,7 @@ export default function Cucina() {
 
     const handleDeleteClick = (id: GridRowId) => () => {
         setRows(rows.filter((row) => row.id !== id));
+        delCamerieri(Number(id));
     };
 
     const handleCancelClick = (id: GridRowId) => () => {
@@ -218,6 +219,12 @@ export default function Cucina() {
         console.log('*********************');
         const updatedRow = { ...newRow, isNew: false };
         setRows(rows.map((row) => (row.id === newRow.id ? { ...row, col2: newRow.col2 } : row)));
+        if (newRow.isNew == false) {
+            updateCamerieri([{id:newRow.id,nome:newRow.col2,foglietto_start:newRow.col3,foglietto_end:newRow.col4}])
+        } else {
+            addCamerieri(newRow.col2,newRow.col3,newRow.col4);
+        }
+        
         return updatedRow;
     };
 
@@ -225,15 +232,6 @@ export default function Cucina() {
         setRowModesModel(newRowModesModel);
     };
 
-    // Funzione per raccogliere e inviare i dati aggiornati al DB
-    const handleButtonClick = async () => {
-
-        rows.map((item, i) => {
-            console.log(item)
-            return
-        });
-
-    };
 
     if ((session?.user?.name == "Casse") || (session?.user?.name == "SuperUser")) {
         if (phase == 'caricamento') {
@@ -281,9 +279,6 @@ export default function Cucina() {
                                 }}
 
                             />
-                            <div className='p-6'>
-                                <Button className="rounded-full" variant="contained" onClick={handleButtonClick}>Invia Lista Camerieri</Button>
-                            </div>
 
                         </div>
                     </div>
