@@ -313,7 +313,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           <>
             <div className="z-0 text-center">
 
-              <div className="z-0 xl:text-3xl font-extralight xl:text-end md:text-3xl md:py-2 md:text-center">
+              <div className="z-0 xl:text-2xl font-extralight xl:text-end md:text-2xl md:py-2 md:text-center">
                 <p >
                   Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span>
                 </p>
@@ -327,7 +327,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               <div>
                 <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
               </div>
-              <div className="z-0 xl:text-3xl font-extralight xl:text-end md:text-3xl md:py-2 md:text-center">
+              <div className="z-0 xl:text-2xl font-extralight xl:text-end md:text-2xl md:py-2 md:text-center">
                 <p >
                   Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                 </p>
@@ -540,7 +540,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               </li>
             </ul>
           </div>
-          <div className="z-0 xl:text-3xl font-extralight xl:text-end md:text-3xl md:py-2 md:text-center">
+          <div className="z-0 xl:text-2xl font-extralight xl:text-end md:text-2xl md:py-2 md:text-center">
             <p>Ultimi ricercati: &nbsp;
               {lastLog.map((row) => (
                 <>
