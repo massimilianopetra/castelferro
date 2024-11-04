@@ -268,6 +268,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               <br></br>
               <br></br>
               <br></br>
+              <br></br>              
+              <br></br>
               <br></br>
               <p className="text-5xl py-4">
                 Caricare un numero foglietto!!
@@ -279,6 +281,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         return (
           <>
             <div className='z-0 text-center'>
+              <br></br>
+              <br></br>
               <br></br>
               <br></br>
               <br></br>
@@ -300,6 +304,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               <br></br>
               <br></br>
               <br></br>
+              <br></br>
+              <br></br>
               <p className="text-5xl py-4">
                 Elaborazione in corso ...
               </p>
@@ -310,45 +316,88 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         );
       case 'aperto':
         return (
-          <>
+          <>             
+              <br></br>
+              <br></br>
+              <br></br>
             <div className="z-0 text-center">
-
-              <div className="z-0 xl:text-2xl font-extralight xl:text-end md:text-2xl md:py-2 md:text-center">
-                <p >
-                  Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span>
+              <div className="z-0 text-2xl font-extralight text-end">
+                <p>
+                  Conto aperto da:{" "}
+                  <span className="font-extrabold text-blue-800">
+                    {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;
+                  </span>
                 </p>
-                <p >
-                  Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
+                <p>
+                  Cameriere:{" "}
+                  <span className="font-extrabold text-blue-800">
+                    {conto?.cameriere}&nbsp;&nbsp;&nbsp;
+                  </span>
                 </p>
-                <p >
-                  Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
+                <p>
+                  Conto:{" "}
+                  <span className="font-extrabold text-blue-800">
+                    {numeroFoglietto}&nbsp;&nbsp;&nbsp;
+                  </span>
                 </p>
               </div>
               <div>
-                <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
+                <TabellaConto
+                  item={products}
+                  onAdd={handleAdd}
+                  onRemove={handleRemove}
+                />
               </div>
-              <div className="z-0 xl:text-2xl font-extralight xl:text-end md:text-2xl md:py-2 md:text-center">
-                <p >
-                  Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
+              <div className="z-0 text-2xl font-extralight text-end">
+                <p>
+                  Conto:{" "}
+                  <span className="font-extrabold text-blue-800">  {numeroFoglietto}&nbsp;&nbsp;&nbsp; </span>
                 </p>
               </div>
               &nbsp;
-              <div className='text-center '>
-                {+numeroFoglietto > 10 ? <Button variant="contained" onClick={handleStampa} >Stampa Conto</Button> :
-                  <Button variant="contained" onClick={handleStampa} disabled >Stampa Conto</Button>
-                }
+              <div className="text-center ">
+                {+numeroFoglietto > 10 ? (
+                  <Button variant="contained" onClick={handleStampa}>
+                    Stampa Conto
+                  </Button>
+                ) : (
+                  <Button variant="contained" onClick={handleStampa} disabled>
+                    Stampa Conto
+                  </Button>
+                )}
                 &nbsp;&nbsp;
                 <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
                   &nbsp;Chiudi conto&nbsp;&nbsp;
                   <ButtonGroup variant="contained" aria-label="xccc">
-                    <Button variant="contained" onClick={handleAChiudiPos} disabled>  POS  </Button>
-                    <Button variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
-                    <Button variant="contained" onClick={handleAChiudiGratis} disabled>Gratis</Button>
+                    <Button
+                      variant="contained"
+                      onClick={handleAChiudiPos}
+                      disabled
+                    >
+                      {" "}
+                      POS{" "}
+                    </Button>
+                    <Button
+                      variant="contained"
+                      onClick={handleAChiudi}
+                      disabled
+                    >
+                      Contanti
+                    </Button>
+                    <Button
+                      variant="contained"
+                      onClick={handleAChiudiGratis}
+                      disabled
+                    >
+                      Gratis
+                    </Button>
                   </ButtonGroup>
                   &nbsp;&nbsp;
                 </ul>
                 &nbsp;&nbsp;
-                <Button variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
+                <Button variant="contained" onClick={handleAggiorna} disabled>
+                  Aggiorna Conto
+                </Button>
               </div>
             </div>
 
@@ -356,15 +405,13 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             <div ref={printRef} className="hidden">
               <TheBill item={products} />
             </div>
-
           </>
         );
       case 'modificato':
         return (
           <>
             <div className="z-0 text-center">
-
-              <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
+              <div className="z-0 xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
                 <p >
                   Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span>
                 </p>
@@ -378,7 +425,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               <div>
                 <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
               </div>
-              <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
+              <div className="z-0 xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
                 <p >
                   Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                 </p>
@@ -409,7 +456,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             <div className="z-0 text-center">
               <br></br>
               <br></br>
-              <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
+              <div className="z-0 xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
                 <p >
                   Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span>
                 </p>
@@ -423,7 +470,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               <div>
                 <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
               </div>
-              <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
+              <div className="z-0 xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
                 <p >
                   Conto stampato numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                 </p>
@@ -507,7 +554,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     } else {
       return (
         <main>
-          <div className="z-50 lg:fixed xl:fixed md:fixed p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
+          <div className="z-50 lg:fixed xl:fixed lg:fixed p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
             <ul className="flex rounded-full">
               <li className="flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
                 <a className="text-center block text-white font-extralight ">
@@ -540,7 +587,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               </li>
             </ul>
           </div>
-          <div className="z-0 xl:text-2xl font-extralight xl:text-end md:text-2xl md:py-2 md:text-center">
+          <div className="z-0 xl:text-3xl font-extralight xl:text-end lg:text-2xl lg:py-2 lg:text-center">
             <p>Ultimi ricercati: &nbsp;
               {lastLog.map((row) => (
                 <>

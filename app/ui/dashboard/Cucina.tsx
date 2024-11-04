@@ -214,18 +214,18 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                 return (
                     <>
                         <div>
-                            <div className="z-0 xl:text-3xl font-extralight text-end md:text-3xl md:py-1">
+                            <div className="z-0 text-3xl font-extralight text-end">
                                 <p >
-                                    Cameriere: <span className="xl:text-3xl md:text-3xl font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
+                                    Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                                 <p >
-                                    Conto: <span className= "xl:text-3xl md:text-3xl font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
+                                    Conto: <span className= "font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                             </div>
                             <TabellaCucina item={products} onAdd={handleAdd} onRemove={handleRemove} />
-                            <div className="z-0 xl:text-3xl font-extralight text-end md:text-3xl md:py-1">
+                            <div className="z-0 text-3xl font-extralight text-end">
                                 <p >
-                                    Conto: <span className="xl:text-3xl md:text-3xl font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
+                                    Conto: <span className= "font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                             </div>
                         </div>
@@ -284,15 +284,15 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
         else
             return (
                 <main>
-                    <div className="z-50 lg:fixed xl:fixed md:fixed p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
+                    <div className="z-50 lg:fixed xl:fixed lg:fixed p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
                         <ul className="flex rounded-full">
-                            <li className="flex-1 mr-2 text-3xl md:text-5xl font-bold py-4 rounded-full">
+                            <li className="flex-1 mr-2 text-3xl lg:text-5xl font-bold py-4 rounded-full">
                                 <a className="text-center block text-white font-extralight ">
                                     {nomeCucina}
                                 </a>
                                 <div className="text-xs text-center text-white">SAGRA:  {sagra.stato}&nbsp;&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</div>
                             </li>
-                            <li className="text-right flex-1 mr-2 text-3xl md:text-3xl  text-white font-bold py-4">
+                            <li className="text-right flex-1 mr-2 text-3xl lg:text-4xl  text-white font-bold py-4">
                                 <a>
                                     <div className='text-center text-emerald-600'>
                                         <TextField
@@ -311,12 +311,12 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                     </div>
                                 </a>
                             </li>
-                            <li className="text-left flex-1 mr-2 text-3xl md:text-3xl  font-bold py-4 rounded-full">
+                            <li className="text-left flex-1 mr-2 text-3xl lg:text-4xl  font-bold py-4 rounded-full">
                                 <Button className="rounded-full" size="large" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
                             </li>
                         </ul>
                     </div>
-                    <div className="z-0 xl:text-3xl font-extralight xl:text-end md:text-3xl md:py-2 md:text-center">
+                    <div className="z-0 xl:text-4xl font-extralight xl:text-end lg:text-4xl lg:py-2 lg:text-center">
                         <p>Ultimi ricercati: &nbsp;
                             {lastLog.map((row) => (
                                 <>

@@ -16,11 +16,11 @@ export default function TabellaCucina({ item, onAdd, onRemove }: { item: DbConsu
     return (
         <div>
             <TableContainer component={Paper}>
-                <Table sx={{ minWidth: 150 }} size="small" aria-label="a dense table" className="z-0 xl:text-5xl xl:py-4 font-extralight text-end md:text-3xl md:py-1">
+                <Table sx={{ minWidth: 150 }} size="small" aria-label="a dense table" className="z-0 text-3xl py-4 font-extralight text-end">
                     <TableHead>
-                        <TableRow className=" text-gray-800 rounded-lg bg-gray-100 z-0 xl:text-5xl xl:py-4 font-extralight text-end md:text-3xl md:py-1">
-                            <TableCell className=" text-2xl font-bold" align="left"><p>Piatto</p></TableCell>
-                            <TableCell className=" text-2xl font-bold" align="left"><p>Quantità</p></TableCell>
+                        <TableRow className=" text-blue-800 rounded-lg bg-gray-100 font-extralight text-end">
+                            <TableCell className=" text-2xl " align="left"><p>Piatto</p></TableCell>
+                            <TableCell className=" text-2xl " align="left"><p>Quantità</p></TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
@@ -28,9 +28,9 @@ export default function TabellaCucina({ item, onAdd, onRemove }: { item: DbConsu
                             <TableRow className="hover:bg-yellow-100" sx={{
                                 backgroundColor: row.quantita > 0 ? "rgba(144, 238, 144, 0.3)" : "white",
                             }}>
-                                <TableCell className="text-3xl font-extralight" align="left">{row.piatto}</TableCell>
+                                <TableCell className="text-2xl font-extralight" align="left">{row.piatto}</TableCell>
                                 <TableCell align="left">
-                                    <span className="text-3xl font-semibold ">{row.quantita}</span> &nbsp;&nbsp;&nbsp;&nbsp;
+                                    <span className="text-2xl font-semibold ">{row.quantita}</span> &nbsp;&nbsp;&nbsp;&nbsp;
                                     <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
                                     &nbsp;&nbsp;&nbsp;&nbsp;
                                     <Button onClick={() => onAdd(row.id_piatto)} size="large" variant="contained" startIcon={<AddCircleIcon />} />

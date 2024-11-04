@@ -10,13 +10,12 @@ type Props = {
 export default  function Layout({ children }: Props) {
   return (
     <NextAuthProvider>
-      <div className="flex h-screen flex-col md:flex-row md:overflow-hidden">
-        <div className="w-full flex-none md:w-64">
+      <div className="flex h-screen flex-col lg:flex-row lg:overflow-hidden">
+        <div className="w-full flex-none lg:w-64">
           <SideNav />
           
         </div>
-        <div className="bg-red-500 sm:bg-green-500 md:bg-blue-500 lg:bg-pink-500 xl:bg-teal-500">sss</div>
-        <div className="flex-grow p-6 md:overflow-y-auto md:p-12">{children}</div>
+        <div className="flex-grow p-6 lg:overflow-y-auto lg:p-12">{children}</div>
       </div>
     </NextAuthProvider>
   );
