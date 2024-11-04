@@ -313,23 +313,23 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           <>
             <div className="z-0 text-center">
 
-              <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
+              <div className="z-0 xl:text-3xl font-extralight xl:text-end md:text-3xl md:py-2 md:text-center">
                 <p >
                   Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span>
                 </p>
                 <p >
-                  Nome Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
+                  Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
                 </p>
                 <p >
-                  Conto caricato per Consultazione/Modifiche numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
+                  Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                 </p>
               </div>
               <div>
                 <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
               </div>
-              <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
+              <div className="z-0 xl:text-3xl font-extralight xl:text-end md:text-3xl md:py-2 md:text-center">
                 <p >
-                  Conto caricato per Consultazione/Modifiche numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
+                  Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                 </p>
               </div>
               &nbsp;
@@ -369,10 +369,10 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span>
                 </p>
                 <p >
-                  Nome Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
+                  Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
                 </p>
                 <p >
-                  Conto caricato per Consultazione/Modifiche numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
+                  Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                 </p>
               </div>
               <div>
@@ -380,7 +380,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               </div>
               <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
                 <p >
-                  Conto caricato per Consultazione/Modifiche numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
+                  Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                 </p>
               </div>
               &nbsp;
@@ -414,7 +414,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span>
                 </p>
                 <p >
-                  Nome Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
+                  Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
                 </p>
                 <p >
                   Conto stampato numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
@@ -540,11 +540,11 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               </li>
             </ul>
           </div>
-          <div className="z-0 xl:text-2xl  xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
+          <div className="z-0 xl:text-3xl font-extralight xl:text-end md:text-3xl md:py-2 md:text-center">
             <p>Ultimi ricercati: &nbsp;
               {lastLog.map((row) => (
                 <>
-                  <Button size="small" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
+                  <Button size="large" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
                   &nbsp;&nbsp;
                 </>
               ))}

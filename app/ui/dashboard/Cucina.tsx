@@ -213,22 +213,19 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
             case 'caricato':
                 return (
                     <>
-                        <div className="z-0 text-center">
-                            <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
+                        <div>
+                            <div className="z-0 xl:text-4xl font-extralight text-end md:text-3xl md:py-1">
                                 <p >
-                                    Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span>
+                                    Cameriere: <span className="xl:text-4xl md:text-3xl font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                                 <p >
-                                    Nome Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
-                                </p>
-                                <p >
-                                    Conto x Consultazione/Modifiche: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
+                                    Conto: <span className= "xl:text-4xl md:text-3xl font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                             </div>
                             <TabellaCucina item={products} onAdd={handleAdd} onRemove={handleRemove} />
-                            <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
+                            <div className="z-0 xl:text-4xl font-extralight text-end md:text-3xl md:py-1">
                                 <p >
-                                    Conto x Consultazione/Modifiche: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
+                                    Conto: <span className="xl:text-4xl md:text-3xl font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                             </div>
                         </div>
@@ -295,7 +292,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                 </a>
                                 <div className="text-xs text-center text-white">SAGRA:  {sagra.stato}&nbsp;&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</div>
                             </li>
-                            <li className="text-right flex-1 mr-2 text-3xl md:text-5xl  text-white font-bold py-4">
+                            <li className="text-right flex-1 mr-2 text-3xl md:text-4xl  text-white font-bold py-4">
                                 <a>
                                     <div className='text-center text-emerald-600'>
                                         <TextField
@@ -314,16 +311,16 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                     </div>
                                 </a>
                             </li>
-                            <li className="text-left flex-1 mr-2 text-3xl md:text-5xl font-bold py-4 rounded-full">
-                                <Button className="rounded-full" size="medium" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
+                            <li className="text-left flex-1 mr-2 text-3xl md:text-4xl  font-bold py-4 rounded-full">
+                                <Button className="rounded-full" size="large" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
                             </li>
                         </ul>
                     </div>
-                    <div className="z-0 xl:text-2xl  xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
+                    <div className="z-0 xl:text-4xl font-extralight xl:text-end md:text-3xl md:py-2 md:text-center">
                         <p>Ultimi ricercati: &nbsp;
                             {lastLog.map((row) => (
                                 <>
-                                    <Button size="small" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
+                                    <Button size="large" className="rounded-full text-xl" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
                                     &nbsp;&nbsp;
                                 </>
                             ))}
@@ -332,9 +329,10 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                     {renderPhaseContent()}
                     &nbsp;
                     <div className='text-center '>
+                        
                         {phase == 'caricato' ?
-                            <Button variant="contained" onClick={handleButtonClickInvia}>Invia</Button> :
-                            <Button variant="contained" onClick={handleButtonClickInvia} disabled>Invia </Button>
+                            <Button size="large" variant="contained" onClick={handleButtonClickInvia}>Invia</Button> :
+                            <Button size="large" variant="contained" onClick={handleButtonClickInvia} disabled>Invia </Button>
                         }
                     </div>
                     <div>

@@ -42,9 +42,10 @@ export default function TabellaConto({ item, onAdd, onRemove }: { item: DbConsum
                               }}>
                                 <TableCell align="left" className="text-lg font-extralight">{row.piatto}</TableCell>
                                 <TableCell className="flex-wrap">
-                                    <Button onClick={() => onAdd(row.id_piatto)} size="medium" variant="contained" startIcon={<AddCircleIcon />} />
-                                    &nbsp;&nbsp;<span className="text-lg font-semibold ">{row.quantita}</span> &nbsp;&nbsp;
+                                    <span className="text-lg font-semibold ">{row.quantita}</span> &nbsp;&nbsp;&nbsp;&nbsp;
                                     <Button onClick={() => onRemove(row.id_piatto)} size="medium" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
+                                    &nbsp;&nbsp;&nbsp;&nbsp;
+                                    <Button onClick={() => onAdd(row.id_piatto)} size="medium" variant="contained" startIcon={<AddCircleIcon />} />
                                 </TableCell>
                                 <TableCell align="right" className="text-lg font-extralight">
                                     {(row.quantita * row.prezzo_unitario).toFixed(2)}&nbsp;&euro;&nbsp;
