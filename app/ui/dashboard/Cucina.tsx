@@ -327,9 +327,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                         </p>
                     </div>
                     {renderPhaseContent()}
-                    &nbsp;
-                    <div className="bg-red-500 sm:bg-green-500 md:bg-blue-500 lg:bg-pink-500 xl:bg-teal-500">sss</div>
-                    
+                    &nbsp;         
                     <div className='text-center '>
                       {phase == 'caricato' ?
                             <Button size="large" variant="contained" onClick={handleButtonClickInvia}>Invia</Button> :
