@@ -96,8 +96,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   const handleButtonClickCarica = () => {
     const num = Number(numero);
     if (isNaN(num) || num < 1 || num > 9999) {
-        setOpenSnackbar(true);
-        return;
+      setOpenSnackbar(true);
+      return;
     }
 
     router.push(`/dashboard/casse/${numero}`);
@@ -115,6 +115,29 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       }
       await sendConsumazioni(products);
       await aggiornaConto(Number(numeroFoglietto), sagra.giornata, totale);
+
+      // Gestione log
+      const logArray = products.map((item) => {
+        const orig = iniProducts.find(o => o.id_piatto == item.id_piatto);
+        if (orig) {
+          if (item.quantita > orig.quantita) {
+            return ({ id: item.id_comanda, message: `Aggiunti: ${item.quantita - orig.quantita} ${item.piatto}` });
+
+          } else if (item.quantita < orig.quantita) {
+            return ({ id: item.id_comanda, message: `Eliminati: ${orig.quantita - item.quantita} ${item.piatto}` });
+          } else {
+            return ({ id: -1, message: `` });
+          }
+        }
+
+        return { id: -1, message: `` };
+      });
+
+      for (var index = 0; index < logArray.length; index++) {
+        if (logArray[index].id != -1) {
+          await writeLog(logArray[index].id, sagra.giornata, 'Casse', '', 'UPDATE', logArray[index].message);
+        }
+      }
       setPhase('aperto');
     };
     fetchData();
@@ -165,7 +188,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
     const fetchData = async () => {
       setPhase('elaborazione');
-      const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata,1);
+      const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata, 1);
       const cc = await getConto(Number(numeroFoglietto), sagra.giornata);
       await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', 'Pagato contanti');
       setConto(cc);
@@ -311,8 +334,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               </div>
               &nbsp;
               <div className='text-center '>
-                { +numeroFoglietto > 10 ? <Button variant="contained" onClick={handleStampa} >Stampa Conto</Button> :
-                <Button variant="contained" onClick={handleStampa} disabled >Stampa Conto</Button>
+                {+numeroFoglietto > 10 ? <Button variant="contained" onClick={handleStampa} >Stampa Conto</Button> :
+                  <Button variant="contained" onClick={handleStampa} disabled >Stampa Conto</Button>
                 }
                 &nbsp;&nbsp;
                 <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
@@ -406,8 +429,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 </p>
               </div>
               <div className="z-0 text-center">
-                { +numeroFoglietto > 10 ? <Button variant="contained" onClick={handleStampa} >Stampa Conto</Button> :
-                <Button variant="contained" onClick={handleStampa} disabled >Stampa Conto</Button>
+                {+numeroFoglietto > 10 ? <Button variant="contained" onClick={handleStampa} >Stampa Conto</Button> :
+                  <Button variant="contained" onClick={handleStampa} disabled >Stampa Conto</Button>
                 }
                 &nbsp;&nbsp;
                 <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
