@@ -165,7 +165,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
     const fetchData = async () => {
       setPhase('elaborazione');
-      const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata);
+      const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata,1);
       const cc = await getConto(Number(numeroFoglietto), sagra.giornata);
       await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', 'Pagato contanti');
       setConto(cc);
@@ -178,9 +178,22 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
     const fetchData = async () => {
       setPhase('elaborazione');
-      const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata, true);
+      const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata, 2);
       const cc = await getConto(Number(numeroFoglietto), sagra.giornata);
       await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', 'Pagato POS');
+      setConto(cc);
+      setPhase('chiuso');
+    };
+    fetchData();
+  };
+
+  const handleAChiudiGratis = async () => {
+
+    const fetchData = async () => {
+      setPhase('elaborazione');
+      const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata, 3);
+      const cc = await getConto(Number(numeroFoglietto), sagra.giornata);
+      await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', 'Gratis');
       setConto(cc);
       setPhase('chiuso');
     };
@@ -307,6 +320,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   <ButtonGroup variant="contained" aria-label="xccc">
                     <Button variant="contained" onClick={handleAChiudiPos} disabled>  POS  </Button>
                     <Button variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
+                    <Button variant="contained" onClick={handleAChiudiGratis} disabled>Gratis</Button>
                   </ButtonGroup>
                   &nbsp;&nbsp;
                 </ul>
@@ -355,6 +369,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   <ButtonGroup variant="contained" aria-label="xccc">
                     <Button variant="contained" onClick={handleAChiudiPos} disabled>  POS  </Button>
                     <Button variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
+                    <Button variant="contained" onClick={handleAChiudiGratis} disabled>Gratis</Button>
                   </ButtonGroup>
                   &nbsp;&nbsp;
                 </ul>
@@ -400,6 +415,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   <ButtonGroup variant="contained" aria-label="xccc">
                     <Button variant="contained" onClick={handleAChiudiPos} >  POS  </Button>
                     <Button variant="contained" onClick={handleAChiudi} >Contanti</Button>
+                    <Button variant="contained" onClick={handleAChiudiGratis} >Gratis</Button>
                   </ButtonGroup>
                   &nbsp;&nbsp;
                 </ul>

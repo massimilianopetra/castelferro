@@ -384,7 +384,7 @@ export async function aggiornaConto(foglietto: number, giorno: number, totale: n
 }
 
 
-export async function chiudiConto(foglietto: number, giorno: number, pos: boolean = false) {
+export async function chiudiConto(foglietto: number, giorno: number, mode: Number = 1) {
 
   const date_format_millis = Date.now();
 
@@ -392,13 +392,20 @@ export async function chiudiConto(foglietto: number, giorno: number, pos: boolea
 
   if (current.rows[0]) {
     console.log(`Chiusura conto foglietto n. ${foglietto} giorno n. ${giorno}`);
-    if (pos) {
+    if (mode == 2) {
       return await sql`
                       UPDATE conti
                       SET stato = 'CHIUSOPOS',
                       data_chiusura = ${date_format_millis}
                       WHERE id = ${current.rows[0].id};
                       `;
+    } else if (mode == 3) {
+      return await sql`
+                      UPDATE conti
+                      SET stato = 'CHIUSOGRATIS',
+                      data_chiusura = ${date_format_millis}
+                      WHERE id = ${current.rows[0].id};
+      `;
     } else {
       return await sql`
                       UPDATE conti

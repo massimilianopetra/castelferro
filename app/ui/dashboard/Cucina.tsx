@@ -45,7 +45,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setNumero(event.target.value);
     };
-    
+
     const handleClose = () => {
         setOpenSnackbar(false);
     };
@@ -67,10 +67,11 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
             setNumeroFoglietto(num);
             if (cc) {
                 setConto(cc);
-                if (cc.stato == 'CHIUSO' || cc.stato == 'STAMPATO' || cc.stato == 'CHIUSOPOS') {
+                if (cc.stato == 'CHIUSO' || cc.stato == 'STAMPATO' || cc.stato == 'CHIUSOPOS' || cc.stato == 'CHIUSOGRATIS') {
                     setPhase('bloccato')
-                }
-                else {
+                } else if (cc.cameriere == 'Sconosciuto') {
+                    setPhase('sconosciuto');
+                } else {
                     await writeLog(num, sagra.giornata, nomeCucina, '', 'OPEN', ''); // Logger
                     const cc = await getLastLog(sagra.giornata, nomeCucina);
                     if (cc) {
@@ -82,16 +83,20 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
             } else {
                 const cameriere = await getCamerieri(num);
                 if (cameriere) {
-                    await apriConto(num, sagra.giornata, cameriere);
-                    await writeLog(num, sagra.giornata, nomeCucina, '', 'START', ''); // Logger
-                    const cc = await getLastLog(sagra.giornata, nomeCucina);
-                    if (cc) {
-                        setLastLog(cc);
+                    if (cameriere == 'Sconosciuto') {
+                        setPhase('sconosciuto');
+                    } else {
+                        await apriConto(num, sagra.giornata, cameriere);
+                        await writeLog(num, sagra.giornata, nomeCucina, '', 'START', ''); // Logger
+                        const cc = await getLastLog(sagra.giornata, nomeCucina);
+                        if (cc) {
+                            setLastLog(cc);
+                        }
+                        const ccc = await getConto(num, sagra.giornata);
+                        setConto(ccc);
+                        setPhase('caricato');
                     }
-                    const ccc = await getConto(num, sagra.giornata);
-                    setConto(ccc);
                 }
-                setPhase('caricato');
             }
 
         };
@@ -118,26 +123,26 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
             const orig = iniProducts.find(o => o.id_piatto == item.id_piatto);
             if (orig) {
                 if (item.quantita > orig.quantita) {
-                    return ({id: item.id_comanda,message:`Aggiunti: ${item.quantita-orig.quantita} ${item.piatto}`});
-                    
-                } else if  (item.quantita < orig.quantita) {
-                    return({id: item.id_comanda,message:`Eliminati: ${orig.quantita-item.quantita} ${item.piatto}`});
+                    return ({ id: item.id_comanda, message: `Aggiunti: ${item.quantita - orig.quantita} ${item.piatto}` });
+
+                } else if (item.quantita < orig.quantita) {
+                    return ({ id: item.id_comanda, message: `Eliminati: ${orig.quantita - item.quantita} ${item.piatto}` });
                 } else {
-                    return ({id: -1, message:``});
+                    return ({ id: -1, message: `` });
                 }
             }
 
-            return {id: -1, message:``};
+            return { id: -1, message: `` };
         });
 
-        for (var index=0; index<logArray.length; index++) {
+        for (var index = 0; index < logArray.length; index++) {
             if (logArray[index].id != -1) {
                 await writeLog(logArray[index].id, sagra.giornata, nomeCucina, '', 'UPDATE', logArray[index].message);
             }
         }
-        
+
         sendConsumazioni(products);
-        updateTotaleConto(Number(numeroFoglietto),sagra.giornata);
+        updateTotaleConto(Number(numeroFoglietto), sagra.giornata);
         setPhase('inviato');
         setProducts([]);
         setIniProducts([]);
@@ -217,13 +222,13 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                     Nome Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                                 <p >
-                                Conto x Consultazione/Modifiche: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
+                                    Conto x Consultazione/Modifiche: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                             </div>
                             <TabellaCucina item={products} onAdd={handleAdd} onRemove={handleRemove} />
                             <div className="z-0 xl:text-2xl xl:py-4 font-extralight text-end md:text-base md:py-1">
                                 <p >
-                                Conto x Consultazione/Modifiche: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
+                                    Conto x Consultazione/Modifiche: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                             </div>
                         </div>
@@ -239,12 +244,22 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                         </div>
                     </>
                 );
+            case 'sconosciuto':
+                return (
+                    <>
+                        <div className='text-center '>
+                            <p className="text-5xl py-4">
+                                Conto non valido: cameriere sconosciuto!
+                            </p>
+                        </div>
+                    </>
+                );
             case 'bloccato':
                 return (
                     <>
                         <div className='text-center '>
                             <p className="text-5xl py-4">
-                                Il conto risulta bloccato!!
+                                Conto non valido: bloccato dalle casse!
                             </p>
                         </div>
                     </>
