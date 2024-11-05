@@ -75,7 +75,8 @@ export async function getConsumazioni(cucina: string, comanda: number = -1, gior
       quantita: 0,
       cucina: item.cucina,
       giorno: giornata,
-      data: 0
+      data: 0,
+      alias: item.alias
     }));
     if (comanda != -1) {
       console.log(`Richiesta comanda n. ${comanda}`)
@@ -106,7 +107,8 @@ export async function getConsumazioniCassa(comanda: number = -1, giornata: numbe
       quantita: 0,
       cucina: item.cucina,
       giorno: giornata,
-      data: 0
+      data: 0,
+      alias:item.alias
     }));
     if (comanda != -1) {
       console.log(`Richiesta comanda n. ${comanda}`)
