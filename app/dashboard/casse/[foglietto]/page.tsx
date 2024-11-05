@@ -595,7 +595,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   &nbsp;&nbsp;
                 </>
               ))}
-            </p>
+            </p>        
           </div>
           {renderPhaseContent()}
           <div>

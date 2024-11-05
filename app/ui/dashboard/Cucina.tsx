@@ -235,6 +235,10 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                 return (
                     <>
                         <div className='text-center '>
+                            <br></br>
+                            <br></br>
+                            <br></br>
+                            <br></br>
                             <p className="text-5xl py-4">
                                 Inviato con successo!!
                             </p>
@@ -245,6 +249,10 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                 return (
                     <>
                         <div className='text-center '>
+                            <br></br>
+                            <br></br>
+                            <br></br>
+                            <br></br>
                             <p className="text-5xl py-4">
                                 Conto non valido: cameriere sconosciuto!
                             </p>
@@ -255,6 +263,10 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                 return (
                     <>
                         <div className='text-center '>
+                            <br></br>
+                            <br></br>
+                            <br></br>
+                            <br></br>
                             <p className="text-5xl py-4">
                                 Conto non valido: bloccato dalle casse!
                             </p>
@@ -316,11 +328,11 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                             </li>
                         </ul>
                     </div>
-                    <div className="z-0 xl:text-4xl font-extralight xl:text-end lg:text-4xl lg:py-2 lg:text-center">
+                    <div className="z-0 xl:text-3xl font-extralight xl:text-end lg:text-3xl lg:py-2 lg:text-center">
                         <p>Ultimi : &nbsp;
                             {lastLog.map((row) => (
                                 <>
-                                    <Button size="large" className="rounded-full text-xl" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
+                                    <Button size="medium" className="rounded-full text-xl" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
                                     &nbsp;&nbsp;
                                 </>
                             ))}

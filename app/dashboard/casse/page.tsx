@@ -73,7 +73,7 @@ export default function Page() {
         else
             return (
                 <main>
-                    <div className="z-50 lg:fixed xl:fixed lg:fixed p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
+                    <div className="z-50 lg:fixed xl:fixed md:fixed p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
                         <ul className="flex rounded-full">
                             <li className="flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
                                 <a className="text-center block text-white font-extralight ">
@@ -106,8 +106,8 @@ export default function Page() {
                             </li>
                         </ul>
                     </div>
-                    <div className="z-0 xl:text-2xl  xl:py-4 font-extralight xl:text-end lg:text-base lg:py-2 lg:text-center">
-                        <p>Ultimi: &nbsp;
+                    <div className="z-0 xl:text-2xl  xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
+                        <p>Ultimi ricercati: &nbsp;
                             {lastLog.map((row) => (
                                 <>
                                     <Button size="small" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
