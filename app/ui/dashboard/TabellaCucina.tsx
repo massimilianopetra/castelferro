@@ -28,7 +28,7 @@ export default function TabellaCucina({ item, onAdd, onRemove }: { item: DbConsu
                             <TableRow className="hover:bg-yellow-100" sx={{
                                 backgroundColor: row.quantita > 0 ? "rgba(144, 238, 144, 0.3)" : "white",
                             }}>
-                                <TableCell align="left" size = "medium">
+                                <TableCell align="left">
                                     <span className="text-3xl font-normal">{row.piatto}</span>
                                 </TableCell>
                                 <TableCell align="left">
