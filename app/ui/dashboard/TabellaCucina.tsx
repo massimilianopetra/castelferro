@@ -19,7 +19,7 @@ export default function TabellaCucina({ item, onAdd, onRemove }: { item: DbConsu
                 <Table sx={{ minWidth: 150 }} size="small" aria-label="a dense table" className="z-0 text-3xl py-4 font-extralight text-end">
                     <TableHead>
                         <TableRow className=" text-blue-800 rounded-lg bg-gray-100 font-extralight text-end">
-                            <TableCell className=" text-2xl " align="left"><p>Piatto</p></TableCell>
+                            <TableCell className=" text-2xl " align="left"><p>12334</p></TableCell>
                             <TableCell className=" text-2xl " align="left"><p>Quantità</p></TableCell>
                         </TableRow>
                     </TableHead>
@@ -29,7 +29,7 @@ export default function TabellaCucina({ item, onAdd, onRemove }: { item: DbConsu
                                 backgroundColor: row.quantita > 0 ? "rgba(144, 238, 144, 0.3)" : "white",
                             }}>
                                 <TableCell align="left">
-                                    <span className="text-3xl font-normal text-green-500">{row.piatto}</span>
+                                    <span className="text-3xl font-normal text-red-500">{row.piatto}</span>
                                 </TableCell>
                                 <TableCell align="left">
                                     <span className="text-3xl font-bold">{row.quantita}</span> &nbsp;&nbsp;&nbsp;&nbsp;
