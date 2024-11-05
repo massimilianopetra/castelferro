@@ -29,7 +29,7 @@ export default function TabellaCucina({ item, onAdd, onRemove }: { item: DbConsu
                                 backgroundColor: row.quantita > 0 ? "rgba(144, 238, 144, 0.3)" : "white",
                             }}>
                                 <TableCell align="left">
-                                    <span className="text-3xl font-normal">{row.piatto}</span>
+                                    <span className="text-3xl font-normal">{row.alias}</span>
                                 </TableCell>
                                 <TableCell align="left">
                                     <span className="text-3xl font-bold">{row.quantita}</span> &nbsp;&nbsp;&nbsp;&nbsp;

@@ -301,7 +301,8 @@ const menu = [
     piatto: 'Bonarda',
     prezzo: 7.00,
     cucina: 'Bevande',
-    disponibile: "Y"
+    disponibile: "Y",
+    alias: 'Bonarda'
   },
   {
     id: 33,
@@ -332,7 +333,8 @@ const menu = [
     piatto: 'Birra artigianale 0,4lt',
     prezzo: 4.00,
     cucina: 'Birre',
-    disponibile: "Y"
+    disponibile: "Y",
+    alias: 'Birra'
   },
   {
     id: 37,

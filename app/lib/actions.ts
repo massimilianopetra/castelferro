@@ -134,8 +134,8 @@ export async function sendConsumazioni(c: DbConsumazioni[]) {
   c.map(async (item) => {
     if (item.id == -1) {
       return await sql`
-         INSERT INTO consumazioni (id_comanda, id_piatto, piatto, quantita, cucina, giorno, data)
-         VALUES (${item.id_comanda}, ${item.id_piatto}, ${item.piatto}, ${item.quantita}, ${item.cucina},${item.giorno},${date_format_millis})
+         INSERT INTO consumazioni (id_comanda, id_piatto, piatto, quantita, cucina, giorno, data, alias)
+         VALUES (${item.id_comanda}, ${item.id_piatto}, ${item.piatto}, ${item.quantita}, ${item.cucina},${item.giorno},${date_format_millis}, ${item.alias})
          ON CONFLICT (id) DO NOTHING;
       `;
     } else {
@@ -252,6 +252,30 @@ export async function doQuery(tableName: string): Promise<any[] | undefined> {
   try {
     
     const query = `SELECT * FROM ${tableName}`;
+    console.log(query)
+    const result = await sql.query(query);
+    return result.rows;
+  } catch (error) {
+    return [];
+  }
+}
+
+export async function doTruncate(tableName: string): Promise<any[] | undefined> {
+  try {
+    
+    const query = `TRUNCATE TABLE ${tableName}`;
+    console.log(query)
+    const result = await sql.query(query);
+    return result.rows;
+  } catch (error) {
+    return [];
+  }
+}
+
+export async function doDrop(tableName: string): Promise<any[] | undefined> {
+  try {
+    
+    const query = `DROP TABLE ${tableName}`;
     console.log(query)
     const result = await sql.query(query);
     return result.rows;

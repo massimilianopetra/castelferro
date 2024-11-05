@@ -41,7 +41,7 @@ export default function TabellaConto({ item, onAdd, onRemove }: { item: DbConsum
                                 backgroundColor: row.quantita > 0 ?  "rgba(144, 238, 144, 0.3)" : "white",
                               }}>
                                 <TableCell align="left">
-                                    <span className="text-lg font-normal">{row.piatto}</span>
+                                    <span className="text-lg font-normal">{row.alias}</span>
                                 </TableCell>
                                 <TableCell className="flex-wrap">
                                     <span className="text-lg font-semibold ">{row.quantita}</span> &nbsp;&nbsp;&nbsp;&nbsp;

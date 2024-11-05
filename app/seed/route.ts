@@ -49,10 +49,10 @@ async function seedMenu() {
 
   const insertedMenu = await Promise.all(
     menu.map(async (item) => {
-      console.log(`VALUES ${item.id}, ${item.piatto}, ${item.prezzo}, ${item.cucina},${item.disponibile}`);
+      console.log(`VALUES ${item.id}, ${item.piatto}, ${item.prezzo}, ${item.cucina},${item.disponibile}, ${item.alias}`);
       return client.sql`
-           INSERT INTO menus (id, piatto, prezzo, cucina,disponibile)
-           VALUES (${item.id}, ${item.piatto}, ${item.prezzo}, ${item.cucina},${item.disponibile})
+           INSERT INTO menus (id, piatto, prezzo, cucina, disponibile, alias)
+           VALUES (${item.id}, ${item.piatto}, ${item.prezzo}, ${item.cucina},${item.disponibile},${item.alias})
            ON CONFLICT (id) DO NOTHING;
         `;
     }),
@@ -71,7 +71,8 @@ async function seedConsumazioni() {
        quantita INTEGER,
        cucina VARCHAR(255) NOT NULL,
        giorno INTEGER,
-       data BIGINT
+       data BIGINT,
+       alias VARCHAR(255) NOT NULL
      );
    `;
 
@@ -115,7 +116,8 @@ async function seedConti() {
        giorno INTEGER,
        data_apertura BIGINT,
        data BIGINT,
-       data_chiusura BIGINT
+       data_chiusura BIGINT,
+       note VARCHAR(256)
      );
    `;
 

@@ -53,6 +53,32 @@ export default function Page() {
         setProducts(newProducts);
     }
 
+    const handleFileChange = async (event: Event) => {
+        const input = event.target as HTMLInputElement;
+        const file = input.files?.[0];
+        if (file) {
+            const text = await file.text();
+            const rows = text.trim().split("\n"); // Split by line
+
+            const data = rows.slice(1).map((row) => {
+                const values = row.split(",");
+                const entry: DbMenu = { id: Number(values[0]), piatto: values[1], prezzo: Number(values[2]), cucina: values[3], disponibile: values[4], alias: values[5] };
+                return entry;
+            });
+
+            setProducts(data);
+            console.log("Parsed CSV Data:", data);
+        }
+    }
+
+    const handleUploadClick = () => {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = '.csv';
+        fileInput.onchange = handleFileChange;
+        fileInput.click();
+    };
+
     //const session = await auth();
     //console.log(session?.user?.name);
 
@@ -71,10 +97,9 @@ export default function Page() {
                     <div>
                         <TabellaMenu item={products} onToggle={handleToggle} />
                     </div>
-                    <div className='text-center '>
-                        <br></br>
-                        <br></br>
+                    <div className="flex justify-center space-x-4 py-8">
                         <Button variant="contained" onClick={handleButtonClickInvia}>Tutto Disponibile</Button>
+                        <Button variant="contained" onClick={handleUploadClick}>Upload Menu</Button>
                     </div>
 
                 </div>

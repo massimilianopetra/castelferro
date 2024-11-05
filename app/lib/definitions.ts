@@ -53,6 +53,7 @@ export type DbConti =   {
   data_apertura: number;
   data: number;
   data_chiusura: number;
+  note: string;
 };
 
 export type DbCamerieri =   {
