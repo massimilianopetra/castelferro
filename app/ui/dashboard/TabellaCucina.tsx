@@ -28,9 +28,11 @@ export default function TabellaCucina({ item, onAdd, onRemove }: { item: DbConsu
                             <TableRow className="hover:bg-yellow-100" sx={{
                                 backgroundColor: row.quantita > 0 ? "rgba(144, 238, 144, 0.3)" : "white",
                             }}>
-                                <TableCell className="text-2xl font-extralight" align="left">{row.piatto}</TableCell>
+                                <TableCell align="left" size = "medium">
+                                    <span className="text-3xl font-normal">{row.piatto}</span>
+                                </TableCell>
                                 <TableCell align="left">
-                                    <span className="text-2xl font-semibold ">{row.quantita}</span> &nbsp;&nbsp;&nbsp;&nbsp;
+                                    <span className="text-3xl font-bold">{row.quantita}</span> &nbsp;&nbsp;&nbsp;&nbsp;
                                     <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
                                     &nbsp;&nbsp;&nbsp;&nbsp;
                                     <Button onClick={() => onAdd(row.id_piatto)} size="large" variant="contained" startIcon={<AddCircleIcon />} />

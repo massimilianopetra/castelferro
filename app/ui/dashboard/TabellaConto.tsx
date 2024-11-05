@@ -40,7 +40,9 @@ export default function TabellaConto({ item, onAdd, onRemove }: { item: DbConsum
                             <TableRow className="hover:bg-yellow-100" sx={{
                                 backgroundColor: row.quantita > 0 ?  "rgba(144, 238, 144, 0.3)" : "white",
                               }}>
-                                <TableCell align="left" className="text-lg font-extralight">{row.piatto}</TableCell>
+                                <TableCell align="left">
+                                    <span className="text-lg font-normal">{row.piatto}</span>
+                                </TableCell>
                                 <TableCell className="flex-wrap">
                                     <span className="text-lg font-semibold ">{row.quantita}</span> &nbsp;&nbsp;&nbsp;&nbsp;
                                     <Button onClick={() => onRemove(row.id_piatto)} size="medium" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />

@@ -15,6 +15,7 @@ export type DbMenu =   {
   prezzo: number;
   cucina: string;
   disponibile: string;
+  alias: string;
 };
 
 export type DbConsumazioni =   {
@@ -26,6 +27,7 @@ export type DbConsumazioni =   {
   cucina: string;
   giorno: number;
   data: number;
+  alias: string;
 };
 
 export type DbConsumazioniPrezzo =   {
@@ -38,6 +40,7 @@ export type DbConsumazioniPrezzo =   {
   cucina: string;
   giorno: number;
   data: number;
+  alias: string;
 };
 
 export type DbConti =   {

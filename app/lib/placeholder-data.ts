@@ -61,231 +61,302 @@ const menu = [
     piatto: 'Pane e Coperto',
     prezzo: 2.50,
     cucina: 'All',
-    disponibile: 'Y'
+    disponibile: 'Y',
+    alias: 'Pane e Coperto'
   },
   {
     id: 2,
     piatto: 'Bresaola equina e rucola',
     prezzo: 5.00,
     cucina: 'Antipasti',
-    disponibile: "Y"
+    disponibile: "Y",
+    alias: 'Bresaola'
   },
   {
     id: 3,
     piatto: 'Antipasto equino',
     prezzo: 5.00,
     cucina: 'Antipasti',
-    disponibile: "Y"
+    disponibile: "Y",
+    alias: 'Equino'
   },
   {
     id: 4,
     piatto: 'Prosciutto crudo e melone',
     prezzo: 5.00,
     cucina: 'Antipasti',
-    disponibile: "Y"
+    disponibile: "Y",
+    alias: 'Crudo e Melone'
   },
   {
     id: 5,
     piatto: 'Robiola biologica 100% latte di capra',
     prezzo: 3.50,
     cucina: 'Antipasti',
-    disponibile: "Y"
+    disponibile: "Y",
+    alias: 'Robiola'
   },
   {
     id: 6,
     piatto: 'Caprino alle erbe',
     prezzo: 3.50,
     cucina: 'Antipasti',
-    disponibile: "Y"
+    disponibile: "Y",
+    alias: 'Caprino'
   },
   {
     id: 7,
     piatto: 'Agnolotti al sugo',
     prezzo: 7.50,
     cucina: 'Primi',
-    disponibile: "Y"
+    disponibile: "Y",
+    alias: 'Agnolotti al sugo'
   },
   {
     id: 8,
     piatto: 'Agnolotti al vino',
     prezzo: 6.00,
     cucina: 'Primi',
-    disponibile: "Y"
+    disponibile: "Y",
+    alias: 'Agnolotti al vino'
   },
   {
     id: 9,
-    piatto: 'Agnolotti al butto e/o formaggio',
+    piatto: 'Agnolotti al burro e/o formaggio',
     prezzo: 6.00,
     cucina: 'Primi',
-    disponibile: "Y"
+    disponibile: "Y",
+    alias: 'Agnolotti burro/form.'
   },
   {
     id: 10,
     piatto: 'Polenta e tapulone',
     prezzo: 8.00,
     cucina: 'Primi',
-    disponibile: "Y"
+    disponibile: "Y",
+    alias: 'Polenta e tapulone'
   },
   {
     id: 11,
-    piatto: 'Arrosto d`asino',
-    prezzo: 9.00,
-    cucina: 'Secondi',
-    disponibile: "Y"
+    piatto: 'Polenta',
+    prezzo: 4.00,
+    cucina: 'Primi',
+    disponibile: "Y",
+    alias: 'Polenta'
   },
   {
     id: 12,
-    piatto: 'Stracotto d`asino',
-    prezzo: 9.00,
-    cucina: 'Secondi',
-    disponibile: "Y"
+    piatto: 'Prosciutto Crudo',
+    prezzo: 5.00,
+    cucina: 'Primi',
+    disponibile: "Y",
+    alias: 'Prosciutto Crudo'
   },
   {
     id: 13,
-    piatto: 'Salamini al cartoccio',
-    prezzo: 7.00,
-    cucina: 'Secondi',
-    disponibile: "Y"
+    piatto: 'Polenta al sugo',
+    prezzo: 8.00,
+    cucina: 'Primi',
+    disponibile: "Y",
+    alias: 'Polenta al sugo'
   },
   {
     id: 14,
-    piatto: 'Braciola di maiale',
-    prezzo: 6.00,
-    cucina: 'Secondi',
-    disponibile: "Y"
+    piatto: 'Polenta e stracotto',
+    prezzo: 12.00,
+    cucina: 'Primi',
+    disponibile: "Y",
+    alias: 'Polenta e stracotto'
   },
   {
     id: 15,
-    piatto: 'Patatine fritte',
-    prezzo: 3.00,
+    piatto: 'Arrosto d`asino',
+    prezzo: 9.00,
     cucina: 'Secondi',
-    disponibile: "Y"
+    disponibile: "Y",
+    alias: 'Arrosto d`asino'
   },
   {
     id: 16,
-    piatto: 'Peperonata',
-    prezzo: 3.50,
+    piatto: 'Stracotto d`asino',
+    prezzo: 9.00,
     cucina: 'Secondi',
-    disponibile: "Y"
+    disponibile: "Y",
+    alias: 'Stracotto d`asino'
   },
   {
     id: 17,
-    piatto: 'Insalasta verde',
-    prezzo: 3.00,
+    piatto: 'Salamini al cartoccio',
+    prezzo: 7.00,
     cucina: 'Secondi',
-    disponibile: "Y"
+    disponibile: "Y",
+    alias: 'Salamini al cartoccio'
   },
   {
     id: 18,
-    piatto: 'Fagioli alla texana',
-    prezzo: 3.50,
+    piatto: 'Braciola di maiale',
+    prezzo: 6.00,
     cucina: 'Secondi',
-    disponibile: "Y"
-  },
+    disponibile: "Y",
+    alias: 'Braciola di maiale'
+  }, 
   {
     id: 19,
-    piatto: 'Melone a fette',
-    prezzo: 2.00,
-    cucina: 'Antipasti',
-    disponibile: "Y"
+    piatto: 'Patatine fritte',
+    prezzo: 3.00,
+    cucina: 'Secondi',
+    disponibile: "Y",
+    alias: 'Patatine'
   },
   {
     id: 20,
-    piatto: 'Torta di nocciole',
+    piatto: 'Peperonata',
     prezzo: 3.50,
-    cucina: 'Dolci',
-    disponibile: "Y"
+    cucina: 'Secondi',
+    disponibile: "Y",
+    alias: 'Peperonata'
   },
   {
     id: 21,
-    piatto: 'Crostata',
-    prezzo: 3.50,
-    cucina: 'Dolci',
-    disponibile: "Y"
-  },
-  {
-    id: 22,
-    piatto: 'Salame dolce al cioccolato',
-    prezzo: 3.50,
-    cucina: 'Dolci',
-    disponibile: "Y"
+    piatto: 'Insalasta tricolore',
+    prezzo: 3.00,
+    cucina: 'Secondi',
+    disponibile: "Y",
+    alias: 'Insalata'
   },
   {
     id: 23,
-    piatto: 'Salame dolce al marmellata',
+    piatto: 'Fagioli alla texana',
     prezzo: 3.50,
-    cucina: 'Dolci',
-    disponibile: "Y"
+    cucina: 'Secondi',
+    disponibile: "Y",
+    alias: 'Fagioli'
   },
   {
     id: 24,
-    piatto: 'Pastine della nonna',
-    prezzo: 2.50,
-    cucina: 'Dolci',
-    disponibile: "Y"
+    piatto: 'Melone a fette',
+    prezzo: 2.00,
+    cucina: 'Antipasti',
+    disponibile: "Y",
+    alias: 'Melone'
   },
   {
     id: 25,
-    piatto: 'Dolcetto d`Ovada DOC',
-    prezzo: 7.00,
-    cucina: 'Bevande',
-    disponibile: "Y"
+    piatto: 'Torta di nocciole',
+    prezzo: 3.50,
+    cucina: 'Dolci',
+    disponibile: "Y",
+    alias: 'Torta nocciole'
   },
   {
     id: 26,
-    piatto: 'Barbera del monferrato DOC',
-    prezzo: 7.00,
-    cucina: 'Bevande',
-    disponibile: "Y"
+    piatto: 'Crostata',
+    prezzo: 3.50,
+    cucina: 'Dolci',
+    disponibile: "Y",
+    alias: 'Crostata'
   },
   {
     id: 27,
+    piatto: 'Salame dolce al cioccolato',
+    prezzo: 3.50,
+    cucina: 'Dolci',
+    disponibile: "Y",
+    alias: 'Salame cioccolato'
+  },
+  {
+    id: 28,
+    piatto: 'Salame dolce al marmellata',
+    prezzo: 3.50,
+    cucina: 'Dolci',
+    disponibile: "Y",
+    alias: 'Salame marmellata'
+  },
+  {
+    id: 29,
+    piatto: 'Pastine della nonna',
+    prezzo: 2.50,
+    cucina: 'Dolci',
+    disponibile: "Y",
+    alias: 'Pastine'
+  },
+  {
+    id: 30,
+    piatto: 'Dolcetto d`Ovada DOC',
+    prezzo: 7.00,
+    cucina: 'Bevande',
+    disponibile: "Y",
+    alias: 'Dolcetto'
+  },
+  {
+    id: 31,
+    piatto: 'Barbera del monferrato DOC',
+    prezzo: 7.00,
+    cucina: 'Bevande',
+    disponibile: "Y",
+    alias: 'Barbera'
+  },
+  {
+    id: 32,
     piatto: 'Bonarda',
     prezzo: 7.00,
     cucina: 'Bevande',
     disponibile: "Y"
   },
   {
-    id: 28,
+    id: 33,
     piatto: 'Pinot Bianco DOC',
     prezzo: 7.00,
     cucina: 'Bevande',
-    disponibile: "Y"
+    disponibile: "Y",
+    alias: 'Pinot Bianco'
   },
   {
-    id: 29,
+    id: 34,
     piatto: 'Rugiada Chardonnay DOC',
     prezzo: 7.00,
     cucina: 'Bevande',
-    disponibile: "Y"
+    disponibile: "Y",
+    alias: 'Rugiada'
   },
   {
-    id: 30,
+    id: 35,
     piatto: 'Moscato Piemonte',
     prezzo: 7.00,
     cucina: 'Bevande',
-    disponibile: "Y"
+    disponibile: "Y",
+    alias: 'Moascato'
   },
   {
-    id: 31,
+    id: 36,
     piatto: 'Birra artigianale 0,4lt',
     prezzo: 4.00,
     cucina: 'Birre',
     disponibile: "Y"
   },
   {
-    id: 32,
+    id: 37,
     piatto: 'Acqua Minerale naturale 0,5lt',
     prezzo: 1.00,
     cucina: 'Bevande',
-    disponibile: "Y"
+    disponibile: "Y",
+    alias: 'Acqua Naturale'
   },
   {
-    id: 33,
+    id: 38,
     piatto: 'Acqua Minerale frizzante 0,5lt',
     prezzo: 1.00,
     cucina: 'Bevande',
-    disponibile: "Y"
+    disponibile: "Y",
+    alias: 'Acqua Frizzante'
+  },
+  {
+    id: 38,
+    piatto: 'Salamini da asporto',
+    prezzo: 2.00,
+    cucina: 'Cassa',
+    disponibile: "Y",
+    alias: 'Salamini asporto'
   },
 ];
 export { menu };

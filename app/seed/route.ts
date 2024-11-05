@@ -39,7 +39,8 @@ async function seedMenu() {
        piatto VARCHAR(255) UNIQUE,
        prezzo REAL,
        cucina VARCHAR(255),
-       disponibile VARCHAR(3)
+       disponibile VARCHAR(3),
+       alias VARCHAR(255)
      );
    `;
 
