@@ -353,7 +353,7 @@ const menu = [
     alias: 'Acqua Frizzante'
   },
   {
-    id: 38,
+    id: 39,
     piatto: 'Salamini da asporto',
     prezzo: 2.00,
     cucina: 'Cassa',
