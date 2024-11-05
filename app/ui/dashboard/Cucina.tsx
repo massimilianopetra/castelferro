@@ -317,7 +317,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                         </ul>
                     </div>
                     <div className="z-0 xl:text-4xl font-extralight xl:text-end lg:text-4xl lg:py-2 lg:text-center">
-                        <p>Ultimi ricercati: &nbsp;
+                        <p>Ultimi : &nbsp;
                             {lastLog.map((row) => (
                                 <>
                                     <Button size="large" className="rounded-full text-xl" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>

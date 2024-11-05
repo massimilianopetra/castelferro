@@ -107,7 +107,7 @@ export default function Page() {
                         </ul>
                     </div>
                     <div className="z-0 xl:text-2xl  xl:py-4 font-extralight xl:text-end lg:text-base lg:py-2 lg:text-center">
-                        <p>Ultimi ricercati: &nbsp;
+                        <p>Ultimi: &nbsp;
                             {lastLog.map((row) => (
                                 <>
                                     <Button size="small" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>

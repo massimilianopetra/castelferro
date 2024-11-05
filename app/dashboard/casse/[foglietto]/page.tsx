@@ -588,7 +588,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             </ul>
           </div>
           <div className="z-0 xl:text-3xl font-extralight xl:text-end lg:text-2xl lg:py-2 lg:text-center">
-            <p>Ultimi ricercati: &nbsp;
+            <p>Ultimi: &nbsp;
               {lastLog.map((row) => (
                 <>
                   <Button size="medium" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
