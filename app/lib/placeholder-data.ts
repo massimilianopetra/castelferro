@@ -148,7 +148,7 @@ const menu = [
     id: 12,
     piatto: 'Prosciutto Crudo',
     prezzo: 5.00,
-    cucina: 'Primi',
+    cucina: 'Antipasti',
     disponibile: "Y",
     alias: 'Prosciutto Crudo'
   },

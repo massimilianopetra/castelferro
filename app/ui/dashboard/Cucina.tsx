@@ -216,10 +216,10 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                         <div>
                             <div className="z-0 text-3xl font-extralight text-end">
                                 <p >
-                                    sss: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
+                                    Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                                 <p >
-                                    xxx: <span className= "font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
+                                    Conto: <span className= "font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                             </div>
                             <TabellaCucina item={products} onAdd={handleAdd} onRemove={handleRemove} />
