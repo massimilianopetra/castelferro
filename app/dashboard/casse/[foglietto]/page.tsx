@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation';
 import { Button, ButtonGroup, Snackbar, TextField } from '@mui/material';
 import type { DbConsumazioniPrezzo, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
-import { getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto, aggiornaConto, stampaConto } from '@/app/lib/actions';
+import { getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto, aggiornaConto, stampaConto, riapriConto } from '@/app/lib/actions';
 import { writeLog, getGiornoSagra, getLastLog } from '@/app/lib/actions';
 import { deltanow, milltodatestring } from '@/app/lib/utils'
 import TabellaConto from '@/app/ui/dashboard/TabellaConto';
@@ -164,6 +164,18 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     print();
   };
 
+  const handleButtonRiapri = async () => {
+
+    if (conto?.id_comanda) {
+      setPhase('elaborazione');
+      await riapriConto(conto.id_comanda, sagra.giornata);
+      await writeLog(conto.id_comanda, sagra.giornata, 'Casse', '', 'RESTART', 'Conto riaperto');
+      setNumeroFoglietto(conto.id_comanda.toString())
+      setPhase('aperto');
+    }
+  }
+
+
   const print = () => {
     const printArea = printRef.current;
 
@@ -216,7 +228,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
     const fetchData = async () => {
       setPhase('elaborazione');
-      const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata, 3, textValue,importValue);
+      const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata, 3, textValue, importValue);
       const cc = await getConto(Number(numeroFoglietto), sagra.giornata);
       await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', 'Altro Importo');
       setConto(cc);
@@ -474,7 +486,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         );
       case 'stampato':
         return (
-          <>        
+          <>
             <div className="z-0 text-center">
               <br></br>
               <br></br>
@@ -489,16 +501,16 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   Conto stampato numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                 </p>
               </div>
-                <ul className="inline-block py-3 text-2xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
-                  &nbsp;Chiudi conto&nbsp;&nbsp;
-                  <ButtonGroup variant="contained" aria-label="xccc">
-                    <Button variant="contained" size="large" onClick={handleAChiudiPos} >  POS  </Button>
-                    <Button variant="contained" size="large" onClick={handleAChiudi} >Contanti</Button>
-                    <Button variant="contained" size="large" onClick={handleChiudiGratis} >Altro Importo</Button>
-                  </ButtonGroup>
-                  &nbsp;&nbsp;
-                </ul>
-                <br />
+              <ul className="inline-block py-3 text-2xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
+                &nbsp;Chiudi conto&nbsp;&nbsp;
+                <ButtonGroup variant="contained" aria-label="xccc">
+                  <Button variant="contained" size="large" onClick={handleAChiudiPos} >  POS  </Button>
+                  <Button variant="contained" size="large" onClick={handleAChiudi} >Contanti</Button>
+                  <Button variant="contained" size="large" onClick={handleChiudiGratis} >Altro Importo</Button>
+                </ButtonGroup>
+                &nbsp;&nbsp;
+              </ul>
+              <br />
 
               <div>
                 <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
@@ -545,6 +557,9 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               <br></br>
               <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50  text-center" role="alert">
                 <span className="text-xl font-semibold">Dark alert!</span> Conto {conto?.id_comanda} chiuso in data: {milltodatestring(conto?.data_chiusura)} totale: {conto?.totale} Euro.
+              </div>
+              <div>
+                <Button className="rounded-full" variant="contained" onClick={handleButtonRiapri}>Riapri Conto</Button>
               </div>
             </main>
           </>

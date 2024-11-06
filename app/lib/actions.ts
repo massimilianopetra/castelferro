@@ -609,8 +609,25 @@ export async function aggiornaConto(foglietto: number, giorno: number, totale: n
   }
 }
 
+export async function riapriConto(foglietto: number, giorno: number) {
+  const date_format_millis = Date.now();
 
-export async function chiudiConto(foglietto: number, giorno: number, mode: Number = 1, note: string = "", totale: string  = "0.0") {
+  const current = await sql<DbConti>`SELECT * FROM conti  WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`;
+
+  if (current.rows[0]) {
+    console.log(`Ri-Apertura conto foglietto n. ${foglietto} giorno n. ${giorno}`);
+    return await sql`
+    UPDATE conti
+    SET data = ${date_format_millis},
+        stato = 'APERTO'
+    WHERE id = ${current.rows[0].id};
+    `;
+  } else {
+    console.log(`Il conto foglietto n. ${foglietto} giorno n. ${giorno} non risulta paerto`);
+  }
+}
+
+export async function chiudiConto(foglietto: number, giorno: number, mode: Number = 1, note: string = "", totale: string = "0.0") {
 
   const date_format_millis = Date.now();
 
