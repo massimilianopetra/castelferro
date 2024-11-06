@@ -23,16 +23,16 @@ export default function TabellaConto({ item, onAdd, onRemove }: { item: DbConsum
     return (
         <div className="z-0">
 
-           <div className="z-0 p-1 mb-1 text-2xl font-extralight text-blue-800 rounded-lg bg-blue-50 text-end">
-               Totale Conto: <span className="text-xl font-semibold ">{totale.toFixed(2)}</span> &euro;&nbsp;
+           <div className="z-0 p-1 mb-1 text-3xl font-semibold text-blue-800 rounded-lg bg-blue-50 text-end ">
+              Totale Conto: <span className="text-3xl font-extrabold ">{totale.toFixed(2)}</span> &euro;&nbsp;
             </div>
             <TableContainer component={Paper}>
                 <Table  sx={{ minWidth: 150 }} size="small" aria-label="a dense table">
                     <TableHead>
                         <TableRow className=" text-gray-800 rounded-lg bg-gray-100">
-                            <TableCell align="left"><p className="text-lg font-bold">Piatto</p></TableCell>
-                            <TableCell className="text-lg font-bold" align="center"><p className="font-bold">Quantità</p></TableCell>
-                            <TableCell className="text-lg font-bold" align="right"><p className="font-bold">Prezzo Totale</p></TableCell>
+                            <TableCell align="left"><p className="text-2xl font-bold">Piatto</p></TableCell>
+                            <TableCell className="text-2xl font-bold" align="center"><p className="font-bold">Quantità</p></TableCell>
+                            <TableCell className="text-2xl font-bold" align="right"><p className="font-bold">Prezzo Totale</p></TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody >
@@ -41,15 +41,15 @@ export default function TabellaConto({ item, onAdd, onRemove }: { item: DbConsum
                                 backgroundColor: row.quantita > 0 ?  "rgba(144, 238, 144, 0.3)" : "white",
                               }}>
                                 <TableCell align="left">
-                                    <span className="text-lg font-normal">{row.alias}</span>
+                                    <span className="text-2xl font-normal">{row.alias}</span>
                                 </TableCell>
                                 <TableCell className="flex-wrap">
-                                    <span className="text-lg font-semibold ">{row.quantita}</span> &nbsp;&nbsp;&nbsp;&nbsp;
+                                    <span className="text-2xl font-semibold ">{row.quantita}</span> &nbsp;&nbsp;&nbsp;&nbsp;
                                     <Button onClick={() => onRemove(row.id_piatto)} size="medium" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
                                     &nbsp;&nbsp;&nbsp;&nbsp;
                                     <Button onClick={() => onAdd(row.id_piatto)} size="medium" variant="contained" startIcon={<AddCircleIcon />} />
                                 </TableCell>
-                                <TableCell align="right" className="text-lg font-extralight">
+                                <TableCell align="right" className="text-2xl font-extralight">
                                     {(row.quantita * row.prezzo_unitario).toFixed(2)}&nbsp;&euro;&nbsp;
                                 </TableCell>
                             </TableRow>
@@ -58,7 +58,7 @@ export default function TabellaConto({ item, onAdd, onRemove }: { item: DbConsum
                 </Table>
             </TableContainer>
             <div className="p-2 mb-2 text-2xl font-extralight text-blue-800 rounded-lg bg-blue-50 text-end">
-               Totale Conto: <span className="text-xl font-semibold ">{totale.toFixed(2)}</span>&euro;&nbsp;
+               Totale Conto: <span className="text-2xl font-semibold ">{totale.toFixed(2)}</span>&euro;&nbsp;
             </div>
         </div>
 

@@ -46,7 +46,7 @@ export default function Page() {
         { field: 'col2', headerName: 'Stato' },
         { field: 'col3', headerName: 'Cameriere', width: 200 },
         { field: 'col4', headerName: 'Aperto da', width: 150 },
-        { field: 'col5', headerName: 'Stamapato da', width: 150 },
+        { field: 'col5', headerName: 'Stampato da', width: 150 },
         { field: 'col6', headerName: 'Chiuso in data', width: 150 },
         { field: 'col7', headerName: 'Totale', type: "number", align: 'right' },
         { field: 'col8', headerName: 'Note', width: 200 }

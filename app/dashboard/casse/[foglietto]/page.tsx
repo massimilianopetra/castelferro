@@ -410,28 +410,9 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
                   &nbsp;Chiudi conto&nbsp;&nbsp;
                   <ButtonGroup variant="contained" aria-label="xccc">
-                    <Button
-                      variant="contained"
-                      onClick={handleAChiudiPos}
-                      disabled
-                    >
-                      {" "}
-                      POS{" "}
-                    </Button>
-                    <Button
-                      variant="contained"
-                      onClick={handleAChiudi}
-                      disabled
-                    >
-                      Contanti
-                    </Button>
-                    <Button
-                      variant="contained"
-                      onClick={handleChiudiGratis}
-                      disabled
-                    >
-                      Altro Importo
-                    </Button>
+                    <Button variant="contained" onClick={handleAChiudiPos} disabled>{" "}POS{" "}</Button>
+                    <Button variant="contained" onClick={handleAChiudi} disabled> Contanti </Button>
+                    <Button variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
                   </ButtonGroup>
                   &nbsp;&nbsp;
                 </ul>
@@ -493,11 +474,11 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         );
       case 'stampato':
         return (
-          <>
+          <>        
             <div className="z-0 text-center">
               <br></br>
               <br></br>
-              <div className="z-0 xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
+              <div className="z-0 text-3xl xl:py-4 font-extralight text-end lg:py-1">
                 <p >
                   Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span>
                 </p>
@@ -508,6 +489,17 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   Conto stampato numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                 </p>
               </div>
+                <ul className="inline-block py-3 text-2xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
+                  &nbsp;Chiudi conto&nbsp;&nbsp;
+                  <ButtonGroup variant="contained" aria-label="xccc">
+                    <Button variant="contained" size="large" onClick={handleAChiudiPos} >  POS  </Button>
+                    <Button variant="contained" size="large" onClick={handleAChiudi} >Contanti</Button>
+                    <Button variant="contained" size="large" onClick={handleChiudiGratis} >Altro Importo</Button>
+                  </ButtonGroup>
+                  &nbsp;&nbsp;
+                </ul>
+                <br />
+
               <div>
                 <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
               </div>
@@ -521,7 +513,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   <Button variant="contained" onClick={handleStampa} disabled >Stampa Conto</Button>
                 }
                 &nbsp;&nbsp;
-                <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
+
+                <ul className="inline-block py-3 text-2xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
                   &nbsp;Chiudi conto&nbsp;&nbsp;
                   <ButtonGroup variant="contained" aria-label="xccc">
                     <Button variant="contained" onClick={handleAChiudiPos} >  POS  </Button>
