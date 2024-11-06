@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation';
 import { Button, ButtonGroup, Snackbar, TextField } from '@mui/material';
 import type { DbConsumazioniPrezzo, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
-import { getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto, aggiornaConto, stampaConto, riapriConto } from '@/app/lib/actions';
+import { getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto, aggiornaConto, stampaConto, riapriConto, apriConto } from '@/app/lib/actions';
 import { writeLog, getGiornoSagra, getLastLog } from '@/app/lib/actions';
 import { deltanow, milltodatestring } from '@/app/lib/utils'
 import TabellaConto from '@/app/ui/dashboard/TabellaConto';
@@ -78,6 +78,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         } else if (cc?.stato == 'CHIUSO' || cc?.stato == 'CHIUSOPOS' || cc?.stato == 'CHIUSOALTRO') {
           setPhase('chiuso');
         } else {
+          setNumero(num.toString());
           setNumeroFoglietto(num.toString());
           setPhase('none');
         }
@@ -171,6 +172,15 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       await riapriConto(conto.id_comanda, sagra.giornata);
       await writeLog(conto.id_comanda, sagra.giornata, 'Casse', '', 'RESTART', 'Conto riaperto');
       setNumeroFoglietto(conto.id_comanda.toString())
+      setPhase('aperto');
+    }
+  }
+
+  const handleButtonCrea = async () => {
+    if (numeroFoglietto) {
+      setPhase('elaborazione');
+      await apriConto(Number(numeroFoglietto), sagra.giornata, 'Casse');
+      await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'START', ''); // Logger
       setPhase('aperto');
     }
   }
@@ -575,6 +585,9 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               <br></br>
               <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50  text-center" role="alert">
                 <span className="text-xl font-semibold">Dark alert!</span> Conto non esistente.
+              </div>
+              <div>
+                <Button className="rounded-full" variant="contained" onClick={handleButtonCrea}>Crea Nuovo Conto</Button>
               </div>
             </main>
           </>
