@@ -6,7 +6,188 @@ import type { DbMenu, DbConsumazioniPrezzo, DbConsumazioni, DbFiera, DbConti, Db
 import { QueryResult, sql } from '@vercel/postgres';
 import { date } from 'zod';
 import exp from 'constants';
+import bcrypt from 'bcrypt';
+import { users, waiters } from '../lib/placeholder-data';
+import { menu } from '../lib/placeholder-data';
 
+
+/* ************************ SEED DATABASE **************************** */
+
+async function seedUsers() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS users (
+       id INTEGER PRIMARY KEY,
+       name VARCHAR(255) NOT NULL,
+       email TEXT NOT NULL UNIQUE,
+       password TEXT NOT NULL
+     );
+   `;
+
+  console.log(`CREATED TABLE users`);
+
+  const insertedUsers = await Promise.all(
+    users.map(async (user) => {
+      const hashedPassword = await bcrypt.hash(user.password, 10);
+      console.log(`VALUES ${user.id}, ${user.name}, ${user.email}, ${hashedPassword}`);
+      return sql`
+           INSERT INTO users (id, name, email, password)
+           VALUES (${user.id}, ${user.name}, ${user.email}, ${hashedPassword})
+           ON CONFLICT (id) DO NOTHING;
+        `;
+    }),
+  );
+
+  return insertedUsers;
+}
+
+async function seedMenu() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS menus (
+       id INTEGER PRIMARY KEY,
+       piatto VARCHAR(255) UNIQUE,
+       prezzo REAL,
+       cucina VARCHAR(255),
+       disponibile VARCHAR(3),
+       alias VARCHAR(255)
+     );
+   `;
+
+  console.log(`CREATED TABLE menus`);
+
+
+  const insertedMenu = await Promise.all(
+    menu.map(async (item) => {
+      console.log(`VALUES ${item.id}, ${item.piatto}, ${item.prezzo}, ${item.cucina},${item.disponibile}, ${item.alias}`);
+      return sql`
+           INSERT INTO menus (id, piatto, prezzo, cucina, disponibile, alias)
+           VALUES (${item.id}, ${item.piatto}, ${item.prezzo}, ${item.cucina},${item.disponibile},${item.alias})
+           ON CONFLICT (id) DO NOTHING;
+        `;
+    }),
+  );
+
+  return insertedMenu;
+}
+
+async function seedConsumazioni() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS consumazioni (
+       id SERIAL PRIMARY KEY,
+       id_comanda INTEGER,
+       id_piatto INTEGER,
+       piatto VARCHAR(255) NOT NULL,
+       quantita INTEGER,
+       cucina VARCHAR(255) NOT NULL,
+       giorno INTEGER,
+       data BIGINT,
+       alias VARCHAR(255) NOT NULL
+     );
+   `;
+
+  console.log(`CREATED TABLE consumazioni`);
+}
+
+async function seedCamerieri() {
+  await sql`
+  CREATE TABLE IF NOT EXISTS camerieri (
+     id SERIAL PRIMARY KEY,
+     nome VARCHAR(64),
+     foglietto_start INTEGER,
+     foglietto_end INTEGER
+   );
+ `;
+
+  const inserted = await Promise.all(
+    waiters.map(async (item) => {
+      console.log(`VALUES ${item.id}, ${item.name}, ${item.figlietto_start}, ${item.foglietto_end}`);
+      return sql`
+         INSERT INTO camerieri (id, nome, foglietto_start, foglietto_end)
+         VALUES (${item.id}, ${item.name}, ${item.figlietto_start}, ${item.foglietto_end})
+         ON CONFLICT (id) DO NOTHING;
+      `;
+    }),
+  );
+
+  console.log(`CREATED TABLE camerieri`);
+
+  return inserted;
+}
+
+async function seedConti() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS conti (
+       id SERIAL PRIMARY KEY,
+       id_comanda INTEGER,
+       stato VARCHAR(32),
+       totale REAL,
+       cameriere VARCHAR(64),
+       giorno INTEGER,
+       data_apertura BIGINT,
+       data BIGINT,
+       data_chiusura BIGINT,
+       note VARCHAR(256)
+     );
+   `;
+
+  console.log(`CREATED TABLE conti`);
+}
+
+async function seedFiera() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS fiera (
+       id SERIAL PRIMARY KEY,
+       giornata INTEGER,
+       stato VARCHAR(32)
+     );
+   `;
+
+  await sql`
+           INSERT INTO fiera (id, giornata, stato)
+           VALUES (1,1,'CHIUSA')
+           ON CONFLICT (id) DO NOTHING;
+    `;
+
+  console.log(`CREATED TABLE fiera`);
+}
+
+async function seedLog() {
+  await sql`
+    CREATE TABLE IF NOT EXISTS logger (
+       id SERIAL PRIMARY KEY,
+       foglietto INTEGER,
+       azione VARCHAR(32),
+       note VARCHAR(128),
+       cucina VARCHAR(32),
+       utente VARCHAR(128),
+       giornata INTEGER,
+       data BIGINT
+     );
+   `;
+
+  console.log(`CREATED TABLE logger`);
+}
+
+
+export async function seedDatabase() {
+
+  try {
+    console.log('**** Database seeding ****');
+    await seedUsers();
+    await seedMenu();
+    await seedConsumazioni();
+    await seedFiera();
+    await seedConti();
+    await seedCamerieri();
+    await seedLog();
+
+    console.log('Database seed completed');
+  } catch (error) {
+
+  }
+
+}
+
+/* ************************ AUTHENTICATION **************************** */
 
 export async function authenticate(
   prevState: string | undefined,
@@ -27,6 +208,8 @@ export async function authenticate(
   }
 }
 
+/* ************************ GESTIONE DB **************************** */
+
 export async function getMenu(): Promise<DbMenu[] | undefined> {
   console.log("getMenu");
   try {
@@ -45,6 +228,21 @@ export async function updatetMenu(record: DbMenu) {
          SET disponibile = ${record.disponibile}
          WHERE id = ${record.id};
       `;
+}
+
+export async function overwriteMenu(record: DbMenu[]) {
+  await sql`
+         TRUNCATE TABLE menus;
+      `;
+
+  record.map(async (item) => {
+    console.log(`VALUES ${item.id}, ${item.piatto}, ${item.prezzo}, ${item.cucina},${item.disponibile}, ${item.alias}`);
+    return await sql`
+             INSERT INTO menus (id, piatto, prezzo, cucina, disponibile, alias)
+             VALUES (${item.id}, ${item.piatto}, ${item.prezzo}, ${item.cucina},${item.disponibile},${item.alias})
+             ON CONFLICT (id) DO NOTHING;
+          `;
+  })
 }
 
 export async function setMenuAllAvailable() {
@@ -108,7 +306,7 @@ export async function getConsumazioniCassa(comanda: number = -1, giornata: numbe
       cucina: item.cucina,
       giorno: giornata,
       data: 0,
-      alias:item.alias
+      alias: item.alias
     }));
     if (comanda != -1) {
       console.log(`Richiesta comanda n. ${comanda}`)
@@ -244,13 +442,13 @@ export async function addCamerieri(nome: string, foglietto_start: number, foglie
 }
 
 export async function listTables(): Promise<any[] | undefined> {
-  const result  = await sql`SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'`;
+  const result = await sql`SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'`;
   return result.rows;
 }
 
 export async function doQuery(tableName: string): Promise<any[] | undefined> {
   try {
-    
+
     const query = `SELECT * FROM ${tableName}`;
     console.log(query)
     const result = await sql.query(query);
@@ -262,7 +460,7 @@ export async function doQuery(tableName: string): Promise<any[] | undefined> {
 
 export async function doTruncate(tableName: string): Promise<any[] | undefined> {
   try {
-    
+
     const query = `TRUNCATE TABLE ${tableName}`;
     console.log(query)
     const result = await sql.query(query);
@@ -274,7 +472,7 @@ export async function doTruncate(tableName: string): Promise<any[] | undefined> 
 
 export async function doDrop(tableName: string): Promise<any[] | undefined> {
   try {
-    
+
     const query = `DROP TABLE ${tableName}`;
     console.log(query)
     const result = await sql.query(query);
@@ -410,7 +608,7 @@ export async function aggiornaConto(foglietto: number, giorno: number, totale: n
 }
 
 
-export async function chiudiConto(foglietto: number, giorno: number, mode: Number = 1) {
+export async function chiudiConto(foglietto: number, giorno: number, mode: Number = 1, note: string = "", totale: string  = "0.0") {
 
   const date_format_millis = Date.now();
 
@@ -428,8 +626,10 @@ export async function chiudiConto(foglietto: number, giorno: number, mode: Numbe
     } else if (mode == 3) {
       return await sql`
                       UPDATE conti
-                      SET stato = 'CHIUSOGRATIS',
-                      data_chiusura = ${date_format_millis}
+                      SET stato = 'CHIUSOALTRO',
+                      data_chiusura = ${date_format_millis},
+                      note = ${note},
+                      totale = ${totale}
                       WHERE id = ${current.rows[0].id};
       `;
     } else {

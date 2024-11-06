@@ -67,7 +67,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
             setNumeroFoglietto(num);
             if (cc) {
                 setConto(cc);
-                if (cc.stato == 'CHIUSO' || cc.stato == 'STAMPATO' || cc.stato == 'CHIUSOPOS' || cc.stato == 'CHIUSOGRATIS') {
+                if (cc.stato == 'CHIUSO' || cc.stato == 'STAMPATO' || cc.stato == 'CHIUSOPOS' || cc.stato == 'CHIUSOALTRO') {
                     setPhase('bloccato')
                 } else if (cc.cameriere == 'Sconosciuto') {
                     setPhase('sconosciuto');

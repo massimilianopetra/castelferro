@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
 import type { DbMenu } from '@/app/lib/definitions';
-import { getMenu, updatetMenu, setMenuAllAvailable } from '@/app/lib/actions';
+import { getMenu, updatetMenu, setMenuAllAvailable, overwriteMenu } from '@/app/lib/actions';
 import TabellaMenu from '@/app/ui/dashboard/TabellaMenu';
 import { Button } from '@mui/material';
 
@@ -67,6 +67,7 @@ export default function Page() {
             });
 
             setProducts(data);
+            overwriteMenu(data);
             console.log("Parsed CSV Data:", data);
         }
     }

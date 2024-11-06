@@ -1,0 +1,39 @@
+Id,Piatto,Prezzo,Cucina,Disponibile,Alias
+1,Pane e Coperto,2.5,All,Y,Pane e Coperto
+2,Bresaola equina e rucola,5,Antipasti,Y,Bresaola
+3,Antipasto equino,5,Antipasti,Y,Equino
+4,Prosciutto crudo e melone,5,Antipasti,Y,Crudo e Melone
+5,Robiola biologica 100% latte di capra,3.5,Antipasti,Y,Robiola
+6,Caprino alle erbe,3.5,Antipasti,Y,Caprino
+7,Agnolotti al sugo,7.5,Primi,Y,Agnolotti al sugo
+8,Agnolotti al vino,6,Primi,Y,Agnolotti al vino
+9,Agnolotti al burro e/o formaggio,6,Primi,Y,Agnolotti burro/form.
+10,Polenta e tapulone,8,Primi,Y,Polenta e tapulone
+11,Polenta,4,Primi,Y,Polenta
+12,Prosciutto Crudo,5,Antipasti,Y,Prosciutto Crudo
+13,Polenta al sugo,8,Primi,Y,Polenta al sugo
+14,Polenta e stracotto,12,Primi,Y,Polenta e stracotto
+15,Arrosto d`asino,9,Secondi,Y,Arrosto d`asino
+16,Stracotto d`asino,9,Secondi,Y,Stracotto d`asino
+17,Salamini al cartoccio,7,Secondi,Y,Salamini al cartoccio
+18,Braciola di maiale,6,Secondi,Y,Braciola di maiale
+19,Patatine fritte,3,Secondi,Y,Patatine
+20,Peperonata,3.5,Secondi,Y,Peperonata
+21,Insalasta tricolore,3,Secondi,Y,Insalata
+23,Fagioli alla texana,3.5,Secondi,Y,Fagioli
+24,Melone a fette,2,Antipasti,Y,Melone
+25,Torta di nocciole,3.5,Dolci,Y,Torta nocciole
+26,Crostata,3.5,Dolci,Y,Crostata
+27,Salame dolce al cioccolato,3.5,Dolci,Y,Salame cioccolato
+28,Salame dolce al marmellata,3.5,Dolci,Y,Salame marmellata
+29,Pastine della nonna,2.5,Dolci,Y,Pastine
+30,Dolcetto d`Ovada DOC,7,Bevande,Y,Dolcetto
+31,Barbera del monferrato DOC,7,Bevande,Y,Barbera
+32,Bonarda,7,Bevande,Y,Bonarda
+33,Pinot Bianco DOC,7,Bevande,Y,Pinot Bianco
+34,Rugiada Chardonnay DOC,7,Bevande,Y,Rugiada
+35,Moscato Piemonte,7,Bevande,Y,Moascato
+36,Birra artigianale 0.4lt,4,Birre,Y,Birra
+37,Acqua Minerale naturale 0.5lt,1,Bevande,Y,Acqua Naturale
+38,Acqua Minerale frizzante 0.5lt,1,Bevande,Y,Acqua Frizzante
+39,Salamini da asporto,2,Cassa,Y,Salamini da asporto

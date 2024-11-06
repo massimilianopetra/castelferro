@@ -18,6 +18,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
   const router = useRouter();
   const printRef = useRef<HTMLDivElement | null>(null);
+  const [importValue, setImportValue] = useState('');
+  const [textValue, setTextValue] = useState('');
   const [phase, setPhase] = useState('iniziale');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [products, setProducts] = useState<DbConsumazioniPrezzo[]>([]);
@@ -73,7 +75,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             setLastLog(cc);
           }
           setPhase('stampato');
-        } else if (cc?.stato == 'CHIUSO' || cc?.stato == 'CHIUSOPOS') {
+        } else if (cc?.stato == 'CHIUSO' || cc?.stato == 'CHIUSOPOS' || cc?.stato == 'CHIUSOALTRO') {
           setPhase('chiuso');
         } else {
           setNumeroFoglietto(num.toString());
@@ -210,18 +212,27 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     fetchData();
   };
 
-  const handleAChiudiGratis = async () => {
+  const handleCompletatoGratis = async () => {
 
     const fetchData = async () => {
       setPhase('elaborazione');
-      const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata, 3);
+      const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata, 3, textValue,importValue);
       const cc = await getConto(Number(numeroFoglietto), sagra.giornata);
-      await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', 'Gratis');
+      await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', 'Altro Importo');
       setConto(cc);
       setPhase('chiuso');
     };
     fetchData();
   };
+
+  const handleChiudiGratis = async () => {
+    setPhase('gratis');
+  }
+
+  const handleAnnullaGratis = async () => {
+    setPhase('stampato');
+  }
+
 
   const handleAdd = (id: number) => {
     const newProducts = products.map((item) => {
@@ -268,7 +279,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               <br></br>
               <br></br>
               <br></br>
-              <br></br>              
+              <br></br>
               <br></br>
               <br></br>
               <p className="text-5xl py-4">
@@ -314,12 +325,42 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
           </>
         );
+      case 'gratis':
+        return (
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="w-[500px] p-4 border rounded-lg space-y-4">
+              <TextField
+                label="Importo"
+                variant="outlined"
+                value={importValue}
+                onChange={(e) => setImportValue(e.target.value)}
+                type="number"
+                fullWidth
+              />
+              <TextField
+                label="Note"
+                variant="outlined"
+                value={textValue}
+                onChange={(e) => setTextValue(e.target.value)}
+                fullWidth
+              />
+              <div className="flex justify-center space-x-4">
+                <Button variant="contained" color="primary" onClick={handleCompletatoGratis}>
+                  Chiudi
+                </Button>
+                <Button variant="contained" color="primary" onClick={handleAnnullaGratis}>
+                  Annulla
+                </Button>
+              </div>
+            </div>
+          </div>
+        )
       case 'aperto':
         return (
-          <>             
-              <br></br>
-              <br></br>
-              <br></br>
+          <>
+            <br></br>
+            <br></br>
+            <br></br>
             <div className="z-0 text-center">
               <div className="z-0 text-2xl font-extralight text-end">
                 <p>
@@ -386,10 +427,10 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                     </Button>
                     <Button
                       variant="contained"
-                      onClick={handleAChiudiGratis}
+                      onClick={handleChiudiGratis}
                       disabled
                     >
-                      Gratis
+                      Altro Importo
                     </Button>
                   </ButtonGroup>
                   &nbsp;&nbsp;
@@ -439,7 +480,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   <ButtonGroup variant="contained" aria-label="xccc">
                     <Button variant="contained" onClick={handleAChiudiPos} disabled>  POS  </Button>
                     <Button variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
-                    <Button variant="contained" onClick={handleAChiudiGratis} disabled>Gratis</Button>
+                    <Button variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
                   </ButtonGroup>
                   &nbsp;&nbsp;
                 </ul>
@@ -485,7 +526,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   <ButtonGroup variant="contained" aria-label="xccc">
                     <Button variant="contained" onClick={handleAChiudiPos} >  POS  </Button>
                     <Button variant="contained" onClick={handleAChiudi} >Contanti</Button>
-                    <Button variant="contained" onClick={handleAChiudiGratis} >Gratis</Button>
+                    <Button variant="contained" onClick={handleChiudiGratis} >Altro Importo</Button>
                   </ButtonGroup>
                   &nbsp;&nbsp;
                 </ul>
@@ -595,7 +636,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   &nbsp;&nbsp;
                 </>
               ))}
-            </p>        
+            </p>
           </div>
           {renderPhaseContent()}
           <div>

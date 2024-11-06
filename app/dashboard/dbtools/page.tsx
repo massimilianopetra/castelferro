@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
 import { Button, Typography, Box, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import CircularProgress from '@mui/material/CircularProgress';
-import { doQuery, doTruncate, doDrop, listTables } from '@/app/lib/actions';
+import { doQuery, doTruncate, doDrop, listTables, seedDatabase } from '@/app/lib/actions';
 import { useRouter } from 'next/navigation';
 import { GridColDef, GridToolbar, DataGrid } from '@mui/x-data-grid';
 
@@ -67,6 +67,13 @@ export default function Page() {
         }
     }
 
+    const handleSeed = async () => {
+        setPhase('caricamento');
+        await seedDatabase();
+        setPhase('caricato');
+
+    }
+
     // Configurazione delle colonne per il DataGrid basato sui dati ricevuti
     const columns: GridColDef[] = result?.length
         ? Object.keys(result[0]).map((key) => ({
@@ -85,7 +92,16 @@ export default function Page() {
                         <p className="text-5xl py-4">
                             DB Tools
                         </p>
-
+                        <div className="flex justify-center space-x-4">
+                            <Button
+                                onClick={handleSeed}
+                                variant="contained"
+                                color="primary"
+                                sx={{ mt: 2 }}
+                            >
+                                Seed Database
+                            </Button>
+                        </div>
                         <Box sx={{ maxWidth: 800, mx: "auto", my: 4, p: 2, border: "1px solid #ddd", borderRadius: 2 }}>
                             <Typography variant="h6" gutterBottom>
                                 Visualizza Tabella
