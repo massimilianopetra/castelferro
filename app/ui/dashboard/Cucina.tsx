@@ -324,15 +324,20 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                 </a>
                             </li>
                             <li className="text-left flex-1 mr-2 text-3xl lg:text-4xl  font-bold py-4 rounded-full">
-                                <Button className="rounded-full" size="large" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
+                                 {phase == 'caricato' ?
+                                    <Button className="rounded-full" size="large" variant="contained" onClick={handleButtonClickCarica} disabled>Carica Foglietto</Button>:
+                                    <Button className="rounded-full" size="large" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
+                               }
                             </li>
                         </ul>
                     </div>
                     <div className="z-0 xl:text-3xl font-extralight xl:text-end lg:text-3xl lg:py-2 lg:text-center">
-                        <p>Ultimi : &nbsp;
+                        <p>aaaaUltimi : &nbsp;
                             {lastLog.map((row) => (
                                 <>
-                                    <Button size="medium" className="rounded-full text-xl" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
+                                    {phase == 'caricato' ?
+                                        <Button size="medium" className="rounded-full text-xl" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} disabled>{row.foglietto}</Button>:
+                                        <Button size="medium" className="rounded-full text-xl" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} >{row.foglietto}</Button>       }
                                     &nbsp;&nbsp;
                                 </>
                             ))}
