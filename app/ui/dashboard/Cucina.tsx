@@ -332,7 +332,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                         </ul>
                     </div>
                     <div className="z-0 xl:text-3xl font-extralight xl:text-end lg:text-3xl lg:py-2 lg:text-center">
-                        <p>aaaaUltimi : &nbsp;
+                        <p>Ultimi : &nbsp;
                             {lastLog.map((row) => (
                                 <>
                                     {phase == 'caricato' ?
