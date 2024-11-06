@@ -125,7 +125,8 @@ async function seedConti() {
        data_apertura BIGINT,
        data BIGINT,
        data_chiusura BIGINT,
-       note VARCHAR(256)
+       note VARCHAR(256),
+       data_stampa BIGINT
      );
    `;
 
@@ -579,7 +580,8 @@ export async function stampaConto(foglietto: number, giorno: number) {
     return await sql`
     UPDATE conti
     SET stato = 'STAMPATO',
-        data = ${date_format_millis}
+        data = ${date_format_millis},
+        data_stampa = ${date_format_millis}
     WHERE id = ${current.rows[0].id};
     `;
   } else {

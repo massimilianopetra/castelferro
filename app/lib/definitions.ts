@@ -54,6 +54,8 @@ export type DbConti =   {
   data: number;
   data_chiusura: number;
   note: string;
+  data_stampa: number;
+  
 };
 
 export type DbCamerieri =   {

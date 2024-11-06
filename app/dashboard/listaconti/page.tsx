@@ -46,8 +46,13 @@ export default function Page() {
         { field: 'col2', headerName: 'Stato' },
         { field: 'col3', headerName: 'Cameriere', width: 200 },
         { field: 'col4', headerName: 'Aperto da', width: 150 },
-        { field: 'col5', headerName: 'Chiuso in data', width: 200 },
-        { field: 'col6', headerName: 'Totale', type: "number", align: 'right' }
+        { field: 'col5', headerName: 'Stamapato da', width: 150 },
+        { field: 'col6', headerName: 'Chiuso in data', width: 200 },
+        { field: 'col7', headerName: 'Totale', type: "number", align: 'right' },
+        { field: 'col8', headerName: 'Note', width: 150 },
+        
+        
+
 
     ];
 
@@ -69,9 +74,11 @@ export default function Page() {
                         col2: item.stato,
                         col3: item.cameriere,
                         col4: deltanow(item.data_apertura),
-                        col5: item.stato.includes('*') ? milltodatestring(item.data_chiusura) : '----',//CHIUSO br1
+                        col5: deltanow(item.data_stampa),
+                        col6: item.stato.includes('*') ? milltodatestring(item.data_chiusura) : '----',//CHIUSO br1
                         // col6: (item.totale.toFixed(2) + ' €')
-                        col6: item.totale.toFixed(2)
+                        col7: item.totale.toFixed(2),
+                        col8: item.note
                     }
                 });
 
