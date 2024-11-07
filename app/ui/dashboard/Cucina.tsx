@@ -296,7 +296,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
         else
             return (
                 <main>
-                    <div className="z-50 lg:fixed xl:fixed lg:fixed p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
+                    <div className="z-50 lg:fixed xl:fixed p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
                         <ul className="flex rounded-full">
                             <li className="flex-1 mr-2 text-3xl lg:text-5xl font-bold py-4 rounded-full">
                                 <a className="text-center block text-white font-extralight ">
