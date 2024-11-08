@@ -38,7 +38,7 @@ export default function Page() {
     };
 
     async function carica(num: number) {
-        router.push(`/dashboard/casse/${num}`);
+       router.push(`/dashboard/casse/${num}`);
     }
 
     const handleButtonClickCarica = () => {

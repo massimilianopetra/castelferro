@@ -12,6 +12,7 @@ import TabellaConto from '@/app/ui/dashboard/TabellaConto';
 import TheBill from '@/app/ui/dashboard/thebill';
 import CircularProgress from '@mui/material/CircularProgress';
 import Filter1Icon from '@mui/icons-material/Filter1';
+import { The_Nautigal } from 'next/font/google';
 
 
 export default function Page({ params }: { params: { foglietto: string } }) {
@@ -159,11 +160,13 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       await aggiornaConto(Number(numeroFoglietto), sagra.giornata, totale);
       await stampaConto(Number(numeroFoglietto), sagra.giornata);
       await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'PRINT', 'Stampa conto');
-      setPhase('stampato');
+     {/* setPhase('stampato');  {/*BRUNO */}  
+      setPhase('iniziale_stampato');  
     };
     fetchData();
     print();
-  };
+
+   };
 
   const handleButtonRiapri = async () => {
 
@@ -310,6 +313,29 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             </div>
           </>
         );
+      case 'iniziale_stampato':
+        console.log('iniziale_stampato');
+          return (
+            <>
+              <div className='z-0 text-center'>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <p className="text-5xl py-4">
+                  Conto  <span className="font-extrabold text-blue-800">
+                    {numeroFoglietto}
+                  </span> inviato in stampa. 
+                  <br></br>      
+                  <br></br>  
+                  Caricare un numero foglietto!!
+                </p>
+              </div>
+            </>
+          );
       case 'caricamento':
         return (
           <>
@@ -384,7 +410,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             <br></br>
             <br></br>
             <div className="z-0 text-center">
-              <div className="z-0 text-2xl font-extralight text-end">
+              <div className="z-0 text-2xl font-extralight text-end"> 
                 <p>
                   Conto aperto da:{" "}
                   <span className="font-extrabold text-blue-800">
@@ -653,10 +679,15 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             <p>Ultimi: &nbsp;
               {lastLog.map((row) => (
                 <>
-                  <Button size="medium" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
+                  <Button size="medium" className="rounded-full" variant="contained" onClick={() => {
+                      if  (phase == 'iniziale_stampato') 
+                        setPhase('stampato') 
+                      else
+                        carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
                   &nbsp;&nbsp;
                 </>
-              ))}
+              ))
+            }
             </p>
           </div>
           {renderPhaseContent()}
