@@ -88,12 +88,21 @@ export default function Page() {
     for (var i = 0; i < 8; i++) {
       const conti = await listConti('CHIUSO', i + 1);
       const contiPos = await listConti('CHIUSOPOS', i + 1);
+      const contiAltriImporti = await listConti('CHIUSOALTRO', i + 1);
       const cosumazioni = await listConsumazioni(1, i + 1);
 
       var sum = conti?.reduce((accumulator, currentValue) => {
         return accumulator + currentValue.totale;
       }, 0);
 
+      var sumAltriImporti = contiAltriImporti?.reduce((accumulator, currentValue) => {
+        return accumulator + currentValue.totale;
+      }, 0);
+
+      var sumPos = contiPos?.reduce((accumulator, currentValue) => {
+        return accumulator + currentValue.totale;
+      }, 0);
+      
       var sumPos = contiPos?.reduce((accumulator, currentValue) => {
         return accumulator + currentValue.totale;
       }, 0);
@@ -106,22 +115,26 @@ export default function Page() {
 
       if (!sum) sum = 0;
       if (!sumPos) sumPos = 0;
+      if (!sumAltriImporti) sumAltriImporti = 0;
+      
       if (conti) numConti += conti.length;
       if (contiPos) numConti += contiPos.length;
+      if (contiAltriImporti) numConti += contiAltriImporti.length;
+      
 
       var mediaperconti = 0
       var mediacopertiperconto = 0
       if (numConti > 0) {
-        mediaperconti = (sum + sumPos) / numConti
+        mediaperconti = (sum + sumPos + sumAltriImporti) / numConti
         mediacopertiperconto = numCoperti / numConti
       }
 
       var mediapercoperto = 0
       if (numCoperti > 0)
-        mediapercoperto = (sum + sumPos) / numCoperti
+        mediapercoperto = (sum + sumPos + sumAltriImporti) / numCoperti
 
       rows[i] = {
-        ...rows[i], incasso: sum + sumPos, incassopos: sumPos,
+        ...rows[i], incasso: sum + sumPos + sumAltriImporti, incassopos: sumPos,
         conti: numConti, coperti: numCoperti, spesamediaperconti: mediaperconti, spesamediacoperto: mediapercoperto, mediacopertiperconto: mediacopertiperconto
       }
 
