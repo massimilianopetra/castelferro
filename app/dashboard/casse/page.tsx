@@ -119,11 +119,11 @@ export default function Page() {
                         <p>Ultimi ricercati: &nbsp;
                             {lastLog.map((row) => (
                                 <>
-                                    <Button size="small" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
+                                    <Button size="medium" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
                                     &nbsp;&nbsp;
                                 </>
                             ))}
-                            <Button size="small" className="rounded-full" variant="contained" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
+                            <Button size="medium" className="font-semibold rounded-full" variant="outlined"  onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
                         </p>
                     </div>
                     <div>

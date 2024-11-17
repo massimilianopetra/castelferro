@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation';
 import { Button, ButtonGroup, Snackbar, TextField } from '@mui/material';
 import type { DbConsumazioniPrezzo, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
-import { getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto, aggiornaConto, stampaConto, riapriConto, apriConto } from '@/app/lib/actions';
+import { getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto, aggiornaConto, stampaConto, riapriConto, apriConto, getContoPiuAlto } from '@/app/lib/actions';
 import { writeLog, getGiornoSagra, getLastLog } from '@/app/lib/actions';
 import { deltanow, milltodatestring } from '@/app/lib/utils'
 import TabellaConto from '@/app/ui/dashboard/TabellaConto';
@@ -113,6 +113,14 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
     router.push(`/dashboard/casse/${numero}`);
   };
+
+  const handleButtonClickCaricaAsporto = async () => {
+    const ultconto = await getContoPiuAlto();
+    var uc = Number(ultconto);
+    if (uc < 5999)
+        uc = 6000 
+    carica(uc+1);
+};
 
   const handleAggiorna = async () => {
 
@@ -695,7 +703,10 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 </>
               ))
             }
+            <Button size="medium" className="font-semibold rounded-full" variant="outlined"  onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
+        
             </p>
+          
           </div>
           {renderPhaseContent()}
           <div>
