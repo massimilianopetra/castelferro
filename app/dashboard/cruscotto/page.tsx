@@ -103,13 +103,9 @@ export default function Page() {
         return accumulator + currentValue.totale;
       }, 0);
       
-      var sumPos = contiPos?.reduce((accumulator, currentValue) => {
-        return accumulator + currentValue.totale;
-      }, 0);
-
       var numCoperti = 0
       if (cosumazioni)
-        numCoperti = cosumazioni?.length
+        numCoperti += cosumazioni?.length
 
       var numConti = 0;
 

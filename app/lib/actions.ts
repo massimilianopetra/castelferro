@@ -500,6 +500,22 @@ export async function listConti(stato: string, giornata: number): Promise<DbCont
   }
 }
 
+ export async function getContoPiuAlto(): Promise<Number| undefined> {
+    try {
+      console.log("getContoPiuAlto");
+      const cc = await sql<DbConti>`SELECT * FROM conti ORDER BY Id_comanda DESC`;
+      var uc = Number(cc.rows[0].id_comanda)
+      console.log(">>getContoPiuAlto>>");
+      console.log(uc);
+
+      return uc;
+    } catch (error) {
+      console.log(':', error);
+      throw new Error('Failed getContoPiuAlto.');
+    }
+  }
+
+
 export async function listContiGratis(): Promise<DbConti[] | undefined> {
 
   const current = await sql<DbConti>`SELECT * FROM conti  WHERE id_comanda < 10`;

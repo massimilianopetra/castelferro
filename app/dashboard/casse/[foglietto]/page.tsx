@@ -78,7 +78,14 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           setPhase('stampato');
         } else if (cc?.stato == 'CHIUSO' || cc?.stato == 'CHIUSOPOS' || cc?.stato == 'CHIUSOALTRO') {
           setPhase('chiuso');
-        } else {
+        } else if (Number(num) > 5999) {
+            setNumeroFoglietto(num.toString());
+            setSagra(gg);
+            setPhase('elaborazione');
+            await apriConto(Number(num), gg.giornata, 'Casse');
+            await writeLog(Number(num), gg.giornata, 'Casse', '', 'START', ''); // Logger
+            setPhase('aperto');
+          } else {
           setNumero(num.toString());
           setNumeroFoglietto(num.toString());
           setPhase('none');

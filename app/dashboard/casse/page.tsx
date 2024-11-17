@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button, Snackbar, TextField } from '@mui/material';
 import type { DbFiera, DbLog } from '@/app/lib/definitions';
-import { getGiornoSagra, getLastLog } from '@/app/lib/actions';
+import { getContoPiuAlto, getGiornoSagra, getLastLog } from '@/app/lib/actions';
 import Filter1Icon from '@mui/icons-material/Filter1';
 
 
@@ -38,7 +38,7 @@ export default function Page() {
     };
 
     async function carica(num: number) {
-       router.push(`/dashboard/casse/${num}`);
+        router.push(`/dashboard/casse/${num}`);
     }
 
     const handleButtonClickCarica = () => {
@@ -50,6 +50,16 @@ export default function Page() {
 
         router.push(`/dashboard/casse/${numero}`);
     };
+
+    const handleButtonClickCaricaAsporto = async () => {
+        const ultconto = await getContoPiuAlto();
+        var uc = Number(ultconto);
+        if (uc < 5999)
+            uc = 6000 
+        carica(uc+1);
+    };
+
+
 
     const handleClose = () => {
         setOpenSnackbar(false);
@@ -68,7 +78,6 @@ export default function Page() {
                         </div>
                     </div>
                 </main>
-
             )
         else
             return (
@@ -114,6 +123,7 @@ export default function Page() {
                                     &nbsp;&nbsp;
                                 </>
                             ))}
+                            <Button size="small" className="rounded-full" variant="contained" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
                         </p>
                     </div>
                     <div>
