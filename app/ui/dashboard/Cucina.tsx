@@ -118,6 +118,11 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
 
     const handleButtonClickInvia = async () => {
         // numeroFoglietto
+        
+        const gc = await getConto(Number(numeroFoglietto), sagra.giornata);
+        if (gc?.stato+"" == "STAMPATO")
+            setPhase('bloccato');
+
         console.log(`Aggiornamento Numero foglietto: ${numeroFoglietto} da ${nomeCucina}`);
         const logArray = products.map((item) => {
             const orig = iniProducts.find(o => o.id_piatto == item.id_piatto);
