@@ -120,37 +120,40 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
         // numeroFoglietto
         
         const gc = await getConto(Number(numeroFoglietto), sagra.giornata);
-        if (gc?.stato+"" == "STAMPATO")
+        if (gc?.stato+"" == "STAMPATO"){
             setPhase('bloccato');
+        } 
+        else
+        {
+            console.log(`Aggiornamento Numero foglietto: ${numeroFoglietto} da ${nomeCucina}`);
+            const logArray = products.map((item) => {
+                const orig = iniProducts.find(o => o.id_piatto == item.id_piatto);
+                if (orig) {
+                    if (item.quantita > orig.quantita) {
+                        return ({ id: item.id_comanda, message: `Aggiunti: ${item.quantita - orig.quantita} ${item.piatto}` });
 
-        console.log(`Aggiornamento Numero foglietto: ${numeroFoglietto} da ${nomeCucina}`);
-        const logArray = products.map((item) => {
-            const orig = iniProducts.find(o => o.id_piatto == item.id_piatto);
-            if (orig) {
-                if (item.quantita > orig.quantita) {
-                    return ({ id: item.id_comanda, message: `Aggiunti: ${item.quantita - orig.quantita} ${item.piatto}` });
+                    } else if (item.quantita < orig.quantita) {
+                        return ({ id: item.id_comanda, message: `Eliminati: ${orig.quantita - item.quantita} ${item.piatto}` });
+                    } else {
+                        return ({ id: -1, message: `` });
+                    }
+                }
 
-                } else if (item.quantita < orig.quantita) {
-                    return ({ id: item.id_comanda, message: `Eliminati: ${orig.quantita - item.quantita} ${item.piatto}` });
-                } else {
-                    return ({ id: -1, message: `` });
+                return { id: -1, message: `` };
+            });
+
+            for (var index = 0; index < logArray.length; index++) {
+                if (logArray[index].id != -1) {
+                    await writeLog(logArray[index].id, sagra.giornata, nomeCucina, '', 'UPDATE', logArray[index].message);
                 }
             }
 
-            return { id: -1, message: `` };
-        });
-
-        for (var index = 0; index < logArray.length; index++) {
-            if (logArray[index].id != -1) {
-                await writeLog(logArray[index].id, sagra.giornata, nomeCucina, '', 'UPDATE', logArray[index].message);
-            }
+            sendConsumazioni(products);
+            updateTotaleConto(Number(numeroFoglietto), sagra.giornata);
+            setPhase('inviato');
+            setProducts([]);
+            setIniProducts([]);
         }
-
-        sendConsumazioni(products);
-        updateTotaleConto(Number(numeroFoglietto), sagra.giornata);
-        setPhase('inviato');
-        setProducts([]);
-        setIniProducts([]);
     };
 
     const handleAdd = (id: number) => {
