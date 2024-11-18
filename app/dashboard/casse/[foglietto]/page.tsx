@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation';
-import { Button, ButtonGroup, Snackbar, TextField } from '@mui/material';
+import { Button, ButtonGroup, Link, Snackbar, TextField } from '@mui/material';
 import type { DbConsumazioniPrezzo, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
 import { getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto, aggiornaConto, stampaConto, riapriConto, apriConto, getContoPiuAlto } from '@/app/lib/actions';
 import { writeLog, getGiornoSagra, getLastLog } from '@/app/lib/actions';
@@ -342,7 +342,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 <br></br>
                 <p className="text-5xl py-4">
                   Conto  <span className="font-extrabold text-blue-800">
-                    {numeroFoglietto}
+                  <Link href={`/dashboard/casse/${numeroFoglietto}`}>{numeroFoglietto}</Link>
+
                   </span> inviato in stampa. 
                   <br></br>      
                   <br></br>  

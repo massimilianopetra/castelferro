@@ -9,10 +9,10 @@ export function today(): string {
 export function milltodatestring(dtmillis: number | undefined): string {
     console.log(dtmillis);
     if (dtmillis){
-        let stringa = new Date(+dtmillis).toLocaleTimeString() + " (";
-        stringa = stringa + new Date(+dtmillis).toLocaleString().substring(0,5)+ ")";
+        let stringa = new Date(+dtmillis).toLocaleString()  
         return  stringa;
     }
+    
     return "--:--:--";
 
     
