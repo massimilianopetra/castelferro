@@ -71,7 +71,7 @@ export default function Page() {
                         col3: item.cameriere,
                         col4: deltanow(item.data_apertura),
                         col5: deltanow(item.data_stampa),
-                        col6: item.stato.includes('*') ? milltodatestring(item.data_chiusura) : '----',//CHIUSO br1
+                        col6: item.stato.includes('CHIUSO') ?  milltodatestring(item.data_chiusura) : '++++',
                         // col6: (item.totale.toFixed(2) + ' €')
                         col7: item.totale.toFixed(2),
                         col8: item.note
