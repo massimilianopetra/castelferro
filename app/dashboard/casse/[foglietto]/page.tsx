@@ -391,9 +391,13 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       case 'gratis':
         return (
           <div className="flex items-center justify-center min-h-screen">
-            <div className="w-[500px] p-4 border rounded-lg space-y-4">
+            <div className="w-[600px] p-4 border rounded-lg space-y-4">
+            <p className="text-xl py-4">
+            Conto numero: <span className="font-extrabold text-blue-800">{conto?.id_comanda} </span>
+                  con incasso previsto di: <span className="font-semibold text-blue-800">{conto?.totale} Euro </span>
+            </p>
               <TextField
-                label="Importo"
+                label="Nuovo importo"
                 variant="outlined"
                 value={importValue}
                 onChange={(e) => setImportValue(e.target.value)}
@@ -409,7 +413,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               />
               <div className="flex justify-center space-x-4">
                 <Button variant="contained" color="primary" onClick={handleCompletatoGratis}>
-                  Chiudi
+                  Salva e chiudi
                 </Button>
                 <Button variant="contained" color="primary" onClick={handleAnnullaGratis}>
                   Annulla
