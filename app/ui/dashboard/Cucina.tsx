@@ -120,7 +120,8 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
         // numeroFoglietto
         
         const gc = await getConto(Number(numeroFoglietto), sagra.giornata);
-        if (gc?.stato+"" == "STAMPATO"){
+        if (gc?.stato == "STAMPATO"){
+            console.log(`Aggiornamento Numero foglietto STAMPATO: ${numeroFoglietto} da ${nomeCucina}`);  
             setPhase('bloccato');
             return
         } 
