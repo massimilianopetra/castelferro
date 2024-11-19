@@ -120,13 +120,8 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
         // numeroFoglietto
         
         const gc = await getConto(Number(numeroFoglietto), sagra.giornata);
-        if (gc?.stato !== "APERTO"){
-            console.log(`Aggiornamento Numero foglietto non aperto: ${numeroFoglietto} da ${nomeCucina}`);  
-            setPhase('bloccato');
-            return;
-        } 
-        else 
-        {
+        console.log('<<<<<<<>>>>>>>: ${gc?.stato}');
+        if (gc?.stato === "APERTO"){
             console.log(`Aggiornamento Numero foglietto: ${numeroFoglietto} da ${nomeCucina}`);
             const logArray = products.map((item) => {
                 const orig = iniProducts.find(o => o.id_piatto == item.id_piatto);
@@ -155,7 +150,13 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
             setPhase('inviato');
             setProducts([]);
             setIniProducts([]);
-        }
+            }
+        else 
+        {
+            console.log('Aggiornamento Numero foglietto non aperto: ${numeroFoglietto} da ${nomeCucina}');  
+            setPhase('bloccato');
+            return;
+        } 
     } 
 ;
 
