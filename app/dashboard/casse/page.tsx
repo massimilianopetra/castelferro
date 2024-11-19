@@ -43,7 +43,7 @@ export default function Page() {
 
     const handleButtonClickCarica = () => {
         const num = Number(numero);
-        if (isNaN(num) || num < 1 || num > 5999) {
+        if (isNaN(num) || num < 1 || num > 9999) {
             setOpenSnackbar(true);
             return;
         }
@@ -131,8 +131,8 @@ export default function Page() {
                             autoHideDuration={6000}
                             onClose={handleClose}
                             message={(+numero) > 9999 ?
-                                "Inserisci un numero foglietto valido (minore di 5999)":
-                                "Hai inserito un numero riservato asporto (compreso tra 6000 e 9999)"
+                                "1 Inserisci un numero foglietto valido (minore di 5999)":
+                                "2 Hai inserito un numero riservato asporto (compreso tra 6000 e 9999)"
                             }
                         />
                 </main>

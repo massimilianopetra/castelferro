@@ -44,7 +44,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         }
 
         const num = +params.foglietto;
-        if (isNaN(num) || num < 1 || num > 5999) {
+        if (isNaN(num) || num < 1 || num > 9999) {
           setOpenSnackbar(true);
           return;
         }
@@ -57,8 +57,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
         //console.log(`estrazione conto ${num} giornata: ${gg.giornata}`);
         const cc = await getConto(num, gg.giornata);
-        //console.log('record: ');
-        //console.log(cc);
+        console.log('>>>record: ');
+        console.log(cc?.stato);
         setConto(cc);
         if (cc?.stato == 'APERTO') {
           setNumeroFoglietto(num.toString());
@@ -85,7 +85,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             await apriConto(Number(num), gg.giornata, 'Casse');
             await writeLog(Number(num), gg.giornata, 'Casse', '', 'START', ''); // Logger
             setPhase('aperto');
-          } else {
+          } 
+         else {
           setNumero(num.toString());
           setNumeroFoglietto(num.toString());
           setPhase('none');
@@ -104,14 +105,26 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     router.push(`/dashboard/casse/${num}`);
   }
 
-  const handleButtonClickCarica = () => {
+  const handleButtonClickCarica = async () => {
     const num = Number(numero);
-    if (isNaN(num) || num < 1 || num > 5999) {
-      setOpenSnackbar(true);
-      return;
-    }
+    const gg = await getGiornoSagra();
+    if (gg) {
+      setSagra(gg);
+      const cc = await getConto(num, gg.giornata);
 
+      if (isNaN(num) || num < 1 || num > 9999) {
+        setOpenSnackbar(true);
+        return;
+      } else if (num > 5999  && cc?.stato !== "APERTO"
+                          && cc?.stato !== "STAMPATO"
+                          && cc?.stato !== "CHIUSO"
+                          && cc?.stato !== "CHIUSOPOS"
+                          && cc?.stato !== "CHIUSOALTRO") {
+        setOpenSnackbar(true);
+        return;
+      }
     router.push(`/dashboard/casse/${numero}`);
+    } 
   };
 
   const handleButtonClickCaricaAsporto = async () => {
@@ -719,8 +732,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             autoHideDuration={6000}
             onClose={handleClose}
             message={(+numero) > 9999 ?
-             "Inserisci un numero foglietto valido (minore di 5999)":
-             "Hai inserito un numero riservato asporto (compreso tra 6000 e 9999)"
+             "3 Inserisci un numero foglietto valido (minore di 5999)":
+             "4 Hai inserito un numero riservato asporto (compreso tra 6000 e 9999)"
             }
             />
 
