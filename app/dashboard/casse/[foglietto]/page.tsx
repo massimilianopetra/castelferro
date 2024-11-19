@@ -44,7 +44,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         }
 
         const num = +params.foglietto;
-        if (isNaN(num) || num < 1 || num > 9999) {
+        if (isNaN(num) || num < 1 || num > 5999) {
           setOpenSnackbar(true);
           return;
         }
@@ -106,7 +106,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
   const handleButtonClickCarica = () => {
     const num = Number(numero);
-    if (isNaN(num) || num < 1 || num > 9999) {
+    if (isNaN(num) || num < 1 || num > 5999) {
       setOpenSnackbar(true);
       return;
     }
@@ -714,14 +714,15 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           
           </div>
           {renderPhaseContent()}
-          <div>
-            <Snackbar
-              open={openSnackbar}
-              autoHideDuration={6000}
-              message="Inserisci un numero foglietto valido"
-              onClose={handleClose}
+          <Snackbar
+            open={openSnackbar}
+            autoHideDuration={6000}
+            onClose={handleClose}
+            message={(+numero) > 9999 ?
+             "Inserisci un numero foglietto valido (minore di 5999)":
+             "Hai inserito un numero riservato asporto (compreso tra 6000 e 9999)"
+            }
             />
-          </div>
 
         </main>
 
