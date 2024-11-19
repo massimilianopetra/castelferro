@@ -60,7 +60,9 @@ export default function Page() {
         carica(uc+1);
     }
     };
-
+    const handleButtonClickCaricaConto1 = async () => {
+        carica(1);
+    };
 
 
     const handleClose = () => {
@@ -126,6 +128,8 @@ export default function Page() {
                                 </>
                             ))}
                             <Button size="medium" className="font-semibold rounded-full" variant="outlined"  onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
+                            &nbsp;&nbsp;
+                            <Button size="medium" color="secondary" className="font-semibold rounded-full" variant="outlined"  onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
                         </p>
                     </div>
                     <Snackbar

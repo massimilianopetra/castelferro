@@ -50,6 +50,10 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
         setOpenSnackbar(false);
     };
 
+    const handleButtonClickCaricaConto1 = async () => {
+        carica(1);
+    };
+
     async function carica(num: number) {
         if (isNaN(num) || num < 1 || num > 5999) {
             setOpenSnackbar(true);
@@ -351,6 +355,11 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                     &nbsp;&nbsp;
                                 </>
                             ))}
+                             {phase == 'caricato' ?
+                                     <Button size="medium" color="secondary" className="font-semibold rounded-full" variant="outlined"  onClick={handleButtonClickCaricaConto1} disabled>Camerieri</Button>:
+                                     <Button size="medium" color="secondary" className="font-semibold rounded-full" variant="outlined"  onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                                     }
+
                         </p>
                     </div>
                     {renderPhaseContent()}
