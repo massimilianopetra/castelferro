@@ -51,7 +51,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     };
 
     async function carica(num: number) {
-        if (isNaN(num) || num < 1 || num > 9999) {
+        if (isNaN(num) || num < 1 || num > 5999) {
             setOpenSnackbar(true);
             return;
         }
@@ -367,7 +367,10 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                             open={openSnackbar}
                             autoHideDuration={6000}
                             onClose={handleClose}
-                            message="Inserisci un numero foglietto valido"
+                            message={(+numero) > 9999 ?
+                                "Inserisci un numero foglietto valido (minore di 5999)":
+                                "Hai inserito un numero riservato asporto (compreso tra 6000 e 9999)"
+                            }
                         />
                     </div>
                 </main>
