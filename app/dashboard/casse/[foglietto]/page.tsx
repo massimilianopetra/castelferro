@@ -444,24 +444,40 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               <div className="z-0 text-2xl font-extralight text-end"> 
                 <p>
                   Conto aperto da:{" "}
-                  <span className="font-extrabold text-blue-800">
-                    {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;
-                  </span>
+                  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span>
                 </p>
                 <p>
                   Cameriere:{" "}
-                  <span className="font-extrabold text-blue-800">
-                    {conto?.cameriere}&nbsp;&nbsp;&nbsp;
-                  </span>
+                  <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
                 </p>
                 <p>
                   Conto:{" "}
-                  <span className="font-extrabold text-blue-800">
-                    {numeroFoglietto}&nbsp;&nbsp;&nbsp;
-                  </span>
+                  <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                 </p>
               </div>
               <div>
+              <div className="text-center ">
+                {+numeroFoglietto > 9 ? (
+                  <Button variant="contained" onClick={handleStampa}> Stampa Conto </Button>
+                ) : (
+                  <Button variant="contained" onClick={handleStampa} disabled>Stampa Conto </Button>
+                )}
+                &nbsp;&nbsp;
+                <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
+                  &nbsp;Chiudi conto&nbsp;&nbsp;
+                  <ButtonGroup variant="contained" aria-label="xccc">
+                    <Button variant="contained" onClick={handleAChiudiPos} disabled>{" "}POS{" "}</Button>
+                    <Button variant="contained" onClick={handleAChiudi} disabled> Contanti </Button>
+                    <Button variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
+                  </ButtonGroup>
+                  &nbsp;&nbsp;
+                </ul>
+                &nbsp;&nbsp;
+                <Button variant="contained" onClick={handleAggiorna} disabled>
+                  Aggiorna Conto
+                </Button>
+              </div>
+              
                 <TabellaConto
                   item={products}
                   onAdd={handleAdd}
@@ -477,13 +493,9 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               &nbsp;
               <div className="text-center ">
                 {+numeroFoglietto > 9 ? (
-                  <Button variant="contained" onClick={handleStampa}>
-                    Stampa Conto
-                  </Button>
+                  <Button variant="contained" onClick={handleStampa}> Stampa Conto </Button>
                 ) : (
-                  <Button variant="contained" onClick={handleStampa} disabled>
-                    Stampa Conto
-                  </Button>
+                  <Button variant="contained" onClick={handleStampa} disabled>Stampa Conto </Button>
                 )}
                 &nbsp;&nbsp;
                 <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
@@ -522,6 +534,22 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 <p >
                   Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                 </p>
+              </div>
+              <div className='text-center'>
+                <Button variant="contained" onClick={handleStampa} disabled>Stampa Conto</Button>
+                &nbsp;&nbsp;
+                <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
+                  &nbsp;Chiudi conto&nbsp;&nbsp;
+                  <ButtonGroup variant="contained" aria-label="xccc">
+                    <Button variant="contained" onClick={handleAChiudiPos} disabled>  POS  </Button>
+                    <Button variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
+                    <Button variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
+                  </ButtonGroup>
+                  &nbsp;&nbsp;
+                </ul>
+                &nbsp;&nbsp;
+                <Button variant="contained" onClick={handleAggiorna}>Aggiorna Conto</Button>
+
               </div>
               <div>
                 <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
@@ -568,15 +596,24 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   Conto stampato numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                 </p>
               </div>
-              <ul className="inline-block py-3 text-2xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
-                &nbsp;Chiudi conto&nbsp;&nbsp;
-                <ButtonGroup variant="contained" aria-label="xccc">
-                  <Button variant="contained" size="large" onClick={handleAChiudiPos} >  POS  </Button>
-                  <Button variant="contained" size="large" onClick={handleAChiudi} >Contanti</Button>
-                  <Button variant="contained" size="large" onClick={handleChiudiGratis} >Altro Importo</Button>
-                </ButtonGroup>
+              <div className="z-0 text-center">
+                {+numeroFoglietto > 9 ? <Button variant="contained" onClick={handleStampa} >Stampa Conto</Button> :
+                  <Button variant="contained" onClick={handleStampa} disabled >Stampa Conto</Button>
+                }
                 &nbsp;&nbsp;
-              </ul>
+
+                <ul className="inline-block py-3 text-2xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
+                  &nbsp;Chiudi conto&nbsp;&nbsp;
+                  <ButtonGroup variant="contained" aria-label="xccc">
+                    <Button variant="contained" onClick={handleAChiudiPos} >  POS  </Button>
+                    <Button variant="contained" onClick={handleAChiudi} >Contanti</Button>
+                    <Button variant="contained" onClick={handleChiudiGratis} >Altro Importo</Button>
+                  </ButtonGroup>
+                  &nbsp;&nbsp;
+                </ul>
+                &nbsp;&nbsp;
+                <Button variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
+              </div>
               <br />
 
               <div>
@@ -588,7 +625,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 </p>
               </div>
               <div className="z-0 text-center">
-                {+numeroFoglietto > 10 ? <Button variant="contained" onClick={handleStampa} >Stampa Conto</Button> :
+                {+numeroFoglietto > 9 ? <Button variant="contained" onClick={handleStampa} >Stampa Conto</Button> :
                   <Button variant="contained" onClick={handleStampa} disabled >Stampa Conto</Button>
                 }
                 &nbsp;&nbsp;
