@@ -135,7 +135,6 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                         return ({ id: -1, message: `` });
                     }
                 }
-
                 return { id: -1, message: `` };
             });
 
