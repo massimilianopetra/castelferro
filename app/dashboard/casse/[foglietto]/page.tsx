@@ -21,7 +21,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   const printRef = useRef<HTMLDivElement | null>(null);
   const [importValue, setImportValue] = useState('');
   const [textValue, setTextValue] = useState('');
-  const [phase, setPhase] = useState('iniziale');
+  const [phase, setPhase] = useState('elaborazione');
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [products, setProducts] = useState<DbConsumazioniPrezzo[]>([]);
   const [iniProducts, setIniProducts] = useState<DbConsumazioniPrezzo[]>([]);
@@ -54,11 +54,12 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           setProducts(c);
           setIniProducts(c);
         }
-
-        //console.log(`estrazione conto ${num} giornata: ${gg.giornata}`);
+        console.log('----------');
+        console.log(`estrazione conto ${num} giornata: ${gg.giornata}`);
         const cc = await getConto(num, gg.giornata);
-        //console.log('>>>record: ');
-        //console.log(cc?.stato);
+        console.log('>>>record: ');
+        console.log(cc?.stato);
+        console.log('----------');
         setConto(cc);
         if (cc?.stato == 'APERTO') {
           setNumeroFoglietto(num.toString());
@@ -475,7 +476,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               </div>
               &nbsp;
               <div className="text-center ">
-                {+numeroFoglietto > 10 ? (
+                {+numeroFoglietto > 9 ? (
                   <Button variant="contained" onClick={handleStampa}>
                     Stampa Conto
                   </Button>

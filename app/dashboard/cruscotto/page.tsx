@@ -104,8 +104,14 @@ export default function Page() {
       }, 0);
       
       var numCoperti = 0
-      if (cosumazioni)
-        numCoperti += cosumazioni?.length
+      if (cosumazioni) {
+        numCoperti = cosumazioni.reduce((accumulator, cons) => {
+          if (cons.id_piatto == 1) 
+            return accumulator + cons.quantita
+          else
+            return accumulator
+        }, 0);
+      }
 
       var numConti = 0;
 

@@ -149,12 +149,12 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
             setProducts([]);
             setIniProducts([]);
             }
-        else 
-        {
-            console.log('Aggiornamento Numero foglietto non aperto: ${numeroFoglietto} da ${nomeCucina}');  
-            setPhase('bloccato');
-            return;
-        } 
+            else 
+            {
+                console.log('Aggiornamento Numero foglietto non aperto:' + {numeroFoglietto} +' da' + {nomeCucina} + 'in bloccato');  
+                setPhase('bloccato');
+                return;
+            } 
     } 
 ;
 

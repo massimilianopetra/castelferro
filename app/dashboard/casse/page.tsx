@@ -53,10 +53,12 @@ export default function Page() {
 
     const handleButtonClickCaricaAsporto = async () => {
         const ultconto = await getContoPiuAlto();
-        var uc = Number(ultconto);
-        if (uc < 5999)
-            uc = 6000 
+        if (ultconto){
+            var uc = Number(ultconto);
+            if (uc < 5999)
+                uc = 6000 
         carica(uc+1);
+    }
     };
 
 
