@@ -371,8 +371,7 @@ export async function getConto(foglietto: number, giorno: number): Promise<DbCon
     const c = await sql<DbConti>`SELECT * FROM conti  WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`;
     return c.rows[0];
   } catch (error) {
-    console.error('Failed to fetch conto:', error);
-    throw new Error('Failed to fetch conto.');
+     return undefined
   }
 }
 

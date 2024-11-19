@@ -120,7 +120,6 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
         // numeroFoglietto
         
         const gc = await getConto(Number(numeroFoglietto), sagra.giornata);
-        console.log('<<<<<<<>>>>>>>: ${gc?.stato}');
         if (gc?.stato === "APERTO"){
             console.log(`Aggiornamento Numero foglietto: ${numeroFoglietto} da ${nomeCucina}`);
             const logArray = products.map((item) => {

@@ -57,8 +57,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
         //console.log(`estrazione conto ${num} giornata: ${gg.giornata}`);
         const cc = await getConto(num, gg.giornata);
-        console.log('>>>record: ');
-        console.log(cc?.stato);
+        //console.log('>>>record: ');
+        //console.log(cc?.stato);
         setConto(cc);
         if (cc?.stato == 'APERTO') {
           setNumeroFoglietto(num.toString());
@@ -78,7 +78,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           setPhase('stampato');
         } else if (cc?.stato == 'CHIUSO' || cc?.stato == 'CHIUSOPOS' || cc?.stato == 'CHIUSOALTRO') {
           setPhase('chiuso');
-        } else if (Number(num) > 5999) {
+        } else if (Number(num) > 5999 && cc?.stato == undefined) {  // siamo nella condizione che c'è un conto aperto tra 6000 e 9000 quindi va bene (che è minore 9999 già verificato sopra)
             setNumeroFoglietto(num.toString());
             setSagra(gg);
             setPhase('elaborazione');
@@ -115,11 +115,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       if (isNaN(num) || num < 1 || num > 9999) {
         setOpenSnackbar(true);
         return;
-      } else if (num > 5999  && cc?.stato !== "APERTO"
-                          && cc?.stato !== "STAMPATO"
-                          && cc?.stato !== "CHIUSO"
-                          && cc?.stato !== "CHIUSOPOS"
-                          && cc?.stato !== "CHIUSOALTRO") {
+      } else if (num > 5999 && cc?.stato == undefined)   // siamo nella condizione che c'è un conto aperto tra 6000 e 9000 quindi va bene (che è minore 9999 già verificato sopra)
+         {
         setOpenSnackbar(true);
         return;
       }
