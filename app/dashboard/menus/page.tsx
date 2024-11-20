@@ -6,6 +6,7 @@ import type { DbMenu } from '@/app/lib/definitions';
 import { getMenu, updatetMenu, setMenuAllAvailable, overwriteMenu } from '@/app/lib/actions';
 import TabellaMenu from '@/app/ui/dashboard/TabellaMenu';
 import { Button } from '@mui/material';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
 
 export default function Page() {
@@ -100,7 +101,7 @@ export default function Page() {
                     </div>
                     <div className="flex justify-center space-x-4 py-8">
                         <Button variant="contained" onClick={handleButtonClickInvia}>Tutto Disponibile</Button>
-                        <Button variant="contained" onClick={handleUploadClick}>Upload Menu</Button>
+                        <Button variant="contained" startIcon={<CloudUploadIcon />} onClick={handleUploadClick}>Upload Menu</Button>
                     </div>
 
                 </div>

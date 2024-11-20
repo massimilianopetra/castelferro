@@ -247,7 +247,7 @@ export default function Cucina() {
                             <p className="text-5xl py-4">
                                 Caricamento in corso ...
                             </p>
-                            <CircularProgress />
+                            <CircularProgress size="9rem" />
                         </div>
                     </div>
                 </main>

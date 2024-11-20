@@ -163,7 +163,7 @@ export default function Page() {
             );
         } else if (phase == 'caricamento') {
             return (
-                <CircularProgress />
+                <CircularProgress size="9rem" />
             );
         }
     }

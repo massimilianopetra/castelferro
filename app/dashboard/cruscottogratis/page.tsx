@@ -445,7 +445,7 @@ export default function Page() {
               <p className="text-5xl py-4  text-blue-600">
                 Caricamento in corso ...
               </p>
-              <CircularProgress />
+              <CircularProgress size="9rem" />
             </div>
           </div>
         </main>

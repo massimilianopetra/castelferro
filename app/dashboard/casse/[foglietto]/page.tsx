@@ -34,7 +34,6 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
   useEffect(() => {
     const fetchData = async () => {
-
       const gg = await getGiornoSagra();
       if (gg) {
         setSagra(gg);
@@ -61,7 +60,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       //  console.log(cc?.stato);
       //  console.log('----------');
         setConto(cc);
-        if (cc?.stato == 'APERTO') {
+        if (cc?.stato == 'APERTO')  {
           setNumeroFoglietto(num.toString());
           await writeLog(num, gg.giornata, 'Casse', '', 'OPEN', ''); // Logger
           const cc = await getLastLog(gg.giornata, 'Casse');
@@ -80,21 +79,19 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         } else if (cc?.stato == 'CHIUSO' || cc?.stato == 'CHIUSOPOS' || cc?.stato == 'CHIUSOALTRO') {
           setPhase('chiuso');
         } else if (Number(num) > 5999 && cc?.stato == undefined) {  // siamo nella condizione che c'è un conto aperto tra 6000 e 9000 quindi va bene (che è minore 9999 già verificato sopra)
-            setNumeroFoglietto(num.toString());
-            setSagra(gg);
-            setPhase('elaborazione');
-            await apriConto(Number(num), gg.giornata, 'Casse');
-            await writeLog(Number(num), gg.giornata, 'Casse', '', 'START', ''); // Logger
-            setPhase('aperto');
-          } 
-         else {
+          setNumeroFoglietto(num.toString());
+          setSagra(gg);
+          setPhase('elaborazione');
+          await apriConto(Number(num), gg.giornata, 'Casse');
+          await writeLog(Number(num), gg.giornata, 'Casse', '', 'START', ''); // Logger
+          setPhase('aperto');
+        } else {
           setNumero(num.toString());
           setNumeroFoglietto(num.toString());
           setPhase('none');
         }
       }
     };
-
     fetchData();
   }, []);
 
@@ -116,8 +113,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       if (isNaN(num) || num < 1 || num > 9999) {
         setOpenSnackbar(true);
         return;
-      } else if (num > 5999 && cc?.stato == undefined)   // siamo nella condizione che c'è un conto aperto tra 6000 e 9000 quindi va bene (che è minore 9999 già verificato sopra)
-         {
+      } else if (num > 5999 && cc?.stato == undefined) {  // siamo nella condizione che c'è un conto aperto tra 6000 e 9000 quindi va bene (che è minore 9999 già verificato sopra)
         setOpenSnackbar(true);
         return;
       }
@@ -125,54 +121,51 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     } 
   };
 
-  const handleButtonClickCaricaAsporto = async () => {
-    const ultconto = await getContoPiuAlto();
-    var uc = Number(ultconto);
-    if (uc < 5999)
-        uc = 6000 
-    carica(uc+1);
+const handleButtonClickCaricaAsporto = async () => {
+  const ultconto = await getContoPiuAlto();
+  var uc = Number(ultconto);
+  if (uc < 5999)
+      uc = 6000 
+  carica(uc+1);
 };
 
 const handleButtonClickCaricaConto1 = async () => {
   carica(1);
 };
 
-  const handleAggiorna = async () => {
+const handleAggiorna = async () => {
+  console.log(`Aggiornamento n. foglietto: ${numeroFoglietto}`);
+  const fetchData = async () => {
+     setPhase('caricamento');
+     var totale = 0;
 
-    console.log(`Aggiornamento n. foglietto: ${numeroFoglietto}`);
-    const fetchData = async () => {
-      setPhase('caricamento');
-      var totale = 0;
+    for (let i of products) {
+      totale += i.quantita * i.prezzo_unitario;
+    }
+    await sendConsumazioni(products);
+    await aggiornaConto(Number(numeroFoglietto), sagra.giornata, totale);
 
-      for (let i of products) {
-        totale += i.quantita * i.prezzo_unitario;
+    // Gestione log
+    const logArray = products.map((item) => {
+    const orig = iniProducts.find(o => o.id_piatto == item.id_piatto);
+    if (orig) {
+      if (item.quantita > orig.quantita) {
+        return ({ id: item.id_comanda, message: `Aggiunti: ${item.quantita - orig.quantita} ${item.piatto}` });
+      } else if (item.quantita < orig.quantita) {
+        return ({ id: item.id_comanda, message: `Eliminati: ${orig.quantita - item.quantita} ${item.piatto}` });
+      } else {
+        return ({ id: -1, message: `` });
       }
-      await sendConsumazioni(products);
-      await aggiornaConto(Number(numeroFoglietto), sagra.giornata, totale);
-
-      // Gestione log
-      const logArray = products.map((item) => {
-        const orig = iniProducts.find(o => o.id_piatto == item.id_piatto);
-        if (orig) {
-          if (item.quantita > orig.quantita) {
-            return ({ id: item.id_comanda, message: `Aggiunti: ${item.quantita - orig.quantita} ${item.piatto}` });
-
-          } else if (item.quantita < orig.quantita) {
-            return ({ id: item.id_comanda, message: `Eliminati: ${orig.quantita - item.quantita} ${item.piatto}` });
-          } else {
-            return ({ id: -1, message: `` });
-          }
-        }
-
-        return { id: -1, message: `` };
-      });
-
-      for (var index = 0; index < logArray.length; index++) {
-        if (logArray[index].id != -1) {
-          await writeLog(logArray[index].id, sagra.giornata, 'Casse', '', 'UPDATE', logArray[index].message);
-        }
-      }
-      setPhase('aperto');
+    }
+    return { id: -1, message: `` };
+  });
+  
+  for (var index = 0; index < logArray.length; index++) {
+    if (logArray[index].id != -1) {
+      await writeLog(logArray[index].id, sagra.giornata, 'Casse', '', 'UPDATE', logArray[index].message);
+    }
+  }
+    setPhase('aperto');
     };
     fetchData();
   };
@@ -381,7 +374,7 @@ const handleButtonClickCaricaConto1 = async () => {
               <p className="text-5xl py-4">
                 Caricamento in corso ...
               </p>
-              <CircularProgress />
+              <CircularProgress size="9rem" />
             </div>
 
           </>
@@ -399,7 +392,7 @@ const handleButtonClickCaricaConto1 = async () => {
               <p className="text-5xl py-4">
                 Elaborazione in corso ...
               </p>
-              <CircularProgress />
+              <CircularProgress size="9rem" />
             </div>
 
           </>
@@ -408,10 +401,10 @@ const handleButtonClickCaricaConto1 = async () => {
         return (
           <div className="flex items-center justify-center min-h-screen">
             <div className="w-[600px] p-4 border rounded-lg space-y-4">
-            <p className="text-xl py-4">
-            Conto numero: <span className="font-extrabold text-blue-800">{conto?.id_comanda} </span>
-                  con incasso previsto di: <span className="font-semibold text-blue-800">{conto?.totale} Euro </span>
-            </p>
+              <p className="text-xl py-4">
+              Conto numero: <span className="font-extrabold text-blue-800">{conto?.id_comanda} </span>
+              con incasso previsto di: <span className="font-semibold text-blue-800">{conto?.totale} Euro </span>
+              </p>
               <TextField
                 label="Nuovo importo"
                 variant="outlined"
@@ -428,10 +421,10 @@ const handleButtonClickCaricaConto1 = async () => {
                 fullWidth
               />
               <div className="flex justify-center space-x-4">
-                <Button variant="contained" color="primary" onClick={handleCompletatoGratis}>
+                <Button  size="small" variant="contained" color="primary" onClick={handleCompletatoGratis}>
                   Salva e chiudi
                 </Button>
-                <Button variant="contained" color="primary" onClick={handleAnnullaGratis}>
+                <Button  size="small" variant="contained" color="primary" onClick={handleAnnullaGratis}>
                   Annulla
                 </Button>
               </div>
@@ -441,81 +434,65 @@ const handleButtonClickCaricaConto1 = async () => {
       case 'aperto':
         return (
           <>
-            <br></br>
-            <br></br>
-            <br></br>
-            <div className="z-0 text-center">
-              <div className="z-0 text-2xl font-extralight text-end"> 
-                <p>
-                  Conto aperto da:{" "}
-                  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span>
-                </p>
-                <p>
-                  Cameriere:{" "}
-                  <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
-                </p>
-                <p>
-                  Conto:{" "}
-                  <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
-                </p>
+            <div>
+              <div className="z-0 xl:text-3xl font-extralight text-end lg:text-base lg:py-1">
+                <p>  Conto aperto da:{" "}  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span></p>
+                <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
+                <p>  Conto:{" "}            <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
               </div>
               <div>
+              {(+numeroFoglietto) > 9 ? 
               <div className="text-center ">
                 {+numeroFoglietto > 9 ? (
-                  <Button size="small" variant="contained" onClick={handleStampa}> Stampa Conto </Button>
-                ) : (
-                  <Button size="small" variant="contained" onClick={handleStampa} disabled>Stampa Conto </Button>
-                )}
-                &nbsp;&nbsp;
+                  <Button size="small" className="rounded-full" variant="contained" onClick={handleStampa}> Stampa Conto </Button>
+                  ) : (
+                  <Button size="small" className="rounded-full" variant="contained" onClick={handleStampa} disabled>Stampa Conto </Button>
+                  )} &nbsp;&nbsp;
+                  <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
+                    &nbsp;Chiudi conto&nbsp;&nbsp;
+                    <ButtonGroup  size="small" variant="contained" aria-label="xccc">
+                      <Button  size="small" variant="contained" onClick={handleAChiudiPos} disabled>{" "}POS{" "}</Button>
+                      <Button  size="small" variant="contained" onClick={handleAChiudi} disabled> Contanti </Button>
+                      <Button  size="small" variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
+                    </ButtonGroup> &nbsp;&nbsp;
+                  </ul>&nbsp;&nbsp;
+                  <Button size="small" className="rounded-full" variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
+              </div> : 
+              <div className="text-center ">
+                <Button size="small" className="rounded-full" variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto </Button>
+              </div> 
+            }
+            <TabellaConto
+              item={products}
+              onAdd={handleAdd}
+              onRemove={handleRemove}
+            />
+          </div>
+            <div className="z-0 text-2xl font-extralight text-end">
+              <p>Conto:{" "}<span className="font-extrabold text-blue-800">  {numeroFoglietto}&nbsp;&nbsp;&nbsp; </span></p>
+            </div>
+            {(+numeroFoglietto) > 9 ? 
+            <div className="text-center ">
+              {+numeroFoglietto > 9 ? (
+                <Button className="rounded-full" variant="contained" onClick={handleStampa}> Stampa Conto </Button>
+              ) : (
+                <Button className="rounded-full" variant="contained" onClick={handleStampa} disabled>Stampa Conto </Button>
+                )} &nbsp;
                 <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
                   &nbsp;Chiudi conto&nbsp;&nbsp;
-                  <ButtonGroup  size="small" variant="contained" aria-label="xccc">
+                  <ButtonGroup variant="contained" aria-label="xccc">
                     <Button  size="small" variant="contained" onClick={handleAChiudiPos} disabled>{" "}POS{" "}</Button>
                     <Button  size="small" variant="contained" onClick={handleAChiudi} disabled> Contanti </Button>
                     <Button  size="small" variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
                   </ButtonGroup>
-                  &nbsp;&nbsp;
-                </ul>
-                &nbsp;&nbsp;
-                <Button size="small" variant="contained" onClick={handleAggiorna} disabled>
-                  Aggiorna Conto
-                </Button>
-              </div>
-              
-                <TabellaConto
-                  item={products}
-                  onAdd={handleAdd}
-                  onRemove={handleRemove}
-                />
-              </div>
-              <div className="z-0 text-2xl font-extralight text-end">
-                <p>
-                  Conto:{" "}
-                  <span className="font-extrabold text-blue-800">  {numeroFoglietto}&nbsp;&nbsp;&nbsp; </span>
-                </p>
-              </div>
-              &nbsp;
-              <div className="text-center ">
-                {+numeroFoglietto > 9 ? (
-                  <Button variant="contained" onClick={handleStampa}> Stampa Conto </Button>
-                ) : (
-                  <Button variant="contained" onClick={handleStampa} disabled>Stampa Conto </Button>
-                )}
-                &nbsp;&nbsp;
-                <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
-                  &nbsp;Chiudi conto&nbsp;&nbsp;
-                  <ButtonGroup variant="contained" aria-label="xccc">
-                    <Button variant="contained" onClick={handleAChiudiPos} disabled>{" "}POS{" "}</Button>
-                    <Button variant="contained" onClick={handleAChiudi} disabled> Contanti </Button>
-                    <Button variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
-                  </ButtonGroup>
-                  &nbsp;&nbsp;
-                </ul>
-                &nbsp;&nbsp;
-                <Button variant="contained" onClick={handleAggiorna} disabled>
-                  Aggiorna Conto
-                </Button>
-              </div>
+                  &nbsp;
+                </ul> &nbsp;
+                <Button className="rounded-full" variant="contained"onClick={handleAggiorna} disabled> Aggiorna Conto</Button>
+            </div>  :
+            <div className="text-center ">
+              <Button className="rounded-full" variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
+            </div>
+            }
             </div>
 
             {/* Sezione che verrà stampata */}
@@ -528,33 +505,32 @@ const handleButtonClickCaricaConto1 = async () => {
         return (
           <>
             <div className="z-0 text-center">
-              <div className="z-0 xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
-                <p >
-                  Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span>
-                </p>
-                <p >
-                  Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
-                </p>
-                <p >
-                  Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
-                </p>
+              <div className="z-0 xl:text-3xl font-extralight text-end lg:text-base lg:py-1">
+                <p>  Conto aperto da:{" "}  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span></p>
+                <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
+                <p>  Conto:{" "}            <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
               </div>
-              <div className='text-center'>
-                <Button size="small" variant="contained" onClick={handleStampa} disabled>Stampa Conto</Button>
-                &nbsp;&nbsp;
-                <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
-                  &nbsp;Chiudi conto&nbsp;&nbsp;
-                  <ButtonGroup size="small" variant="contained" aria-label="xccc">
-                    <Button size="small" variant="contained" onClick={handleAChiudiPos} disabled>  POS  </Button>
-                    <Button size="small" variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
-                    <Button size="small" variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
-                  </ButtonGroup>
+              
+              {(+numeroFoglietto) > 9 ? 
+                <div className='text-center'>
+                  <Button size="small" className="rounded-full" variant="contained" onClick={handleStampa} disabled>Stampa Conto</Button>
                   &nbsp;&nbsp;
-                </ul>
-                &nbsp;&nbsp;
-                <Button size="small" variant="contained" onClick={handleAggiorna}>Aggiorna Conto</Button>
-
-              </div>
+                  <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
+                    &nbsp;Chiudi conto&nbsp;&nbsp;
+                    <ButtonGroup size="small" variant="contained" aria-label="xccc">
+                      <Button size="small" variant="contained" onClick={handleAChiudiPos} disabled>  POS  </Button>
+                      <Button size="small" variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
+                      <Button size="small" variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
+                    </ButtonGroup>
+                    &nbsp;&nbsp;
+                  </ul>
+                  &nbsp;&nbsp;
+                  <Button size="small" className="rounded-full" variant="contained" onClick={handleAggiorna}>Aggiorna Conto</Button>
+                </div> : 
+                <div className='text-center'>
+                  <Button size="small" className="rounded-full" variant="contained" onClick={handleAggiorna}>Aggiorna Conto</Button>
+                </div>
+              }
               <div>
                 <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
               </div>
@@ -563,23 +539,26 @@ const handleButtonClickCaricaConto1 = async () => {
                   Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                 </p>
               </div>
-              &nbsp;
-              <div className='text-center'>
-                <Button variant="contained" onClick={handleStampa} disabled>Stampa Conto</Button>
-                &nbsp;&nbsp;
-                <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
-                  &nbsp;Chiudi conto&nbsp;&nbsp;
-                  <ButtonGroup variant="contained" aria-label="xccc">
-                    <Button variant="contained" onClick={handleAChiudiPos} disabled>  POS  </Button>
-                    <Button variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
-                    <Button variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
-                  </ButtonGroup>
+              {(+numeroFoglietto) > 9 ? 
+                <div className='text-center'>
+                  <Button  className="rounded-full" variant="contained" onClick={handleStampa} disabled>Stampa Conto</Button>
                   &nbsp;&nbsp;
-                </ul>
-                &nbsp;&nbsp;
-                <Button variant="contained" onClick={handleAggiorna}>Aggiorna Conto</Button>
-
-              </div>
+                  <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
+                    &nbsp;Chiudi conto&nbsp;&nbsp;
+                    <ButtonGroup variant="contained" aria-label="xccc">
+                      <Button  size="small" variant="contained" onClick={handleAChiudiPos} disabled>  POS  </Button>
+                      <Button  size="small" variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
+                      <Button  size="small" variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
+                    </ButtonGroup>
+                    &nbsp;&nbsp;
+                  </ul>
+                  &nbsp;&nbsp;
+                  <Button size="small" className="rounded-full" variant="contained" onClick={handleAggiorna}>Aggiorna Conto</Button>
+                </div> : 
+                <div className='text-center'>
+                  <Button size="small" className="rounded-full" variant="contained" onClick={handleAggiorna}>Aggiorna Conto</Button>
+                </div>
+              }
             </div>
           </>
         );
@@ -587,22 +566,14 @@ const handleButtonClickCaricaConto1 = async () => {
         return (
           <>
             <div className="z-0 text-center">
-              <br></br>
-              <br></br>
-              <div className="z-0 text-3xl xl:py-4 font-extralight text-end lg:py-1">
-                <p >
-                  Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span>
-                </p>
-                <p >
-                  Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
-                </p>
-                <p >
-                  Conto stampato numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
-                </p>
+              <div className="z-0 xl:text-3xl font-extralight text-end lg:text-base lg:py-1">
+                <p>  Conto aperto da:{" "}  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span></p>
+                <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
+                <p>  Conto:{" "}            <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
               </div>
               <div className="z-0 text-center">
-                {+numeroFoglietto > 9 ? <Button size="small" variant="contained" onClick={handleStampa} >Stampa Conto</Button> :
-                  <Button size="small" variant="contained" onClick={handleStampa} disabled >Stampa Conto</Button>
+                {+numeroFoglietto > 9 ? <Button size="small"className="rounded-full" variant="contained" onClick={handleStampa} >Stampa Conto</Button> :
+                  <Button size="small" className="rounded-full" variant="contained" onClick={handleStampa} disabled >Stampa Conto</Button>
                 }
                 &nbsp;&nbsp;
 
@@ -616,7 +587,7 @@ const handleButtonClickCaricaConto1 = async () => {
                   &nbsp;&nbsp;
                 </ul>
                 &nbsp;&nbsp;
-                <Button size="small" variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
+                <Button size="small" className="rounded-full" variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
               </div>
               <br />
 
@@ -629,22 +600,21 @@ const handleButtonClickCaricaConto1 = async () => {
                 </p>
               </div>
               <div className="z-0 text-center">
-                {+numeroFoglietto > 9 ? <Button variant="contained" onClick={handleStampa} >Stampa Conto</Button> :
-                  <Button variant="contained" onClick={handleStampa} disabled >Stampa Conto</Button>
+                {+numeroFoglietto > 9 ? <Button className="rounded-full" variant="contained" onClick={handleStampa} >Stampa Conto</Button> :
+                  <Button className="rounded-full" variant="contained" onClick={handleStampa} disabled >Stampa Conto</Button>
                 }
                 &nbsp;&nbsp;
 
                 <ul className="inline-block py-3 text-2xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
                   &nbsp;Chiudi conto&nbsp;&nbsp;
                   <ButtonGroup variant="contained" aria-label="xccc">
-                    <Button variant="contained" onClick={handleAChiudiPos} >  POS  </Button>
-                    <Button variant="contained" onClick={handleAChiudi} >Contanti</Button>
-                    <Button variant="contained" onClick={handleChiudiGratis} >Altro Importo</Button>
+                    <Button  size="small" variant="contained" onClick={handleAChiudiPos} >  POS  </Button>
+                    <Button  size="small" variant="contained" onClick={handleAChiudi} >Contanti</Button>
+                    <Button  size="small" variant="contained" onClick={handleChiudiGratis} >Altro Importo</Button>
                   </ButtonGroup>
                   &nbsp;&nbsp;
                 </ul>
-                &nbsp;&nbsp;
-                <Button variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
+                <Button className="rounded-full"  variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
               </div>
             </div>
 
@@ -747,38 +717,37 @@ const handleButtonClickCaricaConto1 = async () => {
               </li>
             </ul>
           </div>
-          <div className="z-0 xl:text-3xl font-extralight xl:text-end lg:text-2xl lg:py-2 lg:text-center">
-            <p>Ultimi: &nbsp;
-              {lastLog.map((row) => (
-                <>
-                  <Button size="medium" className="rounded-full" variant="contained" onClick={() => {
-                      if  (phase == 'iniziale_stampato') 
-                        setPhase('stampato') 
-                      else
-                        carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
-                  &nbsp;&nbsp;
-                </>
+        <div className="z-0 xl:text-3xl font-extralight xl:text-end lg:text-2xl lg:py-2 lg:text-center">
+          <p className="z-0 xl:text-3xl font-extralight xl:text-end lg:text-2xl lg:py-2 lg:text-center">Ultimi: &nbsp;
+            {lastLog.map((row) => (
+              <>
+              <Button size="medium" className="rounded-full" variant="contained" onClick={() => {
+                if  (phase == 'iniziale_stampato') 
+                  setPhase('stampato') 
+                else
+                  carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
+                &nbsp;&nbsp;
+               </>
               ))
             }
+          </p>
+          <div className="z-0 xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
             <Button size="medium" className="font-semibold rounded-full" variant="outlined"  onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
             &nbsp;&nbsp;
             <Button size="medium" color="secondary" className="font-semibold rounded-full" variant="outlined"  onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
-            </p>
-          
           </div>
-          {renderPhaseContent()}
-          <Snackbar
-            open={openSnackbar}
-            autoHideDuration={6000}
-            onClose={handleClose}
-            message={(+numero) > 9999 ?
-             "3 Inserisci un numero foglietto valido (minore di 5999)":
-             "4 Hai inserito un numero riservato asporto (compreso tra 6000 e 9999)"
-            }
-            />
-
-        </main>
-
+        </div>
+        {renderPhaseContent()}
+        <Snackbar
+          open={openSnackbar}
+          autoHideDuration={6000}
+          onClose={handleClose}
+          message={(+numero) > 9999 ?
+           "3 Inserisci un numero foglietto valido (minore di 5999)":
+           "4 Hai inserito un numero riservato asporto (compreso tra 6000 e 9999)"
+          }
+        />
+      </main>
       )
     }
   } else {

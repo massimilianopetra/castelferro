@@ -120,6 +120,10 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
         carica(num);
     };
 
+    const handleButtonClickAnnulla = () => {
+        setPhase('iniziale');
+    };
+
     const handleButtonClickInvia = async () => {
         // numeroFoglietto
         
@@ -219,7 +223,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                             <p className="text-5xl py-4">
                                 Caricamento in corso ...
                             </p>
-                            <CircularProgress />
+                            <CircularProgress size="9rem" />
                         </div>
 
                     </>
@@ -346,7 +350,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                         </ul>
                     </div>
                     <div className="z-0 xl:text-3xl font-extralight xl:text-end lg:text-3xl lg:py-2 lg:text-center">
-                        <p>Ultimi : &nbsp;
+                        <p>
                             {lastLog.map((row) => (
                                 <>
                                     {phase == 'caricato' ?
@@ -366,8 +370,8 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                     &nbsp;         
                     <div className='text-center '>
                       {phase == 'caricato' ?
-                            <Button size="large" variant="contained" onClick={handleButtonClickInvia}>Invia</Button> :
-                            <Button size="large" variant="contained" onClick={handleButtonClickInvia} disabled>Invia </Button>
+                            <div><Button size="large" variant="contained" onClick={handleButtonClickInvia}>Invia</Button> &nbsp; <Button size="large" variant="contained" onClick={handleButtonClickAnnulla}>Annulla</Button></div> :
+                            <div><Button size="large" variant="contained" onClick={handleButtonClickInvia} disabled>Invia </Button> &nbsp; <Button size="large" variant="contained" onClick={handleButtonClickAnnulla} disabled>Annulla </Button></div>
                         }
                     </div>
                     <div>
