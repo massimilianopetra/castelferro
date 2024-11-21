@@ -593,7 +593,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               <br />
 
               <div>
-                <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove}/>
+                <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
               </div>
               <div className="z-0 xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
                 <p >
