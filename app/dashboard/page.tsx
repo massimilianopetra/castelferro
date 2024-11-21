@@ -1,6 +1,4 @@
 
-import DashboardLinks from '@/app/ui/dashboard/dashboard-links';
-
 export default async function Page() {
 
 
@@ -12,8 +10,6 @@ export default async function Page() {
                         Home
                     </p>
                 </div>
-             <DashboardLinks/>
-
             </div>
         </main>
 
