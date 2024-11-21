@@ -126,6 +126,7 @@ const handleButtonClickCaricaAsporto = async () => {
   var uc = Number(ultconto);
   if (uc < 5999)
       uc = 6000 
+  await writeLog(uc+1, sagra.giornata, 'Casse', '', 'OPEN', 'Bottone Asporto');
   carica(uc+1);
 };
 
