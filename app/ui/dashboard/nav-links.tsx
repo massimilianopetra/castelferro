@@ -17,16 +17,7 @@ import clsx from 'clsx';
 
 // Map of links to display in the side navigation.
 // Depending on the size of the application, this would be stored in a database.
-const linksCasse = [
-  { name: 'Gestione', href: '/dashboard/gestione', icon: SettingsIcon },
-  { name: 'Casse', href: '/dashboard/casse', icon: EuroIcon },
-  { name: 'Antipasti', href: '/dashboard/antipasti', icon: KebabDiningOutlinedIcon },
-  { name: 'Primi', href: '/dashboard/primi', icon: DinnerDiningIcon },
-  { name: 'Secondi', href: '/dashboard/secondi', icon: RestaurantOutlinedIcon },
-  { name: 'Dolci', href: '/dashboard/dolci', icon: CakeIcon },
-  { name: 'Bevande', href: '/dashboard/bevande', icon: LocalDrinkIcon },
-  { name: 'Birre', href: '/dashboard/birre', icon: SportsBarIcon },
-];
+
 
 export default function NavLinks() {
   const { data: session } = useSession();
@@ -35,8 +26,28 @@ export default function NavLinks() {
 
   switch (session?.user?.name) {
     case 'Casse':
+      links = [
+        { name: 'Gestione', href: '/dashboard/gestione', icon: SettingsIcon },
+        { name: 'Casse', href: '/dashboard/casse', icon: EuroIcon },
+        { name: 'Antipasti', href: '/dashboard/antipasti', icon: KebabDiningOutlinedIcon },
+        { name: 'Primi', href: '/dashboard/primi', icon: DinnerDiningIcon },
+        { name: 'Secondi', href: '/dashboard/secondi', icon: RestaurantOutlinedIcon },
+        { name: 'Dolci', href: '/dashboard/dolci', icon: CakeIcon },
+        { name: 'Bevande', href: '/dashboard/bevande', icon: LocalDrinkIcon },
+        { name: 'Birre', href: '/dashboard/birre', icon: SportsBarIcon },
+      ];
+      break;
     case 'SuperUser':
-      links = linksCasse;
+      links = [
+        { name: 'Gestione', href: '/dashboard/gestione', icon: SettingsIcon },
+        { name: 'Casse', href: '/dashboard/casse', icon: EuroIcon },
+        { name: 'Antipasti', href: '/dashboard/antipasti', icon: KebabDiningOutlinedIcon },
+        { name: 'Primi', href: '/dashboard/primi', icon: DinnerDiningIcon },
+        { name: 'Secondi', href: '/dashboard/secondi', icon: RestaurantOutlinedIcon },
+        { name: 'Dolci', href: '/dashboard/dolci', icon: CakeIcon },
+        { name: 'Bevande', href: '/dashboard/bevande', icon: LocalDrinkIcon },
+        { name: 'Birre', href: '/dashboard/birre', icon: SportsBarIcon },
+      ];
       break;
     case 'Antipasti':
       links = [{ name: 'Antipasti', href: '/dashboard/antipasti', icon: KebabDiningOutlinedIcon },]
