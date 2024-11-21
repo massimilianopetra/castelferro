@@ -127,10 +127,11 @@ export default function Page() {
                                     &nbsp;&nbsp;
                                 </>
                             ))}
-                            <Button size="medium" className="font-semibold rounded-full" variant="outlined"  onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
-                            &nbsp;&nbsp;
-                            <Button size="medium" color="secondary" className="font-semibold rounded-full" variant="outlined"  onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
-                        </p>
+                       <div className="z-0 xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
+            <Button size="medium" className="font-semibold rounded-full" variant="outlined"  onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
+            &nbsp;&nbsp;
+            <Button size="medium" color="secondary" className="font-semibold rounded-full" variant="outlined"  onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+          </div> </p>
                     </div>
                     <Snackbar
                             open={openSnackbar}

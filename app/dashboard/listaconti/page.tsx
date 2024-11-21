@@ -132,7 +132,9 @@ export default function Page() {
                                 rows={rows}
                                 columns={columns}
                                 slots={{ toolbar: GridToolbar }}
-
+                                initialState={{
+                                    density: 'compact',
+                                  }}
                             />
 
                             <br /><br />

@@ -271,6 +271,9 @@ export default function Cucina() {
                                 onRowModesModelChange={handleRowModesModelChange}
                                 onRowEditStop={handleRowEditStop}
                                 processRowUpdate={processRowUpdate}
+                                initialState={{
+                                    density: 'compact',
+                                  }}
                                 slots={{
                                     toolbar: EditToolbar as GridSlots['toolbar'],
                                 }}

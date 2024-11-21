@@ -153,6 +153,9 @@ export default function Page() {
                                         rows={result.map((row: any, index: number) => ({ id: index, ...row }))}
                                         columns={columns}
                                         slots={{ toolbar: GridToolbar }}
+                                        initialState={{
+                                            density: 'compact',
+                                          }}
                                     />
                                 </Box>
                             )}
