@@ -279,6 +279,9 @@ export default function Camerieri() {
                                 onRowModesModelChange={handleRowModesModelChange}
                                 onRowEditStop={handleRowEditStop}
                                 processRowUpdate={processRowUpdate}
+                                initialState={{
+                                    density: 'compact',
+                                  }}
                                 slots={{
                                     toolbar: EditToolbar as GridSlots['toolbar'],
                                 }}

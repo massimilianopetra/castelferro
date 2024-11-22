@@ -1,7 +1,13 @@
 'use client';
 
-import EuroIcon from '@mui/icons-material/Euro';
+import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
+import { LockOpenIcon } from '@heroicons/react/20/solid';
+import AccessibilityIcon from '@mui/icons-material/Accessibility';
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import AutoStoriesIcon from '@mui/icons-material/AutoStories';
+import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import CakeIcon from '@mui/icons-material/Cake';
+import EuroIcon from '@mui/icons-material/Euro';
 import HomeIcon from '@mui/icons-material/Home';
 import SettingsIcon from '@mui/icons-material/Settings';
 import LocalDrinkIcon from '@mui/icons-material/LocalDrink';
@@ -29,13 +35,10 @@ export default function NavLinks() {
       links = [
         { name: 'Gestione', href: '/dashboard/gestione', icon: SettingsIcon },
         { name: 'Casse', href: '/dashboard/casse', icon: EuroIcon },
-        { name: 'Antipasti', href: '/dashboard/antipasti', icon: KebabDiningOutlinedIcon },
-        { name: 'Primi', href: '/dashboard/primi', icon: DinnerDiningIcon },
-        { name: 'Secondi', href: '/dashboard/secondi', icon: RestaurantOutlinedIcon },
-        { name: 'Dolci', href: '/dashboard/dolci', icon: CakeIcon },
-        { name: 'Bevande', href: '/dashboard/bevande', icon: LocalDrinkIcon },
-        { name: 'Birre', href: '/dashboard/birre', icon: SportsBarIcon },
-      ];
+        { name: 'Verifica conti (aperti e chiusi)', href: '/dashboard/listaconti', icon: CheckCircleOutlineIcon },
+        { name: 'Configura Menu', href: '/dashboard/menus', icon: WrenchScrewdriverIcon },
+        { name: 'Gestione Camerieri', href: '/dashboard/camerieri', icon: AccessibilityIcon },
+       ];
       break;
     case 'SuperUser':
       links = [

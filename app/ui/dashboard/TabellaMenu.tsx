@@ -13,7 +13,7 @@ export default function TabellaMenu({item,onToggle}:{item: DbMenu[], onToggle:(i
     return (
         <div>
             <TableContainer component={Paper}>
-                <Table sx={{ minWidth: 450 }} aria-label="simple table">
+                <Table sx={{ minWidth: 450 }} aria-label="a dense table">
                     <TableHead>
                         <TableRow>
                             <TableCell className="font-bold">id</TableCell>
