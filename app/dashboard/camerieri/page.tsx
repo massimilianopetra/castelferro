@@ -279,9 +279,6 @@ export default function Camerieri() {
                                 onRowModesModelChange={handleRowModesModelChange}
                                 onRowEditStop={handleRowEditStop}
                                 processRowUpdate={processRowUpdate}
-                                initialState={{
-                                    density: 'compact',
-                                  }}
                                 slots={{
                                     toolbar: EditToolbar as GridSlots['toolbar'],
                                 }}
@@ -292,7 +289,7 @@ export default function Camerieri() {
                                     sorting: {
                                         sortModel: [{ field: 'col1', sort: 'desc' }],
                                     },
-                                }}
+                                  }}
 
                             />
 
