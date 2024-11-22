@@ -30,7 +30,9 @@ import {
     GridToolbar,
 } from '@mui/x-data-grid';
 
-export default function Cucina() {
+export default function Camerieri() {
+
+    const NUMFOGLI = 15;
 
     type RowsData = {
         id: number;
@@ -150,26 +152,32 @@ export default function Cucina() {
     function EditToolbar(props: EditToolbarProps) {
         const { setRows, setRowModesModel } = props;
 
-        const maxID = rows.reduce(
-            (prev, current) => {
-                return prev.id > current.id ? prev : current
-            }
-        );
+        var maxID = 0;
+        var maxN = 0;
+        var maxFoglietto = 0;
 
-        const maxN = rows.reduce(
-            (prev, current) => {
-                return prev.col1 > current.col1 ? prev : current
-            }
-        );
+        for (var i = 0; i < rows.length; i++) {
+            if (rows[i].id > maxID)
+                maxID = rows[i].id;
+            if (rows[i].col1 > maxN)
+                maxN = rows[i].col1;
+            if (rows[i].col3 > maxFoglietto)
+                maxFoglietto = rows[i].col3;
+            if (rows[i].col4 > maxFoglietto)
+                maxFoglietto = rows[i].col4;
+        }
 
+        maxFoglietto = Math.ceil((maxFoglietto + 1) / NUMFOGLI) * NUMFOGLI;
         const handleClick = () => {
+
+            console.log(maxID, maxN)
             setRows((oldRows) => [
                 ...oldRows,
-                { id: maxID.id+1, col1: maxN.col1, col2: '', col3: '', isNew: true },
+                { id: maxID + 1, col1: maxN + 1, col2: '', col3: maxFoglietto, col4: maxFoglietto + NUMFOGLI - 1, isNew: true },
             ]);
             setRowModesModel((oldModel) => ({
                 ...oldModel,
-                [maxID.id+1]: { mode: GridRowModes.Edit, fieldToFocus: 'col1' },
+                [maxID + 1]: { mode: GridRowModes.Edit, fieldToFocus: 'col2' },
             }));
         };
 
@@ -220,11 +228,11 @@ export default function Cucina() {
         const updatedRow = { ...newRow, isNew: false };
         setRows(rows.map((row) => (row.id === newRow.id ? { ...row, col2: newRow.col2 } : row)));
         if (newRow.isNew == false) {
-            updateCamerieri([{id:newRow.id,nome:newRow.col2,foglietto_start:newRow.col3,foglietto_end:newRow.col4}])
+            updateCamerieri([{ id: newRow.id, nome: newRow.col2, foglietto_start: newRow.col3, foglietto_end: newRow.col4 }])
         } else {
-            addCamerieri(newRow.col2,newRow.col3,newRow.col4);
+            addCamerieri(newRow.col2, newRow.col3, newRow.col4);
         }
-        
+
         return updatedRow;
     };
 
@@ -276,6 +284,11 @@ export default function Cucina() {
                                 }}
                                 slotProps={{
                                     toolbar: { setRows, setRowModesModel },
+                                }}
+                                initialState={{
+                                    sorting: {
+                                        sortModel: [{ field: 'col1', sort: 'desc' }],
+                                    },
                                 }}
 
                             />
