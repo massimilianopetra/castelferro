@@ -5,14 +5,15 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import { Button } from '@mui/material';
+import { Button, ButtonGroup } from '@mui/material';
 
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RemoveCircleSharpIcon from '@mui/icons-material/RemoveCircleSharp';
+import EditIcon from '@mui/icons-material/Edit';
 
 import type { DbConsumazioni } from '@/app/lib/definitions';
 
-export default function TabellaCucina({ item, onAdd, onRemove }: { item: DbConsumazioni[], onAdd: (id: number) => void, onRemove: (id: number) => void }) {
+export default function TabellaCucina({ item, onAdd, onRemove, onSet }: { item: DbConsumazioni[], onAdd: (id: number) => void, onRemove: (id: number) => void, onSet: (id: number) => void }) {
     return (
         <div>
             <TableContainer component={Paper}>
@@ -21,21 +22,29 @@ export default function TabellaCucina({ item, onAdd, onRemove }: { item: DbConsu
                         <TableRow className=" text-blue-800 rounded-lg bg-gray-100 font-extralight text-end">
                             <TableCell className=" text-2xl " align="left"><p>Piatto</p></TableCell>
                             <TableCell className=" text-2xl " align="left"><p>Quantità</p></TableCell>
+                            <TableCell className=" text-2xl " align="left"><p></p></TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {item.map((row) => ( 
-                            <TableRow className="hover:bg-yellow-100" sx={{
+                            <TableRow className="hover:bg-yellow-200" sx={{
                                 backgroundColor: row.quantita > 0 ? "rgba(144, 238, 144, 0.3)" : "white",
                             }}>
                                 <TableCell align="left">
-                                    <span className="text-3xl font-normal">{row.alias}</span>
+                                    <span className="text-3xl font-normal">{row.alias}ss</span>
                                 </TableCell>
-                                <TableCell align="left">
+                                <TableCell align="left" >
                                     <span className="text-3xl font-bold">{row.quantita}</span> &nbsp;&nbsp;&nbsp;&nbsp;
+                                </TableCell>
+                                <TableCell align="left" >
+                                    <ButtonGroup >
                                     <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
-                                    &nbsp;&nbsp;&nbsp;&nbsp;
                                     <Button onClick={() => onAdd(row.id_piatto)} size="large" variant="contained" startIcon={<AddCircleIcon />} />
+                                    </ButtonGroup>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;
+                                 <ButtonGroup >
+                                    <Button onClick={() => onSet(row.id_piatto)} size="medium" variant="outlined" color="secondary" startIcon={<EditIcon />} />
+                                    </ButtonGroup>
                                 </TableCell>
                             </TableRow>
                         ))}

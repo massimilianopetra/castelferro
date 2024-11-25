@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation';
-import { Button, ButtonGroup, Link, Snackbar, TextField } from '@mui/material';
+import { Button, ButtonGroup, Link, Paper, Snackbar, TextField } from '@mui/material';
 import type { DbConsumazioniPrezzo, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
 import { getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto, aggiornaConto, stampaConto, riapriConto, apriConto, getContoPiuAlto } from '@/app/lib/actions';
 import { writeLog, getGiornoSagra, getLastLog } from '@/app/lib/actions';
@@ -31,6 +31,9 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   const [lastLog, setLastLog] = useState<DbLog[]>([]);
   const { data: session } = useSession();
   const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
+  const [nuovaquantitaValue, setQuantitaValue] = useState('');
+  const [idmodificaquantitaValue, setIdModQuantita] = useState(1);
+  const [piattomodificaquantitaValue, setPiattoModQuantita] = useState("non definito");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -133,6 +136,24 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   const handleButtonClickCaricaConto1 = async () => {
     carica(1);
   };
+
+  const handleModificaQuantita = async () => {
+
+    const newProducts = products.map((item) => {
+        if (item.id_piatto == idmodificaquantitaValue) {
+            console.log(item);
+            return ({ ...item, quantita: Number(nuovaquantitaValue)});
+        }
+        else
+            return (item);
+    });
+    setProducts(newProducts);
+    setPhase('aperto');
+  };
+
+const handleAnnulla = async () => {
+    setPhase('aperto');
+  }
 
   const handleAggiorna = async () => {
     console.log(`Aggiornamento n. foglietto: ${numeroFoglietto}`);
@@ -282,6 +303,17 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     setPhase('stampato');
   }
 
+  const handleSet = (id: number) => {
+    setIdModQuantita (Number(id));
+
+    const newProducts = products.map((item) => {
+        if (item.id_piatto == id) {
+            setPiattoModQuantita ( item.piatto);
+            setQuantitaValue(item.quantita+"");
+        }
+    });     
+    setPhase('modificaquantita');
+};
 
   const handleAdd = (id: number) => {
     const newProducts = products.map((item) => {
@@ -467,6 +499,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   item={products}
                   onAdd={handleAdd}
                   onRemove={handleRemove}
+                  onSet={handleSet}
                 />
               </div>
               <div className="z-0 text-2xl font-extralight text-end">
@@ -533,7 +566,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 </div>
               }
               <div>
-                <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
+                <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet}/>
               </div>
               <div className="z-0 xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
                 <p >
@@ -593,7 +626,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               <br />
 
               <div>
-                <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} />
+                <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet}/>
               </div>
               <div className="z-0 xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
                 <p >
@@ -643,6 +676,36 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             </main>
           </>
         );
+        case 'modificaquantita':
+          return (
+              <div className="flex items-center justify-center min-h-screen rounded">
+                <div className="w-[600px] p-4  space-y-4 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded">
+                  <p className="text-xl py-1 rounded">
+                  Per il conto numero: <span className="font-extrabold text-blue-800">{conto?.id_comanda} </span>
+                  inserisci la quantità di porzioni per il piatto: <span className="font-extrabold text-blue-800">{piattomodificaquantitaValue} 
+                  </span>
+                  </p>
+                  <TextField  
+                    label="Modifica quantità"
+                    variant="outlined"
+                    value={nuovaquantitaValue}
+                    onChange={(e) => setQuantitaValue(e.target.value)}
+                    type="number"
+                    size="medium"
+                    fullWidth
+                  />
+  
+                  <div className="flex justify-center space-x-4">
+                    <Button size="small" variant="contained" color="primary" onClick={handleModificaQuantita}>
+                      Salva e chiudi
+                    </Button>
+                    <Button size="small" variant="contained" color="primary" onClick={handleAnnulla}>
+                      Annulla
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            );
       case 'none':
         return (
           <>

@@ -10,6 +10,8 @@ import TabellaCucina from '@/app/ui/dashboard/TabellaCucina';
 import CircularProgress from '@mui/material/CircularProgress';
 import Filter1Icon from '@mui/icons-material/Filter1';
 import { deltanow } from '@/app/lib/utils';
+import { number } from 'zod';
+import { useItemHighlighted } from '@mui/x-charts';
 
 
 
@@ -25,6 +27,9 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     const { data: session } = useSession();
     const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
     const [conto, setConto] = useState<DbConti>();
+    const [nuovaquantitaValue, setQuantitaValue] = useState('');
+    const [idmodificaquantitaValue, setIdModQuantita] = useState(1);
+    const [piattomodificaquantitaValue, setPiattoModQuantita] = useState("non definito");
 
 
     useEffect(() => {
@@ -166,6 +171,36 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     } 
 ;
 
+const handleModificaQuantita = async () => {
+
+    const newProducts = products.map((item) => {
+        if (item.id_piatto == idmodificaquantitaValue) {
+            console.log(item);
+            return ({ ...item, quantita: Number(nuovaquantitaValue)});
+        }
+        else
+            return (item);
+    });
+    setProducts(newProducts);
+    setPhase('caricato');
+  };
+
+const handleAnnulla = async () => {
+    setPhase('caricato');
+  }
+
+    const handleSet = (id: number) => {
+        setIdModQuantita (Number(id));
+
+        const newProducts = products.map((item) => {
+            if (item.id_piatto == id) {
+                setPiattoModQuantita ( item.piatto);
+                setQuantitaValue(item.quantita+"");
+            }
+        });     
+        setPhase('modificaquantita');
+    };
+
     const handleAdd = (id: number) => {
         const newProducts = products.map((item) => {
             if (item.id_piatto == id) {
@@ -240,7 +275,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                     Conto: <span className= "font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                             </div>
-                            <TabellaCucina item={products} onAdd={handleAdd} onRemove={handleRemove} />
+                            <TabellaCucina item={products} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
                             <div className="z-0 text-3xl font-extralight text-end">
                                 <p >
                                     Conto: <span className= "font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
@@ -291,7 +326,37 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                         </div>
                     </>
                 );
+                case 'modificaquantita':
+                    return (
+                        <div className="flex items-center justify-center min-h-screen rounded">
+                          <div className="w-[600px] p-4  space-y-4 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded">
+                            <p className="text-xl py-1 rounded">
+                            Per il conto numero: <span className="font-extrabold text-blue-800">{conto?.id_comanda} </span>
+                            inserisci la quantità di porzioni per il piatto: <span className="font-extrabold text-blue-800">{piattomodificaquantitaValue} 
+                            </span>
+                            </p>
+                            <TextField  
+                              label="Modifica quantità"
+                              variant="outlined"
+                              value={nuovaquantitaValue}
+                              onChange={(e) => setQuantitaValue(e.target.value)}
+                              type="number"
+                              size="medium"
+                              fullWidth
+                            />
+                            <div className="flex justify-center space-x-4">
+                              <Button size="small" variant="contained" color="primary" onClick={handleModificaQuantita}>
+                                Salva e chiudi
+                              </Button>
+                              <Button size="small" variant="contained" color="primary" onClick={handleAnnulla}>
+                                Annulla
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      );
             default:
+
                 return null;
         }
     };
