@@ -7,7 +7,7 @@ export function today(): string {
 }
 
 export function milltodatestring(dtmillis: number | undefined): string {
-    console.log(dtmillis);
+   // console.log(dtmillis);
     if (dtmillis){
         let stringa = new Date(+dtmillis).toLocaleString()  
         return  stringa;

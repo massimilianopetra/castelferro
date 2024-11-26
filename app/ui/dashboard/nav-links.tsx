@@ -1,7 +1,6 @@
 'use client';
 
 import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
-import { LockOpenIcon } from '@heroicons/react/20/solid';
 import AccessibilityIcon from '@mui/icons-material/Accessibility';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
@@ -15,6 +14,7 @@ import SportsBarIcon from '@mui/icons-material/SportsBar';
 import DinnerDiningIcon from '@mui/icons-material/DinnerDining';
 import RestaurantOutlinedIcon from '@mui/icons-material/RestaurantOutlined';
 import KebabDiningOutlinedIcon from '@mui/icons-material/KebabDiningOutlined';
+import { LockOpenIcon, ShoppingCartIcon } from '@heroicons/react/20/solid';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -35,7 +35,7 @@ export default function NavLinks() {
       links = [
         { name: 'Gestione', href: '/dashboard/gestione', icon: SettingsIcon },
         { name: 'Casse', href: '/dashboard/casse', icon: EuroIcon },
-        { name: 'Verifica conti (aperti e chiusi)', href: '/dashboard/listaconti', icon: CheckCircleOutlineIcon },
+        { name: 'Incassa Conti', href: '/dashboard/chiudiconti', icon: ShoppingCartIcon  },
         { name: 'Configura Menu', href: '/dashboard/menus', icon: WrenchScrewdriverIcon },
         { name: 'Gestione Camerieri', href: '/dashboard/camerieri', icon: AccessibilityIcon },
        ];

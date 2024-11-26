@@ -1,7 +1,7 @@
 'use client';
 
 import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
-import { LockOpenIcon } from '@heroicons/react/20/solid';
+import { LockOpenIcon, ShoppingCartIcon } from '@heroicons/react/20/solid';
 import AccessibilityIcon from '@mui/icons-material/Accessibility';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import AutoStoriesIcon from '@mui/icons-material/AutoStories';
@@ -43,7 +43,8 @@ export default function DashboardLinks() {
   switch (session?.user?.name) {
     case 'Casse':
       links = [
-        { name: 'Apertura-Chiusura Giornata Sagra', href: '/dashboard/sagra', icon: LockOpenIcon },       
+        { name: 'Apertura-Chiusura Giornata Sagra', href: '/dashboard/sagra', icon: LockOpenIcon }, 
+        { name: 'Verifica conti (aperti e chiusi)', href: '/dashboard/listaconti', icon: CheckCircleOutlineIcon },      
         { name: 'Logs', href: '/dashboard/logs', icon: AutoStoriesIcon },
         { name: 'Cruscotto di sintesi', href: '/dashboard/cruscotto', icon: EuroIcon },
         { name: 'Cruscotto di sintesi: conti omaggio', href: '/dashboard/cruscottogratis', icon: CardGiftcardIcon },
@@ -59,6 +60,7 @@ export default function DashboardLinks() {
         { name: 'Cruscotto di sintesi', href: '/dashboard/cruscotto', icon: EuroIcon },
         { name: 'Cruscotto di sintesi: conti omaggio', href: '/dashboard/cruscottogratis', icon: CardGiftcardIcon },
         { name: 'Logs', href: '/dashboard/logs', icon: AutoStoriesIcon },
+        { name: 'Incassa Conti', href: '/dashboard/chiudiconti', icon: ShoppingCartIcon  },
       ];
       break;
     case 'Antipasti':

@@ -56,6 +56,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           setProducts(c);
           setIniProducts(c);
         }
+        
         // console.log('----------');
         // console.log(`estrazione conto ${num} giornata: ${gg.giornata}`);
         const cc = await getConto(num, gg.giornata);
