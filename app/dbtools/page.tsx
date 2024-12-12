@@ -1,10 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react'
 import { Button, Typography, Box, FormControl, InputLabel, Select, MenuItem } from "@mui/material";
 import CircularProgress from '@mui/material/CircularProgress';
-import { doQuery, doTruncate, doDrop, listTables, seedDatabase } from '@/app/lib/actions';
+import { doSelect, doTruncate, doDrop, listTables, seedDatabase } from '@/app/lib/actions';
 import { useRouter } from 'next/navigation';
 import { GridColDef, GridToolbar, DataGrid } from '@mui/x-data-grid';
 
@@ -20,7 +19,6 @@ export default function Page() {
     const [result, setResult] = useState<any>(null);
     const [options, setOptions] = useState<string[]>([]);
     const [selectedTable, setSelectedTable] = useState('');
-    const { data: session } = useSession();
     const router = useRouter();
 
     useEffect(() => {
@@ -40,7 +38,7 @@ export default function Page() {
     const handleQuery = async () => {
         setPhase('caricamento');
         if (selectedTable) {
-            const query = await doQuery(selectedTable);
+            const query = await doSelect(selectedTable);
             setResult(query);
             console.log(query);
             setPhase('caricato');
@@ -155,7 +153,7 @@ export default function Page() {
                                         slots={{ toolbar: GridToolbar }}
                                         initialState={{
                                             density: 'compact',
-                                          }}
+                                        }}
                                     />
                                 </Box>
                             )}
@@ -171,25 +169,12 @@ export default function Page() {
         }
     }
 
-    if ((session?.user?.name == "SuperUser")) {
-        return (
-            <main>
-                {renderPhaseContent()}
-            </main>
 
-        );
-    } else {
-        return (
-            <main>
-                <div className="flex flex-wrap flex-col">
-                    <div className='text-center '>
-                        <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
-                            <span className="text-xl font-semibold">Danger alert!</span> Utente non autorizzato.
-                        </div>
-                    </div>
-                </div>
-            </main>
+    return (
+        <main>
+            {renderPhaseContent()}
+        </main>
 
-        )
-    }
+    );
+
 }

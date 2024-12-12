@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import { db } from '@vercel/postgres';
+import { db } from '@/app/lib/db';
 import { users, waiters } from '../lib/placeholder-data';
 import { menu } from '../lib/placeholder-data';
 
