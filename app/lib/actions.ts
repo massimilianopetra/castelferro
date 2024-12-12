@@ -369,10 +369,12 @@ export async function getConsumazioniCassa(comanda: number = -1, giornata: numbe
       if (comanda != -1) {
         console.log(`Richiesta comanda n. ${comanda}`)
         // Ricerca consumazioni esistenti con codice comanda
-        const cosumazioni_tavolo = await sql<DbConsumazioni>`SELECT * FROM consumazioni  WHERE id_comanda = ${comanda} AND giorno = ${giornata}`;
+        const cosumazioni_tavolo = await executeQuery<DbConsumazioni>(`SELECT * FROM consumazioni  WHERE id_comanda = ${comanda} AND giorno = ${giornata}`);
         // Fonde consumazioni esistenti con lista piatti menu della cucina
-        const consumazioni = consumazioni_menu.map(t1 => ({ ...t1, ...cosumazioni_tavolo.rows.find(t2 => t2.id_piatto === t1.id_piatto) }));
-        return consumazioni;
+        if (cosumazioni_tavolo) {
+          const consumazioni = consumazioni_menu.map(t1 => ({ ...t1, ...cosumazioni_tavolo.find(t2 => t2.id_piatto === t1.id_piatto) }));
+          return consumazioni;
+        }
       }
 
       return consumazioni_menu;
@@ -639,7 +641,7 @@ export async function apriConto(foglietto: number, giorno: number, cameriere: st
 
   const current = await executeQuery<DbConti>(`SELECT * FROM conti  WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`);
 
-  if (current && current?.length > 0 ) {
+  if (current && current?.length > 0) {
     console.log(`Il conto foglietto n. ${foglietto} giorno n. ${giorno} risulta paerto in data: ${current[0].data_apertura}`);
   } else {
     console.log(`Inserimento conto foglietto n. ${foglietto} giorno n. ${giorno}`);
