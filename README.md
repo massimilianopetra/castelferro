@@ -2,5 +2,6 @@
 
 Pagina del portale della sagra del Salamino d'Asino di Castelferro
 
-// TODO  *
+# Docker image build
+docker build -t castelferro:v1 .
 

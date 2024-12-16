@@ -1,21 +1,16 @@
-version: "3.7"
-
+version: '3.9'
 services:
-  dev:
-    build:
-      context: .
-      dockerfile: Dockerfile.dev
-    container_name: castelferro-nextjs-dev
-    environment:
-      - WATCHPACK_POLLING=true
-    volumes:
-      - /app/node_modules
-      - /app/.next
+  castelferro:
+    image: castelferro:v1
+    container_name: castelferro-dev
+
     ports:
       - "3000:3000"
-    env_file:
-      - .env
 
+    networks:
+      - pg-network
 
-volumes:
-  node_modules:
+ 
+networks:
+  pg-network:
+    driver: bridge
