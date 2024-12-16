@@ -1,0 +1,21 @@
+version: "3.7"
+
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: castelferro-nextjs-dev
+    environment:
+      - WATCHPACK_POLLING=true
+    volumes:
+      - /app/node_modules
+      - /app/.next
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+
+
+volumes:
+  node_modules:
