@@ -346,6 +346,18 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     setPhase('modificato');
     setProducts(newProducts);
   };
+  const handleAdd10 = (id: number) => {
+    const newProducts = products.map((item) => {
+      if (item.id_piatto == id) {
+        console.log(item);
+        return ({ ...item, quantita: item.quantita + 10, cucina: "Casse" });
+      }
+      else
+        return (item);
+    });
+    setPhase('modificato');
+    setProducts(newProducts);
+  };
 
   const handleRemove = (id: number) => {
     const newProducts = products.map((item) => {
@@ -623,6 +635,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             <TabellaConto
               item={products}
               onAdd={handleAdd}
+              onAdd10={handleAdd10}
+              
               onRemove={handleRemove}
               onSet={handleSet}
             />
@@ -744,7 +758,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 </div>
               }
               <div>
-                <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
+                <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
               </div>
               <div className="z-0 xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
                 <p >
@@ -861,7 +875,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               <br />
 
               <div>
-                <TabellaConto item={products} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
+                <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
               </div>
               <div className="z-0 xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
                 <p >
@@ -1086,7 +1100,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     } else {
       return (
         <main>
-          <Box sx={{ flexGrow: 1 }}>
+          <Box sx={{ flexGrow: 1 }} >
             <Grid container spacing={2}>
               <Grid
                 container
@@ -1096,8 +1110,9 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 sx={{ fontSize: '12px' }}
                 size={12}
               >
-                <Grid sx={{ order: { xs: 2, sm: 1 } }}>
-                  {/*<Item>*/}          <div className="z-0 xl:text-3xl xl:py-1 font-extralight lg:text-base">
+                <Grid sx={{ order: { xs: 1, sm: 2 } }}>
+                  {/*<Item>*/}          
+                  <div className="z-0 xl:text-3xl xl:py-1 font-extralight lg:text-base">
                     <p className='text-start'>Ultimi: &nbsp;
                       {lastLog.map((row) => (
                         <>
