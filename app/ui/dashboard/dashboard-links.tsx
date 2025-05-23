@@ -48,6 +48,7 @@ export default function DashboardLinks() {
         { name: 'Logs', href: '/dashboard/logs', icon: AutoStoriesIcon },
         { name: 'Cruscotto di sintesi', href: '/dashboard/cruscotto', icon: EuroIcon },
         { name: 'Cruscotto di sintesi: conti omaggio', href: '/dashboard/cruscottogratis', icon: CardGiftcardIcon },
+        { name: 'Cruscotto di sintesi piatti', href: '/dashboard/cruscottopiatti', icon: CardGiftcardIcon },
       
       ];
       break;
@@ -61,6 +62,7 @@ export default function DashboardLinks() {
         { name: 'Cruscotto di sintesi: conti omaggio', href: '/dashboard/cruscottogratis', icon: CardGiftcardIcon },
         { name: 'Logs', href: '/dashboard/logs', icon: AutoStoriesIcon },
         { name: 'Incassa Conti', href: '/dashboard/chiudiconti', icon: ShoppingCartIcon  },
+        { name: 'Cruscotto di sintesi piatti', href: '/dashboard/cruscottopiatti', icon: CardGiftcardIcon },
       ];
       break;
     case 'Antipasti':

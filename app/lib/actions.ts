@@ -2,7 +2,7 @@
 
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
-import type { DbMenu, DbConsumazioniPrezzo, DbConsumazioni, DbFiera, DbConti, DbCamerieri, DbLog, DbUser } from '@/app/lib/definitions';
+import type { DbMenu, DbConsumazioniPrezzo, DbConsumazioni, DbFiera, DbConti, DbCamerieri, DbLog, DbUser, DbSintesiPiatti } from '@/app/lib/definitions';
 import { sql } from '@vercel/postgres';
 import { Pool } from 'pg';
 import { date } from 'zod';
@@ -507,6 +507,43 @@ export async function addCamerieri(nome: string, foglietto_start: number, foglie
 export async function listTables(): Promise<any[] | undefined> {
   const result = await executeQuery(`SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'`);
   return result;
+}
+
+export async function getListaSintesiPiatti(giorno: number): Promise<DbSintesiPiatti[] | undefined> {
+  try {
+    console.log(`Get Lista SintesiPiatti giorno ${giorno}`);
+
+
+    const c = await executeQuery<DbSintesiPiatti>(`SELECT  DISTINCT m.id,m.alias
+              FROM menus m
+              JOIN consumazioni c ON m.id = c.id_piatto AND c.giorno = ${giorno} AND c.quantita > 0;`);
+    if (c)
+      console.log(c);
+    return (c)
+  } catch (error) {
+    return (undefined);
+  }
+
+  return (undefined);
+}
+
+export async function getSintesiPiatti(id: number, giorno: number): Promise<number | undefined> {
+  try {
+    console.log(`Get Sum SintesiPiatti giorno ${giorno}`);
+
+    const c = await executeQuery<{ sum: string }>(`SELECT  SUM(c.quantita) 
+              FROM consumazioni c WHERE c.id_piatto = ${id} AND c.giorno = ${giorno} AND c.quantita > 0;`);
+
+    if (c && c.length > 0) {
+      const totalQuantita = Number(c[0]?.sum) || 0;
+      return (totalQuantita)
+    }
+    return 0
+  } catch (error) {
+    console.log("undefined");
+    return (undefined);
+  }
+
 }
 
 export async function doSelect(tableName: string): Promise<any[] | undefined> {

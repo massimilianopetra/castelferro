@@ -43,6 +43,11 @@ export type DbConsumazioniPrezzo =   {
   alias: string;
 };
 
+export type DbSintesiPiatti =   {
+  id: number;
+  alias: string;
+};
+
 export type DbConti =   {
   id: number;
   id_comanda: number;
