@@ -4,6 +4,7 @@ RUN npm i -g pnpm
 COPY package.json pnpm-lock.yaml ./
 
 RUN pnpm install
+RUN npm rebuild bcrypt --build-from-source
 
 COPY . .
 
@@ -16,5 +17,8 @@ COPY --from=base /app/package.json ./package.json
 COPY --from=base /app .
 
 EXPOSE 3000
+EXPOSE 3001
 
 CMD ["pnpm", "dev"]
+
+
