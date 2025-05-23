@@ -10,10 +10,11 @@ import { Button, ButtonGroup } from '@mui/material';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RemoveCircleSharpIcon from '@mui/icons-material/RemoveCircleSharp';
 import EditIcon from '@mui/icons-material/Edit';
+import Replay10Icon from '@mui/icons-material/Replay10';
 
 import type { DbConsumazioniPrezzo } from '@/app/lib/definitions';
 
-export default function TabellaConto({ item, onAdd, onRemove, onSet  }: { item: DbConsumazioniPrezzo[], onAdd: (id: number) => void, onRemove: (id: number) => void, onSet: (id: number) => void }) {
+export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }: { item: DbConsumazioniPrezzo[],onAdd10: (id: number) => void, onAdd: (id: number) => void, onRemove: (id: number) => void, onSet: (id: number) => void }) {
 
     var totale = 0;
 
@@ -53,7 +54,11 @@ export default function TabellaConto({ item, onAdd, onRemove, onSet  }: { item: 
                                         <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
                                         <Button onClick={() => onAdd(row.id_piatto)} size="large" variant="contained" startIcon={<AddCircleIcon />} />
                                     </ButtonGroup>
-                                    &nbsp;&nbsp;&nbsp;&nbsp;
+                                    &nbsp;&nbsp;&nbsp;
+                                    <ButtonGroup >
+                                        <Button onClick={() => onAdd10(row.id_piatto)} size="medium" variant="contained" startIcon={<Replay10Icon />} />
+                                    </ButtonGroup>
+                                    &nbsp;&nbsp;&nbsp;
                                     <ButtonGroup >
                                         <Button onClick={() => onSet(row.id_piatto)} size="medium" variant="outlined" color="secondary" startIcon={<EditIcon />} />
                                     </ButtonGroup>

@@ -213,6 +213,18 @@ const handleAnnulla = async () => {
         setProducts(newProducts);
     };
 
+    const handleAdd10 = (id: number) => {
+        const newProducts = products.map((item) => {
+            if (item.id_piatto == id) {
+                console.log(item);
+                return ({ ...item, quantita: item.quantita + 10 });
+            }
+            else
+                return (item);
+        });
+        setProducts(newProducts);
+    };
+
     const handleRemove = (id: number) => {
         const newProducts = products.map((item) => {
             if (item.id_piatto == id) {
@@ -275,7 +287,7 @@ const handleAnnulla = async () => {
                                     Conto: <span className= "font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                                 </p>
                             </div>
-                            <TabellaCucina item={products} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
+                            <TabellaCucina item={products}  onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
                             <div className="z-0 text-3xl font-extralight text-end">
                                 <p >
                                     Conto: <span className= "font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>

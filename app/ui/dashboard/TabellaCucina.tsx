@@ -5,15 +5,16 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import { Button, ButtonGroup } from '@mui/material';
+import { Button, ButtonGroup} from '@mui/material';
 
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RemoveCircleSharpIcon from '@mui/icons-material/RemoveCircleSharp';
 import EditIcon from '@mui/icons-material/Edit';
+import Replay10Icon from '@mui/icons-material/Replay10';
 
 import type { DbConsumazioni } from '@/app/lib/definitions';
 
-export default function TabellaCucina({ item, onAdd, onRemove, onSet }: { item: DbConsumazioni[], onAdd: (id: number) => void, onRemove: (id: number) => void, onSet: (id: number) => void }) {
+export default function TabellaCucina({ item, onAdd10, onAdd, onRemove, onSet }: { item: DbConsumazioni[], onAdd10: (id: number) => void, onAdd: (id: number) => void, onRemove: (id: number) => void, onSet: (id: number) => void }) {
     return (
         <div>
             <TableContainer component={Paper}>
@@ -38,12 +39,16 @@ export default function TabellaCucina({ item, onAdd, onRemove, onSet }: { item: 
                                 </TableCell>
                                 <TableCell align="left" >
                                     <ButtonGroup >
-                                    <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
-                                    <Button onClick={() => onAdd(row.id_piatto)} size="large" variant="contained" startIcon={<AddCircleIcon />} />
+                                        <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
+                                        <Button onClick={() => onAdd(row.id_piatto)} size="large" variant="contained" startIcon={<AddCircleIcon />} />
                                     </ButtonGroup>
-                                    &nbsp;&nbsp;&nbsp;&nbsp;
-                                 <ButtonGroup >
-                                    <Button onClick={() => onSet(row.id_piatto)} size="medium" variant="outlined" color="secondary" startIcon={<EditIcon />} />
+                                    &nbsp;&nbsp;&nbsp;
+                                    <ButtonGroup >
+                                        <Button onClick={() => onAdd10(row.id_piatto)} size="medium" variant="contained" startIcon={<Replay10Icon />} />
+                                    </ButtonGroup>
+                                    &nbsp;&nbsp;&nbsp;
+                                    <ButtonGroup >
+                                        <Button onClick={() => onSet(row.id_piatto)} size="medium" variant="outlined" color="secondary" startIcon={<EditIcon />} />
                                     </ButtonGroup>
                                 </TableCell>
                             </TableRow>
