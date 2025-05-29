@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
 import { getListaCamerieri, updateCamerieri, addCamerieri, delCamerieri } from '@/app/lib/actions';
-import type { DbCamerieri } from '@/app/lib/definitions';
 
 
 import CircularProgress from '@mui/material/CircularProgress';
@@ -27,7 +26,6 @@ import {
     GridRowModel,
     GridRowEditStopReasons,
     GridSlots,
-    GridToolbar,
 } from '@mui/x-data-grid';
 
 export default function Camerieri() {
@@ -150,6 +148,7 @@ export default function Camerieri() {
     }
 
     function EditToolbar(props: EditToolbarProps) {
+        console.log("Edit tool bar");
         const { setRows, setRowModesModel } = props;
 
         var maxID = 0;
@@ -221,10 +220,44 @@ export default function Camerieri() {
         }
     };
 
+    const validateRange = (newRow: GridRowModel) => {
+        const newStart = Number(newRow.col3);
+        const newEnd = Number(newRow.col4);
+        
+        // Verifica che start <= end
+        if (newStart > newEnd) {
+            return { valid: false, message: "Il primo foglietto deve essere minore o uguale all'ultimo" };
+        }
+        
+        // Verifica che il range non intersechi altri range esistenti
+        for (const row of rows) {
+            if (row.id !== newRow.id) { // Ignora la riga corrente se è una modifica
+                const existingStart = Number(row.col3);
+                const existingEnd = Number(row.col4);
+                
+                if ((newStart >= existingStart && newStart <= existingEnd) ||
+                    (newEnd >= existingStart && newEnd <= existingEnd) ||
+                    (newStart <= existingStart && newEnd >= existingEnd)) {
+                    return { 
+                        valid: false, 
+                        message: `Il range si interseca con ${row.col2} (${existingStart}-${existingEnd})` 
+                    };
+                }
+            }
+        }
+        
+        return { valid: true };
+    };
+
     const processRowUpdate = (newRow: GridRowModel) => {
         console.log('*********************');
         console.log(newRow);
         console.log('*********************');
+        const validation = validateRange(newRow);
+        if (!validation.valid) {
+            alert(validation.message); // Puoi usare un modal più elegante se preferisci
+            throw new Error(validation.message); // Questo previene il salvataggio
+        }
         const updatedRow = { ...newRow, isNew: false };
         setRows(rows.map((row) => (row.id === newRow.id ? { ...row, col2: newRow.col2 } : row)));
         if (newRow.isNew == false) {
