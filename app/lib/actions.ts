@@ -511,34 +511,70 @@ export async function listTables(): Promise<any[] | undefined> {
 
 export async function getListaSintesiPiatti(giorno: number): Promise<DbSintesiPiatti[] | undefined> {
   try {
-    console.log(`Get Lista SintesiPiatti giorno ${giorno}`);
+    console.log(`getListaSintesiPiatti giorno ${giorno}`);
 
 
-    const c = await executeQuery<DbSintesiPiatti>(`SELECT  DISTINCT m.id,m.alias
+    const c = await executeQuery<DbSintesiPiatti>(`SELECT  DISTINCT m.id,m.prezzo,m.alias
               FROM menus m
               JOIN consumazioni c ON m.id = c.id_piatto AND c.giorno = ${giorno} AND c.quantita > 0;`);
     if (c)
       console.log(c);
     return (c)
   } catch (error) {
+    console.log("getListaSintesiPiatti: QUQERY ERROR")
     return (undefined);
   }
-
-  return (undefined);
 }
 
-export async function getSintesiPiatti(id: number, giorno: number): Promise<number | undefined> {
+export async function getSintesiPiatti(id: number, giorno: number): Promise<{
+  ordinati: number,
+  stampati: number,
+  aperto: number,
+  pagatocontanti: number,
+  pagatopos: number,
+  pagatoaltro: number
+} | undefined> {
   try {
-    console.log(`Get Sum SintesiPiatti giorno ${giorno}`);
+    console.log(`getSintesiPiatti giorno ${giorno}`);
 
-    const c = await executeQuery<{ sum: string }>(`SELECT  SUM(c.quantita) 
-              FROM consumazioni c WHERE c.id_piatto = ${id} AND c.giorno = ${giorno} AND c.quantita > 0;`);
+    const ordinatiResult = await executeQuery<{ sum: string }>(`
+  SELECT SUM(c.quantita) 
+  FROM consumazioni c 
+  WHERE c.id_piatto = ${id} 
+    AND c.giorno = ${giorno} 
+    AND c.quantita > 0;
+`);
 
-    if (c && c.length > 0) {
-      const totalQuantita = Number(c[0]?.sum) || 0;
-      return (totalQuantita)
-    }
-    return 0
+    const result = await executeQuery<{
+      ordinati: string;
+      stampati: string;
+      aperti: string;
+      pagatocontanti: string;
+      pagatopos: string;
+      pagatoaltro: string;
+    }>(`
+  SELECT 
+    SUM(CASE WHEN c.quantita > 0 THEN c.quantita ELSE 0 END) AS ordinati,
+    SUM(CASE WHEN c.quantita > 0 AND s.stato = 'STAMPATO' THEN c.quantita ELSE 0 END) AS stampati,
+    SUM(CASE WHEN c.quantita > 0 AND s.stato = 'APERTO' THEN c.quantita ELSE 0 END) AS aperti,
+    SUM(CASE WHEN c.quantita > 0 AND s.stato = 'CHIUSO' THEN c.quantita ELSE 0 END) AS pagatocontanti,
+    SUM(CASE WHEN c.quantita > 0 AND s.stato = 'CHIUSOPOS' THEN c.quantita ELSE 0 END) AS pagatopos,
+    SUM(CASE WHEN c.quantita > 0 AND s.stato = 'CHIUSOALTRO' THEN c.quantita ELSE 0 END) AS pagatoaltro
+  FROM consumazioni c
+  JOIN conti s ON c.id_comanda = s.id_comanda
+  WHERE c.id_piatto = ${id}
+    AND c.giorno = ${giorno}
+    AND c.quantita > 0;
+`);
+
+    return {
+      ordinati: Number(result?.[0]?.ordinati || 0),
+      stampati: Number(result?.[0]?.stampati || 0),
+      aperto: Number(result?.[0]?.aperti || 0),
+      pagatocontanti: Number(result?.[0]?.pagatocontanti || 0),
+      pagatopos: Number(result?.[0]?.pagatopos || 0),
+      pagatoaltro: Number(result?.[0]?.pagatoaltro || 0),
+    };
   } catch (error) {
     console.log("undefined");
     return (undefined);

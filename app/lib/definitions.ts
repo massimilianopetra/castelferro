@@ -45,6 +45,7 @@ export type DbConsumazioniPrezzo =   {
 
 export type DbSintesiPiatti =   {
   id: number;
+  prezzo: number;
   alias: string;
 };
 

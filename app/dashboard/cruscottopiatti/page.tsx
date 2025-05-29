@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
 import CircularProgress from '@mui/material/CircularProgress';
-import { getListaSintesiPiatti, getSintesiPiatti } from '@/app/lib/actions';
+import { getListaSintesiPiatti, getSintesiPiatti, getGiornoSagra } from '@/app/lib/actions';
 import * as React from 'react';
 import { styled } from '@mui/material/styles';
 import Table from '@mui/material/Table';
@@ -13,15 +13,15 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
-import { DbSintesiPiatti } from '@/app/lib/definitions';
+import { DbSintesiPiatti, DbFiera } from '@/app/lib/definitions';
 import { FormControl, InputLabel, Select, MenuItem, SelectChangeEvent, Box, Typography } from '@mui/material';
 
 export default function Page() {
 
   const [phase, setPhase] = useState('iniziale');
+  const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
   const [record, setRecord] = useState<RecordElencoPiatti[]>([]);
-  const [selectPiatto, setSelectPiatto] = useState<string>('');
-  const [selectPiattoId, setSelectPiattoId] = useState<number>(-1);
+  const [selectPiatto, setSelectPiatto] = useState<DbSintesiPiatti>();
   const [elencoPaitti, setElencoPiatti] = useState<DbSintesiPiatti[]>([]);
 
   const { data: session } = useSession();
@@ -50,17 +50,13 @@ export default function Page() {
 
   type RecordElencoPiatti = {
     piatto: string;
-    costo_piatto: number;
-    ordinati_paganti: number;
-    dicui_stampati: number;
-    dicui_pagati: number;
-    dicui_dapagare: number;
-    dicui_pagaticontanti: number;
-    dicui_pagatipos: number;
-    dicui_pagatialtro: number;
-    dicui_dapagarecontanti: number;
-    dicui_dapagareipos: number;
-    dicui_dapagarealtro: number;
+    prezzo: number;
+    ordinati: number;
+    aperti: number;
+    stampati: number;
+    pagaticontanti: number;
+    pagatipos: number;
+    pagatialtro: number;
   };
 
 
@@ -73,14 +69,21 @@ export default function Page() {
 
 
   const handleChange = (event: SelectChangeEvent<string>) => {
+    console.log(event.target.value);
     const selectedId = event.target.value;
-    setSelectPiatto(selectedId);
-    console.log(parseInt(selectedId,10),selectedId)
-    fetchDati(parseInt(selectedId,10));
+    const piattoTrovato = elencoPaitti.find(piatto => piatto.id === parseInt(selectedId, 10));
+    setSelectPiatto(piattoTrovato);
+    fetchDati(parseInt(selectedId, 10));
 
   };
 
   const fetchPiatti = async () => {
+
+    const gg = await getGiornoSagra();
+    if (gg) {
+      setSagra(gg);
+
+    }
 
     let piatti = await getListaSintesiPiatti(1);
 
@@ -93,25 +96,23 @@ export default function Page() {
   const fetchDati = async (id: number) => {
 
     console.log("FetcDati");
-    let rows: RecordElencoPiatti[] = [] ;
-    let op = await getSintesiPiatti(id, 1)
+    let rows: RecordElencoPiatti[] = [];
+    let op = await getSintesiPiatti(id, sagra.giornata)
+    const piattoTrovato = elencoPaitti.find(piatto => piatto.id === id);
+    console.log(piattoTrovato)
     if (op) {
-        rows = [{
-        piatto: selectPiatto,
-        costo_piatto: -1,
-        ordinati_paganti: op,
-        dicui_stampati: -1,
-        dicui_pagati: -1,
-        dicui_dapagare: -1,
-        dicui_pagaticontanti: -1,
-        dicui_pagatipos: -1,
-        dicui_pagatialtro: -1,
-        dicui_dapagarecontanti: -1,
-        dicui_dapagareipos: -1,
-        dicui_dapagarealtro: -1,
+      rows = [{
+        piatto: piattoTrovato ? piattoTrovato.alias : "",
+        prezzo: piattoTrovato ? piattoTrovato.prezzo : -1,
+        ordinati: op.ordinati,
+        aperti: op.aperto,
+        stampati: op.stampati,
+        pagaticontanti: op.pagatocontanti,
+        pagatipos: op.pagatopos,
+        pagatialtro: op.pagatoaltro,
       }]
     }
-
+    console.log(rows)
     setRecord(rows);
     setPhase('caricato');
   }
@@ -137,7 +138,7 @@ export default function Page() {
                 <FormControl fullWidth>
                   <InputLabel>Piatto</InputLabel>
                   <Select
-                    value={selectPiatto} // Qui salvi l'ID selezionato
+                    value={selectPiatto ? selectPiatto.id + "" : ""} // Qui salvi l'ID selezionato
                     onChange={handleChange}
                     label="Piatto"
                     sx={{ mt: 2 }}
@@ -180,16 +181,6 @@ export default function Page() {
       );
     } else if (phase == 'caricato') {
 
-      const sintesi_portata = record.map((row) => {
-        return ({
-          piatto: row.piatto,
-          costo: row.costo_piatto,
-          ordinati: row.ordinati_paganti,
-          stampati: row.dicui_stampati,
-          dapagare: row.dicui_dapagare
-        })
-      });
-      console.log(sintesi_portata);
 
       return (
         <main>
@@ -207,7 +198,7 @@ export default function Page() {
               <FormControl fullWidth>
                 <InputLabel>Piatto</InputLabel>
                 <Select
-                  value={selectPiatto} // Qui salvi l'ID selezionato
+                  value={selectPiatto ? selectPiatto.id + "" : ""} // Qui salvi l'ID selezionato
                   onChange={handleChange}
                   label="Piatto"
                   sx={{ mt: 2 }}
@@ -231,19 +222,24 @@ export default function Page() {
                     <StyledTableCell align="right" className="font-bold ">Piatto&nbsp;</StyledTableCell>
                     <StyledTableCell align="right" className="font-bold ">Costo&nbsp;</StyledTableCell>
                     <StyledTableCell align="right" className="font-bold ">Ordinati N.&nbsp;</StyledTableCell>
+                    <StyledTableCell align="right" className="font-bold ">Aperti N.&nbsp;</StyledTableCell>
                     <StyledTableCell align="right" className="font-bold ">Stampati N.&nbsp;</StyledTableCell>
-                    <StyledTableCell align="right" className="font-bold ">Da Pagare N.&nbsp;</StyledTableCell>
+                    <StyledTableCell align="right" className="font-bold ">Pagati Contanti N.&nbsp;</StyledTableCell>
+                    <StyledTableCell align="right" className="font-bold ">Pagati POS N.&nbsp;</StyledTableCell>
+                    <StyledTableCell align="right" className="font-bold ">Pagati Altro N.&nbsp;</StyledTableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {sintesi_portata.map((row) => (
+                  {record.map((row) => (
                     <StyledTableRow key={row.piatto}>
                       <StyledTableCell align="right">{row.piatto}</StyledTableCell>
-                      <StyledTableCell align="right">{row.costo}&euro;</StyledTableCell>
+                      <StyledTableCell align="right">{row.prezzo.toFixed(2)}&euro;</StyledTableCell>
                       <StyledTableCell align="right">{row.ordinati}</StyledTableCell>
+                      <StyledTableCell align="right">{row.aperti}</StyledTableCell>
                       <StyledTableCell align="right">{row.stampati}</StyledTableCell>
-                      <StyledTableCell align="right">{row.dapagare}</StyledTableCell>
-
+                      <StyledTableCell align="right">{row.pagaticontanti}</StyledTableCell>
+                      <StyledTableCell align="right">{row.pagatipos}</StyledTableCell>
+                      <StyledTableCell align="right">{row.pagatialtro}</StyledTableCell>
                     </StyledTableRow>
                   ))}
                 </TableBody>
