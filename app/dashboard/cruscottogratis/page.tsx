@@ -465,83 +465,38 @@ export default function Page() {
               >
                 <TableHead>
                   <TableRow>
-                    <StyledTableCell className="font-bold">
+                    <StyledTableCell>
                       GIORNATA
                     </StyledTableCell>
-                    <StyledTableCell align="right" className="font-bold ">
+                    <StyledTableCell align="right" >
                       Valore&nbsp;
                     </StyledTableCell>
-                    <StyledTableCell align="right" className="font-bold ">
-                      <CustomTextField
-                        className="p-2"
-                        id="filled-size-small"
-                        defaultValue={"Camerieri"}
-                      />
-                      <br></br>Foglietto 1&nbsp;
+                    <StyledTableCell align="right" >
+                      Foglietto 1&nbsp;
                     </StyledTableCell>
-                    <StyledTableCell align="right" className="font-bold ">
-                      <CustomTextField
-                        className="p-2"
-                        id="filled-size-small"
-                        defaultValue={"Valore"}
-                      />
-                      <br></br>Foglietto 2&nbsp;
+                    <StyledTableCell align="right" >
+                      Foglietto 2&nbsp;
                     </StyledTableCell>
-                    <StyledTableCell align="right" className="font-bold ">
-                      <CustomTextField
-                        className="p-2"
-                        id="filled-size-small"
-                        defaultValue={"Valore"}
-                      />
-                      <br></br>Foglietto 3&nbsp;
+                    <StyledTableCell align="right" >
+                      Foglietto 3&nbsp;
                     </StyledTableCell>
-                    <StyledTableCell align="right" className="font-bold ">
-                      <CustomTextField
-                        className="p-2"
-                        id="filled-size-small"
-                        defaultValue={"Valore"}
-                      />
-                      <br></br>Foglietto 4&nbsp;
+                    <StyledTableCell align="right" >
+                      Foglietto 4&nbsp;
                     </StyledTableCell>
-                    <StyledTableCell align="right" className="font-bold ">
-                      <CustomTextField
-                        className="p-2"
-                        id="filled-size-small"
-                        defaultValue={"Valore"}
-                      />
-                      <br></br>Foglietto 5&nbsp;
+                    <StyledTableCell align="right" >
+                      Foglietto 5&nbsp;
                     </StyledTableCell>
-                    <StyledTableCell align="right" className="font-bold ">
-                      <CustomTextField
-                        className="p-2"
-                        id="filled-size-small"
-                        defaultValue={"Valore"}
-                      />
-                      <br></br>Foglietto 6&nbsp;
+                    <StyledTableCell align="right" >
+                      Foglietto 6&nbsp;
                     </StyledTableCell>
-                    <StyledTableCell align="right" className="font-bold ">
-                      <CustomTextField
-                        className="p-2"
-                        id="filled-size-small"
-                        defaultValue={"Valore"}
-                      />
-                      <br></br>Foglietto 7&nbsp;
+                    <StyledTableCell align="right" >
+                      Foglietto 7&nbsp;
                     </StyledTableCell>
-                    <StyledTableCell align="right" className="font-bold ">
-                      <CustomTextField
-                        className="p-2"
-                        id="filled-size-small"
-                        defaultValue={"Valore"}
-                      />
-                      <br></br>Foglietto 8&nbsp;
+                    <StyledTableCell align="right">
+                      Foglietto 8&nbsp;
                     </StyledTableCell>
-                    <StyledTableCell align="right" className="font-bold ">
-                      <CustomTextField
-                        className="p-2"
-                        id="filled-size-small"
-                        defaultValue={"Valore"}
-                      />
-                      <br></br>Foglietto 9&nbsp;
+                    <StyledTableCell align="right">
+                      Foglietto 9&nbsp;
                     </StyledTableCell>
                   </TableRow>
                 </TableHead>
