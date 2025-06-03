@@ -82,14 +82,11 @@ export default function Page() {
     const gg = await getGiornoSagra();
     if (gg) {
       setSagra(gg);
-
-    }
-
-    let piatti = await getListaSintesiPiatti(1);
-
-    if (piatti) {
+      let piatti = await getListaSintesiPiatti(gg.giornata);
+      if (piatti) {
       setElencoPiatti(piatti);
       setPhase('iniziale');
+    }
     }
   }
 
@@ -100,6 +97,7 @@ export default function Page() {
     let op = await getSintesiPiatti(id, sagra.giornata)
     const piattoTrovato = elencoPaitti.find(piatto => piatto.id === id);
     console.log(piattoTrovato)
+   
     if (op) {
       rows = [{
         piatto: piattoTrovato ? piattoTrovato.alias : "",
@@ -128,6 +126,7 @@ export default function Page() {
                 Cruscotto Piatti
               </p>
             </div>
+         
             <div className='text-center '>
 
               <Box sx={{ p: 4, maxWidth: 400 }}>
@@ -190,11 +189,12 @@ export default function Page() {
                 Cruscotto Piatti
               </p>
             </div>
+        
+             
             <Box sx={{ p: 4, maxWidth: 400 }}>
               <Typography variant="h5" gutterBottom>
                 Seleziona un piatto
               </Typography>
-
               <FormControl fullWidth>
                 <InputLabel>Piatto</InputLabel>
                 <Select
