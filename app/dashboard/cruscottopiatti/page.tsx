@@ -92,7 +92,7 @@ export default function Page() {
 
   const fetchDati = async (id: number) => {
 
-    console.log("FetcDati");
+    console.log(`FetcDati id=${id} giorno=${sagra.giornata}`);
     let rows: RecordElencoPiatti[] = [];
     let op = await getSintesiPiatti(id, sagra.giornata)
     const piattoTrovato = elencoPaitti.find(piatto => piatto.id === id);

@@ -537,14 +537,6 @@ export async function getSintesiPiatti(id: number, giorno: number): Promise<{
   try {
     console.log(`getSintesiPiatti giorno ${giorno}`);
 
-    const ordinatiResult = await executeQuery<{ sum: string }>(`
-  SELECT SUM(c.quantita) 
-  FROM consumazioni c 
-  WHERE c.id_piatto = ${id} 
-    AND c.giorno = ${giorno} 
-    AND c.quantita > 0;
-`);
-
     const result = await executeQuery<{
       ordinati: string;
       stampati: string;
@@ -553,18 +545,21 @@ export async function getSintesiPiatti(id: number, giorno: number): Promise<{
       pagatopos: string;
       pagatoaltro: string;
     }>(`
-  SELECT 
-    SUM(CASE WHEN c.quantita > 0 THEN c.quantita ELSE 0 END) AS ordinati,
-    SUM(CASE WHEN c.quantita > 0 AND s.stato = 'STAMPATO' THEN c.quantita ELSE 0 END) AS stampati,
-    SUM(CASE WHEN c.quantita > 0 AND s.stato = 'APERTO' THEN c.quantita ELSE 0 END) AS aperti,
-    SUM(CASE WHEN c.quantita > 0 AND s.stato = 'CHIUSO' THEN c.quantita ELSE 0 END) AS pagatocontanti,
-    SUM(CASE WHEN c.quantita > 0 AND s.stato = 'CHIUSOPOS' THEN c.quantita ELSE 0 END) AS pagatopos,
-    SUM(CASE WHEN c.quantita > 0 AND s.stato = 'CHIUSOALTRO' THEN c.quantita ELSE 0 END) AS pagatoaltro
-  FROM consumazioni c
-  JOIN conti s ON c.id_comanda = s.id_comanda
-  WHERE c.id_piatto = ${id}
-    AND c.giorno = ${giorno}
-    AND c.quantita > 0;
+SELECT
+    SUM(c.quantita) AS ordinati,
+    SUM(CASE WHEN s.stato = 'STAMPATO' THEN c.quantita ELSE 0 END) AS stampati,
+    SUM(CASE WHEN s.stato = 'APERTO' THEN c.quantita ELSE 0 END) AS aperti,
+    SUM(CASE WHEN s.stato = 'CHIUSO' THEN c.quantita ELSE 0 END) AS pagatocontanti,
+    SUM(CASE WHEN s.stato = 'CHIUSOPOS' THEN c.quantita ELSE 0 END) AS pagatopos,
+    SUM(CASE WHEN s.stato = 'CHIUSOALTRO' THEN c.quantita ELSE 0 END) AS pagatoaltro
+FROM consumazioni c
+LEFT JOIN (
+    SELECT DISTINCT id_comanda, stato
+    FROM conti
+) s ON c.id_comanda = s.id_comanda
+WHERE c.id_piatto = ${id}
+  AND c.giorno = ${giorno}
+  AND c.quantita > 0;
 `);
 
     return {
