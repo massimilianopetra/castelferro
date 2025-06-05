@@ -6,7 +6,7 @@ import Link from 'next/link'
 import type { DbConsumazioniPrezzo, DbConti, DbFiera, DbMenu } from '@/app/lib/definitions';
 import CircularProgress from '@mui/material/CircularProgress';
 import { getGiornoSagra, listConti, getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto, aggiornaConto, stampaConto, riapriConto, apriConto, getContoPiuAlto } from '@/app/lib/actions';
-import { writeLog, getLastLog } from '@/app/lib/actions';
+import { writeLog, getLastLog, listConsumazioniFogliettoN } from '@/app/lib/actions';
 import { deltanow } from '@/app/lib/utils';
 import { DataGrid, GridToolbar, GridColDef } from '@mui/x-data-grid';
 import { styled } from '@mui/material/styles';
@@ -219,22 +219,9 @@ export default function Page() {
                     .filter(item => item.stato === "STAMPATO")
                     .filter(item => item.id_comanda > 9) //escludo i gratuiti
                     .map( (item) => {
-                        // id: <Link href={`/dashboard/casse/${item.id}`}>{item.id}</Link>
-                     /*   const gc = await getConsumazioniCassa(Number(item.id_comanda), sagra.giornata);
-                        if (gc) {
-                            const xxx = gc
-                                .filter(tc => tc.id_piatto == 1)
-                                .map((tc) => {
-                                     return {
-                                       Col1: tc.quantita
-                                    }
-                                });
-                
-                            setCoperti(xxx[0]?.Col1);
-               
-                        }
-                        console.log('<<<<<<<<<<<'+coperti+'>>>>>>>>>>');        */    
-                        
+  
+                        // var consumazione = await listConsumazioniFogliettoN(0,gg.giornata,item.id_comanda);
+
                         return {
                             id: item.id,
                             col1: item.id_comanda,

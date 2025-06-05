@@ -167,7 +167,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         return (item);
     });
     setProducts(newProducts);
-    setPhase('aperto');
+    // setPhase('aperto');
+    setPhase('modificato');
   };
 
   const handleAnnulla = async () => {
