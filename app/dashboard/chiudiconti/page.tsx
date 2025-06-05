@@ -5,8 +5,8 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import type { DbConsumazioniPrezzo, DbConti, DbFiera, DbMenu } from '@/app/lib/definitions';
 import CircularProgress from '@mui/material/CircularProgress';
-import { getGiornoSagra, listConti, getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto, aggiornaConto, stampaConto, riapriConto, apriConto, getContoPiuAlto } from '@/app/lib/actions';
-import { writeLog, getLastLog, listConsumazioniFogliettoN } from '@/app/lib/actions';
+import { getGiornoSagra, listConti, getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto} from '@/app/lib/actions';
+import { writeLog, getLastLog, listContiPerChiusra } from '@/app/lib/actions';
 import { deltanow } from '@/app/lib/utils';
 import { DataGrid, GridToolbar, GridColDef } from '@mui/x-data-grid';
 import { styled } from '@mui/material/styles';
@@ -213,11 +213,9 @@ export default function Page() {
         const gg = await getGiornoSagra();
         if (gg) {
             setSagra(gg);
-            const conti = await listConti('*', gg.giornata);
+            const conti = await listContiPerChiusra(gg.giornata);
             if (conti) {
                 const cc = conti
-                    .filter(item => item.stato === "STAMPATO")
-                    .filter(item => item.id_comanda > 9) //escludo i gratuiti
                     .map( (item) => {
   
                         // var consumazione = await listConsumazioniFogliettoN(0,gg.giornata,item.id_comanda);
@@ -227,7 +225,7 @@ export default function Page() {
                             col1: item.id_comanda,
                             col2: item.cameriere,
                             col3: deltanow(item.data_stampa),
-                            col4: 123456, //BRUNO cambiare con coperti
+                            col4: item.coperti, //BRUNO cambiare con coperti
                             col5: item.totale.toFixed(2),
                             col6: item.id_comanda, //BRUNO chiuso contanti
                             col7: item.id_comanda, //BRUNO cchiuso pos

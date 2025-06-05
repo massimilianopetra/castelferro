@@ -49,6 +49,22 @@ export type DbSintesiPiatti =   {
   alias: string;
 };
 
+export type DbExtendedConti =   {
+  id: number;
+  id_comanda: number;
+  stato: string;
+  totale: number;
+  cameriere: string;
+  giorno: number;
+  data_apertura: number;
+  data: number;
+  data_chiusura: number;
+  note: string;
+  data_stampa: number;
+  coperti: number;
+  
+};
+
 export type DbConti =   {
   id: number;
   id_comanda: number;

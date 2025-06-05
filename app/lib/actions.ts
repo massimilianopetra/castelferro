@@ -2,7 +2,7 @@
 
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
-import type { DbMenu, DbConsumazioniPrezzo, DbConsumazioni, DbFiera, DbConti, DbCamerieri, DbLog, DbUser, DbSintesiPiatti } from '@/app/lib/definitions';
+import type { DbMenu, DbConsumazioniPrezzo, DbConsumazioni, DbFiera, DbConti, DbCamerieri, DbLog, DbUser, DbSintesiPiatti, DbExtendedConti } from '@/app/lib/definitions';
 import { sql } from '@vercel/postgres';
 import { Pool } from 'pg';
 import { date } from 'zod';
@@ -633,6 +633,22 @@ export async function listConti(stato: string, giornata: number): Promise<DbCont
   }
 }
 
+export async function listContiPerChiusra(giornata: number): Promise<DbExtendedConti[] | undefined> {
+  const current = await executeQuery<DbExtendedConti>(`
+  SELECT 
+    s.*,  c.quantita as coperti FROM conti s
+  LEFT JOIN consumazioni c 
+  ON c.id_comanda = s.id_comanda
+  WHERE
+  s.giorno = ${giornata}
+  AND
+  s.id_comanda > 9
+  AND c.id_piatto = 1
+  AND s.stato IN ('APERTO','STAMPATO')
+  ;`);
+  return current;
+}
+
 export async function getContoPiuAlto(): Promise<Number | undefined> {
   try {
     console.log("getContoPiuAlto");
@@ -702,6 +718,7 @@ export async function listConsumazioniFogliettoN(id_piatto: number, giornata: nu
     return current;
   }
 }
+
 
 export async function apriConto(foglietto: number, giorno: number, cameriere: string) {
 
