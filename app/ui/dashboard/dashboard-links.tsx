@@ -15,6 +15,7 @@ import SportsBarIcon from '@mui/icons-material/SportsBar';
 import DinnerDiningIcon from '@mui/icons-material/DinnerDining';
 import RestaurantOutlinedIcon from '@mui/icons-material/RestaurantOutlined';
 import KebabDiningOutlinedIcon from '@mui/icons-material/KebabDiningOutlined';
+import FoodBankIcon from '@mui/icons-material/FoodBank';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -43,12 +44,14 @@ export default function DashboardLinks() {
   switch (session?.user?.name) {
     case 'Casse':
       links = [
-        { name: 'Apertura-Chiusura Giornata Sagra', href: '/dashboard/sagra', icon: LockOpenIcon }, 
-        { name: 'Verifica conti (aperti e chiusi)', href: '/dashboard/listaconti', icon: CheckCircleOutlineIcon },      
-        { name: 'Logs', href: '/dashboard/logs', icon: AutoStoriesIcon },
+        { name: 'Apertura-Chiusura Giornata Sagra', href: '/dashboard/sagra', icon: LockOpenIcon },
+        { name: 'Gestione Camerieri', href: '/dashboard/camerieri', icon: AccessibilityIcon },
+        { name: 'Verifica conti (aperti e chiusi)', href: '/dashboard/listaconti', icon: CheckCircleOutlineIcon },
+        { name: 'Incassa Conti', href: '/dashboard/chiudiconti', icon: ShoppingCartIcon  },
         { name: 'Cruscotto di sintesi', href: '/dashboard/cruscotto', icon: EuroIcon },
+        { name: 'Cruscotto di sintesi: piatti', href: '/dashboard/cruscottopiatti', icon: FoodBankIcon },
         { name: 'Cruscotto di sintesi: conti omaggio', href: '/dashboard/cruscottogratis', icon: CardGiftcardIcon },
-        { name: 'Cruscotto di sintesi piatti', href: '/dashboard/cruscottopiatti', icon: CardGiftcardIcon },
+        { name: 'Logs', href: '/dashboard/logs', icon: AutoStoriesIcon },
       
       ];
       break;
@@ -58,11 +61,13 @@ export default function DashboardLinks() {
         { name: 'Apertura-Chiusura Giornata Sagra', href: '/dashboard/sagra', icon: LockOpenIcon },
         { name: 'Gestione Camerieri', href: '/dashboard/camerieri', icon: AccessibilityIcon },
         { name: 'Verifica conti (aperti e chiusi)', href: '/dashboard/listaconti', icon: CheckCircleOutlineIcon },
+        { name: 'Incassa Conti', href: '/dashboard/chiudiconti', icon: ShoppingCartIcon  },
         { name: 'Cruscotto di sintesi', href: '/dashboard/cruscotto', icon: EuroIcon },
+        { name: 'Cruscotto di sintesi: piatti', href: '/dashboard/cruscottopiatti', icon: FoodBankIcon },
         { name: 'Cruscotto di sintesi: conti omaggio', href: '/dashboard/cruscottogratis', icon: CardGiftcardIcon },
         { name: 'Logs', href: '/dashboard/logs', icon: AutoStoriesIcon },
-        { name: 'Incassa Conti', href: '/dashboard/chiudiconti', icon: ShoppingCartIcon  },
-        { name: 'Cruscotto di sintesi piatti', href: '/dashboard/cruscottopiatti', icon: CardGiftcardIcon },
+
+
       ];
       break;
     case 'Antipasti':
