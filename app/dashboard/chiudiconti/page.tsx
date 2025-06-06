@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import type { DbConsumazioniPrezzo, DbConti, DbFiera, DbMenu } from '@/app/lib/definitions';
 import CircularProgress from '@mui/material/CircularProgress';
-import { getGiornoSagra, listConti, getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto} from '@/app/lib/actions';
+import { getGiornoSagra, listConti, getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto } from '@/app/lib/actions';
 import { writeLog, getLastLog, listContiPerChiusra } from '@/app/lib/actions';
 import { deltanow } from '@/app/lib/utils';
 import { DataGrid, GridToolbar, GridColDef } from '@mui/x-data-grid';
@@ -37,10 +37,8 @@ export default function Page() {
     const [textValue, setTextValue] = useState('');
     const [numeroFoglietto, setNumeroFoglietto] = useState<number | string>('');
     const [conto, setConto] = useState<DbConti>();
-
     const [phase, setPhase] = useState('caricamento');
     const [rows, setRows] = useState<any[]>([]);
-    const [coperti, setCoperti] = useState<number | string>('');
     const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
     const { data: session } = useSession();
 
@@ -87,34 +85,32 @@ export default function Page() {
         if (numeroF) {
             const fetchData = async () => {
                 setPhase('elaborazione');
-                const c = await chiudiConto(Number(numeroF), sagra.giornata, 1); //CHIUSO contanti
-
+                const c = await chiudiConto(Number(numeroF), sagra.giornata, 1); //PAGATO CONTANTI 
+                const cc = await getConto(Number(numeroF), sagra.giornata);
                 await writeLog(Number(numeroF), sagra.giornata, 'Casse', '', 'CLOSE', 'Pagato contanti');
-
-
-                const conti = await listConti('*', sagra.giornata);
+                const conti = await listContiPerChiusra(sagra.giornata);
                 if (conti) {
                     const cc = conti
-                        .filter(item => item.stato === "STAMPATO")
-                        .filter(item => item.id_comanda > 9) //escludo i gratuiti
                         .map((item) => {
-                            // id: <Link href={`/dashboard/casse/${item.id}`}>{item.id}</Link>
+
+                            // var consumazione = await listConsumazioniFogliettoN(0,gg.giornata,item.id_comanda);
+
                             return {
                                 id: item.id,
                                 col1: item.id_comanda,
                                 col2: item.cameriere,
                                 col3: deltanow(item.data_stampa),
-                                col4: 999, //BRUNO cambiare con coperti
+                                col4: item.coperti, //BRUNO cambiare con coperti
                                 col5: item.totale.toFixed(2),
                                 col6: item.id_comanda, //BRUNO chiuso contanti
                                 col7: item.id_comanda, //BRUNO cchiuso pos
-                                col8: item.id_comanda //BRUNO chiuso altroimporto
+                                col8: item.id_comanda
                             }
 
                         });
-                    setPhase('chiuso');
                     setRows(cc);
                 }
+                setPhase('chiuso');
             };
             fetchData();
         }
@@ -126,32 +122,30 @@ export default function Page() {
             const fetchData = async () => {
                 setPhase('elaborazione');
                 const c = await chiudiConto(Number(numeroF), sagra.giornata, 2); //PAGATO POS
-
                 await writeLog(Number(numeroF), sagra.giornata, 'Casse', '', 'CLOSE', 'Pagato POS');
-
-                const conti = await listConti('*', sagra.giornata);
+                const conti = await listContiPerChiusra(sagra.giornata);
                 if (conti) {
                     const cc = conti
-                        .filter(item => item.stato === "STAMPATO")
-                        .filter(item => item.id_comanda > 9) //escludo i gratuiti
                         .map((item) => {
-                            // id: <Link href={`/dashboard/casse/${item.id}`}>{item.id}</Link>
+
+                            // var consumazione = await listConsumazioniFogliettoN(0,gg.giornata,item.id_comanda);
+
                             return {
                                 id: item.id,
                                 col1: item.id_comanda,
                                 col2: item.cameriere,
                                 col3: deltanow(item.data_stampa),
-                                col4: 8888,
+                                col4: item.coperti, //BRUNO cambiare con coperti
                                 col5: item.totale.toFixed(2),
                                 col6: item.id_comanda, //BRUNO chiuso contanti
                                 col7: item.id_comanda, //BRUNO cchiuso pos
-                                col8: item.id_comanda //BRUNO chiuso altroimport
+                                col8: item.id_comanda
                             }
 
                         });
-                    setPhase('chiuso');
                     setRows(cc);
                 }
+                setPhase('chiuso');
             };
             fetchData();
         }
@@ -168,23 +162,21 @@ export default function Page() {
         if (numeroFoglietto) {
             const fetchData = async () => {
                 setPhase('elaborazione');
-                const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata, 3, textValue, importValue); //PAGATO POS
-                const cc = await getConto(Number(numeroFoglietto), sagra.giornata);
+                const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata, 3, textValue, importValue); //PAGATO Gratis
                 await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', 'Altro Importo');
-                setConto(cc);
-                const conti = await listConti('*', sagra.giornata);
+                const conti = await listContiPerChiusra(sagra.giornata);
                 if (conti) {
                     const cc = conti
-                        .filter(item => item.stato === "STAMPATO")
-                        .filter(item => item.id_comanda > 9) //escludo i gratuiti
                         .map((item) => {
-                            // id: <Link href={`/dashboard/casse/${item.id}`}>{item.id}</Link>
+
+                            // var consumazione = await listConsumazioniFogliettoN(0,gg.giornata,item.id_comanda);
+
                             return {
                                 id: item.id,
                                 col1: item.id_comanda,
                                 col2: item.cameriere,
                                 col3: deltanow(item.data_stampa),
-                                col4: 99999, //BRUNO cambiare con coperti
+                                col4: item.coperti, //BRUNO cambiare con coperti
                                 col5: item.totale.toFixed(2),
                                 col6: item.id_comanda, //BRUNO chiuso contanti
                                 col7: item.id_comanda, //BRUNO cchiuso pos
@@ -192,9 +184,9 @@ export default function Page() {
                             }
 
                         });
-                    setPhase('chiuso');
                     setRows(cc);
                 }
+                setPhase('chiuso');
             };
             fetchData();
         }
@@ -216,8 +208,8 @@ export default function Page() {
             const conti = await listContiPerChiusra(gg.giornata);
             if (conti) {
                 const cc = conti
-                    .map( (item) => {
-  
+                    .map((item) => {
+
                         // var consumazione = await listConsumazioniFogliettoN(0,gg.giornata,item.id_comanda);
 
                         return {
@@ -258,7 +250,7 @@ export default function Page() {
                     <div className="flex flex-wrap flex-col">
                         <div className='text-center py-4'>
                             <p className="text-5xl py-4">
-                            Incassa conti
+                                Incassa conti
                             </p>
                             <br />
                         </div>
@@ -333,7 +325,7 @@ export default function Page() {
                                 Chiudi Conti
                             </p>
                             <p className="text-xl py-4">
-                            In questa schermata appaiono solo conti chiusi da incassare.
+                                In questa schermata appaiono solo conti chiusi da incassare.
                             </p>
                         </div>
 
