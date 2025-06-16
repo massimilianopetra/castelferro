@@ -980,10 +980,15 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       case 'modificaquantita':
         return (
           <div className="flex items-center justify-center min-h-screen rounded">
-            <div className="w-[600px] p-4  space-y-4 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded">
+            <div className="w-[600px] p-4  space-y-4 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded -translate-y-16">
               <p className="text-xl py-1 rounded">
-                Per il conto numero: <span className="font-extrabold text-blue-800">{conto?.id_comanda} </span>
-                inserisci la quantità di porzioni per il piatto: <span className="font-extrabold text-blue-800">{piattomodificaquantitaValue}
+                Per il conto numero:{" "}
+                <span className="font-extrabold text-blue-800">
+                  {conto?.id_comanda}{" "}
+                </span>
+                inserisci la quantità di porzioni per il piatto:{" "}
+                <span className="font-extrabold text-blue-800">
+                  {piattomodificaquantitaValue}
                 </span>
               </p>
               <TextField
@@ -997,10 +1002,20 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               />
 
               <div className="flex justify-center space-x-4">
-                <Button size="small" variant="contained" color="primary" onClick={handleModificaQuantita}>
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="primary"
+                  onClick={handleModificaQuantita}
+                >
                   Salva e chiudi
                 </Button>
-                <Button size="small" variant="contained" color="primary" onClick={handleAnnulla}>
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="primary"
+                  onClick={handleAnnulla}
+                >
                   Annulla
                 </Button>
               </div>
