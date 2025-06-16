@@ -21,7 +21,7 @@ export default function TabellaCucina({ item, onAdd10, onAdd, onRemove, onSet }:
                 <Table sx={{ minWidth: 130 }} size="small" aria-label="a dense table" className="z-0 text-3xl py-4 font-extralight text-end">
                     <TableHead>
                         <TableRow className=" text-blue-800 rounded-lg bg-gray-100 font-extralight text-end">
-                            <TableCell className=" text-2xl " align="left"><p>Piatto</p></TableCell>
+                            <TableCell className=" text-2xl " align="left"><p>Piatto1</p></TableCell>
                             <TableCell className=" text-2xl " align="left"><p>Quantità</p></TableCell>
                             <TableCell className=" text-2xl " align="left"><p></p></TableCell>
                         </TableRow>
