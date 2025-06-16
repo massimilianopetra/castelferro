@@ -21,7 +21,7 @@ export default function TabellaCucina({ item, onAdd10, onAdd, onRemove, onSet }:
                 <Table sx={{ minWidth: 130 }} size="small" aria-label="a dense table" className="z-0 text-3xl py-4 font-extralight text-end">
                     <TableHead>
                         <TableRow className=" text-blue-800 rounded-lg bg-gray-100 font-extralight text-end">
-                            <TableCell className=" text-2xl " align="left"><p>Piatto1</p></TableCell>
+                            <TableCell className=" text-2xl " align="left"><p>Piatto</p></TableCell>
                             <TableCell className=" text-2xl " align="left"><p>Quantità</p></TableCell>
                             <TableCell className=" text-2xl " align="left"><p></p></TableCell>
                         </TableRow>
@@ -39,14 +39,14 @@ export default function TabellaCucina({ item, onAdd10, onAdd, onRemove, onSet }:
                                 </TableCell>
                                 <TableCell align="left" >
                                     <ButtonGroup >
-                                        <Button onClick={() => onRemove(row.id_piatto)} size="medium" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
-                                        <Button onClick={() => onAdd(row.id_piatto)} size="medium" variant="contained" startIcon={<AddCircleIcon />} />
+                                        <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
+                                        <Button onClick={() => onAdd(row.id_piatto)} size="large" variant="contained" startIcon={<AddCircleIcon />} />
                                     </ButtonGroup>
-                                    &nbsp;
+                                    &nbsp;&nbsp;
                                     <ButtonGroup >
                                         <Button onClick={() => onAdd10(row.id_piatto)} size="small" variant="contained" startIcon={<Replay10Icon />} />
                                     </ButtonGroup>
-                                    &nbsp;
+                                    &nbsp;&nbsp;
                                     <ButtonGroup >
                                         <Button onClick={() => onSet(row.id_piatto)} size="small" variant="outlined" color="secondary" startIcon={<EditIcon />} />
                                     </ButtonGroup>
