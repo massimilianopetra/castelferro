@@ -13,7 +13,8 @@ docker build -t ironcastle/castelferro:v2 .
 # Andare nelle Immagini e fare push (dai 3 puntini sul Docker Hub). 
 # Si aggiorna il Container. 
 
-# ...poi dovrebbe andare. ma non è così. 
+# ...fare partire il container, dovrebbero andare entrambi. 
+# ...cancellare i vecchi container. 
 
 
 # Docker image export
