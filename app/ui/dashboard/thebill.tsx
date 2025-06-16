@@ -1,3 +1,4 @@
+
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -11,25 +12,121 @@ import type { DbConsumazioniPrezzo } from '@/app/lib/definitions';
 export default function TheBill({ item }: { item: DbConsumazioniPrezzo[] }) {
 
     var totale = 0;
+    var coperti = 0;
 
     for (let i of item) {
         totale += i.quantita * i.prezzo_unitario;
+        if (i.id_piatto == 1) //comanda 1 sono i coperti
+            coperti = i.quantita;
     }
+    var media = (totale / coperti);
+
+
+    return (
+
+        <div>
+            <Table>     
+                <TableHead>
+                <TableRow><TableCell>&nbsp;&nbsp;&nbsp;&nbsp;48° SAGRA DEI SALAMINI D’ASINO dal 14 al 21 Agosto 2025</TableCell></TableRow>
+            </TableHead>
+            </Table>
+
+            <Table>
+                <TableHead>
+                    <TableRow>
+                        <TableCell >Piatto&nbsp;&nbsp;</TableCell>
+                        <TableCell >Quantità</TableCell>
+                        <TableCell >Pr. Uni.</TableCell>
+                        <TableCell >SubTot&nbsp;</TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody >
+                    {item.map((row) => (
+                        row.quantita > 0 ?
+                            <TableRow>
+                                <TableCell >{row.piatto}</TableCell>
+                                <TableCell >
+
+                                    &nbsp;&nbsp;&nbsp;&nbsp;{row.quantita}
+
+                                </TableCell>
+                                <TableCell className="flex-wrap">
+
+                                   &nbsp;&nbsp;&nbsp;{row.prezzo_unitario}&nbsp;&euro;
+
+                                </TableCell>
+                                <TableCell > &nbsp;&nbsp;&nbsp;
+                                    {(row.quantita * row.prezzo_unitario).toFixed(2)}&nbsp;&euro;
+                                </TableCell>
+                            </TableRow>
+                            :
+                            <></>
+                    ))}
+                    <TableHead >
+                        <TableCell ></TableCell>
+                        <TableCell> </TableCell>
+                        <TableCell >Totale:</TableCell>
+                        <TableCell >{totale.toFixed(2)}&euro;&nbsp;
+                        </TableCell>
+                    </TableHead>
+                    <TableBody>
+                        <TableCell></TableCell>
+                        <TableCell ></TableCell>
+                        <TableCell>&nbsp;&nbsp;&nbsp;A coperto:</TableCell>
+                    <TableCell>&nbsp;&nbsp;{media.toFixed(2)}&nbsp;&euro; </TableCell>
+                </TableBody>
+            </TableBody>
+        </Table>
+        <br />
+        &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;  Grazie per aver cenato da noi!  Speriamo di rivederti presto.
+            
+        </div >
+
+    
+    );
+
+}
+/*
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper';
+
+import type { DbConsumazioniPrezzo } from '@/app/lib/definitions';
+
+export default function TheBill({ item }: { item: DbConsumazioniPrezzo[] }) {
+
+    var totale = 0;
+    var coperti = 0;
+
+    for (let i of item) {
+        totale += i.quantita * i.prezzo_unitario;
+         if (i.id_piatto == 1) //comanda 1 sono i coperti
+        coperti = i.quantita;
+    }
+    var media = (totale / coperti);
+
 
     return (
 
         <div className="z-0">
 
             <div className="z-0 p-1 mb-1 text-2xl font-extralight text-blue-800 rounded-lg bg-blue-50 text-end">
-                Totale Conto: <span className="text-xl font-semibold ">{totale.toFixed(2)}</span> &euro;&nbsp;
+                Totale Conto: <span className="text-xl font-semibold ">{totale.toFixed(2)}</span> &euro;&nbsp;<br />
+                Media per persona: <span className="text-xl font-semibold ">{media.toFixed(2)}</span> &euro; - <span className="text-xl font-semibold ">{coperti}</span> - coperti 
+                
             </div>
             <TableContainer component={Paper}>
                 <Table sx={{ minWidth: 150 }} size="small" aria-label="a dense table">
                     <TableHead>
                         <TableRow className=" text-gray-800 rounded-lg bg-gray-50">
-                            <TableCell align="left"><p className="text-lg font-bold">Piatto</p></TableCell>
-                            <TableCell className="text-lg font-bold" align="center"><p className="font-bold">Quantità</p></TableCell>
-                            <TableCell className="text-lg font-bold" align="right"><p className="font-bold">Prezzo Totale</p></TableCell>
+                            <TableCell align="left"><p className="text-lg font-bold">Piatto       </p></TableCell>
+                            <TableCell className="text-lg font-bold" align="center"><p className="font-bold">Quantità       </p></TableCell>
+                            <TableCell className="text-lg font-bold" align="center"><p className="font-bold">Prezzo Unitario</p></TableCell>
+                            <TableCell className="text-lg font-bold" align="right"><p className="font-bold">SubTotale      </p></TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody >
@@ -42,6 +139,11 @@ export default function TheBill({ item }: { item: DbConsumazioniPrezzo[] }) {
                                     <span className="text-lg font-semibold ">{row.quantita}</span>
 
                                 </TableCell>
+                                 <TableCell className="flex-wrap">
+
+                                    <span className="text-lg font-semibold ">{row.prezzo_unitario}</span>&nbsp;&euro;
+
+                                </TableCell>
                                 <TableCell align="right" className="text-lg font-extralight">
                                     {(row.quantita * row.prezzo_unitario).toFixed(2)}&nbsp;&euro;&nbsp;
                                 </TableCell>
@@ -49,15 +151,23 @@ export default function TheBill({ item }: { item: DbConsumazioniPrezzo[] }) {
                             :
                             <></>
                         ))}
+                         <TableHead className="bg-white">
+                             <TableCell align="left"><p className="text-lg font-bold">        </p></TableCell>
+                            <TableCell className="text-lg font-bold" align="center"><p className="font-bold">        </p></TableCell>
+                            <TableCell className="text-lg font-bold" align="center"><p className="font-bold">Totale:</p></TableCell>
+                            <TableCell className="text-lg font-bold" align="right"><p className="font-bold">{totale.toFixed(2)}&euro;&nbsp;</p></TableCell>
+                         </TableHead>
                     </TableBody>
                 </Table>
             </TableContainer>
             <div className="p-2 mb-2 text-2xl font-extralight text-blue-800 rounded-lg bg-blue-50 text-end">
-                Totale Conto: <span className="text-xl font-semibold ">{totale.toFixed(2)}</span>&euro;&nbsp;
+                    Grazie per aver cenato da noi!  Speriamo di rivederti presto.
             </div>
         </div>
 
+    
     );
+
     }
 
 /*
@@ -94,48 +204,48 @@ const elegantLocalTheme = createTheme({
             'sans-serif',
         ].join(','),
         h4: {
-            fontFamily: 'Playfair Display, serif',
+            fontFamily: 'Playfair Display, serif !important',
             fontWeight: 700,
-            color: '#303030',
+            color: '#303030 !important',
         },
         h5: {
-            fontFamily: 'Playfair Display, serif',
+            fontFamily: 'Playfair Display, serif !important',
             fontWeight: 700,
-            color: '#202020',
-            fontSize: '1.8rem',
+            color: '#202020 !important',
+            fontSize: '1.8rem !important',
         },
         h6: {
             fontWeight: 500,
-            color: '#404040',
-            fontSize: '1.2rem',
+            color: '#404040 !important',
+            fontSize: '1.2rem !important',
         },
         body1: {
-            fontFamily: 'Roboto, sans-serif',
+            fontFamily: 'Roboto, sans-serif !important',
             fontWeight: 300,
-            color: '#505050',
-            fontSize: '1rem',
+            color: '#505050 !important',
+            fontSize: '1rem !important',
         },
         body2: {
             fontFamily: 'Roboto, sans-serif',
             fontWeight: 400,
-            color: '#606060',
-            fontSize: '0.95rem',
+            color: '#606060 !important',
+            fontSize: '0.95rem !important',
         },
     },
     palette: {
         primary: {
-            main: '#4A4A4A',
-            light: '#F8F8F8',
-            contrastText: '#FFF',
+            main: '#4A4A4A !important',
+            light: '#F8F8F8 !important',
+            contrastText: '#FFF !important',
         },
         text: {
-            primary: '#303030',
-            secondary: '#707070',
+            primary: '#303030 !important',
+            secondary: '#707070 !important',
         },
-        divider: '#E0E0E0',
+        divider: '#E0E0E0 !important',
         background: {
-            paper: '#FFFFFF',
-            default: '#F5F5F5',
+            paper: '#FFFFFF !important',
+            default: '#F5F5F5 !important',
         },
     },
     components: {
@@ -155,7 +265,7 @@ const elegantLocalTheme = createTheme({
                 root: ({ theme }) => ({
                     // Applica questi stili a tutte le TableCell all'interno di questo tema
                     // Se un StyledTableCell ha stili propri, li sovrascriverà
-                    fontSize: '0.95rem',
+                    fontSize: '0.95rem !important',
                     color: theme.palette.text.primary,
                     padding: theme.spacing(1.2, 2),
                     borderBottom: `1px dashed ${theme.palette.divider}`,
@@ -163,7 +273,7 @@ const elegantLocalTheme = createTheme({
                 head: ({ theme }) => ({
                     fontWeight: 600,
                     color: theme.palette.text.secondary,
-                    fontSize: '0.9rem',
+                    fontSize: '0.9rem !important',
                     backgroundColor: theme.palette.background.default,
                     borderBottom: `1px solid ${theme.palette.divider}`,
                 }),
@@ -191,7 +301,7 @@ const elegantLocalTheme = createTheme({
 // Questi avranno la precedenza sulle sovrascrizioni del tema MuiTableCell/MuiTableRow
 const ElegantContainer = styled(Paper)(({ theme }) => ({
     maxWidth: 550,
-    margin: '40px auto',
+    margin: '40px auto !important',
     padding: theme.spacing(4),
     borderRadius: 12,
     backgroundColor: theme.palette.background.paper,
@@ -268,7 +378,6 @@ const FooterBox = styled(Box)(({ theme }) => ({
     color: theme.palette.text.secondary,
     fontSize: '0.85rem',
 }));
-
 
 export default function TheBill({ item }: { item: DbConsumazioniPrezzo[] }) {
     const totale = useMemo(() => {
@@ -364,4 +473,5 @@ export default function TheBill({ item }: { item: DbConsumazioniPrezzo[] }) {
             </ElegantContainer>
         </ThemeProvider>
     );
-}*/
+}
+ */
