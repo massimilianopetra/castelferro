@@ -35,18 +35,18 @@ export default function TabellaCucina({ item, onAdd10, onAdd, onRemove, onSet }:
                                     <span className="text-2xl font-normal">{row.alias}</span>
                                 </TableCell>
                                 <TableCell align="left" >
-                                    <span className="text-2xl font-bold">{row.quantita}</span> &nbsp;&nbsp;&nbsp;&nbsp;
+                                    <span className="text-2xl font-bold">{row.quantita}</span> &nbsp;&nbsp;&nbsp;
                                 </TableCell>
                                 <TableCell align="left" >
                                     <ButtonGroup >
-                                        <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
-                                        <Button onClick={() => onAdd(row.id_piatto)} size="large" variant="contained" startIcon={<AddCircleIcon />} />
+                                        <Button onClick={() => onRemove(row.id_piatto)} size="medium" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
+                                        <Button onClick={() => onAdd(row.id_piatto)} size="medium" variant="contained" startIcon={<AddCircleIcon />} />
                                     </ButtonGroup>
                                     &nbsp;&nbsp;
                                     <ButtonGroup >
                                         <Button onClick={() => onAdd10(row.id_piatto)} size="small" variant="contained" startIcon={<Replay10Icon />} />
                                     </ButtonGroup>
-                                    &nbsp;&nbsp;
+                                    &nbsp;
                                     <ButtonGroup >
                                         <Button onClick={() => onSet(row.id_piatto)} size="small" variant="outlined" color="secondary" startIcon={<EditIcon />} />
                                     </ButtonGroup>
