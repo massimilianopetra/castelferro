@@ -82,7 +82,7 @@ export default function DashboardLinks() {
     case 'Dolci':
       links = [{ name: 'Dolci', href: '/dashboard/dolci', icon: CakeIcon },]
       break;
-    case 'Bevade':
+    case 'Bevande':
       links = [{ name: 'Bevande', href: '/dashboard/bevande', icon: LocalDrinkIcon },]
       break;
     case 'Birre':
