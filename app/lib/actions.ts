@@ -644,7 +644,7 @@ export async function listContiPerChiusra(giornata: number): Promise<DbExtendedC
   AND
   s.id_comanda > 9
   AND c.id_piatto = 1
-  AND s.stato IN ('APERTO','STAMPATO')
+  AND s.stato IN ('STAMPATO')
   ;`);
   return current;
 }
