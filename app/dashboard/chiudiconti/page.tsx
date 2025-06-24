@@ -246,22 +246,22 @@ export default function Page() {
             )
         } else if (phase == 'caricamento') {
             return (
-                <main>
-                    <div className="flex flex-wrap flex-col">
-                        <div className='text-center py-4'>
+                <><header className="top-section">
+                </header><main className="middle-section">
+                        <div className='z-0 text-center'>
+                            <br></br>
+                            <br></br>
                             <p className="text-5xl py-4">
-                                Incassa conti
+                                Incassa Conti
                             </p>
-                            <br />
-                        </div>
-                        <div className='text-center '>
+                            <br></br>
+                            <br></br>
                             <p className="text-5xl py-4">
                                 Caricamento in corso ...
                             </p>
                             <CircularProgress size="9rem" />
                         </div>
-                    </div>
-                </main>
+                    </main></>
             );
         } else if (phase == 'elaborazione') {
             return (
@@ -274,7 +274,7 @@ export default function Page() {
                         <br></br>
                         <br></br>
                         <p className="text-5xl py-4">
-                            Elaborazione in corso ... chiudi conti
+                            Elaborazione in corso ... Incassa Conti
                         </p>
                         <CircularProgress size="9rem" />
                     </div>
@@ -322,7 +322,7 @@ export default function Page() {
                     <div className="flex flex-wrap flex-col">
                         <div className='text-center py-4'>
                             <p className="text-5xl py-4">
-                                Chiudi Conti
+                                Incassa Conti 
                             </p>
                             <p className="text-xl py-4">
                                 In questa schermata appaiono solo conti chiusi da incassare.

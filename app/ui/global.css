@@ -16,3 +16,121 @@ input[type='number']::-webkit-outer-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+main {
+    margin: 0;
+    padding: 0;
+    height: 100%; /* Lasciato per garantire che il body si espanda */
+    font-family: Arial, sans-serif;
+    color: #333;
+}
+
+.fantasy {
+  font-family: fantasy;
+}
+
+
+/* Contenitore principale Flexbox per le 3 sezioni orizzontali */
+.container {
+    display: flex;
+    flex-direction: column; /* Impila le sezioni verticalmente */
+    height: 100%; /* Occupa il 100% dell'altezza del suo genitore (.outer-wrapper) */
+    width: 100%; /* Occupa il 100% della larghezza del suo genitore (.outer-wrapper) */
+    overflow: hidden; /* Assicura che solo le sezioni designate possano scorrere */
+}
+
+/* Stili comuni per le sezioni */
+.top-section,
+.middle-section,
+.bottom-section {
+    padding: 20px;
+    box-sizing: border-box; /* Include padding e border nella larghezza/altezza */
+    display: flex; /* Utilizza Flexbox per le sub-sezioni */
+    flex-shrink: 0; /* Impedisce alle sezioni di restringersi */
+}
+
+/* Sezione Superiore: 25% dell'altezza */
+.top-section {
+    height: 22%;
+ /*   background-color: #e0f7fa;*/
+    border-bottom: 1px solid #b2ebf2;
+    /* justify-content: space-around; rimosso per un controllo più preciso con flex-grow */
+    align-items: center; /* Centra verticalmente le sub-sezioni */
+}
+
+/* Sub-sezioni della Sezione Superiore (verticali) */
+.top-section .sez-sx,
+/*.top-section .sez-centrale-top,*/
+.top-section .sez-dx {
+    padding: 10px;
+    margin: 0 10px;
+/*     background-color: #b3e5fc;*/
+    border-radius: 5px;
+    text-align: center;
+    overflow: hidden; /* Blocca scorrimento interno */
+}
+
+/* Assegnazione delle percentuali specifiche */
+.top-section .sez-sx {
+    flex: 6; /* Corrisponde al 60% del 100% complessivo (3+5+2 = 10) */
+}
+/*
+.top-section .sez-centrale-top {
+    flex: 0; /* Corrisponde al 30% 
+}
+*/
+.top-section .sez-dx {
+    flex: 4; /* Corrisponde al 40% */
+}
+
+
+/* Sezione Centrale: 60% dell'altezza, scorrevole verticalmente */
+.middle-section {
+    height: 69%;
+/*    background-color: #fffde7;*/
+    overflow-y: auto; /* Abilita lo scorrimento verticale se il contenuto eccede */
+    overflow-x: hidden; /* Disabilita lo scorrimento orizzontale */
+    flex-direction: column; /* Contenuto impilato verticalmente */
+    border-bottom: 1px solid #ffe0b2;
+}
+
+/* Sezione Inferiore: 15% dell'altezza */
+.bottom-section {
+    height: 9%;
+ /*   background-color: #e8f5e9;*/
+    border-top: 1px solid #c8e6c9;
+    justify-content: space-around; /* Spazia uniformemente le sub-sezioni */
+    align-items: center; /* Centra verticalmente le sub-sezioni */
+}
+
+/* Sub-sezioni della Sezione Inferiore */
+.bottom-section .sez-sx-bassa,
+.bottom-section .sez-dx-bassa {
+
+    padding: 5px;
+    margin: 0 5px;
+/*    background-color: #c8e6c9;*/
+    border-radius: 5px;
+    text-align: center;
+    overflow: hidden; /* Blocca scorrimento interno */
+}
+/* Assegnazione delle percentuali specifiche */
+.bottom-section .sez-sx-bassa {
+    flex: 4 /* Corrisponde al 60% del 100% complessivo (3+5+2 = 10) */
+}
+/*
+.bottom-section  .sez-centrale-top {
+    flex: 0; /* Corrisponde al 30% 
+}
+*/
+.bottom-section  .sez-dx-bassa  {
+    flex: 6; /* Corrisponde al 40% */
+}
+/* Stili per titoli e paragrafi all'interno delle sezioni per migliore leggibilità */
+h2, h3 {
+    color: #01579b;
+    margin-top: 0;
+}
+
+p {
+    line-height: 1.6;
+}

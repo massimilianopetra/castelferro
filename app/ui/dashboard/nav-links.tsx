@@ -44,6 +44,7 @@ export default function NavLinks() {
       links = [
         { name: 'Gestione', href: '/dashboard/gestione', icon: SettingsIcon },
         { name: 'Casse', href: '/dashboard/casse', icon: EuroIcon },
+        { name: 'Configura Menu', href: '/dashboard/menus', icon: WrenchScrewdriverIcon },
         { name: 'Antipasti', href: '/dashboard/antipasti', icon: KebabDiningOutlinedIcon },
         { name: 'Primi', href: '/dashboard/primi', icon: DinnerDiningIcon },
         { name: 'Secondi', href: '/dashboard/secondi', icon: RestaurantOutlinedIcon },

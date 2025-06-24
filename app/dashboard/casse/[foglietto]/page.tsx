@@ -12,36 +12,13 @@ import TabellaConto from '@/app/ui/dashboard/TabellaConto';
 import TheBill from '@/app/ui/dashboard/thebill';
 import CircularProgress from '@mui/material/CircularProgress';
 import Filter1Icon from '@mui/icons-material/Filter1';
-import { The_Nautigal } from 'next/font/google';
 
 import * as React from 'react';
-import { styled } from '@mui/material/styles';
-import Box from '@mui/material/Box';
-import Grid from '@mui/material/Grid2';
 
-const FooterBox = styled(Box)(({ theme }) => ({
-    textAlign: 'center',
-    marginTop: theme.spacing(4),
-    paddingTop: theme.spacing(2),
-    borderTop: `1px dashed ${theme.palette.divider}`,
-    color: theme.palette.text.secondary,
-    fontSize: '0.85rem',
-}));
 
 export default function Page({ params }: { params: { foglietto: string } }) {
 
-  const Item = styled(Paper)(({ theme }) => ({
 
-    variant: 'outlined',
-    backgroundColor: 'white',
-    ...theme.typography.body2,
-    padding: theme.spacing(2),
-    textAlign: 'center',
-    color: theme.palette.text.secondary,
-    ...theme.applyStyles('dark', {
-      backgroundColor: 'blue',
-    }),
-  }));
 
   const router = useRouter();
   const printRef = useRef<HTMLDivElement | null>(null);
@@ -108,7 +85,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           setPhase('stampato');
         } else if (cc?.stato == 'CHIUSO' || cc?.stato == 'CHIUSOPOS' || cc?.stato == 'CHIUSOALTRO') {
           setPhase('chiuso');
-        } else if (Number(num) > 5999 && cc?.stato == undefined) {  // siamo nella condizione che c'è un conto aperto tra 6000 e 9000 quindi va bene (che è minore 9999 già verificato sopra)
+        } else if (Number(num) > 8999 && cc?.stato == undefined) {  // siamo nella condizione che c'è un conto aperto tra 8000 e 9000 quindi va bene (che è minore 9999 già verificato sopra)
           setNumeroFoglietto(num.toString());
           setSagra(gg);
           setPhase('elaborazione');
@@ -143,7 +120,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       if (isNaN(num) || num < 1 || num > 9999) {
         setOpenSnackbar(true);
         return;
-      } else if (num > 5999 && cc?.stato == undefined) {  // siamo nella condizione che c'è un conto aperto tra 6000 e 9000 quindi va bene (che è minore 9999 già verificato sopra)
+      } else if (num > 8999 && cc?.stato == undefined) {  // siamo nella condizione che c'è un conto aperto tra 8000 e 9000 quindi va bene (che è minore 9999 già verificato sopra)
         setOpenSnackbar(true);
         return;
       }
@@ -154,8 +131,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   const handleButtonClickCaricaAsporto = async () => {
     const ultconto = await getContoPiuAlto();
     var uc = Number(ultconto);
-    if (uc < 5999)
-      uc = 6000
+    if (uc < 8999)
+      uc = 9000
     await writeLog(uc + 1, sagra.giornata, 'Casse', '', 'OPEN', 'Bottone Asporto');
     carica(uc + 1);
   };
@@ -395,84 +372,85 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         console.log('iniziale');
         return (
           <>
-            <div className='z-0 text-center'>
-              <br></br>
-              <br></br>
-              <br></br>
-              <br></br>
-              <br></br>
-              <br></br>
-              <br></br>
-              <p className="text-5xl py-4">
-                Caricare un numero foglietto!!
-              </p>
-            </div>
+            <header className="top-section">
+            </header>
+            <main className="middle-section">
+              <div className='z-0 text-center'>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <p className="text-5xl py-4">
+                  Inserire Numero del Foglietto
+                </p>
+                
+              </div>
+            </main>
+
           </>
         );
       case 'iniziale_stampato':
         console.log('iniziale_stampato');
         return (
           <>
-            <br></br>
-            <div className='z-0 text-center'>
-              <Box sx={{ flexGrow: 1 }}>
-                <Grid container spacing={2}>
-                  <Grid
-                    container
-                    justifyContent="space-between"
-                    alignItems="center"
-                    flexDirection={{ xs: 'column', sm: 'row' }}
-                    sx={{ fontSize: '12px' }}
-                    size={12}
-                  >
-                    <Grid sx={{ order: { xs: 2, sm: 1 } }}>
-                      {/*<Item>*/}
-                      <div className="z-0 p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
-                        <ul className="flex rounded-full">
-                          <li className="flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
-                            <a className="text-center block text-white font-extralight ">
-                              Casse
-                            </a>
-                            <div className="text-xs text-center text-white ">SAGRA:  {sagra.stato}&nbsp;&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</div>
-                          </li>
-                          <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4">
-                            <a>
-                              <div className='text-center text-emerald-600'>
-                                <TextField
-                                  autoFocus
-                                  className="p-2"
-                                  label="Numero Foglietto"
-                                  variant="outlined"
-                                  value={numero}
-                                  onChange={handleInputChange}
-                                  sx={{
-                                    input: {
-                                      textAlign: 'right', // Allinea il testo a destra
-                                    },
-                                  }}
-                                  type="number"
-                                />
-                              </div>
-                            </a>
-                          </li>
-                          <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
-                            <Button className="rounded-full" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
-                          </li>
-                        </ul>
-                      </div>
-                      {/*</Item>*/}
+            <header className="top-section">
+              <div className="sez-sx">
+                <div className="font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
+                  <ul className="flex rounded-full">
+                    <li className="flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
+                      <a className="text-center block text-white font-extralight ">
+                        Casse
+                      </a>
+                      <div className="text-xs text-center text-white ">SAGRA:  {sagra.stato}&nbsp;&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</div>
+                    </li>
+                    <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4">
 
-                    </Grid>
-                  </Grid>
-                </Grid>
-              </Box>
+                      <div className='text-center text-emerald-600'>
+                        <TextField
+                          autoFocus
+                          className="p-2"
+                          label="Numero Foglietto"
+                          variant="outlined"
+                          value={numero}
+                          onChange={handleInputChange}
+                          sx={{
+                            input: {
+                              textAlign: 'right', // Allinea il testo a destra
+                            },
+                          }}
+                          type="number"
+                        />
+                      </div>
+                    </li>
+                    <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
+                      <Button className="rounded-full" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
+                    </li>
+                  </ul>
+                </div>
+                <div className=" xl:text-2xl  xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
+                  Ultimi ricercati: &nbsp;
+                  {lastLog.map((row) => (
+                    <>
+                      <Button size="medium" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
+                      &nbsp;&nbsp;
+                    </>
+                  ))}
+                </div>
+              </div>
+              <div className="sez-dx">
+                <div className="xl:text-2xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
+                  <Button size="medium" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
+                  &nbsp;&nbsp;
+                  <Button size="medium" color="secondary" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                  <br></br><br></br><br></br><br></br><br></br>
+                </div>                        </div>
+            </header>
+            <main className="middle-section">
               <br></br>
-              <br></br>
-              <br></br>
-              <br></br>
-              <br></br>
-              <br></br>
-              <p className="text-5xl py-4">
+              <p className="text-5xl py-4 text-center">
                 Conto  <span className="font-extrabold text-blue-800">
                   <Link href={`/dashboard/casse/${numeroFoglietto}`}>{numeroFoglietto}</Link>
 
@@ -481,44 +459,49 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 <br></br>
                 Caricare un numero foglietto!!
               </p>
-            </div>
+            </main>
           </>
         );
       case 'caricamento':
         return (
           <>
-            <div className='z-0 text-center'>
-              <br></br>
-              <br></br>
-              <br></br>
-              <br></br>
-              <br></br>
-              <br></br>
-              <br></br>
-              <p className="text-5xl py-4">
-                Caricamento in corso ...
-              </p>
-              <CircularProgress size="9rem" />
-            </div>
-
+            <header className="top-section">
+            </header>
+            <main className="middle-section">
+              <div className='z-0 text-center'>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <p className="text-5xl py-4">
+                  Caricamento in corso ...
+                </p>
+                <CircularProgress size="9rem" />
+              </div>
+            </main>
           </>
         );
       case 'elaborazione':
         return (
           <>
-            <div className='z-0 text-center '>
-              <br></br>
-              <br></br>
-              <br></br>
-              <br></br>
-              <br></br>
-              <br></br>
-              <p className="text-5xl py-4">
-                Elaborazione in corso ...
-              </p>
-              <CircularProgress size="9rem" />
-            </div>
-
+            <header className="top-section">
+            </header>
+            <main className="middle-section">
+              <div className='z-0 text-center'>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <br></br>
+                <p className="text-5xl py-4">
+                  Elaborazione in corso ...
+                </p>
+                <CircularProgress size="9rem" />
+              </div>
+            </main>
           </>
         );
       case 'gratis':
@@ -558,357 +541,275 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       case 'aperto':
         return (
           <>
-            <Box sx={{ flexGrow: 1 }}>
-              <Grid container spacing={2}>
-                <Grid
-                  container
-                  justifyContent="space-between"
-                  alignItems="center"
-                  flexDirection={{ xs: 'column', sm: 'row' }}
-                  sx={{ fontSize: '12px' }}
-                  size={12}
-                >
-                  <Grid sx={{ order: { xs: 2, sm: 1 } }}>
-                    {/*<Item>*/}
-                    <div className="z-0 p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
-                      <ul className="flex rounded-full">
-                        <li className="flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
-                          <a className="text-center block text-white font-extralight ">
-                            Casse
-                          </a>
-                          <div className="text-xs text-center text-white ">SAGRA:  {sagra.stato}&nbsp;&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</div>
-                        </li>
-                        <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4">
-                          <a>
-                            <div className='text-center text-emerald-600'>
-                              <TextField
-                                autoFocus
-                                className="p-2"
-                                label="Numero Foglietto"
-                                variant="outlined"
-                                value={numero}
-                                onChange={handleInputChange}
-                                sx={{
-                                  input: {
-                                    textAlign: 'right', // Allinea il testo a destra
-                                  },
-                                }}
-                                type="number"
-                              />
-                            </div>
-                          </a>
-                        </li>
-                        <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
-                          <Button className="rounded-full" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
-                        </li>
-                      </ul>
-                    </div>
-                    {/*</Item>*/}
-                  </Grid>
-                  <Grid container columnSpacing={1} sx={{ order: { xs: 2, sm: 1 } }}>
-                    <Grid>
-                      <Item elevation={0}>
-                        <div className="z-0 xl:text-3xl font-extralight text-end lg:text-base lg:py-1" >
-                          <p>  Conto aperto da:{" "}  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span></p>
-                          <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
-                          <p>  Conto:{" "}            <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
-                        </div>
-                      </Item>
-                    </Grid>
-                  </Grid>
-                </Grid>
-              </Grid>
-            </Box>
+            <header className="top-section">
+              <div className="sez-sx">
+                <div className="font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
+                  <ul className="flex rounded-full">
+                    <li className="flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
+                      <a className="text-center block text-white font-extralight ">
+                        Casse
+                      </a>
+                      <div className="text-xs text-center text-white ">SAGRA:  {sagra.stato}&nbsp;&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</div>
+                    </li>
+                    <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4">
 
-            {(+numeroFoglietto) > 9 ?
-              <div className="text-center">
-                {+numeroFoglietto > 9 ? (
-                  <Button size="small" className="rounded-full" variant="contained" onClick={handleStampa}> Stampa Conto </Button>
-                ) : (
-                  <Button size="small" className="rounded-full" variant="contained" onClick={handleStampa} disabled>Stampa Conto </Button>
-                )} &nbsp;&nbsp;
-                <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
-                  &nbsp;Chiudi conto&nbsp;&nbsp;
-                  <ButtonGroup size="small" className="rounded-full" variant="contained" aria-label="xccc">
-                    <Button size="small" variant="contained" onClick={handleAChiudiPos} disabled>{" "}POS{" "}</Button>
-                    <Button size="small" variant="contained" onClick={handleAChiudi} disabled> Contanti </Button>
-                    <Button size="small" variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
-                  </ButtonGroup> &nbsp;&nbsp;
-                </ul>&nbsp;&nbsp;
-                <Button size="small" className="rounded-full" variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
-              </div> :
-              <div className="text-center ">
-                <Button size="small" className="rounded-full" variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto </Button>
+                      <div className='text-center text-emerald-600'>
+                        <TextField
+                          autoFocus
+                          className="p-2"
+                          label="Numero Foglietto"
+                          variant="outlined"
+                          value={numero}
+                          onChange={handleInputChange}
+                          sx={{
+                            input: {
+                              textAlign: 'right', // Allinea il testo a destra
+                            },
+                          }}
+                          type="number"
+                        />
+                      </div>
+
+                    </li>
+                    <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
+                      <Button className="rounded-full" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
+                    </li>
+                  </ul>
+                </div>
+                <div className=" xl:text-2xl  xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
+                  Ultimi ricercati: &nbsp;
+                  {lastLog.map((row) => (
+                    <>
+                      <Button size="medium" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
+                      &nbsp;&nbsp;
+                    </>
+                  ))}
+                </div>
+
               </div>
-            }
-            <TabellaConto
-              item={products}
-              onAdd={handleAdd}
-              onAdd10={handleAdd10}
-              
-              onRemove={handleRemove}
-              onSet={handleSet}
-            />
-            <div className="z-0 text-2xl font-extralight text-end">
-              <p>Conto:{" "}<span className="font-extrabold text-blue-800">  {numeroFoglietto}&nbsp;&nbsp;&nbsp; </span></p>
+              <div className="sez-dx">
+                <div className="xl:text-2xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
+                  <Button size="medium" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
+                  &nbsp;&nbsp;
+                  <Button size="medium" color="secondary" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                  <p>  Conto:{" "}            <span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
+                  <p>  Conto aperto da:{" "}  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span></p>
+                  <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
+                </div>                        </div>
+            </header>
+
+            <main className="middle-section">
+              <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
+
+            </main>
+            
+            <footer className="bottom-section">
+              <div className="sez-sx-bassa ">
+                            <div className="z-0 text-2xl font-extralight text-end">
             </div>
-            {(+numeroFoglietto) > 9 ?
-              <div className="text-center ">
-                {+numeroFoglietto > 9 ? (
-                  <Button className="rounded-full" variant="contained" onClick={handleStampa}> Stampa Conto </Button>
-                ) : (
-                  <Button className="rounded-full" variant="contained" onClick={handleStampa} disabled>Stampa Conto </Button>
-                )} &nbsp;
-                <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
-                  &nbsp;Chiudi conto&nbsp;&nbsp;
-                  <ButtonGroup size="small" className="rounded-full" variant="contained" aria-label="xccc">
-                    <Button size="small" variant="contained" onClick={handleAChiudiPos} disabled>{" "}POS{" "}</Button>
-                    <Button size="small" variant="contained" onClick={handleAChiudi} disabled> Contanti </Button>
-                    <Button size="small" variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
-                  </ButtonGroup>
-                  &nbsp;
-                </ul> &nbsp;
-                <Button className="rounded-full" variant="contained" onClick={handleAggiorna} disabled> Aggiorna Conto</Button>
-              </div> :
-              <div className="text-center ">
-                <Button className="rounded-full" variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
+                {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" onClick={handleStampa} >Stampa Conto</Button> :
+                  <Button size="medium" className="rounded-full" variant="contained" onClick={handleStampa} disabled >Stampa Conto</Button>
+                }
+
+                &nbsp;<Button size="medium" className="rounded-full" variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
+                <br />
+                {+numeroFoglietto < 10 ? <p> Conto "non stampabile" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p> : <p> Conto "aperto" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>}
+
               </div>
-            }
+
+              <div className="sez-dx-bassa">
+                <ul className="inline-block py-3 text-2xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
+                  &nbsp;Chiudi conto&nbsp;&nbsp;
+                  <ButtonGroup size="medium" className="rounded-full" variant="contained" aria-label="xccc">
+                    <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudiPos} disabled>  POS  </Button>
+                    <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
+                    <Button size="medium" className="rounded-full" variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
+                  </ButtonGroup>
+                  &nbsp;&nbsp;
+                </ul>
+              </div>
+            </footer>
+
+
+
             {/* Sezione che verrà stampata */}
             <div ref={printRef} className="hidden">
               <TheBill item={products} />
             </div>
-          </>
+           </>
         );
       case 'modificato':
         return (
           <>
-            <Box sx={{ flexGrow: 1 }}>
-              <Grid container spacing={2}>
-                <Grid
-                  container
-                  justifyContent="space-between"
-                  alignItems="center"
-                  flexDirection={{ xs: 'column', sm: 'row' }}
-                  sx={{ fontSize: '12px' }}
-                  size={12}
-                >
-                  <Grid sx={{ order: { xs: 2, sm: 1 } }}>
-                    {/*<Item>*/}
-                    <div className="z-0 p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
-                      <ul className="flex rounded-full">
-                        <li className="flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
-                          <a className="text-center block text-white font-extralight ">
-                            Casse
-                          </a>
-                          <div className="text-xs text-center text-white ">SAGRA:  {sagra.stato}&nbsp;&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</div>
-                        </li>
-                        <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4">
-                          <a>
-                            <div className='text-center text-emerald-600'>
-                              <TextField
-                                autoFocus
-                                className="p-2"
-                                label="Numero Foglietto"
-                                variant="outlined"
-                                value={numero}
-                                onChange={handleInputChange}
-                                sx={{
-                                  input: {
-                                    textAlign: 'right', // Allinea il testo a destra
-                                  },
-                                }}
-                                type="number"
-                              />
-                            </div>
-                          </a>
-                        </li>
-                        <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
-                          <Button className="rounded-full" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
-                        </li>
-                      </ul>
-                    </div>
-                    {/*</Item>*/}
-                  </Grid>
-                  <Grid container columnSpacing={1} sx={{ order: { xs: 2, sm: 1 } }}>
-                    <Grid>
-                      <Item elevation={0}>
-                        <div className="z-0 xl:text-3xl font-extralight text-end lg:text-base lg:py-1" >
-                          <p>  Conto aperto da:{" "}  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span></p>
-                          <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
-                          <p>  Conto:{" "}            <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
-                        </div>
-                      </Item>
-                    </Grid>
-                  </Grid>
-                </Grid>
-              </Grid>
-            </Box>
+            <header className="top-section">
+              <div className="sez-sx">
+                <div className="font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
+                  <ul className="flex rounded-full">
+                    <li className="flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
+                      <a className="text-center block text-white font-extralight ">
+                        Casse
+                      </a>
+                      <div className="text-xs text-center text-white ">SAGRA:  {sagra.stato}&nbsp;&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</div>
+                    </li>
+                    <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4">
 
-            <div className="z-0 text-center">
-              {(+numeroFoglietto) > 9 ?
-                <div className='text-center'>
-                  <Button size="small" className="rounded-full" variant="contained" onClick={handleStampa} disabled>Stampa Conto</Button>
-                  &nbsp;&nbsp;
-                  <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
-                    &nbsp;Chiudi conto&nbsp;&nbsp;
-                    <ButtonGroup size="small" className="rounded-full" variant="contained" aria-label="xccc">
-                      <Button size="small" variant="contained" onClick={handleAChiudiPos} disabled>  POS  </Button>
-                      <Button size="small" variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
-                      <Button size="small" variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
-                    </ButtonGroup>
-                    &nbsp;&nbsp;
+                      <div className='text-center text-emerald-600'>
+                        <TextField
+                          autoFocus
+                          className="p-2"
+                          label="Numero Foglietto"
+                          variant="outlined"
+                          value={numero}
+                          onChange={handleInputChange}
+                          sx={{
+                            input: {
+                              textAlign: 'right', // Allinea il testo a destra
+                            },
+                          }}
+                          type="number"
+                        />
+                      </div>
+
+                    </li>
+                    <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
+                      <Button className="rounded-full" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
+                    </li>
                   </ul>
-                  &nbsp;&nbsp;
-                  <Button size="small" className="rounded-full" variant="contained" onClick={handleAggiorna}>Aggiorna Conto</Button>
-                </div> :
-                <div className='text-center'>
-                  <Button size="small" className="rounded-full" variant="contained" onClick={handleAggiorna}>Aggiorna Conto</Button>
                 </div>
-              }
-              <div>
-                <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
-              </div>
-              <div className="z-0 xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
-                <p >
-                  Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
-                </p>
-              </div>
-              {(+numeroFoglietto) > 9 ?
-                <div className='text-center'>
-                  <Button className="rounded-full" variant="contained" onClick={handleStampa} disabled>Stampa Conto</Button>
-                  &nbsp;&nbsp;
-                  <ul className="inline-block py-3 text-xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
-                    &nbsp;Chiudi conto&nbsp;&nbsp;
-                    <ButtonGroup size="small" className="rounded-full" variant="contained" aria-label="xccc">
-                      <Button size="small" variant="contained" onClick={handleAChiudiPos} disabled>  POS  </Button>
-                      <Button size="small" variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
-                      <Button size="small" variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
-                    </ButtonGroup>
-                    &nbsp;&nbsp;
-                  </ul>
-                  &nbsp;&nbsp;
-                  <Button size="small" className="rounded-full" variant="contained" onClick={handleAggiorna}>Aggiorna Conto</Button>
-                </div> :
-                <div className='text-center'>
-                  <Button size="small" className="rounded-full" variant="contained" onClick={handleAggiorna}>Aggiorna Conto</Button>
+                <div className=" xl:text-2xl  xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
+                  Ultimi ricercati: &nbsp;
+                  {lastLog.map((row) => (
+                    <>
+                      <Button size="medium" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
+                      &nbsp;&nbsp;
+                    </>
+                  ))}
                 </div>
-              }
-            </div>
+              </div>
+              <div className="sez-dx">
+                <div className="xl:text-2xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
+                  <Button size="medium" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
+                  &nbsp;&nbsp;
+                  <Button size="medium" color="secondary" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                  <p>  Conto:{" "}            <span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
+                  <p>  Conto aperto da:{" "}  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span></p>
+                  <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
+                </div>                        </div>
+            </header>
+
+            <main className="middle-section">
+              <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
+            </main>
+
+            <footer className="bottom-section">
+              <div className="sez-sx-bassa ">
+                 <Button size="medium" className="rounded-full" variant="contained" onClick={handleStampa} disabled >Stampa Conto</Button>
+                &nbsp;<Button size="medium" className="rounded-full" variant="contained" onClick={handleAggiorna} >Aggiorna Conto</Button>
+                <br />
+                <p> Conto "modificato" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
+              </div>
+
+              <div className="sez-dx-bassa">
+                <ul className="inline-block py-3 text-2xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
+                  &nbsp;Chiudi conto&nbsp;&nbsp;
+                  <ButtonGroup size="medium" className="rounded-full" variant="contained" aria-label="xccc">
+                    <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudiPos} disabled>  POS  </Button>
+                    <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
+                    <Button size="medium" className="rounded-full" variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
+                  </ButtonGroup>
+                  &nbsp;&nbsp;
+                </ul>
+              </div>
+            </footer>
           </>
         );
       case 'stampato':
         return (
           <>
-            <Box sx={{ flexGrow: 1 }}>
-              <Grid container spacing={2}>
-                <Grid
-                  container
-                  justifyContent="space-between"
-                  alignItems="center"
-                  flexDirection={{ xs: 'column', sm: 'row' }}
-                  sx={{ fontSize: '12px' }}
-                  size={12}
-                >
-                  <Grid sx={{ order: { xs: 2, sm: 1 } }}>
-                    {/*<Item>*/}
-                    <div className="z-0 p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
-                      <ul className="flex rounded-full">
-                        <li className="flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
-                          <a className="text-center block text-white font-extralight ">
-                            Casse
-                          </a>
-                          <div className="text-xs text-center text-white ">SAGRA:  {sagra.stato}&nbsp;&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</div>
-                        </li>
-                        <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4">
-                          <a>
-                            <div className='text-center text-emerald-600'>
-                              <TextField
-                                autoFocus
-                                className="p-2"
-                                label="Numero Foglietto"
-                                variant="outlined"
-                                value={numero}
-                                onChange={handleInputChange}
-                                sx={{
-                                  input: {
-                                    textAlign: 'right', // Allinea il testo a destra
-                                  },
-                                }}
-                                type="number"
-                              />
-                            </div>
-                          </a>
-                        </li>
-                        <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
-                          <Button className="rounded-full" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
-                        </li>
-                      </ul>
-                    </div>
-                    {/*</Item>*/}
-                  </Grid>
-                  <Grid container columnSpacing={1} sx={{ order: { xs: 2, sm: 1 } }}>
-                    <Grid>
-                      <Item elevation={0}>
-                        <div className="z-0 xl:text-3xl font-extralight text-end lg:text-base lg:py-1" >
-                          <p>  Conto aperto da:{" "}  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span></p>
-                          <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
-                          <p>  Conto:{" "}            <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
-                        </div>
-                      </Item>
-                    </Grid>
-                  </Grid>
-                </Grid>
-              </Grid>
-            </Box>
+            <header className="top-section">
+              <div className="sez-sx">
+                <div className="font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
+                  <ul className="flex rounded-full">
+                    <li className="flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
+                      <a className="text-center block text-white font-extralight ">
+                        Casse
+                      </a>
+                      <div className="text-xs text-center text-white ">SAGRA:  {sagra.stato}&nbsp;&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</div>
+                    </li>
+                    <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4">
 
-            <div className="z-0 text-center">
-              <div className="z-0 text-center">
-                {+numeroFoglietto > 9 ? <Button size="small" className="rounded-full" variant="contained" onClick={handleStampa} >Stampa Conto</Button> :
-                  <Button size="small" className="rounded-full" variant="contained" onClick={handleStampa} disabled >Stampa Conto</Button>
-                }
-                &nbsp;&nbsp;
+                      <div className='text-center text-emerald-600'>
+                        <TextField
+                          autoFocus
+                          className="p-2"
+                          label="Numero Foglietto"
+                          variant="outlined"
+                          value={numero}
+                          onChange={handleInputChange}
+                          sx={{
+                            input: {
+                              textAlign: 'right', // Allinea il testo a destra
+                            },
+                          }}
+                          type="number"
+                        />
+                      </div>
 
+                    </li>
+                    <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
+                      <Button className="rounded-full" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
+                    </li>
+                  </ul>
+                </div>
+                <div className=" xl:text-2xl  xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
+                  Ultimi ricercati: &nbsp;
+                  {lastLog.map((row) => (
+                    <>
+                      <Button size="medium" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
+                      &nbsp;&nbsp;
+                    </>
+                  ))}
+
+                </div>
+
+              </div>
+              <div className="sez-dx">
+                <div className="xl:text-2xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
+                  <Button size="medium" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
+                  &nbsp;&nbsp;
+                  <Button size="medium" color="secondary" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                  <p>  Conto:{" "}            <span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
+                  <p>  Conto aperto da:{" "}  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span></p>
+                  <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
+                </div>                        </div>
+            </header>
+
+            <main className="middle-section">
+              <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
+            </main>
+
+            <footer className="bottom-section">
+             <div className="sez-sx-bassa ">
+                {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" onClick={handleStampa} >Stampa Conto</Button> :
+                  <Button size="medium" className="rounded-full" variant="contained" onClick={handleStampa} disabled >Stampa Conto</Button>
+                } 
+               &nbsp;<Button size="medium" className="rounded-full" variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
+               <br /> 
+                <p> Conto "stampato" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p> 
+              </div>
+                 
+              <div className="sez-dx-bassa">
                 <ul className="inline-block py-3 text-2xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
                   &nbsp;Chiudi conto&nbsp;&nbsp;
-                  <ButtonGroup size="small" className="rounded-full" variant="contained" aria-label="xccc">
-                    <Button size="small" variant="contained" onClick={handleAChiudiPos} >  POS  </Button>
-                    <Button size="small" variant="contained" onClick={handleAChiudi} >Contanti</Button>
-                    <Button size="small" variant="contained" onClick={handleChiudiGratis} >Altro Importo</Button>
+                  <ButtonGroup size="medium" className="rounded-full" variant="contained" aria-label="xccc">
+                    <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudiPos} >  POS  </Button>
+                    <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudi} >Contanti</Button>
+                    <Button size="medium" className="rounded-full" variant="contained" onClick={handleChiudiGratis} >Altro Importo</Button>
                   </ButtonGroup>
                   &nbsp;&nbsp;
                 </ul>
-                &nbsp;&nbsp;
-                <Button size="small" className="rounded-full" variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
               </div>
-              <br />
-
-              <div>
-                <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
-              </div>
-              <div className="z-0 xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
-                <p >
-                  Conto stampato numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
-                </p>
-              </div>
-              <div className="z-0 text-center">
-                {+numeroFoglietto > 9 ? <Button className="rounded-full" variant="contained" onClick={handleStampa} >Stampa Conto</Button> :
-                  <Button className="rounded-full" variant="contained" onClick={handleStampa} disabled >Stampa Conto</Button>
-                }
-                &nbsp;&nbsp;
-
-                <ul className="inline-block py-3 text-2xl font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
-                  &nbsp;Chiudi conto&nbsp;&nbsp;
-                  <ButtonGroup size="small" className="rounded-full" variant="contained" aria-label="xccc">
-                    <Button size="small" variant="contained" onClick={handleAChiudiPos} >  POS  </Button>
-                    <Button size="small" variant="contained" onClick={handleAChiudi} >Contanti</Button>
-                    <Button size="small" variant="contained" onClick={handleChiudiGratis} >Altro Importo</Button>
-                  </ButtonGroup>
-                  &nbsp;&nbsp;
-                </ul>
-                <Button className="rounded-full" variant="contained" onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
-              </div>
-            </div>
+            </footer>
 
             {/* Sezione che verrà stampata */}
             <div ref={printRef} className="hidden">
@@ -919,77 +820,85 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       case 'chiuso':
         return (
           <>
-            <main>
-              <Box sx={{ flexGrow: 1 }}>
-                <Grid container spacing={2}>
-                  <Grid
-                    container
-                    justifyContent="space-between"
-                    alignItems="center"
-                    flexDirection={{ xs: 'column', sm: 'row' }}
-                    sx={{ fontSize: '12px' }}
-                    size={12}
-                  >
-                    <Grid sx={{ order: { xs: 2, sm: 1 } }}>
-                      {/*<Item>*/}
-                      <div className="z-0 p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
-                        <ul className="flex rounded-full">
-                          <li className="flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
-                            <a className="text-center block text-white font-extralight ">
-                              Casse
-                            </a>
-                            <div className="text-xs text-center text-white ">SAGRA:  {sagra.stato}&nbsp;&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</div>
-                          </li>
-                          <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4">
-                            <a>
-                              <div className='text-center text-emerald-600'>
-                                <TextField
-                                  autoFocus
-                                  className="p-2"
-                                  label="Numero Foglietto"
-                                  variant="outlined"
-                                  value={numero}
-                                  onChange={handleInputChange}
-                                  sx={{
-                                    input: {
-                                      textAlign: 'right', // Allinea il testo a destra
-                                    },
-                                  }}
-                                  type="number"
-                                />
-                              </div>
-                            </a>
-                          </li>
-                          <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
-                            <Button className="rounded-full" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
-                          </li>
-                        </ul>
-                      </div>
-                      {/*</Item>*/}
+            <header className="top-section">
+              <div className="sez-sx">
+                <div className="font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
+                  <ul className="flex rounded-full">
+                    <li className="flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
+                      <a className="text-center block text-white font-extralight ">
+                        Casse
+                      </a>
+                      <div className="text-xs text-center text-white ">SAGRA:  {sagra.stato}&nbsp;&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</div>
+                    </li>
+                    <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4">
 
-                    </Grid>
-                  </Grid>
-                </Grid>
-              </Box>
-              <br></br>
-              <br></br>
-              <br></br>
-              <br></br>
-              <br></br>
+                      <div className='text-center text-emerald-600'>
+                        <TextField
+                          autoFocus
+                          className="p-2"
+                          label="Numero Foglietto"
+                          variant="outlined"
+                          value={numero}
+                          onChange={handleInputChange}
+                          sx={{
+                            input: {
+                              textAlign: 'right', // Allinea il testo a destra
+                            },
+                          }}
+                          type="number"
+                        />
+                      </div>
+
+                    </li>
+                    <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
+                      <Button className="rounded-full" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
+                    </li>
+                  </ul>
+                </div>
+                <div className=" xl:text-2xl  xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
+                  Ultimi ricercati: &nbsp;
+                  {lastLog.map((row) => (
+                    <>
+                      <Button size="medium" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
+                      &nbsp;&nbsp;
+                    </>
+                  ))}
+
+                </div>
+
+              </div>
+              <div className="sez-dx">
+                <div className="xl:text-2xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
+                  <Button size="medium" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
+                  &nbsp;&nbsp;
+                  <Button size="medium" color="secondary" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                </div>
+                <br /><br /><br /><br /><br />
+              </div>
+            </header>
+
+            <main className="middle-section">
               <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50  text-center" role="alert">
                 <span className="text-xl font-semibold">Dark alert!</span> Conto {conto?.id_comanda} chiuso in data: {milltodatestring(conto?.data_chiusura)} totale: {conto?.totale} Euro.
               </div>
-              <div>
-                <Button size="medium" className="rounded-full" variant="contained" onClick={handleButtonRiapri}>Riapri Conto</Button>
-              </div>
+
             </main>
+            <footer className="bottom-section">
+              <div className="sez-sx-bassa">
+                <div>
+                  <Button size="medium" className="rounded-full" variant="contained" onClick={handleButtonRiapri}>Riapri Conto</Button>
+                </div>
+              </div>
+              <div className="sez-dx-bassa">
+              </div>
+            </footer>
           </>
         );
       case 'modificaquantita':
         return (
           <div className="flex items-center justify-center min-h-screen rounded">
-           <div className="w-[600px] p-4  space-y-4 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded -translate-y-16">
-                             <p className="text-xl py-1 rounded">
+            <div className="w-[600px] p-4  space-y-4 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded -translate-y-16">
+              <p className="text-xl py-1 rounded">
                 Per il conto numero: <span className="font-extrabold text-blue-800">{conto?.id_comanda} </span>
                 inserisci la quantità di porzioni per il piatto: <span className="font-extrabold text-blue-800">{piattomodificaquantitaValue}
                 </span>
@@ -1018,71 +927,79 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       case 'none':
         return (
           <>
-            <main>
-            <br></br>
-              <Box sx={{ flexGrow: 1 }}>
-                <Grid container spacing={2}>
-                  <Grid
-                    container
-                    justifyContent="space-between"
-                    alignItems="center"
-                    flexDirection={{ xs: 'column', sm: 'row' }}
-                    sx={{ fontSize: '12px' }}
-                    size={12}
-                  >
-                    <Grid sx={{ order: { xs: 2, sm: 1 } }}>
-                      {/*<Item>*/}
-                      <div className="z-0 p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
-                        <ul className="flex rounded-full">
-                          <li className="flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
-                            <a className="text-center block text-white font-extralight ">
-                              Casse
-                            </a>
-                            <div className="text-xs text-center text-white ">SAGRA:  {sagra.stato}&nbsp;&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</div>
-                          </li>
-                          <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4">
-                            <a>
-                              <div className='text-center text-emerald-600'>
-                                <TextField
-                                  autoFocus
-                                  className="p-2"
-                                  label="Numero Foglietto"
-                                  variant="outlined"
-                                  value={numero}
-                                  onChange={handleInputChange}
-                                  sx={{
-                                    input: {
-                                      textAlign: 'right', // Allinea il testo a destra
-                                    },
-                                  }}
-                                  type="number"
-                                />
-                              </div>
-                            </a>
-                          </li>
-                          <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
-                            <Button className="rounded-full" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
-                          </li>
-                        </ul>
-                      </div>
-                      {/*</Item>*/}
 
-                    </Grid>
-                  </Grid>
-                </Grid>
-              </Box>
-  
-              <br></br>
-              <br></br>
-              <br></br>
-              <br></br>
-              <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50  text-center" role="alert">
+               <header className="top-section">
+              <div className="sez-sx">
+                <div className="font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
+                  <ul className="flex rounded-full">
+                    <li className="flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
+                      <a className="text-center block text-white font-extralight ">
+                        Casse
+                      </a>
+                      <div className="text-xs text-center text-white ">SAGRA:  {sagra.stato}&nbsp;&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</div>
+                    </li>
+                    <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4">
+
+                      <div className='text-center text-emerald-600'>
+                        <TextField
+                          autoFocus
+                          className="p-2"
+                          label="Numero Foglietto"
+                          variant="outlined"
+                          value={numero}
+                          onChange={handleInputChange}
+                          sx={{
+                            input: {
+                              textAlign: 'right', // Allinea il testo a destra
+                            },
+                          }}
+                          type="number"
+                        />
+                      </div>
+
+                    </li>
+                    <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
+                      <Button className="rounded-full" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
+                    </li>
+                  </ul>
+                </div>
+                <div className=" xl:text-2xl  xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
+                  Ultimi ricercati: &nbsp;
+                  {lastLog.map((row) => (
+                    <>
+                      <Button size="medium" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
+                      &nbsp;&nbsp;
+                    </>
+                  ))}
+
+                </div>
+
+              </div>
+              <div className="sez-dx">
+                <div className="xl:text-2xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
+                  <Button size="medium" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
+                  &nbsp;&nbsp;
+                  <Button size="medium" color="secondary" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                </div>
+                <br /><br /><br /><br /><br />
+              </div>
+            </header>
+
+            <main className="middle-section">
+               <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50  text-center" role="alert">
                 <span className="text-xl font-semibold">Dark alert!</span> Conto non esistente.
               </div>
-              <div>
+            </main>
+
+            <footer className="bottom-section">
+              <div className="sez-sx-bassa">
+           <div>
                 <Button size="medium" className="rounded-full" variant="contained" onClick={handleButtonCrea}>Crea Nuovo Conto</Button>
               </div>
-            </main>
+              </div>
+              <div className="sez-dx-bassa">
+              </div>
+            </footer>
           </>
         );
 
@@ -1109,59 +1026,18 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     } else {
       return (
         <main>
-          <Box sx={{ flexGrow: 1 }} >
-            <Grid container spacing={2}>
-              <Grid
-                container
-                justifyContent="space-between"
-                alignItems="center"
-                flexDirection={{ xs: 'column', sm: 'row' }}
-                sx={{ fontSize: '12px' }}
-                size={12}
-              >
-                <Grid sx={{ order: { xs: 1, sm: 2 } }}>
-                  {/*<Item>*/}          
-                  <div className="z-0 xl:text-3xl xl:py-1 font-extralight lg:text-base">
-                    <p className='text-start'>Ultimi: &nbsp;
-                      {lastLog.map((row) => (
-                        <>
-                          <Button size="medium" className="rounded-full" variant="contained" onClick={() => {
-                            if (phase == 'iniziale_stampato')
-                              setPhase('stampato')
-                            else
-                              carica(row.foglietto)
-                          }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
-                          &nbsp;&nbsp;
-                        </>
-                      ))
-                      }
-                    </p>
-                  </div>  {/*</Item>*/}
-                </Grid>
-                <Grid container columnSpacing={1} sx={{ order: { xs: 1, sm: 2 } }}>
-                  <Grid>
-                    {/*<Item>*/}                     <div>
-                      <Button size="medium" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
-                    </div>{/*</Item>*/}
-                  </Grid>
-                  <Grid>
-                    {/*<Item>*/}           <div> <Button size="medium" color="secondary" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
-                    </div>{/*</Item>*/}
-                  </Grid>
-                </Grid>
-              </Grid>
-            </Grid>
-          </Box>
           {renderPhaseContent()}
+          
           <Snackbar
             open={openSnackbar}
-            autoHideDuration={6000}
+            autoHideDuration={6001}
             onClose={handleClose}
             message={(+numero) > 9999 ?
-              "3 Inserisci un numero foglietto valido (minore di 5999)" :
-              "4 Hai inserito un numero riservato asporto (compreso tra 6000 e 9999)"
+              "3 Inserisci un numero foglietto valido (minore di 8999)" :
+              "4 Hai inserito un numero riservato asporto (compreso tra 9000 e 9999)"
             }
           />
+
         </main>
       )
     }

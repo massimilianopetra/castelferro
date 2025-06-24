@@ -8,27 +8,34 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 
 import type { DbConsumazioniPrezzo } from '@/app/lib/definitions';
+import { idID } from '@mui/material/locale';
 
 export default function TheBill({ item }: { item: DbConsumazioniPrezzo[] }) {
 
     var totale = 0;
-    var coperti = 0;
+    var coperti = 1;
+    var comanda = -1;
+    var giorno = -1;
 
     for (let i of item) {
         totale += i.quantita * i.prezzo_unitario;
         if (i.id_piatto == 1) //comanda 1 sono i coperti
             coperti = i.quantita;
+        if (comanda == -1) comanda = i.id_comanda;
+        if (giorno == -1) giorno = i.giorno;
     }
+
+
     var media = (totale / coperti);
 
 
     return (
 
         <div>
-            <Table>     
+            <Table>
                 <TableHead>
-                <TableRow><TableCell>&nbsp;&nbsp;&nbsp;&nbsp;48° SAGRA DEI SALAMINI D’ASINO dal 14 al 21 Agosto 2025</TableCell></TableRow>
-            </TableHead>
+                    <TableRow><TableCell>&nbsp;&nbsp;&nbsp;&nbsp;48° SAGRA DEI SALAMINI D’ASINO dal 14 al 21 Agosto 2025</TableCell></TableRow>
+                </TableHead>
             </Table>
 
             <Table>
@@ -52,7 +59,7 @@ export default function TheBill({ item }: { item: DbConsumazioniPrezzo[] }) {
                                 </TableCell>
                                 <TableCell className="flex-wrap">
 
-                                   &nbsp;&nbsp;&nbsp;{row.prezzo_unitario}&nbsp;&euro;
+                                    &nbsp;&nbsp;&nbsp;{row.prezzo_unitario}&nbsp;&euro;
 
                                 </TableCell>
                                 <TableCell > &nbsp;&nbsp;&nbsp;
@@ -66,23 +73,20 @@ export default function TheBill({ item }: { item: DbConsumazioniPrezzo[] }) {
                         <TableCell ></TableCell>
                         <TableCell> </TableCell>
                         <TableCell >Totale:</TableCell>
-                        <TableCell >{totale.toFixed(2)}&euro;&nbsp;
+                        <TableCell >{totale.toFixed(2)}&nbsp;&euro;
                         </TableCell>
                     </TableHead>
                     <TableBody>
                         <TableCell></TableCell>
                         <TableCell ></TableCell>
                         <TableCell>&nbsp;&nbsp;&nbsp;A coperto:</TableCell>
-                    <TableCell>&nbsp;&nbsp;{media.toFixed(2)}&nbsp;&euro; </TableCell>
+                        <TableCell>&nbsp;&nbsp;{media.toFixed(2)}&nbsp;&euro; </TableCell>
+                    </TableBody>
                 </TableBody>
-            </TableBody>
-        </Table>
-        <br />
-        &nbsp;&nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;  Grazie per aver cenato da noi!  Speriamo di rivederti presto.
-            
+            </Table>
+            <br />
+            &nbsp;&nbsp;&nbsp;&nbsp; Id: {comanda}_{giorno}
         </div >
-
-    
     );
 
 }

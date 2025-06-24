@@ -49,7 +49,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setNumero(event.target.value);
-    };
+            };
 
     const handleClose = () => {
         setOpenSnackbar(false);
@@ -60,7 +60,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     };
 
     async function carica(num: number) {
-        if (isNaN(num) || num < 1 || num > 5999) {
+        if (isNaN(num) || num < 1 || num > 8999) {
             setOpenSnackbar(true);
             return;
         }
@@ -403,6 +403,7 @@ const handleAnnulla = async () => {
                                 <a>
                                     <div className='text-center text-emerald-600'>
                                         <TextField
+                                            autoFocus
                                             className="p-2"
                                             label="Numero Foglietto"
                                             variant="outlined"
@@ -454,11 +455,11 @@ const handleAnnulla = async () => {
                     <div>
                         <Snackbar
                             open={openSnackbar}
-                            autoHideDuration={6000}
+                            autoHideDuration={6001}
                             onClose={handleClose}
                             message={(+numero) > 9999 ?
-                                "Inserisci un numero foglietto valido (minore di 5999)":
-                                "Hai inserito un numero riservato asporto (compreso tra 6000 e 9999)"
+                                "Inserisci un numero foglietto valido (minore di 8999)":
+                                "Hai inserito un numero riservato asporto (compreso tra 8000 e 9999)"
                             }
                         />
                     </div>

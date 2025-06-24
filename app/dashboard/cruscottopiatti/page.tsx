@@ -162,21 +162,22 @@ export default function Page() {
     }
     if (phase == 'caricamento') {
       return (
-        <main>
-          <div className="flex flex-wrap flex-col">
-            <div className='text-center py-4'>
+        <><header className="top-section">
+        </header><main className="middle-section">
+            <div className='z-0 text-center'>
+              <br></br>
+              <br></br>
               <p className="text-5xl py-4">
                 Cruscotto di Sintesi
               </p>
-            </div>
-            <div className='text-center '>
+              <br></br>
+              <br></br>
               <p className="text-5xl py-4">
                 Caricamento in corso ...
               </p>
               <CircularProgress size="9rem" />
             </div>
-          </div>
-        </main>
+          </main></>
       );
     } else if (phase == 'caricato') {
 

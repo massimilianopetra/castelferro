@@ -434,21 +434,22 @@ export default function Page() {
   if (session?.user?.name == "SuperUser") {
     if (phase == "caricamento") {
       return (
-        <main>
-          <div className="flex flex-wrap flex-col">
-            <div className="text-center py-4">
-              <p className="text-5xl py-4  text-blue-600">
+        <><header className="top-section">
+        </header><main className="middle-section">
+            <div className='z-0 text-center'>
+              <br></br>
+              <br></br>
+              <p className="text-5xl py-4">
                 Cruscotto di Sintesi conti gratis
               </p>
-            </div>
-            <div className="text-center ">
-              <p className="text-5xl py-4  text-blue-600">
+              <br></br>
+              <br></br>
+              <p className="text-5xl py-4">
                 Caricamento in corso ...
               </p>
               <CircularProgress size="9rem" />
             </div>
-          </div>
-        </main>
+          </main></>
       );
     } else if (phase == "caricato") {
       return (
