@@ -32,10 +32,10 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }:
                 <Table  sx={{ minWidth: 150 }} size="small" aria-label="a dense table">
                     <TableHead>
                         <TableRow className=" text-gray-800 rounded-lg bg-gray-100 md:text-base">
-                            <TableCell align="left"><p className="text-2xl font-bold">Piatto</p></TableCell>
-                            <TableCell className="text-2xl font-bold" align="center"><p className="font-bold">Quantità</p></TableCell>
+                            <TableCell align="left"><p className="text-2xl font-bold md:text-base">Piatto</p></TableCell>
+                            <TableCell className="text-2xl font-bold" align="center"><p className=" md:text-base font-bold">Quantità</p></TableCell>
                             <TableCell className=" text-2xl " align="left"><p></p></TableCell>
-                            <TableCell className="text-2xl font-bold" align="right"><p className="font-bold">Prezzo Totale</p></TableCell>
+                            <TableCell className="text-2xl font-bold" align="right"><p className=" md:text-base font-bold">Prezzo Totale</p></TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody >
@@ -44,10 +44,10 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }:
                                 backgroundColor: row.quantita > 0 ? "rgba(144, 238, 144, 0.3)" : "white",
                             }}>
                                 <TableCell align="left">
-                                    <span className="text-2xl font-normal">{row.alias}</span>
+                                    <span className="text-2xl font-normal md:text-base">{row.alias}</span>
                                 </TableCell>
                                 <TableCell align="left">
-                                    <span className="text-3xl font-bold">{row.quantita}</span> &nbsp;&nbsp;&nbsp;&nbsp;
+                                    <span className="text-3xl font-bold md:text-base">{row.quantita}</span> &nbsp;&nbsp;&nbsp;&nbsp;
                                 </TableCell>
                                 <TableCell align="left" >
                                     <ButtonGroup >
