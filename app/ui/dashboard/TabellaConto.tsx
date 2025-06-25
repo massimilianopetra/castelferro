@@ -23,19 +23,19 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }:
     }
 
     return (
-        <div className="z-0">
+        <div className="z-0 md:text-base">
 
-           <div className="z-0 p-1 mb-1 text-3xl font-semibold text-blue-800 rounded-lg bg-blue-50 text-end ">
+           <div className="z-0 p-1 mb-1 text-3xl md:text-base font-semibold text-blue-800 rounded-lg bg-blue-50 text-end ">
               Totale Conto: <span className="text-3xl font-extrabold ">{totale.toFixed(2)}</span> &euro;&nbsp;
             </div>
             <TableContainer component={Paper}>
                 <Table  sx={{ minWidth: 150 }} size="small" aria-label="a dense table">
                     <TableHead>
                         <TableRow className=" text-gray-800 rounded-lg bg-gray-100">
-                            <TableCell align="left"><p className="text-2xl font-bold">Piatto</p></TableCell>
-                            <TableCell className="text-2xl font-bold" align="center"><p className="font-bold">Quantità</p></TableCell>
+                            <TableCell align="left"><p className="text-2xl font-bold md:text-base">Piatto</p></TableCell>
+                            <TableCell className="text-2xl font-bold" align="center"><p className="font-bold md:text-base">Quantità</p></TableCell>
                             <TableCell className=" text-2xl " align="left"><p></p></TableCell>
-                            <TableCell className="text-2xl font-bold" align="right"><p className="font-bold">Prezzo Totale</p></TableCell>
+                            <TableCell className="text-2xl font-bold" align="right"><p className="font-bold md:text-base">Prezzo Totale</p></TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody >
@@ -44,10 +44,10 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }:
                                 backgroundColor: row.quantita > 0 ? "rgba(144, 238, 144, 0.3)" : "white",
                             }}>
                                 <TableCell align="left">
-                                    <span className="text-2xl font-normal">{row.alias}</span>
+                                    <span className="text-2xl font-normal md:text-base">{row.alias}</span>
                                 </TableCell>
                                 <TableCell align="left">
-                                    <span className="text-3xl font-bold">{row.quantita}</span> &nbsp;&nbsp;&nbsp;&nbsp;
+                                    <span className="text-3xl font-bold md:text-base">{row.quantita}</span> &nbsp;&nbsp;&nbsp;&nbsp;
                                 </TableCell>
                                 <TableCell align="left" >
                                     <ButtonGroup >
@@ -63,7 +63,7 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }:
                                         <Button onClick={() => onSet(row.id_piatto)} size="medium" variant="outlined" color="secondary" startIcon={<EditIcon />} />
                                     </ButtonGroup>
                                 </TableCell>
-                                <TableCell align="right" className="text-2xl font-extralight">
+                                <TableCell align="right" className="text-2xl font-extralight md:text-base">
                                     {(row.quantita * row.prezzo_unitario).toFixed(2)}&nbsp;&euro;&nbsp;
                                 </TableCell>
                             </TableRow>
