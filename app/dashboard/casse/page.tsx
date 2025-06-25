@@ -88,7 +88,7 @@ export default function Page() {
                 <div className="container">
                     <header className="top-section">
                         <div className="sez-sx">
-                            <div className="font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
+                            <div className="p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
                                 <ul className="flex rounded-full">
                                     <li className="flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
                                         <a className="text-center block text-white font-extralight ">
