@@ -28,6 +28,30 @@ main {
   font-family: fantasy;
 }
 
+/* Stili globali per assicurare che la pagina occupi tutto lo spazio visibile */
+html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%; /* Lasciato per garantire che il body si espanda */
+    font-family: Arial, sans-serif;
+    color: #333;
+}
+
+/* Nuovo contenitore padre per delimitare l'area del layout */
+.outer-wrapper {
+    /* Imposta l'altezza e la larghezza desiderate per il tuo layout */
+    width: 800px; /* Larghezza fissa per desktop */
+    height: 600px; /* Altezza fissa per desktop */
+
+    margin: 50px auto; /* Centra il wrapper orizzontalmente e dà un po' di margine superiore */
+    border: 2px solid #0056b3; /* Per visualizzare i confini del layout */
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    display: flex; /* Necessario per il Flexbox del container interno */
+    align-items: center; /* Centra il container all'interno del wrapper */
+    justify-content: center; /* Centra il container all'interno del wrapper */
+    overflow: hidden; /* Nasconde qualsiasi overflow se il container è più grande */
+}
+
 
 /* Contenitore principale Flexbox per le 3 sezioni orizzontali */
 .container {
@@ -44,49 +68,48 @@ main {
 .bottom-section {
     padding: 20px;
     box-sizing: border-box; /* Include padding e border nella larghezza/altezza */
-    display: flex; /* Utilizza Flexbox per le sub-sezioni */
+    display: flex; /* Utilizza Flexbox per le sub-sezioni (default: row) */
     flex-shrink: 0; /* Impedisce alle sezioni di restringersi */
 }
 
 /* Sezione Superiore: 25% dell'altezza */
 .top-section {
-    height: 22%;
- /*   background-color: #e0f7fa;*/
+    height: 25%;
+    background-color: #e0f7fa;
     border-bottom: 1px solid #b2ebf2;
-    /* justify-content: space-around; rimosso per un controllo più preciso con flex-grow */
     align-items: center; /* Centra verticalmente le sub-sezioni */
 }
 
 /* Sub-sezioni della Sezione Superiore (verticali) */
 .top-section .sez-sx,
-/*.top-section .sez-centrale-top,*/
+.top-section .sez-centrale-top,
 .top-section .sez-dx {
     padding: 10px;
-    margin: 0 10px;
-/*     background-color: #b3e5fc;*/
+    margin: 0 10px; /* Margine orizzontale per desktop */
+    background-color: #b3e5fc;
     border-radius: 5px;
     text-align: center;
     overflow: hidden; /* Blocca scorrimento interno */
 }
 
-/* Assegnazione delle percentuali specifiche */
+/* Assegnazione delle percentuali specifiche per desktop */
 .top-section .sez-sx {
-    flex: 6; /* Corrisponde al 60% del 100% complessivo (3+5+2 = 10) */
+    flex: 3; /* Corrisponde al 30% del 100% complessivo (3+5+2 = 10) */
 }
-/*
+
 .top-section .sez-centrale-top {
-    flex: 0; /* Corrisponde al 30% 
+    flex: 5; /* Corrisponde al 50% */
 }
-*/
+
 .top-section .sez-dx {
-    flex: 4; /* Corrisponde al 40% */
+    flex: 2; /* Corrisponde al 20% */
 }
 
 
 /* Sezione Centrale: 60% dell'altezza, scorrevole verticalmente */
 .middle-section {
-    height: 69%;
-/*    background-color: #fffde7;*/
+    height: 60%;
+    background-color: #fffde7;
     overflow-y: auto; /* Abilita lo scorrimento verticale se il contenuto eccede */
     overflow-x: hidden; /* Disabilita lo scorrimento orizzontale */
     flex-direction: column; /* Contenuto impilato verticalmente */
@@ -95,8 +118,8 @@ main {
 
 /* Sezione Inferiore: 15% dell'altezza */
 .bottom-section {
-    height: 9%;
- /*   background-color: #e8f5e9;*/
+    height: 15%;
+    background-color: #e8f5e9;
     border-top: 1px solid #c8e6c9;
     justify-content: space-around; /* Spazia uniformemente le sub-sezioni */
     align-items: center; /* Centra verticalmente le sub-sezioni */
@@ -105,26 +128,15 @@ main {
 /* Sub-sezioni della Sezione Inferiore */
 .bottom-section .sez-sx-bassa,
 .bottom-section .sez-dx-bassa {
-
-    padding: 5px;
-    margin: 0 5px;
-/*    background-color: #c8e6c9;*/
+    flex: 1; /* Distribuisce lo spazio equamente per desktop */
+    padding: 10px;
+    margin: 0 10px; /* Margine orizzontale per desktop */
+    background-color: #c8e6c9;
     border-radius: 5px;
     text-align: center;
     overflow: hidden; /* Blocca scorrimento interno */
 }
-/* Assegnazione delle percentuali specifiche */
-.bottom-section .sez-sx-bassa {
-    flex: 4 /* Corrisponde al 60% del 100% complessivo (3+5+2 = 10) */
-}
-/*
-.bottom-section  .sez-centrale-top {
-    flex: 0; /* Corrisponde al 30% 
-}
-*/
-.bottom-section  .sez-dx-bassa  {
-    flex: 6; /* Corrisponde al 40% */
-}
+
 /* Stili per titoli e paragrafi all'interno delle sezioni per migliore leggibilità */
 h2, h3 {
     color: #01579b;
@@ -133,4 +145,51 @@ h2, h3 {
 
 p {
     line-height: 1.6;
+}
+
+/* --- MEDIA QUERIES PER SMARTPHONE --- */
+@media (max-width: 600px) {
+    /* Il wrapper esterno si adatta alla larghezza dello schermo */
+    .outer-wrapper {
+        width: 95%; /* Occupa quasi tutta la larghezza dello schermo */
+        height: auto; /* L'altezza si adatta al contenuto per evitare scrollbar interne indesiderate */
+        margin: 20px auto; /* Meno margine sui lati */
+        border: none; /* Rimuovi il bordo per un look più pulito su mobile */
+        box-shadow: none; /* Rimuovi l'ombra */
+    }
+
+    /* Le sezioni principali orizzontali diventano colonne */
+    .top-section,
+    .bottom-section {
+        flex-direction: column; /* Impila le sub-sezioni verticalmente */
+        height: auto; /* L'altezza si adatta al contenuto */
+        padding: 10px; /* Riduci il padding */
+    }
+
+    /* Le sub-sezioni della parte superiore occupano tutta la larghezza */
+    .top-section .sez-sx,
+    .top-section .sez-centrale-top,
+    .top-section .sez-dx {
+        flex: none; /* Rimuovi la distribuzione percentuale */
+        width: 100%; /* Occupa tutta la larghezza disponibile */
+        margin: 5px 0; /* Aggiungi un margine verticale tra le sezioni */
+        padding: 15px; /* Aumenta il padding interno per un migliore aspetto */
+    }
+
+    /* Le sub-sezioni della parte inferiore occupano tutta la larghezza */
+    .bottom-section .sez-sx-bassa,
+    .bottom-section .sez-dx-bassa {
+        flex: none; /* Rimuovi la distribuzione percentuale */
+        width: 100%; /* Occupa tutta la larghezza disponibile */
+        margin: 5px 0; /* Aggiungi un margine verticale tra le sezioni */
+        padding: 15px; /* Aumenta il padding interno per un migliore aspetto */
+    }
+
+    /* La sezione centrale mantiene lo scorrimento ma si adatta all'altezza rimanente */
+    .middle-section {
+        height: 400px; /* Puoi impostare un'altezza fissa o una percentuale relativa al container */
+        /* Oppure, se .outer-wrapper ha height: auto, potresti voler usare flex-grow: 1 per farla espandere */
+        /* flex-grow: 1; */
+        padding: 15px;
+    }
 }
