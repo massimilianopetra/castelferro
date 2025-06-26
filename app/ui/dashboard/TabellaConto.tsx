@@ -33,7 +33,9 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }:
                     <TableHead>
                         <TableRow className=" text-gray-800 rounded-lg bg-gray-100 ">
                             <TableCell align="left"><p className="text-base font-bold md:text-2xl">Piatto</p></TableCell>
-                            <TableCell className="text-base font-bold" align="left"><p className=" md:text-2xl font-bold">Quantità</p></TableCell>
+                            
+                            <TableCell align="left"><p className="text-base font-bold md:text-2xl">Quantità</p></TableCell>
+          
                             <TableCell className=" text-base md:text-2xl " align="left"><p></p></TableCell>
                             <TableCell className="text-base font-bold" align="right"><p className=" md:text-2xl font-bold">Prezzo Totale</p></TableCell>
                         </TableRow>
@@ -49,6 +51,7 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }:
                                 <TableCell align="left">
                                     <span className="text-base font-bold md:text-2xl">{row.quantita}</span> &nbsp;&nbsp;&nbsp;&nbsp;
                                 </TableCell>
+                                
                                 <TableCell align="left"  sx={{ display: { xs: 'none', md: 'block' }}}>
                                     <ButtonGroup >
                                         <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
@@ -72,13 +75,9 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }:
               
                                     <ButtonGroup >
                                         <Button onClick={() => onAdd10(row.id_piatto)} size="small" variant="contained" startIcon={<Replay10Icon />} />
-                                    </ButtonGroup>
-         
-                                    <ButtonGroup >
                                         <Button onClick={() => onSet(row.id_piatto)} size="small" variant="outlined" color="secondary" startIcon={<EditIcon />} />
                                     </ButtonGroup>
                                 </TableCell>
-
 
                                 <TableCell align="right" className="text-base font-extralight md:text-2xl">
                                     {(row.quantita * row.prezzo_unitario).toFixed(2)}&nbsp;&euro;&nbsp;
