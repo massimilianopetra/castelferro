@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Button, Snackbar, TextField } from '@mui/material';
+import { Button, ButtonGroup, Snackbar, TextField } from '@mui/material';
 import type { DbFiera, DbLog } from '@/app/lib/definitions';
 import { getContoPiuAlto, getGiornoSagra, getLastLog } from '@/app/lib/actions';
 import Filter1Icon from '@mui/icons-material/Filter1';
@@ -101,42 +101,59 @@ export default function Page() {
                                             <TextField
                                                 autoFocus
                                                 className="p-2"
-                                                    label="Numero Foglietto"
-                                                    variant="outlined"
-                                                    value={numero}
-                                                    onChange={handleInputChange}
-                                                    sx={{
-                                                        input: {
-                                                            textAlign: 'right', // Allinea il testo a destra
-                                                        },
-                                                    }}
-                                                    type="number"
-                                                />
+                                                label="Numero Foglietto"
+                                                variant="outlined"
+                                                value={numero}
+                                                onChange={handleInputChange}
+                                                style={{ borderRadius: '9999px' }}
+                                                sx={{
+                                                    input: {
+                                                        textAlign: 'right', // Allinea il testo a destra
+                                                    },
+                                                }}
+                                                type="number"
+                                            />
                                         </div>
 
                                     </li>
                                     <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
-                                        <Button className="rounded-full" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
+                                        <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
+                                            <Button className="rounded-full" variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>Carica Foglietto</Button>
+                                        </ButtonGroup>
+                                        <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
+                                            <Button size="small" className="rounded-full" variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>Carica Foglietto</Button>
+                                        </ButtonGroup>
+
                                     </li>
                                 </ul>
                             </div>
-                            <div className=" xl:text-2xl  xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
-                                Ultimi ricercati: &nbsp;
-                                {lastLog.map((row) => (
-                                    <>
-                                        <Button size="medium" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
-                                        &nbsp;&nbsp;
-                                    </>
-                                ))}
-
+                            <div className="text-base md:text-xl" style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
+                                <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
+                                    <p>Ultimi ricercati &nbsp;
+                                        {lastLog.map((row) => (
+                                        <>
+                                            <Button size="medium" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} style={{ borderRadius: '9999px' }}>{row.foglietto}</Button>
+                                             &nbsp;
+                                        </>
+                                        ))}</p>
+                                </ButtonGroup>
+                                <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
+                                    <p>Ultimi &nbsp;
+                                        {lastLog.map((row) => (
+                                         <>
+                                            <Button size="small" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} style={{ borderRadius: '9999px' }}>{row.foglietto}</Button>
+                                            &nbsp;
+                                        </>
+                                        ))}</p>
+                                </ButtonGroup>
                             </div>
 
                         </div>
-                        <div className="sez-dx">
+                        <div className="sez-dx" style={{ display: 'flex', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
                             <div className="xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
-                                <Button size="medium" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
+                                <Button size="medium" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaAsporto} style={{ borderRadius: '9999px' }}>Asporto</Button>
                                 &nbsp;&nbsp;
-                                <Button size="medium" color="secondary" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                                <Button size="medium" color="secondary" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaConto1} style={{ borderRadius: '9999px' }}>Camerieri</Button>
                             </div>
                             <br /><br /><br /><br /><br />
                         </div>
