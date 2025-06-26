@@ -90,8 +90,8 @@ export default function Page() {
                         <div className="sez-sx">
                             <div className="p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
                                 <ul className="flex rounded-full">
-                                    <li className="flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
-                                        <a className="text-center block text-white font-extralight md:text-2xl">
+                                    <li className="flex-1 mr-2font-bold py-4 rounded-full">
+                                        <a className="text-center block text-white font-extraligh text-2xl md:text-5xl">
                                             Casse
                                         </a>
                                         <div className="text-xs text-center text-white ">SAGRA:  {sagra.stato}&nbsp;&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</div>
