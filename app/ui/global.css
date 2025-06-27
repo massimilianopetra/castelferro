@@ -148,7 +148,7 @@ p {
 }
 
 /* --- MEDIA QUERIES PER SMARTPHONE --- */
-@media (max-width: 600px) {
+@media (max-width: 1024px) {
     /* Il wrapper esterno si adatta alla larghezza dello schermo */
     .outer-wrapper {
         width: 95%; /* Occupa quasi tutta la larghezza dello schermo */

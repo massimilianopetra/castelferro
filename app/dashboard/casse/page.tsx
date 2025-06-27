@@ -91,7 +91,7 @@ export default function Page() {
                         <div className="sez-sx">
                             <div className="p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
                                 <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}>
-                                    <li className="flex-1 mr-2font-bold py-4 ">
+                                    <li className="flex-1 mr-2font-bold py-2 ">
                                         <a className="text-center block text-blue-700 font-extraligh text-2xl md:text-5xl">
                                             Casse
                                         </a>

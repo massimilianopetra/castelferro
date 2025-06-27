@@ -28,7 +28,7 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }:
            <div className="z-0 p-1 mb-1 ext-base font-extrabold md:text-3xl text-blue-800 rounded-lg bg-blue-50 text-end">
               Totale Conto: <span className="text-base md:text-2xl font-extrabold ">{totale.toFixed(2)}</span> &euro;&nbsp;
             </div>
-            <TableContainer component={Paper}>
+         
                 <Table  sx={{ minWidth: 150 }} size="small" aria-label="a dense table">
                     <TableHead>
                         <TableRow className=" text-gray-800 rounded-lg bg-gray-100 ">
@@ -54,6 +54,7 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }:
                                 
                                 <TableCell align="left"  sx={{ display: { xs: 'none', md: 'block' }}}>
                                     <ButtonGroup >
+                                         
                                         <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
                                         <Button onClick={() => onAdd(row.id_piatto)} size="large" variant="contained" startIcon={<AddCircleIcon />} />
                                     </ButtonGroup>
@@ -69,6 +70,7 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }:
 
                                 <TableCell align="center" sx={{ display: { xs: 'block', md: 'none' }}}>
                                     <ButtonGroup >
+                                                  
                                         <Button onClick={() => onRemove(row.id_piatto)} size="small" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
                                         <Button onClick={() => onAdd(row.id_piatto)} size="small" variant="contained" startIcon={<AddCircleIcon />} />
                                     </ButtonGroup>
@@ -86,8 +88,8 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }:
                         ))}
                     </TableBody>
                 </Table>
-            </TableContainer>
-            <div className="p-2 mb-2 text-base font-extralight md:text-2xl text-blue-800 rounded-lg bg-blue-50 text-end">
+
+            <div className="p-2 mb-2 text-base font-extrabold md:text-2xl text-blue-800 rounded-lg bg-blue-50 text-end">
                Totale Conto: <span className="text-base md:text-2xl font-extrabold ">{totale.toFixed(2)}</span>&euro;&nbsp;
             </div>
         </div>
