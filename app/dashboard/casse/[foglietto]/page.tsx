@@ -666,16 +666,16 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                             </div>
 
                         </div>
-                        <div className="sez-dx" style={{ display: 'flex', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
-                            <div className="xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
-                                <Button size="medium" className="font-semibold" variant="outlined" onClick={handleButtonClickCaricaAsporto} style={{ borderRadius: '9999px' }}>Asporto</Button>
-                                &nbsp;&nbsp;
-                                <Button size="medium" color="secondary" className="font-semibold " variant="outlined" onClick={handleButtonClickCaricaConto1} style={{ borderRadius: '9999px' }}>Camerieri</Button>
-                            </div>
-                            <br /><br /><br /><br /><br />
-                        </div>
-
-                    </header>
+                  <div className="sez-dx">
+                    <div className="text-base md:text-2xl py-2 md:py-4 font-extralight text-end">
+                      <Button size="medium" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
+                      &nbsp;&nbsp;
+                      <Button size="medium" color="secondary" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                      <p>  Conto:{" "}            <span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
+                      <p>  Conto aperto da:{" "}  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span></p>
+                      <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
+                    </div>                        </div>
+                </header>
 
                 <main className="middle-section">
                   <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />

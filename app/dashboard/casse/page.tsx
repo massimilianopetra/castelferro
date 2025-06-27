@@ -158,17 +158,20 @@ export default function Page() {
                                 &nbsp;&nbsp;
                                 <Button size="medium" color="secondary" className="font-semibold " variant="outlined" onClick={handleButtonClickCaricaConto1} style={{ borderRadius: '9999px' }}>Camerieri</Button>
                             </div>
-                            <br /><br /><br /><br /><br />
+     
                         </div>
 
                     </header>
 
-                    <main className="middle-section"> </main>
+                    <main className="middle-section">  
+                                    <p className="text-2xl md:text-5xl py-4 text-center  text-blue-800">
+ 
+                                      <br></br>
+                                      <br></br>
+                                      Caricare un nuovo foglietto!
+                                    </p></main>
 
-                    <footer className="bottom-section">
-                        <div className="sez-sx-bassa"></div>
-                        <div className="sez-dx-bassa"></div>
-                    </footer>
+ 
                 </div>
                 <Snackbar
                     open={openSnackbar}
