@@ -381,10 +381,11 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                 <main>
                     <div className="container_cucine">
                         {/* Sezione 1: Intestazione (25%) */}
-                        {phase !== 'caricato' ?
+                        { phase !== 'caricato' && phase !== 'modificaquantita'  ?
                             <header className="header_cucine_sup">
-                                <div className="font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
-                                    <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}>
+
+                                <div className="p-30 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
+                                    <ul className="flex" style={{ borderRadius: '9999px' }}>
                                         <li className="flex-1 mr-2font-bold py-2 ">
                                             <a className="text-center block text-blue-700 font-extraligh text-2xl md:text-5xl">
                                                 {nomeCucina}
@@ -422,7 +423,9 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                     </ul>
                                 </div>
                             </header> : <div></div>}
-                        {phase !== 'caricato' ?
+                         { phase !== 'caricato' && phase !== 'modificaquantita'  ?
+                       
+                       
 
                             <header className="header_cucine_inf">
                                 <div className="z-0 xl:text-3xl font-extralight xl:text-end lg:text-3xl lg:py-2 lg:text-center">

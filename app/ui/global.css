@@ -230,20 +230,20 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: center;
- /***  background-color: #3b82f6;*/
+/***    background-color: #3b82f6;*/
 /***   color: rgb(19, 183, 47);*/
   padding: 1rem;
-  height: 17%; /* Ora 25% dell'altezza del container_cucine */
+  height: 20%; /* Ora 25% dell'altezza del container_cucine */
 }
 .header_cucine_inf {
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  /***  background-color: #3bf6b5;*/
+/***    background-color: #3bf6b5;*/
  /***  color: rgb(222, 17, 17);*/
   padding: 1rem;
-  height: 8%; /* Ora 25% dell'altezza del container_cucine */
+  height: 7%; /* Ora 25% dell'altezza del container_cucine */
 }
 
 .mainContent_cucine {
@@ -252,7 +252,7 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: center;
-  /*** background-color: #195ee8;*/
+  /***  background-color: #195ee8;*/
   padding: 1rem;
   /* height: 60%; Potrebbe essere omesso se flex-grow: 1 fa il lavoro */
   text-align: center;
@@ -276,7 +276,7 @@ html, body, #root {
   display: flex;
   align-items: center;
   justify-content: center;
-    background-color: #1554d4;
+   /***   background-color: #e4c31c;*/
   padding: 1rem;
   height: 15%; /* Ora 15% dell'altezza del container_cucine */
 }
