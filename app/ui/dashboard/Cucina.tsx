@@ -497,55 +497,55 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                             </div>}
 
                         { }
-                        <main className=".mainContent_cucine">
+                     {/*   <main className=".mainContent_cucine">*/}
                             <p className=".mainContent_cucine_p">          {renderPhaseContent()}</p>
-                        </main>
-                        {/* Sezione 2: Footer (15%) */}
+                     {/*   </main>*/}
+                        {/* Sezione 2: Footer (15%)*/}
 
                         <footer className="footer_cucine">
-                            <div className="buttonContainer_cucine">
+                            <div className="buttonContainer_cucine"> 
 
                                 {phase == 'caricato' ?
                                     <div className="flex justify-between items-center w-full"> {/* AGGIUNGI QUESTE CLASSI */}
-                                        &nbsp;&nbsp;&nbsp;<Button size="large" variant="contained" onClick={handleButtonClickInvia}
+                                        &nbsp;<Button size="large" variant="contained" onClick={handleButtonClickInvia}
                                             className="font-extralight text-left"
                                             sx={{
-                                                padding: '20px 40px', // Aumenta il padding per renderlo più grande
+                                                padding: '15px 30px', // Aumenta il padding per renderlo più grande
                                                 fontSize: '1.5rem', // Aumenta la dimensione del font
                                                 // Puoi aggiungere altre proprietà CSS qui, ad esempio minWidth
                                                 minWidth: '200px',
-                                            }} style={{ borderRadius: '9999px' }}>Invia1</Button> &nbsp;
+                                            }} style={{ borderRadius: '9999px' }}>Invia</Button> &nbsp;
                                         <Button size="large" variant="contained" onClick={handleButtonClickAnnulla}
                                             className=" font-extralight text-right" sx={{
-                                                padding: '20px 40px', // Aumenta il padding per renderlo più grande
+                                                padding: '15px 30px', // Aumenta il padding per renderlo più grande
                                                 fontSize: '1.5rem', // Aumenta la dimensione del font
                                                 // Puoi aggiungere altre proprietà CSS qui, ad esempio minWidth
                                                 minWidth: '200px',
-                                            }} style={{ borderRadius: '9999px' }}>Annulla2</Button>&nbsp;&nbsp;&nbsp;
+                                            }} style={{ borderRadius: '9999px' }}>Annulla</Button>&nbsp;
                                     </div> :
                                     <div className="flex justify-between items-center w-full"> {/* AGGIUNGI QUESTE CLASSI */}
                                         <Button size="large" variant="contained" onClick={handleButtonClickInvia}
                                             className="font-extralight" // Rimuovi text-left
                                             disabled sx={{
-                                                padding: '20px 40px',
+                                                padding: '15px 30px',
                                                 fontSize: '1.5rem',
                                                 minWidth: '200px',
-                                            }} style={{ borderRadius: '9999px' }}>Invia3</Button>
+                                            }} style={{ borderRadius: '9999px' }}>Invia</Button>
                                         {/* Rimuovi lo spazio non-breaking &nbsp; qui, justify-between gestirà lo spazio */}
                                         <Button size="large" variant="contained" onClick={handleButtonClickAnnulla}
                                             className="font-extralight" // Rimuovi text-right
                                             disabled sx={{
-                                                padding: '20px 40px',
+                                                padding: '15px 30px',
                                                 fontSize: '1.5rem',
                                                 minWidth: '200px',
-                                            }} style={{ borderRadius: '9999px' }}>Annulla4</Button>
+                                            }} style={{ borderRadius: '9999px' }}>Annulla</Button>
                                     </div>
                                 }
                                 <div className='text-center '>
 
                                 </div>
-                            </div>
-                        </footer>
+                              </div>
+                        </footer> 
                     </div>
 
                 </main>
