@@ -2,6 +2,10 @@
 @tailwind components;
 @tailwind utilities;
 
+.force-display-flex {
+  display: flex !important;
+}
+
 input[type='number'] {
   -moz-appearance: textfield;
   appearance: textfield;
@@ -44,8 +48,8 @@ html, body {
     height: 600px; /* Altezza fissa per desktop */
 
     margin: 50px auto; /* Centra il wrapper orizzontalmente e dà un po' di margine superiore */
-    border: 2px solid #0056b3; /* Per visualizzare i confini del layout */
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+ /***    border: 2px solid #0056b3; /* Per visualizzare i confini del layout */
+ /***     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
     display: flex; /* Necessario per il Flexbox del container interno */
     align-items: center; /* Centra il container all'interno del wrapper */
     justify-content: center; /* Centra il container all'interno del wrapper */
@@ -75,8 +79,8 @@ html, body {
 /* Sezione Superiore: 25% dell'altezza */
 .top-section {
     height: 25%;
-    background-color: #e0f7fa;
-    border-bottom: 1px solid #b2ebf2;
+  /***    background-color: #e0f7fa;*/
+  /***    border-bottom: 1px solid #b2ebf2; */
     align-items: center; /* Centra verticalmente le sub-sezioni */
 }
 
@@ -86,7 +90,7 @@ html, body {
 .top-section .sez-dx {
     padding: 10px;
     margin: 0 10px; /* Margine orizzontale per desktop */
-    background-color: #b3e5fc;
+   /***      background-color: #b3e5fc;*/
     border-radius: 5px;
     text-align: center;
     overflow: hidden; /* Blocca scorrimento interno */
@@ -109,7 +113,7 @@ html, body {
 /* Sezione Centrale: 60% dell'altezza, scorrevole verticalmente */
 .middle-section {
     height: 60%;
-    background-color: #fffde7;
+     /***   background-color: #fffde7;*/
     overflow-y: auto; /* Abilita lo scorrimento verticale se il contenuto eccede */
     overflow-x: hidden; /* Disabilita lo scorrimento orizzontale */
     flex-direction: column; /* Contenuto impilato verticalmente */
@@ -119,7 +123,7 @@ html, body {
 /* Sezione Inferiore: 15% dell'altezza */
 .bottom-section {
     height: 15%;
-    background-color: #e8f5e9;
+    /***    background-color: #e8f5e9;   */
     border-top: 1px solid #c8e6c9;
     justify-content: space-around; /* Spazia uniformemente le sub-sezioni */
     align-items: center; /* Centra verticalmente le sub-sezioni */
@@ -131,7 +135,7 @@ html, body {
     flex: 1; /* Distribuisce lo spazio equamente per desktop */
     padding: 10px;
     margin: 0 10px; /* Margine orizzontale per desktop */
-    background-color: #c8e6c9;
+/***    background-color: #c8e6c9;*/
     border-radius: 5px;
     text-align: center;
     overflow: hidden; /* Blocca scorrimento interno */
@@ -193,3 +197,116 @@ p {
         padding: 10px;
     }
 }
+
+/*ssss*/ 
+/* App.css o index.css */
+
+/* Stili globali cruciali (invariati) */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Blocca lo scroll a livello di documento */
+}
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+
+/* --- MODIFICA CRUCIALE QUI per .container_cucine --- */
+.container_cucine {
+  display: flex;
+  flex-direction: column;
+  /* NON useremo più height: 100vh qui. Useremo height: 100% */
+  height: 100%; /* Occuperà il 100% dell'altezza del suo genitore */
+  overflow: hidden; /* Impedisce scroll all'interno del container principale */
+}
+/* --- FINE MODIFICA CRUCIALE --- */
+
+
+/* Le altezze delle sezioni interne devono essere percentuali del loro genitore (.container_cucine) */
+.header_cucine_sup {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+ /***  background-color: #3b82f6;*/
+/***   color: rgb(19, 183, 47);*/
+  padding: 1rem;
+  height: 17%; /* Ora 25% dell'altezza del container_cucine */
+}
+.header_cucine_inf {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /***  background-color: #3bf6b5;*/
+ /***  color: rgb(222, 17, 17);*/
+  padding: 1rem;
+  height: 8%; /* Ora 25% dell'altezza del container_cucine */
+}
+
+.mainContent_cucine {
+  flex-grow: 1; /* Occupa lo spazio rimanente */
+  overflow: hidden; /* Nessuno scroll interno per il contenuto */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /*** background-color: #195ee8;*/
+  padding: 1rem;
+  /* height: 60%; Potrebbe essere omesso se flex-grow: 1 fa il lavoro */
+  text-align: center;
+}
+
+.mainContent_cucine_p {
+  max-height: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 5; /* Regola questo valore se vuoi più o meno righe visibili */
+  -webkit-box-orient: vertical;
+  /* Aggiungi una dimensione massima per evitare che una singola parola lunghissima forzi l'overflow orizzontale */
+  word-break: break-word; /* Permette alle parole lunghe di andare a capo */
+  max-width: 100%; /* Assicura che il paragrafo non esca dal contenitore */
+}
+
+
+.footer_cucine {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /***  background-color: #e5e7eb;*/
+  padding: 1rem;
+  height: 15%; /* Ora 15% dell'altezza del container_cucine */
+}
+
+/* ... (il resto del tuo CSS per i bottoni, ecc.) ... */
+.buttonContainer_cucine {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+  justify-content: center;
+  align-items: center;
+}
+
+@media (min-width: 640px) {
+  .buttonContainer_cucine {
+    flex-direction: row;
+  }
+}
+
+.buttonBase_cucine {
+  font-weight: bold;
+  padding: 1rem 2rem;
+  border-radius: 0.5rem;
+  font-size: 1.125rem;
+  text-align: center;
+  min-width: 150px;
+  white-space: nowrap;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+ 

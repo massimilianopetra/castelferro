@@ -33,6 +33,7 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }:
                     <TableHead>
                     <TableRow className=" text-gray-800 rounded-lg bg-gray-100 ">
                         <TableCell align="left"><p className="text-base font-bold md:text-2xl">Piatto</p></TableCell>
+
                         <TableCell align="left" sx={{ display: { xs: 'none', md: 'block' } }}>
                             <p className="text-base font-bold md:text-2xl">Quantità</p>
                         </TableCell>
