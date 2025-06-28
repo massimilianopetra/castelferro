@@ -96,7 +96,7 @@ export default function Page() {
                                             Casse
                                         </a>
                                         <div className="text-xs text-center text-blue-700 ">SAGRA:
-                                            <span className="text-xs text-center text-blue-800 ">{sagra.stato}&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</span>
+                                            <span className="text-xs text-center text-blue-800 font-semibold ">{sagra.stato}&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</span>
                                         </div>
                                     </li>
                                     <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4 rounded-full " style={{ borderRadius: '9999px' }}>
