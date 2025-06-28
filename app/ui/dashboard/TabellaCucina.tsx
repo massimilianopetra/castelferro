@@ -25,7 +25,7 @@ export default function TabellaCucina({ item, onAdd10, onAdd, onRemove, onSet }:
                             <p className="text-base font-bold md:text-2xl">Quantità</p>
                         </TableCell>
                         <TableCell align="left" sx={{ display: { xs: 'block', sm: 'none' }, }} >
-                            <p className="text-base font-bold md:text-2xl">Q11</p>
+                            <p className="text-base font-bold md:text-2xl"></p>
                         </TableCell>
                         <TableCell className=" text-2xl " align="left"><p></p></TableCell>
                     </TableRow>
@@ -36,11 +36,22 @@ export default function TabellaCucina({ item, onAdd10, onAdd, onRemove, onSet }:
                             backgroundColor: row.quantita > 0 ? "rgba(144, 238, 144, 0.3)" : "white",
                         }}>
                             <TableCell align="left">
-                                <span className="text-2xl">{row.alias}</span>
-                            </TableCell>
-                            <TableCell align="left" >
-                                <span className="text-2xl">{row.quantita}</span>
-                            </TableCell>
+    {/* Contenitore Flex per schermi piccoli (default) */}
+    {/* Su schermi piccoli, saranno 'flex-row' per stare sulla stessa riga */}
+    {/* Su schermi grandi, potrebbero non aver bisogno di flex esplicito se TableCell gestisce già */}
+    <div className="flex flex-row items-center justify-between sm:flex-row sm:justify-start sm:gap-4">
+      {/* Testo Alias (responsive) */}
+      <p className="text-base sm:text-2xl">{row.alias}</p> {/* Base per mobile, sm per desktop */}
+
+      {/* Testo Quantità (responsive) */}
+      <p className="text-base sm:text-2xl">{row.quantita}</p> {/* Base per mobile, sm per desktop */}
+    </div>
+  </TableCell>
+
+                        
+
+
+
                             <TableCell align="left" sx={{ display: { xs: 'none', sm: 'block' } }}>
                                 <ButtonGroup >
                                     <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
