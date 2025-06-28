@@ -66,7 +66,7 @@ html, body {
 .top-section,
 .middle-section,
 .bottom-section {
-    padding: 20px;
+    padding: 10px;
     box-sizing: border-box; /* Include padding e border nella larghezza/altezza */
     display: flex; /* Utilizza Flexbox per le sub-sezioni (default: row) */
     flex-shrink: 0; /* Impedisce alle sezioni di restringersi */
@@ -153,7 +153,7 @@ p {
     .outer-wrapper {
         width: 95%; /* Occupa quasi tutta la larghezza dello schermo */
         height: auto; /* L'altezza si adatta al contenuto per evitare scrollbar interne indesiderate */
-        margin: 20px auto; /* Meno margine sui lati */
+        margin: 10px auto; /* Meno margine sui lati */
         border: none; /* Rimuovi il bordo per un look più pulito su mobile */
         box-shadow: none; /* Rimuovi l'ombra */
     }
@@ -163,7 +163,7 @@ p {
     .bottom-section {
         flex-direction: column; /* Impila le sub-sezioni verticalmente */
         height: auto; /* L'altezza si adatta al contenuto */
-        padding: 10px; /* Riduci il padding */
+        padding: 2px; /* Riduci il padding */
     }
 
     /* Le sub-sezioni della parte superiore occupano tutta la larghezza */
@@ -172,8 +172,8 @@ p {
     .top-section .sez-dx {
         flex: none; /* Rimuovi la distribuzione percentuale */
         width: 100%; /* Occupa tutta la larghezza disponibile */
-        margin: 5px 0; /* Aggiungi un margine verticale tra le sezioni */
-        padding: 15px; /* Aumenta il padding interno per un migliore aspetto */
+        margin: 2px 0; /* Aggiungi un margine verticale tra le sezioni */
+        padding: 10px; /* Aumenta il padding interno per un migliore aspetto */
     }
 
     /* Le sub-sezioni della parte inferiore occupano tutta la larghezza */
@@ -181,7 +181,7 @@ p {
     .bottom-section .sez-dx-bassa {
         flex: none; /* Rimuovi la distribuzione percentuale */
         width: 100%; /* Occupa tutta la larghezza disponibile */
-        margin: 5px 0; /* Aggiungi un margine verticale tra le sezioni */
+        margin: 2px 0; /* Aggiungi un margine verticale tra le sezioni */
         padding: 15px; /* Aumenta il padding interno per un migliore aspetto */
     }
 
@@ -190,6 +190,6 @@ p {
         height: 400px; /* Puoi impostare un'altezza fissa o una percentuale relativa al container */
         /* Oppure, se .outer-wrapper ha height: auto, potresti voler usare flex-grow: 1 per farla espandere */
         /* flex-grow: 1; */
-        padding: 15px;
+        padding: 10px;
     }
 }

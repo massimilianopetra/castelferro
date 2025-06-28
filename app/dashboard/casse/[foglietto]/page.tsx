@@ -677,7 +677,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                       <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
                     </ButtonGroup>
                     <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                      <p>Conto:{" "}<span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;</span>{" ("}<span className="text-blue-800 font-bold"> {deltanow(conto?.data_apertura)}{") "}</span>
+                      <p>Conto:{" "}<span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;</span>{" ("}<span className="text-blue-800 font-bold"> {deltanow(conto?.data_apertura)}</span>{") "}
                         &nbsp;Cameriere:{" "}<span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
                     </ButtonGroup>
                   </div>
@@ -799,14 +799,14 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                     <Button size="medium" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
                     &nbsp;&nbsp;
                     <Button size="medium" color="secondary" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
-                    <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
+                      <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
                       <p>  Conto:{" "}            <span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
                       <p>  Conto aperto da:{" "}  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span></p>
                       <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
                     </ButtonGroup>
                     <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                      <p>Conto:{" "}<span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;</span>{" ("}<span className="text-blue-800 font-bold"> {deltanow(conto?.data_apertura)}{") "}</span>
-                        &nbsp;Cameriere:{" "}<span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
+                      <p>Conto:{" "}<span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;</span>{" ("}<span className="text-blue-800 font-bold"> {deltanow(conto?.data_apertura)}</span>{") "}
+                        &nbsp;Cameriere:{" "}<span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;</span></p>
                     </ButtonGroup>
                   </div>
                 </div>
@@ -929,8 +929,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                       <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
                     </ButtonGroup>
                     <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                      <p>Conto:{" "}<span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;</span>{" ("}<span className="text-blue-800 font-bold"> {deltanow(conto?.data_apertura)}{") "}</span>
-                        &nbsp;Cameriere:{" "}<span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
+                      <p>Conto:{" "}<span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;</span>{" ("}<span className="text-blue-800 font-bold"> {deltanow(conto?.data_apertura)}</span>{") "}
+                        &nbsp;Cameriere:{" "}<span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;</span></p>
                     </ButtonGroup>
                   </div>
                 </div>

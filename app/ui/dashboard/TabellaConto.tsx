@@ -31,19 +31,22 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }:
          
                 <Table  sx={{ minWidth: 150 }} size="small" aria-label="a dense table">
                     <TableHead>
-                        <TableRow className=" text-gray-800 rounded-lg bg-gray-100 ">
-                            <TableCell align="left"><p className="text-base font-bold md:text-2xl">Piatto</p></TableCell>
-                            
-                            <TableCell align="left"  sx={{ display: { xs: 'none', md: 'block' }}}>
-                                <p className="text-base font-bold md:text-2xl">Quantità</p>               
-                            </TableCell>
-                            <TableCell align="left" sx={{ display: { xs: 'block', md: 'none' }}}>
-                                <p className="text-base font-bold md:text-2xl">Q</p>
-                            </TableCell>
+                    <TableRow className=" text-gray-800 rounded-lg bg-gray-100 ">
+                        <TableCell align="left"><p className="text-base font-bold md:text-2xl">Piatto</p></TableCell>
+                        <TableCell align="left" sx={{ display: { xs: 'none', md: 'block' } }}>
+                            <p className="text-base font-bold md:text-2xl">Quantità</p>
+                        </TableCell>
+                        <TableCell align="left" sx={{ display: { xs: 'block', md: 'none' }, }} >
+                            <p className="text-base font-bold md:text-2xl">Q</p>
+                        </TableCell>
 
-                       
-                            <TableCell className=" text-base md:text-2xl " align="left"><p></p></TableCell>
-                            <TableCell className="text-base font-bold" align="right"><p className=" md:text-2xl font-bold">Prezzo Totale</p></TableCell>
+                        <TableCell className=" text-base md:text-2xl " align="left"><p></p></TableCell>
+                        <TableCell align="left" sx={{ display: { xs: 'none', md: 'block' } }}>
+                            <p className="text-base font-bold md:text-2xl"> Prezzo Totale</p>
+                        </TableCell>
+                        <TableCell align="left" sx={{ display: { xs: 'block', md: 'none' }, }} >
+                            <p className="text-base font-bold md:text-2xl">Totale</p>
+                        </TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody >
