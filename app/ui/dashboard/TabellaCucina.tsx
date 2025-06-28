@@ -24,8 +24,8 @@ export default function TabellaCucina({ item, onAdd10, onAdd, onRemove, onSet }:
                         <TableCell align="left" sx={{ display: { xs: 'none', sm: 'block' } }}>
                             <p className="text-base font-bold md:text-2xl">Quantità</p>
                         </TableCell>
-                        <TableCell align="left" sx={{ display: { xs: 'block', sm: 'none' }, }} >
-                            <p className="text-base font-bold md:text-2xl"></p>
+                        <TableCell align="left" sx={{ display: { xs: 'block', sm: 'none' } }} >
+                            <p className="text-base font-bold md:text-2xl">Q</p>
                         </TableCell>
                         <TableCell className=" text-2xl " align="left"><p></p></TableCell>
                     </TableRow>
@@ -35,22 +35,20 @@ export default function TabellaCucina({ item, onAdd10, onAdd, onRemove, onSet }:
                         <TableRow className="hover:bg-yellow-200" sx={{
                             backgroundColor: row.quantita > 0 ? "rgba(144, 238, 144, 0.3)" : "white",
                         }}>
+
+
                             <TableCell align="left">
-    {/* Contenitore Flex per schermi piccoli (default) */}
-    {/* Su schermi piccoli, saranno 'flex-row' per stare sulla stessa riga */}
-    {/* Su schermi grandi, potrebbero non aver bisogno di flex esplicito se TableCell gestisce già */}
-    <div className="flex flex-row items-center justify-between sm:flex-row sm:justify-start sm:gap-4">
-      {/* Testo Alias (responsive) */}
-      <p className="text-base sm:text-2xl">{row.alias}</p> {/* Base per mobile, sm per desktop */}
-
-      {/* Testo Quantità (responsive) */}
-      <p className="text-base sm:text-2xl">{row.quantita}</p> {/* Base per mobile, sm per desktop */}
-    </div>
-  </TableCell>
-
-                        
-
-
+                                {row.alias.length > 8 ?
+                                    <span className="text-sm sm:text-2xl">{row.alias}</span>:
+                                    <span className="text-base sm:text-2xl">{row.alias}</span>
+                                 }
+                            </TableCell>
+                            <TableCell align="left" >
+                                {row.quantita > 99 ?
+                                    <span className="text-sm sm:text-2xl">{row.quantita}</span>:
+                                    <span className="text-base sm:text-2xl">{row.quantita}</span>
+                                 }
+                            </TableCell>
 
                             <TableCell align="left" sx={{ display: { xs: 'none', sm: 'block' } }}>
                                 <ButtonGroup >
