@@ -34,8 +34,14 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }:
                         <TableRow className=" text-gray-800 rounded-lg bg-gray-100 ">
                             <TableCell align="left"><p className="text-base font-bold md:text-2xl">Piatto</p></TableCell>
                             
-                            <TableCell align="left"><p className="text-base font-bold md:text-2xl">Quantità</p></TableCell>
-          
+                            <TableCell align="left"  sx={{ display: { xs: 'none', md: 'block' }}}>
+                                <p className="text-base font-bold md:text-2xl">Quantità</p>               
+                            </TableCell>
+                            <TableCell align="left" sx={{ display: { xs: 'block', md: 'none' }}}>
+                                <p className="text-base font-bold md:text-2xl">Q</p>
+                            </TableCell>
+
+                       
                             <TableCell className=" text-base md:text-2xl " align="left"><p></p></TableCell>
                             <TableCell className="text-base font-bold" align="right"><p className=" md:text-2xl font-bold">Prezzo Totale</p></TableCell>
                         </TableRow>
@@ -54,7 +60,6 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }:
                                 
                                 <TableCell align="left"  sx={{ display: { xs: 'none', md: 'block' }}}>
                                     <ButtonGroup >
-                                         
                                         <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
                                         <Button onClick={() => onAdd(row.id_piatto)} size="large" variant="contained" startIcon={<AddCircleIcon />} />
                                     </ButtonGroup>
