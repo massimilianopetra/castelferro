@@ -125,6 +125,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         return;
       }
       router.push(`/dashboard/casse/${numero}`);
+      setNumero('');//azzera inputo box
     }
   };
 
@@ -235,6 +236,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       await apriConto(Number(numeroFoglietto), sagra.giornata, 'Casse');
       await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'START', ''); // Logger
       setPhase('aperto');
+      setNumero('');//azzera inputo box
     }
   }
 
@@ -1188,7 +1190,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             open={openSnackbar}
             autoHideDuration={6001}
             onClose={handleClose}
-            message={(+numero) > 9999 ?
+            message={(+numeroFoglietto) > 9999 ?
               "3 Inserisci un numero foglietto valido (minore di 8999)" :
               "4 Hai inserito un numero riservato asporto (compreso tra 9000 e 9999)"
             }

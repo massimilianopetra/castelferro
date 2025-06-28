@@ -49,6 +49,7 @@ export default function Page() {
         }
 
         router.push(`/dashboard/casse/${numero}`);
+        setNumero(''); //cancella numero foglietto dalla input box
     };
 
     const handleButtonClickCaricaAsporto = async () => {

@@ -39,7 +39,7 @@ export default function Page() {
 
   const StyledTableRow = styled(TableRow)(({ theme }) => ({
     '&:nth-of-type(odd)': {
-      backgroundColor: theme.palette.action.hover,
+      backgroundColor: theme.palette.action.hoverOpacity,
     },
     // hide last border
     '&:last-child td, &:last-child th': {
@@ -54,6 +54,7 @@ export default function Page() {
     ordinati: number;
     aperti: number;
     stampati: number;
+    pagatitotali: number;
     pagaticontanti: number;
     pagatipos: number;
     pagatialtro: number;
@@ -105,6 +106,7 @@ export default function Page() {
         ordinati: op.ordinati,
         aperti: op.aperto,
         stampati: op.stampati,
+        pagatitotali:op.pagatocontanti+op.pagatopos+op.pagatoaltro,
         pagaticontanti: op.pagatocontanti,
         pagatipos: op.pagatopos,
         pagatialtro: op.pagatoaltro,
@@ -142,11 +144,16 @@ export default function Page() {
                     label="Piatto"
                     sx={{ mt: 2 }}
                   >
-                    {elencoPaitti.map((piatto) => (
-                      <MenuItem key={piatto.id} value={piatto.id}> {/* Value = ID */}
-                        {piatto.alias} {/* Visualizzato = Alias */}
-                      </MenuItem>
-                    ))}
+{
+  elencoPaitti
+    .slice() // Crea una copia dell'array per evitare di modificare l'originale
+    .sort((a, b) => a.alias.localeCompare(b.alias)) // Ordina per la proprietà 'alias'
+    .map((piatto) => (
+      <MenuItem key={piatto.id} value={piatto.id}>
+        {piatto.alias}
+      </MenuItem>
+    ))
+}
                   </Select>
                 </FormControl>
 
@@ -225,22 +232,24 @@ export default function Page() {
                     <StyledTableCell align="right" className="font-bold ">Ordinati N.&nbsp;</StyledTableCell>
                     <StyledTableCell align="right" className="font-bold ">Aperti N.&nbsp;</StyledTableCell>
                     <StyledTableCell align="right" className="font-bold ">Stampati N.&nbsp;</StyledTableCell>
-                    <StyledTableCell align="right" className="font-bold ">Pagati Contanti N.&nbsp;</StyledTableCell>
-                    <StyledTableCell align="right" className="font-bold ">Pagati POS N.&nbsp;</StyledTableCell>
-                    <StyledTableCell align="right" className="font-bold ">Pagati Altro N.&nbsp;</StyledTableCell>
+                    <StyledTableCell align="right" className="font-bold ">Pagati Totali&nbsp;</StyledTableCell>
+                    <StyledTableCell align="right" className="font-extralight "  > Contanti N.&nbsp;</StyledTableCell>
+                    <StyledTableCell align="right" className="font-extralight "  > POS N.&nbsp;</StyledTableCell>
+                    <StyledTableCell align="right" className="font-extralight "  > Altro N.&nbsp;</StyledTableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {record.map((row) => (
                     <StyledTableRow key={row.piatto}>
-                      <StyledTableCell align="right">{row.piatto}</StyledTableCell>
-                      <StyledTableCell align="right">{row.prezzo.toFixed(2)}&euro;</StyledTableCell>
-                      <StyledTableCell align="right">{row.ordinati}</StyledTableCell>
-                      <StyledTableCell align="right">{row.aperti}</StyledTableCell>
-                      <StyledTableCell align="right">{row.stampati}</StyledTableCell>
-                      <StyledTableCell align="right">{row.pagaticontanti}</StyledTableCell>
-                      <StyledTableCell align="right">{row.pagatipos}</StyledTableCell>
-                      <StyledTableCell align="right">{row.pagatialtro}</StyledTableCell>
+                      <StyledTableCell align="right" className="font-semibold">{row.piatto}</StyledTableCell>
+                      <StyledTableCell align="right" className="font-semibold">{row.prezzo.toFixed(2)}&euro;</StyledTableCell>
+                      <StyledTableCell align="right" className="font-semibold">{row.ordinati}</StyledTableCell>
+                      <StyledTableCell align="right" className="font-semibold">{row.aperti}</StyledTableCell>
+                      <StyledTableCell align="right" className="font-semibold">{row.stampati}</StyledTableCell>
+                      <StyledTableCell align="right" className="font-semibold ">{row.pagatitotali}</StyledTableCell>       
+                      <StyledTableCell align="right" className="font-extralight " >{row.pagaticontanti}</StyledTableCell>
+                      <StyledTableCell align="right" className="font-extralight " >{row.pagatipos}</StyledTableCell>
+                      <StyledTableCell align="right" className="font-extralight " >{row.pagatialtro}</StyledTableCell>
                     </StyledTableRow>
                   ))}
                 </TableBody>

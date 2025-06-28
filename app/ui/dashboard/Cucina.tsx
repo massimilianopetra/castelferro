@@ -123,6 +123,8 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     const handleButtonClickCarica = () => {
         const num = Number(numero);
         carica(num);
+        setNumero(''); //arreza numero fogleitto input box
+        
     };
 
     const handleButtonClickAnnulla = () => {
@@ -181,6 +183,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                 return (item);
         });
         setProducts(newProducts);
+    
         setPhase('caricato');
     };
 
@@ -550,7 +553,17 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                               </div>
                         </footer> 
                     </div>
-
+                    <div>
+                        <Snackbar
+                            open={openSnackbar}
+                            autoHideDuration={6001}
+                            onClose={handleClose}
+                            message={(+numero) > 9999 ?
+                                "Inserisci un numero foglietto valido (minore di 8999)":
+                                "Hai inserito un numero riservato asporto (compreso tra 9000 e 9999)"
+                            }
+                        />
+                    </div>
                 </main>
 
 
