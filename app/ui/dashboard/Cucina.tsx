@@ -417,8 +417,8 @@ const handleAnnulla = async () => {
                                         </li>
                                         <li className="text-left flex-1 mr-2 text-3xl lg:text-4xl  font-bold py-4 rounded-full">
                                             {phase == 'caricato' ?
-                                                <Button className="rounded-full" size="large" variant="contained" onClick={handleButtonClickCarica} disabled>Carica Foglietto</Button> :
-                                                <Button className="rounded-full" size="large" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
+                                                <Button className="rounded-full" size="large" variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }} disabled>Carica Foglietto</Button> :
+                                                <Button className="rounded-full" size="large" variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>Carica Foglietto</Button>
                                             }
                                         </li>
                                     </ul>
@@ -429,18 +429,43 @@ const handleAnnulla = async () => {
                         <header className="header_cucine_inf">
                             <div className="z-0 xl:text-3xl font-extralight xl:text-end lg:text-3xl lg:py-2 lg:text-center">
                                 <p>
+                                    <ButtonGroup sx={{ display: { xs: 'none', sm: 'block' } }}>
                                     {lastLog.map((row) => (
                                         <>
                                             {phase == 'caricato' ?
-                                                <Button size="large" className="rounded-full text-xl" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} disabled>{row.foglietto}</Button> :
-                                                <Button size="large" className="rounded-full text-xl" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} >{row.foglietto}</Button>}
+                                                <Button size="large" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} disabled>{row.foglietto}</Button> :
+                                        
+                                                 <Button size="large" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} >{row.foglietto}</Button>
+                                                }
+                                 
                                             &nbsp;&nbsp;
+                
+             </>
+                                    ))}
+                                                                                                                   {phase == 'caricato' ?
+                                        <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1} disabled>Camerieri</Button> :
+                                        <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                                    }
+                                    </ButtonGroup>
+
+
+                                    <ButtonGroup sx={{ display: { xs: 'block', sm: 'none' } }}>
+                                    {lastLog.map((row) => (
+                                        <>
+                                                                     
+                                                                    {phase == 'caricato' ?
+                                                <Button size="small" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} disabled>{row.foglietto}</Button> :
+                                                <Button size="small" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} >{row.foglietto}</Button>
+                                                }
+         &nbsp;&nbsp;
+                                                                      
                                         </>
                                     ))}
-                                    {phase == 'caricato' ?
-                                        <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaConto1} disabled>Camerieri</Button> :
-                                        <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                                                                                                                     {phase == 'caricato' ?
+                                        <Button size="small" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1} disabled>Camerieri</Button> :
+                                        <Button size="small" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
                                     }
+                                    </ButtonGroup>
                                 </p>
                             </div>
                             </header> :

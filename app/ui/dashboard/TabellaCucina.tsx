@@ -21,11 +21,11 @@ export default function TabellaCucina({ item, onAdd10, onAdd, onRemove, onSet }:
                 <TableHead>
                     <TableRow className=" text-blue-800 rounded-lg bg-gray-100 font-extralight text-end">
                         <TableCell align="left"><p className="text-base font-bold md:text-2xl">Piatto</p></TableCell>
-                        <TableCell align="left" sx={{ display: { xs: 'none', md: 'block' } }}>
+                        <TableCell align="left" sx={{ display: { xs: 'none', sm: 'block' } }}>
                             <p className="text-base font-bold md:text-2xl">Quantità</p>
                         </TableCell>
-                        <TableCell align="left" sx={{ display: { xs: 'block', md: 'none' }, }} >
-                            <p className="text-base font-bold md:text-2xl">Q</p>
+                        <TableCell align="left" sx={{ display: { xs: 'block', sm: 'none' }, }} >
+                            <p className="text-base font-bold md:text-2xl">Q11</p>
                         </TableCell>
                         <TableCell className=" text-2xl " align="left"><p></p></TableCell>
                     </TableRow>
