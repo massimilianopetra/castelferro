@@ -49,7 +49,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setNumero(event.target.value);
-            };
+    };
 
     const handleClose = () => {
         setOpenSnackbar(false);
@@ -131,9 +131,9 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
 
     const handleButtonClickInvia = async () => {
         // numeroFoglietto
-        
+
         const gc = await getConto(Number(numeroFoglietto), sagra.giornata);
-        if (gc?.stato === "APERTO"){
+        if (gc?.stato === "APERTO") {
             console.log(`Aggiornamento Numero foglietto: ${numeroFoglietto} da ${nomeCucina}`);
             const logArray = products.map((item) => {
                 const orig = iniProducts.find(o => o.id_piatto == item.id_piatto);
@@ -161,43 +161,42 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
             setPhase('inviato');
             setProducts([]);
             setIniProducts([]);
-            }
-            else 
-            {
-                console.log('Aggiornamento Numero foglietto non aperto:' + {numeroFoglietto} +' da' + {nomeCucina} + 'in bloccato');  
-                setPhase('bloccato');
-                return;
-            } 
-    } 
-;
-
-const handleModificaQuantita = async () => {
-
-    const newProducts = products.map((item) => {
-        if (item.id_piatto == idmodificaquantitaValue) {
-            console.log(item);
-            return ({ ...item, quantita: Number(nuovaquantitaValue)});
         }
-        else
-            return (item);
-    });
-    setProducts(newProducts);
-    setPhase('caricato');
-  };
+        else {
+            console.log('Aggiornamento Numero foglietto non aperto:' + { numeroFoglietto } + ' da' + { nomeCucina } + 'in bloccato');
+            setPhase('bloccato');
+            return;
+        }
+    }
+        ;
 
-const handleAnnulla = async () => {
-    setPhase('caricato');
-  }
+    const handleModificaQuantita = async () => {
+
+        const newProducts = products.map((item) => {
+            if (item.id_piatto == idmodificaquantitaValue) {
+                console.log(item);
+                return ({ ...item, quantita: Number(nuovaquantitaValue) });
+            }
+            else
+                return (item);
+        });
+        setProducts(newProducts);
+        setPhase('caricato');
+    };
+
+    const handleAnnulla = async () => {
+        setPhase('caricato');
+    }
 
     const handleSet = (id: number) => {
-        setIdModQuantita (Number(id));
+        setIdModQuantita(Number(id));
 
         const newProducts = products.map((item) => {
             if (item.id_piatto == id) {
-                setPiattoModQuantita ( item.piatto);
-                setQuantitaValue(item.quantita+"");
+                setPiattoModQuantita(item.piatto);
+                setQuantitaValue(item.quantita + "");
             }
-        });     
+        });
         setPhase('modificaquantita');
     };
 
@@ -279,7 +278,7 @@ const handleAnnulla = async () => {
                 return (
                     <>
                         <div>
-                            <TabellaCucina item={products}  onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
+                            <TabellaCucina item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
                         </div>
                     </>
                 );
@@ -325,35 +324,35 @@ const handleAnnulla = async () => {
                         </div>
                     </>
                 );
-                case 'modificaquantita':
-                    return (
-                        <div className="flex items-center justify-center min-h-screen rounded">
-                          <div className="w-[600px] p-4  space-y-4 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded -translate-y-16">
+            case 'modificaquantita':
+                return (
+                    <div className="flex items-center justify-center min-h-screen rounded">
+                        <div className="w-[600px] p-4  space-y-4 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded -translate-y-16">
                             <p className="text-xl py-1 rounded">
-                            Per il conto numero: <span className="font-extrabold text-blue-800">{conto?.id_comanda} </span>
-                            inserisci la quantità di porzioni per il piatto: <span className="font-extrabold text-blue-800">{piattomodificaquantitaValue} 
-                            </span>
+                                Per il conto numero: <span className="font-extrabold text-blue-800">{conto?.id_comanda} </span>
+                                inserisci la quantità di porzioni per il piatto: <span className="font-extrabold text-blue-800">{piattomodificaquantitaValue}
+                                </span>
                             </p>
-                            <TextField  
-                              label="Modifica quantità"
-                              variant="outlined"
-                              value={nuovaquantitaValue}
-                              onChange={(e) => setQuantitaValue(e.target.value)}
-                              type="number"
-                              size="medium"
-                              fullWidth
+                            <TextField
+                                label="Modifica quantità"
+                                variant="outlined"
+                                value={nuovaquantitaValue}
+                                onChange={(e) => setQuantitaValue(e.target.value)}
+                                type="number"
+                                size="medium"
+                                fullWidth
                             />
                             <div className="flex justify-center space-x-4">
-                              <Button size="small" variant="contained" color="primary" onClick={handleModificaQuantita}>
-                                Salva e chiudi
-                              </Button>
-                              <Button size="small" variant="contained" color="primary" onClick={handleAnnulla}>
-                                Annulla
-                              </Button>
+                                <Button size="small" variant="contained" color="primary" onClick={handleModificaQuantita}>
+                                    Salva e chiudi
+                                </Button>
+                                <Button size="small" variant="contained" color="primary" onClick={handleAnnulla}>
+                                    Annulla
+                                </Button>
                             </div>
-                          </div>
                         </div>
-                      );
+                    </div>
+                );
             default:
 
                 return null;
@@ -383,7 +382,6 @@ const handleAnnulla = async () => {
                     <div className="container_cucine">
                         {/* Sezione 1: Intestazione (25%) */}
                         {phase !== 'caricato' ?
- 
                             <header className="header_cucine_sup">
                                 <div className="font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
                                     <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}>
@@ -424,118 +422,129 @@ const handleAnnulla = async () => {
                                     </ul>
                                 </div>
                             </header> : <div></div>}
-                                  {phase !== 'caricato' ?
- 
-                        <header className="header_cucine_inf">
-                            <div className="z-0 xl:text-3xl font-extralight xl:text-end lg:text-3xl lg:py-2 lg:text-center">
-                                <p>
-                                    <ButtonGroup sx={{ display: { xs: 'none', sm: 'block' } }}>
-                                    {lastLog.map((row) => (
-                                        <>
+                        {phase !== 'caricato' ?
+
+                            <header className="header_cucine_inf">
+                                <div className="z-0 xl:text-3xl font-extralight xl:text-end lg:text-3xl lg:py-2 lg:text-center">
+                                    <p>
+                                        <ButtonGroup sx={{ display: { xs: 'none', sm: 'block' } }}>
+                                            {lastLog.map((row) => (
+                                                <>
+                                                    {phase == 'caricato' ?
+                                                        <Button size="large" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} disabled>{row.foglietto}</Button> :
+                                                        <Button size="large" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} >{row.foglietto}</Button>
+                                                    }
+
+                                                    &nbsp;&nbsp;
+
+                                                </>
+                                            ))}
                                             {phase == 'caricato' ?
-                                                <Button size="large" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} disabled>{row.foglietto}</Button> :
-                                        
-                                                 <Button size="large" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} >{row.foglietto}</Button>
-                                                }
-                                 
-                                            &nbsp;&nbsp;
-                
-             </>
-                                    ))}
-                                                                                                                   {phase == 'caricato' ?
-                                        <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1} disabled>Camerieri</Button> :
-                                        <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
-                                    }
-                                    </ButtonGroup>
+                                                <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1} disabled>Camerieri</Button> :
+                                                <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                                            }
+                                        </ButtonGroup>
 
 
-                                    <ButtonGroup sx={{ display: { xs: 'block', sm: 'none' } }}>
-                                    {lastLog.map((row) => (
-                                        <>
-                                                                     
-                                                                    {phase == 'caricato' ?
-                                                <Button size="small" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} disabled>{row.foglietto}</Button> :
-                                                <Button size="small" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} >{row.foglietto}</Button>
-                                                }
-         &nbsp;&nbsp;
-                                                                      
-                                        </>
-                                    ))}
-                                                                                                                     {phase == 'caricato' ?
-                                        <Button size="small" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1} disabled>Camerieri</Button> :
-                                        <Button size="small" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
-                                    }
-                                    </ButtonGroup>
+                                        <ButtonGroup sx={{ display: { xs: 'block', sm: 'none' } }}>
+                                            {lastLog.map((row) => (
+                                                <>
+
+                                                    {phase == 'caricato' ?
+                                                        <Button size="small" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} disabled>{row.foglietto}</Button> :
+                                                        <Button size="small" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} >{row.foglietto}</Button>
+                                                    }
+                                                    &nbsp;&nbsp;
+
+                                                </>
+                                            ))}
+                                            {phase == 'caricato' ?
+                                                <Button size="small" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1} disabled>Camerieri</Button> :
+                                                <Button size="small" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                                            }
+                                        </ButtonGroup>
 
 
 
-                                </p>
-                            </div>
+                                    </p>
+                                </div>
                             </header> :
-                                     <div className="flex justify-between items-center w-full">
-                             <ButtonGroup sx={{ display: { xs: 'none', sm: 'block' } }}>
+                            <div className="flex justify-between items-center w-full">
+                                <ButtonGroup sx={{ display: { xs: 'none', sm: 'block' } }}>
                                     <p className="z-0 text-3xl font-extralight text-left">
                                         Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
                                     </p>
-                             </ButtonGroup>
-                              <ButtonGroup sx={{ display: { xs: 'none', sm: 'block' } }}>
+                                </ButtonGroup>
+                                <ButtonGroup sx={{ display: { xs: 'none', sm: 'block' } }}>
                                     <p className="z-0 text-3xl font-extralight text-right">
                                         Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                                     </p>
-                             </ButtonGroup>
+                                </ButtonGroup>
 
-                             <ButtonGroup  sx={{ display: { xs: 'block', sm: 'none' } }}>
+                                <ButtonGroup sx={{ display: { xs: 'block', sm: 'none' } }}>
                                     <p className="z-0 text-xl font-extralight text-left">
                                         Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
                                     </p>
                                 </ButtonGroup>
-                             <ButtonGroup  sx={{ display: { xs: 'block', sm: 'none' } }}>
+                                <ButtonGroup sx={{ display: { xs: 'block', sm: 'none' } }}>
                                     <p className="z-0 text-xl font-extralight text-right">
                                         Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                                     </p>
                                 </ButtonGroup>
 
 
-                            
-                                </div>}
+
+                            </div>}
 
                         { }
                         <main className=".mainContent_cucine">
                             <p className=".mainContent_cucine_p">          {renderPhaseContent()}</p>
                         </main>
-
-                        {/* Sezione 3: Pulsanti (15%) */}
+                      {/* Sezione 2: Intestazione (15%) */}
+              
                         <footer className="footer_cucine">
                             <div className="buttonContainer_cucine">
-                            
-                                    {phase == 'caricato' ?
-                                    <div><Button size="large" variant="contained" onClick={handleButtonClickInvia} sx={{
-                                        padding: '20px 40px', // Aumenta il padding per renderlo più grande
-                                        fontSize: '1.5rem', // Aumenta la dimensione del font
-                                        // Puoi aggiungere altre proprietà CSS qui, ad esempio minWidth
-                                        minWidth: '200px',
-                                    }} style={{ borderRadius: '9999px' }}>Invia</Button> &nbsp; <Button size="large" variant="contained" onClick={handleButtonClickAnnulla} sx={{
-                                        padding: '20px 40px', // Aumenta il padding per renderlo più grande
-                                        fontSize: '1.5rem', // Aumenta la dimensione del font
-                                        // Puoi aggiungere altre proprietà CSS qui, ad esempio minWidth
-                                        minWidth: '200px',
-                                    }} style={{ borderRadius: '9999px' }}>Annulla</Button></div> :
-                                    <div><Button size="large" variant="contained" onClick={handleButtonClickInvia} disabled sx={{
-                                        padding: '20px 40px', // Aumenta il padding per renderlo più grande
-                                        fontSize: '1.5rem', // Aumenta la dimensione del font
-                                        // Puoi aggiungere altre proprietà CSS qui, ad esempio minWidth
-                                        minWidth: '200px',
-                                    }} style={{ borderRadius: '9999px' }}>Invia </Button> &nbsp; <Button size="large" variant="contained" onClick={handleButtonClickAnnulla} disabled sx={{
-                                        padding: '20px 40px', // Aumenta il padding per renderlo più grande
-                                        fontSize: '1.5rem', // Aumenta la dimensione del font
-                                        // Puoi aggiungere altre proprietà CSS qui, ad esempio minWidth
-                                        minWidth: '200px',
-                                    }} style={{ borderRadius: '9999px' }}>Annulla </Button></div>
-                                }
-                                <div className='text-center '>
 
-                                </div>
-                            </div>
+                        {phase == 'caricato' ?
+                            <div className="flex justify-between items-center w-full"> {/* AGGIUNGI QUESTE CLASSI */}
+                                &nbsp;&nbsp;&nbsp;<Button size="large" variant="contained" onClick={handleButtonClickInvia} 
+                                className="font-extralight text-left"
+                                    sx={{
+                                    padding: '20px 40px', // Aumenta il padding per renderlo più grande
+                                    fontSize: '1.5rem', // Aumenta la dimensione del font
+                                    // Puoi aggiungere altre proprietà CSS qui, ad esempio minWidth
+                                    minWidth: '200px',
+                                }} style={{ borderRadius: '9999px' }}>Invia1</Button> &nbsp;
+                                <Button size="large" variant="contained" onClick={handleButtonClickAnnulla} 
+                                className=" font-extralight text-right" sx={{
+                                    padding: '20px 40px', // Aumenta il padding per renderlo più grande
+                                    fontSize: '1.5rem', // Aumenta la dimensione del font
+                                    // Puoi aggiungere altre proprietà CSS qui, ad esempio minWidth
+                                    minWidth: '200px',
+                                }} style={{ borderRadius: '9999px' }}>Annulla2</Button>&nbsp;&nbsp;&nbsp;
+                            </div> :
+                          <div className="flex justify-between items-center w-full"> {/* AGGIUNGI QUESTE CLASSI */}
+    <Button size="large" variant="contained" onClick={handleButtonClickInvia}
+    className="font-extralight" // Rimuovi text-left
+    disabled sx={{
+        padding: '20px 40px',
+        fontSize: '1.5rem',
+        minWidth: '200px',
+    }} style={{ borderRadius: '9999px' }}>Invia3</Button>
+    {/* Rimuovi lo spazio non-breaking &nbsp; qui, justify-between gestirà lo spazio */}
+    <Button size="large" variant="contained" onClick={handleButtonClickAnnulla}
+    className="font-extralight" // Rimuovi text-right
+    disabled sx={{
+        padding: '20px 40px',
+        fontSize: '1.5rem',
+        minWidth: '200px',
+    }} style={{ borderRadius: '9999px' }}>Annulla4</Button>
+</div>
+                        }
+                        <div className='text-center '>
+
+                        </div>
+                                  </div>
                         </footer>
                     </div>
 

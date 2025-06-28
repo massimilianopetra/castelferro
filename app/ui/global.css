@@ -263,7 +263,7 @@ html, body, #root {
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 5; /* Regola questo valore se vuoi più o meno righe visibili */
+  -webkit-line-clamp: 3; /* Regola questo valore se vuoi più o meno righe visibili */
   -webkit-box-orient: vertical;
   /* Aggiungi una dimensione massima per evitare che una singola parola lunghissima forzi l'overflow orizzontale */
   word-break: break-word; /* Permette alle parole lunghe di andare a capo */
