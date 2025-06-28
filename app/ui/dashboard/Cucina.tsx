@@ -385,7 +385,7 @@ const handleAnnulla = async () => {
                         {phase !== 'caricato' ?
  
                             <header className="header_cucine_sup">
-                                <div className="p-3 mb-3 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
+                                <div className="font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
                                     <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}>
                                         <li className="flex-1 mr-2font-bold py-2 ">
                                             <a className="text-center block text-blue-700 font-extraligh text-2xl md:text-5xl">
