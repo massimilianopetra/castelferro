@@ -677,7 +677,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                       <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
                     </ButtonGroup>
                     <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                      <p>Conto:{" "}<span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;</span>{" ("}<span className="text-blue-800"> {deltanow(conto?.data_apertura)}{") "}</span>
+                      <p>Conto:{" "}<span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;</span>{" ("}<span className="text-blue-800 font-bold"> {deltanow(conto?.data_apertura)}{") "}</span>
                         &nbsp;Cameriere:{" "}<span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
                     </ButtonGroup>
                   </div>
@@ -794,16 +794,22 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                     </div>
 
                   </div>
-
-                  <div className="sez-dx">
-                    <div className="text-base md:text-2xl py-2 md:py-4 font-extralight text-end">
-                      <Button size="medium" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
-                      &nbsp;&nbsp;
-                      <Button size="medium" color="secondary" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                <div className="sez-dx">
+                  <div className="text-base md:text-2xl py-2 md:py-4 font-extralight text-end">
+                    <Button size="medium" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
+                    &nbsp;&nbsp;
+                    <Button size="medium" color="secondary" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                    <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
                       <p>  Conto:{" "}            <span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
                       <p>  Conto aperto da:{" "}  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span></p>
                       <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
-                    </div>                        </div>
+                    </ButtonGroup>
+                    <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
+                      <p>Conto:{" "}<span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;</span>{" ("}<span className="text-blue-800 font-bold"> {deltanow(conto?.data_apertura)}{") "}</span>
+                        &nbsp;Cameriere:{" "}<span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
+                    </ButtonGroup>
+                  </div>
+                </div>
                 </header>
 
                 <main className="middle-section">
@@ -912,15 +918,22 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
                   </div>
 
-                  <div className="sez-dx">
-                    <div className="text-base md:text-2xl py-2 md:py-4 font-extralight text-end">
-                      <Button size="medium" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
-                      &nbsp;&nbsp;
-                      <Button size="medium" color="secondary" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                 <div className="sez-dx">
+                  <div className="text-base md:text-2xl py-2 md:py-4 font-extralight text-end">
+                    <Button size="medium" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
+                    &nbsp;&nbsp;
+                    <Button size="medium" color="secondary" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                    <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
                       <p>  Conto:{" "}            <span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
                       <p>  Conto aperto da:{" "}  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span></p>
                       <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
-                    </div>                        </div>
+                    </ButtonGroup>
+                    <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
+                      <p>Conto:{" "}<span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;</span>{" ("}<span className="text-blue-800 font-bold"> {deltanow(conto?.data_apertura)}{") "}</span>
+                        &nbsp;Cameriere:{" "}<span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
+                    </ButtonGroup>
+                  </div>
+                </div>
                 </header>
 
                 <main className="middle-section">

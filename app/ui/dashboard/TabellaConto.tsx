@@ -82,7 +82,7 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }:
                                 </TableCell>
 
                                 <TableCell align="right" className="text-base font-extralight md:text-2xl">
-                                    {(row.quantita * row.prezzo_unitario).toFixed(2)}&nbsp;&euro;&nbsp;
+                                    {(row.quantita * row.prezzo_unitario).toFixed(2)}
                                 </TableCell>
                             </TableRow>
                         ))}
