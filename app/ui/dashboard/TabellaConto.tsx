@@ -48,6 +48,8 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }:
                         <TableCell align="left" sx={{ display: { xs: 'block', md: 'none' }, }} >
                             <p className="text-base font-bold md:text-2xl">Totale</p>
                         </TableCell>
+
+
                         </TableRow>
                     </TableHead>
                     <TableBody >

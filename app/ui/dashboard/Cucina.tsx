@@ -444,14 +444,31 @@ const handleAnnulla = async () => {
                                 </p>
                             </div>
                             </header> :
- 
-                                <div className="flex justify-between items-center w-full">
+                                     <div className="flex justify-between items-center w-full">
+                             <ButtonGroup sx={{ display: { xs: 'none', sm: 'block' } }}>
                                     <p className="z-0 text-3xl font-extralight text-left">
                                         Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
                                     </p>
+                             </ButtonGroup>
+                              <ButtonGroup sx={{ display: { xs: 'none', sm: 'block' } }}>
                                     <p className="z-0 text-3xl font-extralight text-right">
                                         Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                                     </p>
+                             </ButtonGroup>
+
+                             <ButtonGroup  sx={{ display: { xs: 'block', sm: 'none' } }}>
+                                    <p className="z-0 text-xl font-extralight text-left">
+                                        Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
+                                    </p>
+                                </ButtonGroup>
+                             <ButtonGroup  sx={{ display: { xs: 'block', sm: 'none' } }}>
+                                    <p className="z-0 text-xl font-extralight text-right">
+                                        Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
+                                    </p>
+                                </ButtonGroup>
+
+
+                            
                                 </div>}
 
                         { }
