@@ -101,8 +101,8 @@ export default function Page() {
                     </main>
                      
                     <div className="flex justify-center space-x-4 py-8">
-                        <Button variant="contained" onClick={handleButtonClickInvia}>Tutto Disponibile</Button>
-                        <Button variant="contained" startIcon={<CloudUploadIcon />} onClick={handleUploadClick}>Upload Menu</Button>
+                        <Button variant="contained" onClick={handleButtonClickInvia} style={{ borderRadius: '9999px' }} >Tutto Disponibile</Button>
+                        <Button variant="contained" startIcon={<CloudUploadIcon />} style={{ borderRadius: '9999px' }} onClick={handleUploadClick}>Upload Menu</Button>
                     </div>
 
                 </div>
