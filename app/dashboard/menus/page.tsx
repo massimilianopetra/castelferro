@@ -96,9 +96,10 @@ export default function Page() {
                             Menu
                         </p>
                     </div>
-                    <div>
-                        <TabellaMenu item={products} onToggle={handleToggle} />
-                    </div>
+                    <main className="middle-section">
+                          <TabellaMenu item={products} onToggle={handleToggle} />
+                    </main>
+                     
                     <div className="flex justify-center space-x-4 py-8">
                         <Button variant="contained" onClick={handleButtonClickInvia}>Tutto Disponibile</Button>
                         <Button variant="contained" startIcon={<CloudUploadIcon />} onClick={handleUploadClick}>Upload Menu</Button>
