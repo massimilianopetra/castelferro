@@ -635,17 +635,19 @@ export async function listConti(stato: string, giornata: number): Promise<DbCont
 
 export async function listContiPerChiusra(giornata: number): Promise<DbExtendedConti[] | undefined> {
   const current = await executeQuery<DbExtendedConti>(`
-  SELECT 
-    s.*,  c.quantita as coperti FROM conti s
+  SELECT DISTINCT ON (s.id_comanda)
+    s.*,  
+    c.quantita as coperti 
+  FROM 
+    conti s
   LEFT JOIN consumazioni c 
   ON c.id_comanda = s.id_comanda
   WHERE
-  s.giorno = ${giornata}
-  AND
-  s.id_comanda > 9
-  AND c.id_piatto = 1
-  AND s.stato IN ('STAMPATO')
-  ;`);
+    s.giorno = ${giornata}
+    AND s.id_comanda > 9
+    AND c.id_piatto = 1
+    AND s.stato IN ('STAMPATO')
+  ORDER BY s.id_comanda;`);
   return current;
 }
 
