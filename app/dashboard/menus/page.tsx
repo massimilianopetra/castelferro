@@ -96,7 +96,7 @@ export default function Page() {
                             Menu3
                         </p>
                     </div>
-                    <main className="middle-section">
+                    <main className="middle-section_L">
                           <TabellaMenu item={products} onToggle={handleToggle} />
                     </main>
                      
