@@ -15,22 +15,22 @@ export default function TabellaMenu({item,onToggle}:{item: DbMenu[], onToggle:(i
             <Table sx={{ minWidth: 450 }} aria-label="a dense table">
                 <TableHead>
                     <TableRow>
-                        <TableCell className="font-bold text-sm sm:text-base">id</TableCell>
+                        <TableCell className="font-bold text-xs sm:text-base">id</TableCell>
                         <TableCell className="font-bold text-sm sm:text-base" align="left">Piatto</TableCell>
                         <TableCell className="font-bold text-sm sm:text-base" align="left">Prezzo</TableCell>
                         <TableCell className="font-bold text-sm sm:text-base" align="left">Cucina</TableCell>
-                        <TableCell className="font-bold text-sm sm:text-base" align="left">Disponibile</TableCell>
+                        <TableCell className="font-bold text-xs sm:text-base" align="left">Disponibile</TableCell>
                     </TableRow>
                 </TableHead>
                 <TableBody>
                     {item.map((row) => (
                         <TableRow>
 
-                            <TableCell className="text-sm sm:text-base">{row.id}</TableCell>
+                            <TableCell className="text-xs sm:text-base">{row.id}</TableCell>
                             <TableCell className="text-sm sm:text-base"align="left">{row.alias}</TableCell>
                             <TableCell className="text-sm sm:text-base"align="left">{row.prezzo}</TableCell>
                             <TableCell className="text-sm sm:text-base"align="left">{row.cucina}</TableCell>
-                            <TableCell className="text-sm sm:text-base"align="left"><Switch checked={row.disponibile === "Y"}
+                            <TableCell className="text-xs sm:text-base"align="left"><Switch checked={row.disponibile === "Y"}
                                 onClick={() => onToggle(row.id, row.disponibile)} /></TableCell>
                         </TableRow>
                     ))}
