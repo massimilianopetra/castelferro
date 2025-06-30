@@ -93,7 +93,7 @@ export default function Page() {
                 <div className="flex flex-wrap flex-col">
                     <div className='text-center '>
                         <p className="text-5xl py-4">
-                            Menu3
+                            Menu
                         </p>
                     </div>
                     <main className="middle-section_L">

@@ -17,7 +17,7 @@ export default function TabellaMenu({item,onToggle}:{item: DbMenu[], onToggle:(i
                     <TableRow>
                         <TableCell className="font-bold text-xs sm:text-base">id</TableCell>
                         <TableCell className="font-bold text-sm sm:text-base" align="left">Piatto</TableCell>
-                        <TableCell className="font-bold text-sm sm:text-base" align="left">Prezzo</TableCell>
+                        <TableCell className="font-bold text-sm sm:text-base" align="left">&euro;</TableCell>
                         <TableCell className="font-bold text-sm sm:text-base" align="left">Cucina</TableCell>
                         <TableCell className="font-bold text-xs sm:text-base" align="left">Disponibile</TableCell>
                     </TableRow>
