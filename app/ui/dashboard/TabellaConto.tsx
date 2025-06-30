@@ -14,7 +14,7 @@ import Replay10Icon from '@mui/icons-material/Replay10';
 
 import type { DbConsumazioniPrezzo } from '@/app/lib/definitions';
 
-export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }: { item: DbConsumazioniPrezzo[],onAdd10: (id: number) => void, onAdd: (id: number) => void, onRemove: (id: number) => void, onSet: (id: number) => void }) {
+export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet }: { item: DbConsumazioniPrezzo[], onAdd10: (id: number) => void, onAdd: (id: number) => void, onRemove: (id: number) => void, onSet: (id: number) => void }) {
 
     var totale = 0;
 
@@ -25,12 +25,12 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }:
     return (
         <div className="z-0">
 
-           <div className="z-0 p-1 mb-1 ext-base font-extrabold md:text-3xl text-blue-800 rounded-lg bg-blue-50 text-end">
-              Totale Conto: <span className="text-base md:text-2xl font-extrabold ">{totale.toFixed(2)}</span> &euro;&nbsp;
+            <div className="z-0 p-1 mb-1 ext-base font-extrabold md:text-3xl text-blue-800 rounded-lg bg-blue-50 text-end">
+                Totale Conto: <span className="text-base md:text-2xl font-extrabold ">{totale.toFixed(2)}</span> &euro;&nbsp;
             </div>
-         
-                <Table  sx={{ minWidth: 150 }} size="small" aria-label="a dense table">
-                    <TableHead>
+
+            <Table sx={{ minWidth: 150 }} size="small" aria-label="a dense table">
+                <TableHead>
                     <TableRow className=" text-gray-800 rounded-lg bg-gray-100 ">
                         <TableCell align="left"><p className="text-base font-bold md:text-2xl">Piatto</p></TableCell>
 
@@ -50,58 +50,87 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }:
                         </TableCell>
 
 
-                        </TableRow>
-                    </TableHead>
-                    <TableBody >
-                        {item.map((row) => (
-                            <TableRow className="hover:bg-yellow-100 md:text-2xl" sx={{
-                                backgroundColor: row.quantita > 0 ? "rgba(144, 238, 144, 0.3)" : "white",
-                            }}>
-                                <TableCell align="left">
-                                    <span className="text-base font-normal md:text-2xl">{row.alias}</span>
-                                </TableCell>
-                                <TableCell align="left">
-                                    <span className="text-base font-bold md:text-2xl">{row.quantita}</span> &nbsp;&nbsp;&nbsp;&nbsp;
-                                </TableCell>
-                                
-                                <TableCell align="left"  sx={{ display: { xs: 'none', md: 'block' }}}>
-                                    <ButtonGroup >
+                    </TableRow>
+                </TableHead>
+                <TableBody >
+                    {item.map((row) => (
+                        <TableRow className="hover:bg-yellow-100 md:text-2xl" sx={{
+                            backgroundColor: row.quantita > 0 ? "rgba(144, 238, 144, 0.3)" : "white",
+                        }}>
+                            <TableCell align="left">
+                                <span className="text-base font-normal md:text-2xl">{row.alias}</span>
+                            </TableCell>
+                            <TableCell align="left">
+                                <span className="text-base font-bold md:text-2xl">{row.quantita}</span> &nbsp;&nbsp;&nbsp;&nbsp;
+                            </TableCell>
+
+                            {(row.id_comanda === 1 || row.id_comanda > 8000) && row.id_piatto === 1 ?
+                                //se è la comanda camerieri o se è asporto >8000 non posso mettere coperti (disabilito tasti)
+                                <><TableCell align="left" sx={{ display: { xs: 'none', sm: 'block' } }}>
+                                    <ButtonGroup>
+                                        <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} disabled />
+                                        <Button onClick={() => onAdd(row.id_piatto)} size="large" variant="contained" startIcon={<AddCircleIcon />} disabled />
+                                    </ButtonGroup>
+                                    &nbsp;&nbsp;&nbsp;
+                                    <ButtonGroup>
+                                        <Button onClick={() => onAdd10(row.id_piatto)} size="medium" variant="contained" startIcon={<Replay10Icon />} disabled />
+                                    </ButtonGroup>
+                                    &nbsp;&nbsp;&nbsp;
+                                    <ButtonGroup>
+                                        <Button onClick={() => onSet(row.id_piatto)} size="medium" variant="outlined" color="secondary" startIcon={<EditIcon />} disabled />
+                                    </ButtonGroup>
+                                </TableCell><TableCell align="center" sx={{ display: { xs: 'block', sm: 'none' } }}>
+                                        <ButtonGroup>
+                                            <Button onClick={() => onRemove(row.id_piatto)} size="small" variant="outlined" startIcon={<RemoveCircleSharpIcon />} disabled />
+                                            <Button onClick={() => onAdd(row.id_piatto)} size="small" variant="contained" startIcon={<AddCircleIcon />} disabled />
+                                        </ButtonGroup>
+                                        &nbsp;
+                                        <ButtonGroup>
+                                            <Button onClick={() => onAdd10(row.id_piatto)} size="small" variant="contained" startIcon={<Replay10Icon />} disabled />
+                                            <Button onClick={() => onSet(row.id_piatto)} size="small" variant="outlined" color="secondary" startIcon={<EditIcon />} disabled />
+                                        </ButtonGroup>
+                                    </TableCell></>
+
+                                :
+                                <><TableCell align="left" sx={{ display: { xs: 'none', sm: 'block' } }}>
+                                    <ButtonGroup>
                                         <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
                                         <Button onClick={() => onAdd(row.id_piatto)} size="large" variant="contained" startIcon={<AddCircleIcon />} />
                                     </ButtonGroup>
                                     &nbsp;&nbsp;&nbsp;
-                                    <ButtonGroup >
+                                    <ButtonGroup>
                                         <Button onClick={() => onAdd10(row.id_piatto)} size="medium" variant="contained" startIcon={<Replay10Icon />} />
                                     </ButtonGroup>
                                     &nbsp;&nbsp;&nbsp;
-                                    <ButtonGroup >
+                                    <ButtonGroup>
                                         <Button onClick={() => onSet(row.id_piatto)} size="medium" variant="outlined" color="secondary" startIcon={<EditIcon />} />
                                     </ButtonGroup>
-                                </TableCell>
+                                </TableCell><TableCell align="center" sx={{ display: { xs: 'block', sm: 'none' } }}>
+                                        <ButtonGroup>
+                                            <Button onClick={() => onRemove(row.id_piatto)} size="small" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
+                                            <Button onClick={() => onAdd(row.id_piatto)} size="small" variant="contained" startIcon={<AddCircleIcon />} />
+                                        </ButtonGroup>
+                                        &nbsp;
+                                        <ButtonGroup>
+                                            <Button onClick={() => onAdd10(row.id_piatto)} size="small" variant="contained" startIcon={<Replay10Icon />} />
+                                            <Button onClick={() => onSet(row.id_piatto)} size="small" variant="outlined" color="secondary" startIcon={<EditIcon />} />
+                                        </ButtonGroup>
+                                    </TableCell></>
 
-                                <TableCell align="center" sx={{ display: { xs: 'block', md: 'none' }}}>
-                                    <ButtonGroup >
-                                                  
-                                        <Button onClick={() => onRemove(row.id_piatto)} size="small" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
-                                        <Button onClick={() => onAdd(row.id_piatto)} size="small" variant="contained" startIcon={<AddCircleIcon />} />
-                                    </ButtonGroup>
-              
-                                    <ButtonGroup >
-                                        <Button onClick={() => onAdd10(row.id_piatto)} size="small" variant="contained" startIcon={<Replay10Icon />} />
-                                        <Button onClick={() => onSet(row.id_piatto)} size="small" variant="outlined" color="secondary" startIcon={<EditIcon />} />
-                                    </ButtonGroup>
-                                </TableCell>
+                            }
 
-                                <TableCell align="right" className="text-base font-extralight md:text-2xl">
-                                    {(row.quantita * row.prezzo_unitario).toFixed(2)}
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
+
+
+                            <TableCell align="right" className="text-base font-extralight md:text-2xl">
+                                {(row.quantita * row.prezzo_unitario).toFixed(2)}
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
 
             <div className="p-2 mb-2 text-base font-extrabold md:text-2xl text-blue-800 rounded-lg bg-blue-50 text-end">
-               Totale Conto: <span className="text-base md:text-2xl font-extrabold ">{totale.toFixed(2)}</span>&euro;&nbsp;
+                Totale Conto: <span className="text-base md:text-2xl font-extrabold ">{totale.toFixed(2)}</span>&euro;&nbsp;
             </div>
         </div>
 

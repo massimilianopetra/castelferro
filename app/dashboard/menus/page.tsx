@@ -89,7 +89,7 @@ export default function Page() {
     console.log("*********************");
     if ((session?.user?.name == "Casse") || (session?.user?.name == "SuperUser")) {
         return (
-            <main>
+   
                 <div className="flex flex-wrap flex-col">
                     <div className='text-center '>
                         <p className="text-5xl py-4">
@@ -105,7 +105,7 @@ export default function Page() {
                     </div>
 
                 </div>
-            </main>
+ 
 
         )
     }

@@ -373,23 +373,26 @@ export default function Page() {
       if (!sumcpatatine) sumcpatatine = 0;
 
       var sumcbirre = cosumazioni?.reduce((accumulator, currentValue) => {
-        if ((currentValue.giorno == i+1) && 
+                if ((currentValue.giorno == i+1) && 
         (currentValue.id_comanda == 1) &&
-        (currentValue.piatto == "Birra artigianale 0,4lt")) {
+        (currentValue.piatto == 'Birra artigianale 0.4lt')) {
           return accumulator + currentValue.quantita;
         } else {
           return accumulator
         }
         
       }, 0);
+
       if (!sumcbirre) sumcbirre = 0;
 
       var sumcagnolotti = cosumazioni?.reduce((accumulator, currentValue) => {
         if ((currentValue.giorno == i+1) && 
             (currentValue.id_comanda == 1) && 
-            ((currentValue.piatto == "Agnolotti al butto e/o formaggio") ||
+         
+            ((currentValue.piatto == 'Agnolotti al burro e/o formaggio') ||
             (currentValue.piatto == "Agnolotti al vino") ||
-            (currentValue.piatto == "Agnolotti al sugo"))) {
+            (currentValue.piatto == "Agnolotti al sugo"))
+          ) {
           return accumulator + currentValue.quantita;
         } else {
           return accumulator
