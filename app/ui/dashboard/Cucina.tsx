@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
-import { Button, Snackbar, TextField } from '@mui/material';
+import { Button, ButtonGroup, Snackbar, TextField } from '@mui/material';
 import type { DbConsumazioni, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
 import { getConsumazioni, sendConsumazioni, getConto, apriConto, getCamerieri, updateTotaleConto } from '@/app/lib/actions';
 import { writeLog, getGiornoSagra, getLastLog } from '@/app/lib/actions';
@@ -12,7 +12,7 @@ import Filter1Icon from '@mui/icons-material/Filter1';
 import { deltanow } from '@/app/lib/utils';
 import { number } from 'zod';
 import { useItemHighlighted } from '@mui/x-charts';
-
+import '@/app/ui/global.css';
 
 
 export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
@@ -49,7 +49,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
 
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setNumero(event.target.value);
-            };
+    };
 
     const handleClose = () => {
         setOpenSnackbar(false);
@@ -123,6 +123,8 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     const handleButtonClickCarica = () => {
         const num = Number(numero);
         carica(num);
+        setNumero(''); //arreza numero fogleitto input box
+        
     };
 
     const handleButtonClickAnnulla = () => {
@@ -131,9 +133,9 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
 
     const handleButtonClickInvia = async () => {
         // numeroFoglietto
-        
+
         const gc = await getConto(Number(numeroFoglietto), sagra.giornata);
-        if (gc?.stato === "APERTO"){
+        if (gc?.stato === "APERTO") {
             console.log(`Aggiornamento Numero foglietto: ${numeroFoglietto} da ${nomeCucina}`);
             const logArray = products.map((item) => {
                 const orig = iniProducts.find(o => o.id_piatto == item.id_piatto);
@@ -161,43 +163,43 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
             setPhase('inviato');
             setProducts([]);
             setIniProducts([]);
-            }
-            else 
-            {
-                console.log('Aggiornamento Numero foglietto non aperto:' + {numeroFoglietto} +' da' + {nomeCucina} + 'in bloccato');  
-                setPhase('bloccato');
-                return;
-            } 
-    } 
-;
-
-const handleModificaQuantita = async () => {
-
-    const newProducts = products.map((item) => {
-        if (item.id_piatto == idmodificaquantitaValue) {
-            console.log(item);
-            return ({ ...item, quantita: Number(nuovaquantitaValue)});
         }
-        else
-            return (item);
-    });
-    setProducts(newProducts);
-    setPhase('caricato');
-  };
+        else {
+            console.log('Aggiornamento Numero foglietto non aperto:' + { numeroFoglietto } + ' da' + { nomeCucina } + 'in bloccato');
+            setPhase('bloccato');
+            return;
+        }
+    }
+        ;
 
-const handleAnnulla = async () => {
-    setPhase('caricato');
-  }
+    const handleModificaQuantita = async () => {
+
+        const newProducts = products.map((item) => {
+            if (item.id_piatto == idmodificaquantitaValue) {
+                console.log(item);
+                return ({ ...item, quantita: Number(nuovaquantitaValue) });
+            }
+            else
+                return (item);
+        });
+        setProducts(newProducts);
+    
+        setPhase('caricato');
+    };
+
+    const handleAnnulla = async () => {
+        setPhase('caricato');
+    }
 
     const handleSet = (id: number) => {
-        setIdModQuantita (Number(id));
+        setIdModQuantita(Number(id));
 
         const newProducts = products.map((item) => {
             if (item.id_piatto == id) {
-                setPiattoModQuantita ( item.piatto);
-                setQuantitaValue(item.quantita+"");
+                setPiattoModQuantita(item.piatto);
+                setQuantitaValue(item.quantita + "");
             }
-        });     
+        });
         setPhase('modificaquantita');
     };
 
@@ -279,20 +281,7 @@ const handleAnnulla = async () => {
                 return (
                     <>
                         <div>
-                            <div className="z-0 text-3xl font-extralight text-end">
-                                <p >
-                                    Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
-                                </p>
-                                <p >
-                                    Conto: <span className= "font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
-                                </p>
-                            </div>
-                            <TabellaCucina item={products}  onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
-                            <div className="z-0 text-3xl font-extralight text-end">
-                                <p >
-                                    Conto: <span className= "font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
-                                </p>
-                            </div>
+                            <TabellaCucina item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
                         </div>
                     </>
                 );
@@ -338,35 +327,35 @@ const handleAnnulla = async () => {
                         </div>
                     </>
                 );
-                case 'modificaquantita':
-                    return (
-                        <div className="flex items-center justify-center min-h-screen rounded">
-                          <div className="w-[600px] p-4  space-y-4 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded -translate-y-16">
+            case 'modificaquantita':
+                return (
+                    <div className="flex items-center justify-center min-h-screen rounded">
+                        <div className="w-[600px] p-4  space-y-4 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded -translate-y-16">
                             <p className="text-xl py-1 rounded">
-                            Per il conto numero: <span className="font-extrabold text-blue-800">{conto?.id_comanda} </span>
-                            inserisci la quantità di porzioni per il piatto: <span className="font-extrabold text-blue-800">{piattomodificaquantitaValue} 
-                            </span>
+                                Per il conto numero: <span className="font-extrabold text-blue-800">{conto?.id_comanda} </span>
+                                inserisci la quantità di porzioni per il piatto: <span className="font-extrabold text-blue-800">{piattomodificaquantitaValue}
+                                </span>
                             </p>
-                            <TextField  
-                              label="Modifica quantità"
-                              variant="outlined"
-                              value={nuovaquantitaValue}
-                              onChange={(e) => setQuantitaValue(e.target.value)}
-                              type="number"
-                              size="medium"
-                              fullWidth
+                            <TextField
+                                label="Modifica quantità"
+                                variant="outlined"
+                                value={nuovaquantitaValue}
+                                onChange={(e) => setQuantitaValue(e.target.value)}
+                                type="number"
+                                size="medium"
+                                fullWidth
                             />
                             <div className="flex justify-center space-x-4">
-                              <Button size="small" variant="contained" color="primary" onClick={handleModificaQuantita}>
-                                Salva e chiudi
-                              </Button>
-                              <Button size="small" variant="contained" color="primary" onClick={handleAnnulla}>
-                                Annulla
-                              </Button>
+                                <Button size="small" variant="contained" color="primary" onClick={handleModificaQuantita}>
+                                    Salva e chiudi
+                                </Button>
+                                <Button size="small" variant="contained" color="primary" onClick={handleAnnulla}>
+                                    Annulla
+                                </Button>
                             </div>
-                          </div>
                         </div>
-                      );
+                    </div>
+                );
             default:
 
                 return null;
@@ -390,67 +379,179 @@ const handleAnnulla = async () => {
             )
         else
             return (
-                <main>
-                    <div className="z-50 lg:fixed xl:fixed p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
-                        <ul className="flex rounded-full">
-                            <li className="flex-1 mr-2 text-3xl lg:text-5xl font-bold py-4 rounded-full">
-                                <a className="text-center block text-white font-extralight ">
-                                    {nomeCucina}
-                                </a>
-                                <div className="text-xs text-center text-white">SAGRA:  {sagra.stato}&nbsp;&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</div>
-                            </li>
-                            <li className="text-right flex-1 mr-2 text-3xl lg:text-4xl  text-white font-bold py-4">
-                                <a>
-                                    <div className='text-center text-emerald-600'>
-                                        <TextField
-                                            autoFocus
-                                            className="p-2"
-                                            label="Numero Foglietto"
-                                            variant="outlined"
-                                            value={numero}
-                                            onChange={handleInputChange}
-                                            sx={{
-                                                input: {
-                                                    textAlign: 'right', // Allinea il testo a destra
-                                                },
-                                            }}
-                                            type="number"
-                                        />
-                                    </div>
-                                </a>
-                            </li>
-                            <li className="text-left flex-1 mr-2 text-3xl lg:text-4xl  font-bold py-4 rounded-full">
-                                 {phase == 'caricato' ?
-                                    <Button className="rounded-full" size="large" variant="contained" onClick={handleButtonClickCarica} disabled>Carica Foglietto</Button>:
-                                    <Button className="rounded-full" size="large" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
-                               }
-                            </li>
-                        </ul>
-                    </div>
-                    <div className="z-0 xl:text-3xl font-extralight xl:text-end lg:text-3xl lg:py-2 lg:text-center">
-                        <p>
-                            {lastLog.map((row) => (
-                                <>
-                                    {phase == 'caricato' ?
-                                        <Button size="medium" className="rounded-full text-xl" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} disabled>{row.foglietto}</Button>:
-                                        <Button size="medium" className="rounded-full text-xl" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} >{row.foglietto}</Button>       }
-                                    &nbsp;&nbsp;
-                                </>
-                            ))}
-                             {phase == 'caricato' ?
-                                     <Button size="medium" color="secondary" className="font-semibold rounded-full" variant="outlined"  onClick={handleButtonClickCaricaConto1} disabled>Camerieri</Button>:
-                                     <Button size="medium" color="secondary" className="font-semibold rounded-full" variant="outlined"  onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
-                                     }
 
-                        </p>
-                    </div>
-                    {renderPhaseContent()}
-                    &nbsp;         
-                    <div className='text-center '>
-                      {phase == 'caricato' ?
-                            <div><Button size="large" variant="contained" onClick={handleButtonClickInvia}>Invia</Button> &nbsp; <Button size="large" variant="contained" onClick={handleButtonClickAnnulla}>Annulla</Button></div> :
-                            <div><Button size="large" variant="contained" onClick={handleButtonClickInvia} disabled>Invia </Button> &nbsp; <Button size="large" variant="contained" onClick={handleButtonClickAnnulla} disabled>Annulla </Button></div>
-                        }
+
+                <main>
+                    <div className="container_cucine">
+                        {/* Sezione 1: Intestazione (25%) */}
+                        { phase !== 'caricato' && phase !== 'modificaquantita'  ?
+                            <header className="header_cucine_sup">
+
+                                <div className="p-30 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
+                                    <ul className="flex" style={{ borderRadius: '9999px' }}>
+                                        <li className="flex-1 mr-2font-bold py-2 ">
+                                            <a className="text-center block text-blue-700 font-extraligh text-2xl md:text-5xl">
+                                                {nomeCucina}
+                                            </a>
+                                            <div className="text-xs text-center text-blue-700 ">SAGRA:
+                                                <span className="text-xs text-center text-blue-800 font-semibold">{sagra.stato}&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</span>
+                                            </div>
+                                        </li>
+                                        <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4 rounded-full " style={{ borderRadius: '9999px' }}>
+                                            <div className='text-center text-emerald-600'>
+                                                <TextField
+                                                    autoFocus
+                                                    className="p-2"
+                                                    label="Numero Foglietto"
+                                                    variant="outlined"
+                                                    value={numero}
+                                                    onChange={handleInputChange}
+                                                    style={{ borderRadius: '9999px' }}
+                                                    sx={{
+                                                        input: {
+                                                            textAlign: 'right', // Allinea il testo a destra
+                                                        },
+                                                    }}
+                                                    type="number"
+                                                />
+                                            </div>
+
+                                        </li>
+                                        <li className="text-left flex-1 mr-2 text-3xl lg:text-4xl  font-bold py-4 rounded-full">
+                                            {phase == 'caricato' ?
+                                                <Button className="rounded-full" size="large" variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }} disabled>Carica Foglietto</Button> :
+                                                <Button className="rounded-full" size="large" variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>Carica Foglietto</Button>
+                                            }
+                                        </li>
+                                    </ul>
+                                </div>
+                            </header> : <div></div>}
+                         { phase !== 'caricato' && phase !== 'modificaquantita'  ?
+                       
+                       
+
+                            <header className="header_cucine_inf">
+                                <div className="z-0 xl:text-3xl font-extralight xl:text-end lg:text-3xl lg:py-2 lg:text-center">
+                                    <p>
+                                        <ButtonGroup sx={{ display: { xs: 'none', sm: 'block' } }}>
+                                            {lastLog.map((row) => (
+                                                <>
+                                                    {phase == 'caricato' ?
+                                                        <Button size="large" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} disabled>{row.foglietto}</Button> :
+                                                        <Button size="large" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} >{row.foglietto}</Button>
+                                                    }
+
+                                                    &nbsp;&nbsp;
+
+                                                </>
+                                            ))}
+                                            {phase == 'caricato' ?
+                                                <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1} disabled>Camerieri</Button> :
+                                                <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                                            }
+                                        </ButtonGroup>
+
+
+                                        <ButtonGroup sx={{ display: { xs: 'block', sm: 'none' } }}>
+                                            {lastLog.map((row) => (
+                                                <>
+
+                                                    {phase == 'caricato' ?
+                                                        <Button size="small" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} disabled>{row.foglietto}</Button> :
+                                                        <Button size="small" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} >{row.foglietto}</Button>
+                                                    }
+                                                    &nbsp;&nbsp;
+
+                                                </>
+                                            ))}
+                                            {phase == 'caricato' ?
+                                                <Button size="small" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1} disabled>Camerieri</Button> :
+                                                <Button size="small" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                                            }
+                                        </ButtonGroup>
+
+
+
+                                    </p>
+                                </div>
+                            </header> :
+                            <div className="flex justify-between items-center w-full">
+                                <ButtonGroup sx={{ display: { xs: 'none', sm: 'block' } }}>
+                                    <p className="z-0 text-3xl font-extralight text-left">
+                                        Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
+                                    </p>
+                                </ButtonGroup>
+                                <ButtonGroup sx={{ display: { xs: 'none', sm: 'block' } }}>
+                                    <p className="z-0 text-3xl font-extralight text-right">
+                                        Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
+                                    </p>
+                                </ButtonGroup>
+
+                                <ButtonGroup sx={{ display: { xs: 'block', sm: 'none' } }}>
+                                    <p className="z-0 text-xl font-extralight text-left">
+                                        Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span>
+                                    </p>
+                                </ButtonGroup>
+                                <ButtonGroup sx={{ display: { xs: 'block', sm: 'none' } }}>
+                                    <p className="z-0 text-xl font-extralight text-right">
+                                        Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
+                                    </p>
+                                </ButtonGroup>
+
+
+
+                            </div>}
+
+                        { }
+                     {/*   <main className=".mainContent_cucine">*/}
+                            <p className=".mainContent_cucine_p">          {renderPhaseContent()}</p>
+                     {/*   </main>*/}
+                        {/* Sezione 2: Footer (15%)*/}
+
+                        <footer className="footer_cucine">
+                            <div className="buttonContainer_cucine"> 
+
+                                {phase == 'caricato' ?
+                                    <div className="flex justify-between items-center w-full"> {/* AGGIUNGI QUESTE CLASSI */}
+                                        &nbsp;<Button size="large" variant="contained" onClick={handleButtonClickInvia}
+                                            className="font-extralight text-left"
+                                            sx={{
+                                                padding: '15px 30px', // Aumenta il padding per renderlo più grande
+                                                fontSize: '1.5rem', // Aumenta la dimensione del font
+                                                // Puoi aggiungere altre proprietà CSS qui, ad esempio minWidth
+                                                minWidth: '200px',
+                                            }} style={{ borderRadius: '9999px' }}>Invia</Button> &nbsp;
+                                        <Button size="large" variant="contained" onClick={handleButtonClickAnnulla}
+                                            className=" font-extralight text-right" sx={{
+                                                padding: '15px 30px', // Aumenta il padding per renderlo più grande
+                                                fontSize: '1.5rem', // Aumenta la dimensione del font
+                                                // Puoi aggiungere altre proprietà CSS qui, ad esempio minWidth
+                                                minWidth: '200px',
+                                            }} style={{ borderRadius: '9999px' }}>Annulla</Button>&nbsp;
+                                    </div> :
+                                    <div className="flex justify-between items-center w-full"> {/* AGGIUNGI QUESTE CLASSI */}
+                                        <Button size="large" variant="contained" onClick={handleButtonClickInvia}
+                                            className="font-extralight" // Rimuovi text-left
+                                            disabled sx={{
+                                                padding: '15px 30px',
+                                                fontSize: '1.5rem',
+                                                minWidth: '200px',
+                                            }} style={{ borderRadius: '9999px' }}>Invia</Button>
+                                        {/* Rimuovi lo spazio non-breaking &nbsp; qui, justify-between gestirà lo spazio */}
+                                        <Button size="large" variant="contained" onClick={handleButtonClickAnnulla}
+                                            className="font-extralight" // Rimuovi text-right
+                                            disabled sx={{
+                                                padding: '15px 30px',
+                                                fontSize: '1.5rem',
+                                                minWidth: '200px',
+                                            }} style={{ borderRadius: '9999px' }}>Annulla</Button>
+                                    </div>
+                                }
+                                <div className='text-center '>
+
+                                </div>
+                              </div>
+                        </footer> 
                     </div>
                     <div>
                         <Snackbar
@@ -459,11 +560,12 @@ const handleAnnulla = async () => {
                             onClose={handleClose}
                             message={(+numero) > 9999 ?
                                 "Inserisci un numero foglietto valido (minore di 8999)":
-                                "Hai inserito un numero riservato asporto (compreso tra 8000 e 9999)"
+                                "Hai inserito un numero riservato asporto (compreso tra 9000 e 9999)"
                             }
                         />
                     </div>
                 </main>
+
 
             )
     else

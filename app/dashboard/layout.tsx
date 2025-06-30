@@ -15,7 +15,7 @@ export default  function Layout({ children }: Props) {
           <SideNav />
           
         </div>
-        <div className="flex-grow p-6 lg:overflow-y-auto lg:p-2">{children}</div>  
+        <div className="flex-grow p-2 lg:overflow-y-auto lg:p-2">{children}</div>  
       </div>
     </NextAuthProvider>
   );

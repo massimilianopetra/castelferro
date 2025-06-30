@@ -25,31 +25,46 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }:
     return (
         <div className="z-0">
 
-           <div className="z-0 p-1 mb-1 text-3xl font-semibold text-blue-800 rounded-lg bg-blue-50 text-end ">
-              Totale Conto: <span className="text-3xl font-extrabold ">{totale.toFixed(2)}</span> &euro;&nbsp;
+           <div className="z-0 p-1 mb-1 ext-base font-extrabold md:text-3xl text-blue-800 rounded-lg bg-blue-50 text-end">
+              Totale Conto: <span className="text-base md:text-2xl font-extrabold ">{totale.toFixed(2)}</span> &euro;&nbsp;
             </div>
-            <TableContainer component={Paper}>
+         
                 <Table  sx={{ minWidth: 150 }} size="small" aria-label="a dense table">
                     <TableHead>
-                        <TableRow className=" text-gray-800 rounded-lg bg-gray-100">
-                            <TableCell align="left"><p className="text-2xl font-bold">Piatto</p></TableCell>
-                            <TableCell className="text-2xl font-bold" align="center"><p className="font-bold">Quantità</p></TableCell>
-                            <TableCell className=" text-2xl " align="left"><p></p></TableCell>
-                            <TableCell className="text-2xl font-bold" align="right"><p className="font-bold">Prezzo Totale</p></TableCell>
+                    <TableRow className=" text-gray-800 rounded-lg bg-gray-100 ">
+                        <TableCell align="left"><p className="text-base font-bold md:text-2xl">Piatto</p></TableCell>
+
+                        <TableCell align="left" sx={{ display: { xs: 'none', md: 'block' } }}>
+                            <p className="text-base font-bold md:text-2xl">Quantità</p>
+                        </TableCell>
+                        <TableCell align="left" sx={{ display: { xs: 'block', md: 'none' }, }} >
+                            <p className="text-base font-bold md:text-2xl">Q</p>
+                        </TableCell>
+
+                        <TableCell className=" text-base md:text-2xl " align="left"><p></p></TableCell>
+                        <TableCell align="left" sx={{ display: { xs: 'none', md: 'block' } }}>
+                            <p className="text-base font-bold md:text-2xl"> Prezzo Totale</p>
+                        </TableCell>
+                        <TableCell align="left" sx={{ display: { xs: 'block', md: 'none' }, }} >
+                            <p className="text-base font-bold md:text-2xl">Totale</p>
+                        </TableCell>
+
+
                         </TableRow>
                     </TableHead>
                     <TableBody >
                         {item.map((row) => (
-                            <TableRow className="hover:bg-yellow-100" sx={{
+                            <TableRow className="hover:bg-yellow-100 md:text-2xl" sx={{
                                 backgroundColor: row.quantita > 0 ? "rgba(144, 238, 144, 0.3)" : "white",
                             }}>
                                 <TableCell align="left">
-                                    <span className="text-2xl font-normal">{row.alias}</span>
+                                    <span className="text-base font-normal md:text-2xl">{row.alias}</span>
                                 </TableCell>
                                 <TableCell align="left">
-                                    <span className="text-3xl font-bold">{row.quantita}</span> &nbsp;&nbsp;&nbsp;&nbsp;
+                                    <span className="text-base font-bold md:text-2xl">{row.quantita}</span> &nbsp;&nbsp;&nbsp;&nbsp;
                                 </TableCell>
-                                <TableCell align="left" >
+                                
+                                <TableCell align="left"  sx={{ display: { xs: 'none', md: 'block' }}}>
                                     <ButtonGroup >
                                         <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
                                         <Button onClick={() => onAdd(row.id_piatto)} size="large" variant="contained" startIcon={<AddCircleIcon />} />
@@ -63,16 +78,30 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet  }:
                                         <Button onClick={() => onSet(row.id_piatto)} size="medium" variant="outlined" color="secondary" startIcon={<EditIcon />} />
                                     </ButtonGroup>
                                 </TableCell>
-                                <TableCell align="right" className="text-2xl font-extralight">
-                                    {(row.quantita * row.prezzo_unitario).toFixed(2)}&nbsp;&euro;&nbsp;
+
+                                <TableCell align="center" sx={{ display: { xs: 'block', md: 'none' }}}>
+                                    <ButtonGroup >
+                                                  
+                                        <Button onClick={() => onRemove(row.id_piatto)} size="small" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
+                                        <Button onClick={() => onAdd(row.id_piatto)} size="small" variant="contained" startIcon={<AddCircleIcon />} />
+                                    </ButtonGroup>
+              
+                                    <ButtonGroup >
+                                        <Button onClick={() => onAdd10(row.id_piatto)} size="small" variant="contained" startIcon={<Replay10Icon />} />
+                                        <Button onClick={() => onSet(row.id_piatto)} size="small" variant="outlined" color="secondary" startIcon={<EditIcon />} />
+                                    </ButtonGroup>
+                                </TableCell>
+
+                                <TableCell align="right" className="text-base font-extralight md:text-2xl">
+                                    {(row.quantita * row.prezzo_unitario).toFixed(2)}
                                 </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
-            </TableContainer>
-            <div className="p-2 mb-2 text-2xl font-extralight text-blue-800 rounded-lg bg-blue-50 text-end">
-               Totale Conto: <span className="text-2xl font-semibold ">{totale.toFixed(2)}</span>&euro;&nbsp;
+
+            <div className="p-2 mb-2 text-base font-extrabold md:text-2xl text-blue-800 rounded-lg bg-blue-50 text-end">
+               Totale Conto: <span className="text-base md:text-2xl font-extrabold ">{totale.toFixed(2)}</span>&euro;&nbsp;
             </div>
         </div>
 

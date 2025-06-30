@@ -8,13 +8,14 @@ export default function SideNav() {
   return (
     <div className="flex h-full flex-col px-3 py-3 lg:px-2 sm:px-2">
       <Link
-        className="mb-2 flex h-16 items-end justify-start rounded-sm bg-blue-600 p-4 lg:h-32"
+        className="hidden lg:mb-2 lg:h-32 lg:items-end lg:justify-start lg:rounded-sm lg:bg-blue-600 lg:p-4 force-display-flex" // 
         href="/"
       >
         <div className="w-32 text-white lg:w-64">
           <AcmeLogo />
         </div>
       </Link>
+      
       <div className="flex grow flex-row justify-between space-x-2 lg:flex-col lg:space-x-0 lg:space-y-2 ">
         <NavLinks />
         <div className="hidden h-auto w-full grow rounded-sm bg-gray-50 lg:block "></div>
