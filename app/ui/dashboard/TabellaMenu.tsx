@@ -17,8 +17,8 @@ export default function TabellaMenu({item,onToggle}:{item: DbMenu[], onToggle:(i
                     <TableRow>
                         <TableCell className="font-bold">id</TableCell>
                         <TableCell className="font-bold" align="left">Piatto</TableCell>
-                        <TableCell className="font-bold" align="left">Prezzo&nbsp;(eur)</TableCell>
-                        <TableCell className="font-bold" align="left">Cucina&nbsp;</TableCell>
+                        <TableCell className="font-bold" align="left">Prezzo</TableCell>
+                        <TableCell className="font-bold" align="left">Cucina</TableCell>
                         <TableCell className="font-bold" align="left">Disponibile</TableCell>
                     </TableRow>
                 </TableHead>
@@ -27,7 +27,7 @@ export default function TabellaMenu({item,onToggle}:{item: DbMenu[], onToggle:(i
                         <TableRow>
 
                             <TableCell>{row.id}</TableCell>
-                            <TableCell align="left">{row.piatto}</TableCell>
+                            <TableCell align="left">{row.alias}</TableCell>
                             <TableCell align="left">{row.prezzo}</TableCell>
                             <TableCell align="left">{row.cucina}</TableCell>
                             <TableCell align="left"><Switch checked={row.disponibile === "Y"}
