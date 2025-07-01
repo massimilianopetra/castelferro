@@ -16,9 +16,9 @@ export default function TabellaMenu({item,onToggle}:{item: DbMenu[], onToggle:(i
                 <TableHead>
                     <TableRow>
                         <TableCell className="font-bold text-xs sm:text-base">id</TableCell>
-                        <TableCell className="font-bold text-sm sm:text-base" align="left">Piatto</TableCell>
+                        <TableCell className="font-bold text-xs sm:text-base" align="left">Piatto</TableCell>
                         <TableCell className="font-bold text-sm sm:text-base" align="left">&euro;</TableCell>
-                        <TableCell className="font-bold text-sm sm:text-base" align="left">Cucina</TableCell>
+                        <TableCell className="font-bold text-xs sm:text-base" align="left">Cucina</TableCell>
                         <TableCell className="font-bold text-xs sm:text-base" align="left">Disponibile</TableCell>
                     </TableRow>
                 </TableHead>
@@ -27,9 +27,9 @@ export default function TabellaMenu({item,onToggle}:{item: DbMenu[], onToggle:(i
                         <TableRow>
 
                             <TableCell className="text-xs sm:text-base">{row.id}</TableCell>
-                            <TableCell className="text-sm sm:text-base"align="left">{row.alias}</TableCell>
+                            <TableCell className="text-xs sm:text-base"align="left">{row.alias}</TableCell>
                             <TableCell className="text-sm sm:text-base"align="left">{row.prezzo}</TableCell>
-                            <TableCell className="text-sm sm:text-base"align="left">{row.cucina}</TableCell>
+                            <TableCell className="text-xs sm:text-base"align="left">{row.cucina}</TableCell>
                             <TableCell className="text-xs sm:text-base"align="left"><Switch checked={row.disponibile === "Y"}
                                 onClick={() => onToggle(row.id, row.disponibile)} /></TableCell>
                         </TableRow>
