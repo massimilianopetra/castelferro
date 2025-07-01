@@ -49,7 +49,6 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet }: 
                             <p className="text-base font-bold md:text-2xl">Totale</p>
                         </TableCell>
 
-
                     </TableRow>
                 </TableHead>
                 <TableBody >

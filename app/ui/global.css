@@ -196,7 +196,7 @@ p {
     .top-section .sez-dx {
         flex: none; /* Rimuovi la distribuzione percentuale */
         width: 100%; /* Occupa tutta la larghezza disponibile */
-        margin: 2px 0; /* Aggiungi un margine verticale tra le sezioni */
+        margin: 1px 0; /* Aggiungi un margine verticale tra le sezioni */
         padding: 10px; /* Aumenta il padding interno per un migliore aspetto */
     }
 
@@ -205,7 +205,7 @@ p {
     .bottom-section .sez-dx-bassa {
         flex: none; /* Rimuovi la distribuzione percentuale */
         width: 100%; /* Occupa tutta la larghezza disponibile */
-        margin: 2px 0; /* Aggiungi un margine verticale tra le sezioni */
+        margin: 1px 0; /* Aggiungi un margine verticale tra le sezioni */
         padding: 15px; /* Aumenta il padding interno per un migliore aspetto */
     }
 
@@ -224,7 +224,7 @@ p {
         padding: 10px;
     }
       .middle-section_XS {
-        height: 400px; /* Puoi impostare un'altezza fissa o una percentuale relativa al container */
+        height: 350px; /* Puoi impostare un'altezza fissa o una percentuale relativa al container */
         /* Oppure, se .outer-wrapper ha height: auto, potresti voler usare flex-grow: 1 per farla espandere */
         /* flex-grow: 1; */
         padding: 10px;
