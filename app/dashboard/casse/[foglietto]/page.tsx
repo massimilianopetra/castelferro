@@ -964,8 +964,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                  
                  
                  
-                    <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }} align="center">
-                    <div>
+                    <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
+                    <div className="flex justify-center w-full">
                       {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} >4Stampa Conto</Button> :
                         <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >5Stampa Conto</Button>
                       }
