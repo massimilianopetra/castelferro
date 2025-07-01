@@ -942,10 +942,10 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
                 <footer className="bottom-section">
                   <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                    {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} >1Stampa Conto</Button> :
-                      <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >2Stampa Conto</Button>
+                    {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} >Stampa Conto</Button> :
+                      <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button>
                     }
-                    &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>3Aggiorna Conto</Button>
+                    &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
                     <br />
                     <p> Conto "stampato" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
                    <br />
@@ -965,19 +965,17 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                  
                  
                     <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                    <div className="flex justify-center w-full">
-                      {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} >4Stampa Conto</Button> :
-                        <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >5Stampa Conto</Button>
+                    <div className=" justify-center">
+                      {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} >Stampa Conto</Button> :
+                        <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button>
                       }
-                      &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>6Aggiorna Conto</Button>
+                      &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
 
-              <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}> 
                       <ButtonGroup size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}>
                         <Button size="medium" className="rounded-full" variant="contained"  onClick={handleAChiudiPos} >  POS  </Button>
                         <Button size="medium" className="rounded-full" variant="contained"  onClick={handleAChiudi} >Contanti</Button>
                         <Button size="medium" className="rounded-full" variant="contained"  onClick={handleChiudiGratis} >Altro Importo</Button>
                       </ButtonGroup>
-                      </ul>
                     </div>
                   </ButtonGroup>
  
