@@ -936,7 +936,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 </div>
                 </header>
               <main className="middle-section_XS">
-             aaa     <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
+             aaaaa     <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
                 </main>
 
 
