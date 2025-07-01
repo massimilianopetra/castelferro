@@ -685,8 +685,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   </div>
                 </div>
               </header>
-              <main className="middle-section xs:middle-section_XS">
-                  <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
+        <main className="middle-section_XS">
+                a  <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
                 </main>
 
   <footer className="bottom-section">
@@ -812,9 +812,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   </div>
                 </div>
                 </header>
-
-              <main className="middle-section xs:middle-section_XS">
-                  <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
+        <main className="middle-section_XS">
+              a    <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
                 </main>
 
                 <footer className="bottom-section">
@@ -936,8 +935,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   </div>
                 </div>
                 </header>
-              <main className="middle-section xs:middle-section_XS">
-                  <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
+              <main className="middle-section_XS">
+             a     <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
                 </main>
 
 
