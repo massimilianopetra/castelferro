@@ -941,7 +941,32 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
 
                 <footer className="bottom-section">
-                  <div className="sez-sx-bassa ">
+                   <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
+                
+                    {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}onClick={handleStampa} >Stampa Conto</Button> :
+                      <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button>
+                    }
+                    &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
+                    <br />
+                    <p> Conto "stampato" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
+                   <br />
+
+                  <div className="sez-dx-bassa">
+                    <ul className="inline-block text-base md:text-2xl py-3 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
+                      &nbsp;Chiudi conto&nbsp;&nbsp;
+                      <ButtonGroup size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}>
+                        <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudiPos} >  POS  </Button>
+                        <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudi} >Contanti</Button>
+                        <Button size="medium" className="rounded-full" variant="contained" onClick={handleChiudiGratis} >Altro Importo</Button>
+                      </ButtonGroup>
+                      &nbsp;&nbsp;
+                    </ul>
+                  </div>  </ButtonGroup>
+                 
+                 
+                 
+                    <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
+                 <div className="sez-sx-bassa ">
                     {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}onClick={handleStampa} >Stampa Conto</Button> :
                       <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button>
                     }
@@ -960,7 +985,9 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                       </ButtonGroup>
                       &nbsp;&nbsp;
                     </ul>
-                  </div>
+                  </div>   </ButtonGroup>
+
+                  
                 </footer>
 
                 {/* Sezione che verrà stampata */}
