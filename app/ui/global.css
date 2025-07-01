@@ -122,12 +122,12 @@ html, body {
 }
 /* Sezione Centrale: 60% dell'altezza, scorrevole verticalmente */
 .middle-section_L {
-    height: 60%;
+    height: 70%;
      /***   background-color: #fffde7;*/
     overflow-y: auto; /* Abilita lo scorrimento verticale se il contenuto eccede */
     overflow-x: hidden; /* Disabilita lo scorrimento orizzontale */
     flex-direction: column; /* Contenuto impilato verticalmente */
-    border-bottom: 1px solid #ffe0b2;
+    border-bottom: 1px solid #b2ffd6;
 }
 
 /* Sezione Inferiore: 15% dell'altezza */
@@ -208,7 +208,7 @@ p {
     }
         /* La sezione centrale mantiene lo scorrimento ma si adatta all'altezza rimanente */
     .middle-section_L {
-        height: 600px; /* Puoi impostare un'altezza fissa o una percentuale relativa al container */
+        height: 500px; /* Puoi impostare un'altezza fissa o una percentuale relativa al container */
         /* Oppure, se .outer-wrapper ha height: auto, potresti voler usare flex-grow: 1 per farla espandere */
         /* flex-grow: 1; */
         padding: 10px;
