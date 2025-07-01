@@ -936,13 +936,13 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 </div>
                 </header>
               <main className="middle-section_XS">
-             aaaaa     <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
+             aaa     <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
                 </main>
 
 
                 <footer className="bottom-section">
                    <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                
+                11
                     {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}onClick={handleStampa} >Stampa Conto</Button> :
                       <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button>
                     }
@@ -966,6 +966,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                  
                  
                     <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
+                 22
                  <div className="sez-sx-bassa ">
                     {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}onClick={handleStampa} >Stampa Conto</Button> :
                       <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button>
