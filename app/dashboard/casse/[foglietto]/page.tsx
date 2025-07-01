@@ -685,9 +685,9 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   </div>
                 </div>
               </header>
-        <main className="middle-section_XS">
-                aa  <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
-                </main>
+              <main className="middle-section_XS">
+                <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
+              </main>
 
   <footer className="bottom-section">
                   <div className="sez-sx-bassa ">
@@ -812,8 +812,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   </div>
                 </div>
                 </header>
-        <main className="middle-section_XS">
-              a    <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
+                <main className="middle-section_XS">
+                  <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
                 </main>
 
                 <footer className="bottom-section">
@@ -932,17 +932,17 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                       <p>Conto:{" "}<span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;</span>{" ("}<span className="text-blue-800 font-bold"> {deltanow(conto?.data_apertura)}</span>{") "}
                         &nbsp;Cameriere:{" "}<span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;</span></p>
                     </ButtonGroup>
+                    </div>
                   </div>
-                </div>
                 </header>
-              <main className="middle-section_XS">
-             aaa     <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
+                <main className="middle-section_XS">
+                  <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
                 </main>
 
 
                 <footer className="bottom-section">
-                   <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                    {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}onClick={handleStampa} >1Stampa Conto</Button> :
+                  <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
+                    {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} >1Stampa Conto</Button> :
                       <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >2Stampa Conto</Button>
                     }
                     &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>3Aggiorna Conto</Button>
@@ -964,19 +964,20 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                  
                  
                  
-                    <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
+                    <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }} align="center">
                     <div>
                       {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} >4Stampa Conto</Button> :
                         <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >5Stampa Conto</Button>
                       }
                       &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>6Aggiorna Conto</Button>
 
-
+              <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}> 
                       <ButtonGroup size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}>
-                        <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAChiudiPos} >  POS  </Button>
-                        <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAChiudi} >Contanti</Button>
-                        <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleChiudiGratis} >Altro Importo</Button>
+                        <Button size="medium" className="rounded-full" variant="contained"  onClick={handleAChiudiPos} >  POS  </Button>
+                        <Button size="medium" className="rounded-full" variant="contained"  onClick={handleAChiudi} >Contanti</Button>
+                        <Button size="medium" className="rounded-full" variant="contained"  onClick={handleChiudiGratis} >Altro Importo</Button>
                       </ButtonGroup>
+                      </ul>
                     </div>
                   </ButtonGroup>
  
