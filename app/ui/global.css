@@ -232,7 +232,7 @@ p {
         /* Oppure, se .outer-wrapper ha height: auto, potresti voler usare flex-grow: 1 per farla espandere */
         /* flex-grow: 1; */
         padding: 10px;
-                         background-color: #2858d2; 
+                         background-color: #86d228; 
     }
 }
 

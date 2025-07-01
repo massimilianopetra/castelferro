@@ -943,10 +943,10 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 <footer className="bottom-section">
                    <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
                 11
-                    {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}onClick={handleStampa} >Stampa Conto</Button> :
-                      <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button>
+                    {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}onClick={handleStampa} >1Stampa Conto</Button> :
+                      <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >2Stampa Conto</Button>
                     }
-                    &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
+                    &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>3Aggiorna Conto</Button>
                     <br />
                     <p> Conto "stampato" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
                    <br />
@@ -968,10 +968,10 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                     <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
                  22
                  <div className="sez-sx-bassa ">
-                    {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}onClick={handleStampa} >Stampa Conto</Button> :
-                      <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button>
+                    {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}onClick={handleStampa} >4Stampa Conto</Button> :
+                      <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >5Stampa Conto</Button>
                     }
-                    &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
+                    &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>6Aggiorna Conto</Button>
                     <br />
                     <p> Conto "stampato" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
                   </div>
