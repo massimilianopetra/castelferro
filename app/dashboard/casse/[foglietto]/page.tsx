@@ -972,22 +972,16 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                       <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >5Stampa Conto</Button>
                     }
                     &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>6Aggiorna Conto</Button>
-                    <br />
-                    <p> Conto "stampato" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
-                  </div>
-
-                  <div className="sez-dx-bassa">
-                    <ul className="inline-block text-base md:text-2xl py-3 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
-                      &nbsp;Chiudi conto&nbsp;&nbsp;
+                   
+            
                       <ButtonGroup size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}>
                         <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudiPos} >  POS  </Button>
                         <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudi} >Contanti</Button>
                         <Button size="medium" className="rounded-full" variant="contained" onClick={handleChiudiGratis} >Altro Importo</Button>
                       </ButtonGroup>
-                      &nbsp;&nbsp;
-                    </ul>
-                  </div>   </ButtonGroup>
-
+</div>
+                   </ButtonGroup>
+ 
                   
                 </footer>
 
