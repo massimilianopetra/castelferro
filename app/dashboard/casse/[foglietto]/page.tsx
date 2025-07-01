@@ -686,7 +686,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 </div>
               </header>
         <main className="middle-section_XS">
-                a  <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
+                aa  <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
                 </main>
 
   <footer className="bottom-section">
@@ -936,7 +936,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 </div>
                 </header>
               <main className="middle-section_XS">
-             a     <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
+             aaa     <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
                 </main>
 
 
