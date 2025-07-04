@@ -321,14 +321,15 @@ export default function Page() {
                     <div className="flex flex-wrap flex-col">
                         <div className='text-center py-4'>
                             <p className="text-5xl py-4">
-                                Incassa Conti 
+                                Incassa Conti 1
                             </p>
                             <p className="text-xl py-4">
                                 In questa schermata appaiono solo conti chiusi da incassare.
                             </p>
                         </div>
 
-                        <div className='text-center' style={{ height: 700, width: 'auto' }} >
+                        <div className='text-center' style=
+                        {{ height: 700, width: 'auto' }} >
                             <h2 className='font-extrabold'>Conti Giornata {sagra.giornata}</h2>
                             <StyledDataGrid
                                 rows={rows}
