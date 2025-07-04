@@ -317,8 +317,7 @@ export default function Page() {
                 </main>)
         } else if (phase == 'caricato' || phase == 'chiuso') {
             return (
-                <main>
-
+   
                     <div className="flex flex-wrap flex-col">
                         <div className='text-center py-4'>
                             <p className="text-5xl py-4">
@@ -342,7 +341,7 @@ export default function Page() {
                             <br /><br />
                         </div>
                     </div>
-                </main>
+
 
             );
         }
