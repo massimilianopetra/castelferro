@@ -282,7 +282,7 @@ export default function Page() {
         }
         else if (phase == 'pagaaltroimporto') {
             return (
-                <main>
+  
                     <div className="flex items-center justify-center min-h-screen">
                         <div className="w-[600px] p-4 border rounded-lg space-y-4">
                             <p className="text-xl py-1">
@@ -314,7 +314,7 @@ export default function Page() {
                             </div>
                         </div>
                     </div>
-                </main>)
+)
         } else if (phase == 'caricato' || phase == 'chiuso') {
             return (
    
