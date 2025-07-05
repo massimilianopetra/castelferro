@@ -251,9 +251,6 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                         <div className='z-0 text-center'>
                             <br></br>
                             <br></br>
-                            <br></br>
-                            <br></br>
-                            <br></br>
                             <p className="text-5xl py-4">
                                 Caricare un numero foglietto!!
                             </p>
