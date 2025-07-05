@@ -438,24 +438,209 @@ export default function Page() {
     if (phase == "caricamento") {
       return (
         <><header className="top-section">
-        </header><main className="middle-section">
+        </header>
+          <main className="middle-section">
             <div className='z-0 text-center'>
               <br></br>
-              <br></br>
               <p className="text-5xl py-4">
-                Cruscotto di Sintesi conti gratis
+                Cruscotto di Sintesi Conti Gratis
               </p>
-              <br></br>
-              <br></br>
-              <p className="text-5xl py-4">
+              <br />
+              <CircularProgress size="9rem" />
+              <br />
+              <p className="text-4xl py-4">
                 Caricamento in corso ...
               </p>
-              <CircularProgress size="9rem" />
+
             </div>
           </main></>
       );
     } else if (phase == "caricato") {
-      return (
+      return ( 
+        <main style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%' }}>
+      {/* Contenuti statici sopra la tabella */}
+      <div style={{ textAlign: 'center', padding: '4px 0' }}>
+        <p style={{ fontSize: '3rem', padding: '8px 0' }}>Cruscotto di Sintesi conti gratis</p>
+        <p style={{ fontSize: '1rem', padding: '4px 0' }}>
+          In questa schermata i foglietti dal 1 (Camerieri) al 9 che non rientrano nel contabilizzazione
+        </p>
+      </div>
+
+      {/* Contenitore principale della tabella (con flex per occupare lo spazio verticale) */}
+      <div style={{ flexGrow: 1, minHeight: 0, width: '100%', textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
+        <h2 style={{ fontWeight: 'extrabold' }}></h2>
+
+        {/* Div che gestisce lo spazio disponibile per il TableContainer.
+            Questo è il div con 'height: calc(100% - 60px)' nel tuo codice originale.
+            Gli diamo flexGrow per occupare lo spazio e minHeight: 0 per la compatibilità flex. */}
+        <div style={{ flexGrow: 1, minHeight: 0, width: '100%', overflow: 'hidden' }}>
+          <TableContainer
+            component={Paper}
+            sx={{
+              // --- CRUCIALE per lo SCROLL VERTICALE ---
+              // Imposta un'altezza massima. Se il contenuto della tabella la supera, apparirà lo scroll.
+              // '100%' qui significa il 100% dell'altezza del suo contenitore genitore (il div con flexGrow: 1).
+              // Se vuoi una scrollbar che appare a un'altezza fissa, usa un valore in px, es. '400px'.
+              maxHeight: '100%',
+              
+              // --- CRUCIALE per lo SCROLL ORIZZONTALE ---
+              // Se la tabella (con il suo minWidth) è più larga del TableContainer, abilita lo scroll.
+              overflowX: 'auto', 
+            }}
+          >
+            <Table
+              // --- CRUCIALE per lo SCROLL ORIZZONTALE ---
+              // Questo è il valore minimo in pixel che la tabella cercherà di mantenere.
+              // Se la larghezza disponibile scende sotto questo valore, apparirà lo scroll orizzontale.
+              // È molto importante che questo valore sia sufficientemente grande da contenere tutte le tue colonne.
+              // Data la quantità di colonne (GIORNATA, VALORE, + 9 FOGLIETTI), 500px è probabile sia troppo poco.
+              // Ti consiglio di iniziare con 1000px o 1200px e aggiustare.
+              sx={{ minWidth: 1500 }} 
+              size="small"
+              aria-label="a dense table"
+              stickyHeader // Rende l'intestazione della tabella fissa durante lo scroll verticale
+            >
+              <TableHead>
+                <TableRow>
+                  <StyledTableCell>GIORNATA</StyledTableCell>
+                  <StyledTableCell align="right">Valore&nbsp;</StyledTableCell>
+                  <StyledTableCell align="right">Foglietto 1 <br />            <p style={{ fontSize: '0.7rem', padding: '4px 0' }}>
+              Camerieri
+            </p></StyledTableCell>
+                  <StyledTableCell align="right">Foglietto 2&nbsp;</StyledTableCell>
+                  <StyledTableCell align="right">Foglietto 3&nbsp;</StyledTableCell>
+                  <StyledTableCell align="right">Foglietto 4&nbsp;</StyledTableCell>
+                  <StyledTableCell align="right">Foglietto 5&nbsp;</StyledTableCell>
+                  <StyledTableCell align="right">Foglietto 6&nbsp;</StyledTableCell>
+                  <StyledTableCell align="right">Foglietto 7&nbsp;</StyledTableCell>
+                  <StyledTableCell align="right">Foglietto 8&nbsp;</StyledTableCell>
+                  <StyledTableCell align="right">Foglietto 9&nbsp;</StyledTableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {record.map((row) => (
+                  <StyledTableRow key={row.giornata}>
+                    <StyledTableCell component="th" scope="row" className="font-bold">
+                      {row.giornata}
+                    </StyledTableCell>
+                    <StyledTableCell align="right">
+                      <b>{row.incasso.toFixed(2)}&nbsp;&euro;</b>
+                      <br></br>
+                    </StyledTableCell>
+                    <StyledTableCell align="right">
+                      {row.incassoconto1.toFixed(2)}&nbsp;&euro;
+                      <br></br>
+                      <b>
+                        <small>N.Cons. {row.consumazioni1.toFixed(0)}&nbsp;&nbsp;</small>
+                      </b>
+                      <br></br>
+                      <small>Birre {row.consumazionibirre.toFixed(0)}&nbsp;&nbsp;</small>
+                      <br></br>
+                      <small>Patatine {row.consumazionipatatine.toFixed(0)}&nbsp;&nbsp;</small>
+                      <br></br>
+                      <small>Agnolotti {row.consumazioniagnolotti.toFixed(0)}&nbsp;&nbsp;</small>
+                    </StyledTableCell>
+                    <StyledTableCell align="right">
+                      {row.incassoconto2.toFixed(2)}&nbsp;&euro;
+                      <br></br>
+                      <b>
+                        <small>N.Cons. {row.consumazioni2.toFixed(0)}&nbsp;&nbsp;</small>
+                      </b>
+                    </StyledTableCell>
+                    <StyledTableCell align="right">
+                      {row.incassoconto3.toFixed(2)}&nbsp;&euro;
+                      <br></br>
+                      <b>
+                        <small>N.Cons.{row.consumazioni3.toFixed(0)}&nbsp;&nbsp;</small>
+                      </b>
+                    </StyledTableCell>
+                    <StyledTableCell align="right">
+                      {row.incassoconto4.toFixed(2)}&nbsp;&euro;
+                      <br></br>
+                      <b>
+                        <small>N.Cons. {row.consumazioni4.toFixed(0)}&nbsp;&nbsp;</small>
+                      </b>
+                    </StyledTableCell>
+                    <StyledTableCell align="right">
+                      {row.incassoconto5.toFixed(2)}&nbsp;&euro;
+                      <br></br>
+                      <b>
+                        <small>N.Cons. {row.consumazioni5.toFixed(0)}&nbsp;&nbsp;</small>
+                      </b>
+                    </StyledTableCell>
+                    <StyledTableCell align="right">
+                      {row.incassoconto6.toFixed(2)}&nbsp;&euro;
+                      <br></br>
+                      <b>
+                        <small>N.Cons. {row.consumazioni6.toFixed(0)}&nbsp;&nbsp;</small>
+                      </b>
+                    </StyledTableCell>
+                    <StyledTableCell align="right">
+                      {row.incassoconto7.toFixed(2)}&nbsp;&euro;
+                      <br></br>
+                      <b>
+                        <small>N.Cons. {row.consumazioni7.toFixed(0)}&nbsp;&nbsp;</small>
+                      </b>
+                    </StyledTableCell>
+                    <StyledTableCell align="right">
+                      {row.incassoconto8.toFixed(2)}&nbsp;&euro;
+                      <br></br>
+                      <b>
+                        <small>N.Cons. {row.consumazioni8.toFixed(0)}&nbsp;&nbsp;</small>
+                      </b>
+                    </StyledTableCell>
+                    <StyledTableCell align="right">
+                      {row.incassoconto9.toFixed(2)}&nbsp;&euro;
+                      <br></br>
+                      <b>
+                        <small>N.Cons. {row.consumazioni9.toFixed(0)}&nbsp;&nbsp;</small>
+                      </b>
+                    </StyledTableCell>
+                  </StyledTableRow>
+                ))}
+                {/* Riga del totale */}
+                <TableRow>
+                  {/* Assicurati che rowSpan sia corretto per le tue righe di riepilogo.
+                      Se hai 3 righe sotto questa, rowSpan=3 potrebbe essere corretto. */}
+                  <TableCell rowSpan={5} /> 
+                  <TableCell
+                    colSpan={2}
+                    className="text-xl font-extralight text-blue-600"
+                  >
+                    <b>Valore totale</b>
+                  </TableCell>
+                  <TableCell
+                    align="right"
+                    className="text-xl font-extralight text-blue-600"
+                  >
+                    <b>
+                      {record
+                        .reduce((accumulator, currentValue) => {
+                          return accumulator + currentValue.incasso;
+                        }, 0)
+                        .toFixed(2)}
+                      &nbsp;&euro;
+                    </b>
+                    <br></br>
+                    <small>N.Cons.{" "}
+                      {record
+                        .reduce((accumulator, currentValue) => {
+                          return accumulator + currentValue.consumazionitot;
+                        }, 0)
+                        .toFixed(0)}
+                      &nbsp;</small>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </div>
+        <br /><br />
+        <br /><br />
+        <br />
+      </div>
+    </main>
+        /*
         <main>
           <div className="flex flex-wrap flex-col">
             <div className="text-center py-4">
@@ -624,6 +809,7 @@ export default function Page() {
             <br></br>
           </div>
         </main>
+        */
       );
     }
   } else {
@@ -635,8 +821,7 @@ export default function Page() {
               className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50"
               role="alert"
             >
-              <span className="text-xl font-semibold">Danger alert!</span>{" "}
-              Utente non autorizzato.
+              <span className="text-xl font-semibold">Violazione:</span> utente non autorizzato.
             </div>
           </div>
         </div>

@@ -24,7 +24,7 @@ export default function Page() {
 
   const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
-       backgroundColor: theme.palette.common.black,
+      backgroundColor: theme.palette.common.black,
       color: theme.palette.common.white,
     },
     [`&.${tableCellClasses.body}`]: {
@@ -102,11 +102,11 @@ export default function Page() {
       var sumPos = contiPos?.reduce((accumulator, currentValue) => {
         return accumulator + currentValue.totale;
       }, 0);
-      
+
       var numCoperti = 0
       if (cosumazioni) {
         numCoperti = cosumazioni.reduce((accumulator, cons) => {
-          if (cons.id_piatto == 1) 
+          if (cons.id_piatto == 1)
             return accumulator + cons.quantita
           else
             return accumulator
@@ -118,11 +118,11 @@ export default function Page() {
       if (!sum) sum = 0;
       if (!sumPos) sumPos = 0;
       if (!sumAltriImporti) sumAltriImporti = 0;
-      
+
       if (conti) numConti += conti.length;
       if (contiPos) numConti += contiPos.length;
       if (contiAltriImporti) numConti += contiAltriImporti.length;
-      
+
 
       var mediaperconti = 0
       var mediacopertiperconto = 0
@@ -149,19 +149,19 @@ export default function Page() {
     if (phase == 'caricamento') {
       return (
         <><header className="top-section">
-        </header><main className="middle-section">
+        </header>
+          <main className="middle-section">
             <div className='z-0 text-center'>
-              <br></br>
               <br></br>
               <p className="text-5xl py-4">
                 Cruscotto di Sintesi
               </p>
-              <br></br>
-              <br></br>
-              <p className="text-5xl py-4">
+              <br />
+              <CircularProgress size="9rem" />
+              <br />
+              <p className="text-4xl py-4">
                 Caricamento in corso ...
               </p>
-              <CircularProgress size="9rem" />
             </div>
           </main></>
       );
@@ -171,6 +171,109 @@ export default function Page() {
       console.log(incassi);
 
       return (
+        <main style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%' }}>
+          {/* Contenuti statici sopra la griglia */}
+          <div style={{ textAlign: 'center', padding: '4px 0' }}>
+            <p style={{ fontSize: '3rem', padding: '8px 0' }}>Cruscotto di Sintesi</p>
+            <p style={{ fontSize: '1rem', padding: '4px 0' }}>
+              In questa schermata appaiono i risultati di sintesi giornalieri della sagra.
+            </p>
+          </div>
+
+          {/* Contenitore della DataGrid */}
+          {/* Questo div è cruciale: diventerà un contenitore flex per la griglia */}
+          <div style={{ flexGrow: 1, minHeight: 0, width: '100%', textAlign: 'center' }}>
+            <h2 style={{ fontWeight: 'extrabold' }}></h2>
+            <div style={{ height: 'calc(100% - 60px)', width: '100%' }}> {/* Calcola altezza dinamica */}
+
+              <TableContainer component={Paper} sx={{ maxHeight: 440 }}> {/* maxHeight per scroll verticale */}
+                <Table sx={{ minWidth: 700 }} aria-label="customized table" stickyHeader> {/* stickyHeader per bloccare l'intestazione */}
+                  <TableHead>
+                    <TableRow>
+                      {/* Mantieni la classe "font-bold" per Tailwind CSS, se stai usando Tailwind */}
+                      <StyledTableCell className="font-bold">GIORNATA</StyledTableCell>
+                      <StyledTableCell align="right" className="font-bold">Incasso&nbsp;</StyledTableCell>
+                      <StyledTableCell align="right" className="font-bold">Conti&nbsp;</StyledTableCell>
+                      <StyledTableCell align="right" className="font-bold">Coperti&nbsp;</StyledTableCell>
+                      <StyledTableCell align="right" className="font-bold">Costo Medio<br></br>x Conto</StyledTableCell>
+                      <StyledTableCell align="right" className="font-bold">Costo Medio<br></br>x Coperto</StyledTableCell>
+                      <StyledTableCell align="right" className="font-bold">Media Coperti<br></br>x Conto</StyledTableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {record.map((row) => (
+                      <StyledTableRow key={row.giornata}>
+                        <StyledTableCell component="th" scope="row" className="font-bold">
+                          {row.giornata}
+                        </StyledTableCell>
+                        <StyledTableCell align="right"><b>{row.incasso.toFixed(2)}&nbsp;&euro;</b><br></br><small>&nbsp;POS&nbsp;{row.incassopos.toFixed(2)}&nbsp;&euro;</small></StyledTableCell>
+                        <StyledTableCell align="right">{row.conti}</StyledTableCell>
+                        <StyledTableCell align="right">{row.coperti}</StyledTableCell>
+                        <StyledTableCell align="right">{row.spesamediaperconti.toFixed(2)}&nbsp;&euro;</StyledTableCell>
+                        <StyledTableCell align="right">{row.spesamediacoperto.toFixed(2)}&nbsp;&euro;</StyledTableCell>
+                        <StyledTableCell align="right">{row.mediacopertiperconto.toFixed(2)}</StyledTableCell>
+                      </StyledTableRow>
+                    ))}
+                    {/* Riga del totale dell'incasso */}
+                    <TableRow>
+                      {/* Assicurati che rowSpan e colSpan siano corretti in base alle tue celle */}
+                      <TableCell rowSpan={3} /> {/* Ho cambiato rowSpan a 3 per le 3 righe riepilogative */}
+                      <TableCell colSpan={2} className="text-xl font-extralight"><b>Incasso totale</b></TableCell>
+                      <TableCell align="right" className="text-xl font-extralight">
+                        <b>
+                          {record.reduce((accumulator, currentValue) => {
+                            return accumulator + currentValue.incasso;
+                          }, 0).toFixed(2)}&nbsp;&euro;
+                        </b><br></br><small>POS {record.reduce((accumulator, currentValue) => {
+                          return accumulator + currentValue.incassopos;
+                        }, 0).toFixed(2)}&nbsp;&euro;&nbsp;</small>
+                      </TableCell>
+                    </TableRow>
+                    {/* Riga del totale coperti */}
+                    <TableRow>
+                      <TableCell colSpan={2} className="text-xl font-extralight">Coperti totali</TableCell>
+                      <TableCell align="right" className="text-xl font-extralight">{record.reduce((accumulator, currentValue) => {
+                        return accumulator + currentValue.coperti;
+                      }, 0)}<br></br><small>Media coperti x giornata: {(record.reduce((accumulator, currentValue) => {
+                        return accumulator + currentValue.coperti;
+                      }, 0) / record.length).toFixed(2)}&nbsp;</small></TableCell>
+                    </TableRow>
+                    {/* Riga della spesa media */}
+                    <TableRow>
+                      <TableCell colSpan={2} className="text-xl font-extralight">Spesa media a persona</TableCell>
+                      <TableCell align="right" className="text-xl font-extralight">
+                        {(record.reduce((accumulator, currentValue) => {
+                          return accumulator + currentValue.incasso;
+                        }, 0) / record.reduce((accumulator, currentValue) => {
+                          return accumulator + currentValue.coperti;
+                        }, 0)).toFixed(2)}&nbsp;&euro;
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </TableContainer>
+            </div>
+            <br />
+            <div className='hidden sm:block'>
+              <p className="text-2xl py-4">
+                Grafico Incasso
+              </p>
+              <BarChart
+                xAxis={[{ dataKey: 'giornata', label: 'Giornata', scaleType: 'band' }]}
+                series={[{ dataKey: 'incasso', label: 'Incasso' },
+                { dataKey: 'incassopos', label: 'IncassoPos' }
+                ]}
+                width={1000}
+                height={600}
+                dataset={incassi}
+              />
+            </div>
+          </div>
+
+
+        </main>
+
+        /*
         <main>
           <div className="flex flex-wrap flex-col">
             <div className='text-center py-4'>
@@ -257,7 +360,7 @@ export default function Page() {
             </div>
           </div>
         </main>
-
+*/
       );
     }
   }
@@ -267,7 +370,7 @@ export default function Page() {
         <div className="flex flex-wrap flex-col">
           <div className='text-center '>
             <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
-              <span className="text-xl font-semibold">Danger alert!</span> Utente non autorizzato.
+              <span className="text-xl font-semibold">Violazione:</span> utente non autorizzato.
             </div>
           </div>
         </div>

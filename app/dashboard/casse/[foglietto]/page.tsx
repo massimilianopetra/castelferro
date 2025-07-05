@@ -506,32 +506,29 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       case 'caricamento':
         return (
           <>
-            <main>
-              <div className="container">
-                <header className="top-section">
-                </header>
+            <><header className="top-section">
+            </header>
+              <main className="middle-section">
+                <div className='z-0 text-center'>
+                  <br></br>
+                  <p className="text-5xl py-4">
+                    Casse
+                  </p>
+                  <br />
+                  <CircularProgress size="9rem" />
+                  <br />
+                  <p className="text-4xl py-4">
+                    Caricamento in corso ...
+                  </p>
 
-                <main className="middle-section">
-                  <div className='z-0 text-center'>
-                    <br></br>
-                    <br></br>
-                    <br></br>
-                    <br></br>
-                    <br></br>
-                    <br></br>
-                    <p className="text-2xl md:text-5xl py-4">
-                      Caricamento in corso ...
-                    </p>
-                    <CircularProgress size="9rem" />
-                  </div>
-                </main>
+                </div>
+              </main></>
 
-                <footer className="bottom-section">
-                  <div className="sez-sx-bassa"></div>
-                  <div className="sez-dx-bassa"></div>
-                </footer>
-              </div>
-            </main>
+            <footer className="bottom-section">
+              <div className="sez-sx-bassa"></div>
+              <div className="sez-dx-bassa"></div>
+            </footer>
+
           </>
         );
       case 'elaborazione':
@@ -689,41 +686,41 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
               </main>
 
-  <footer className="bottom-section">
-                  <div className="sez-sx-bassa ">
-                    <div className="z-0 text-2xl font-extralight text-end">
-                    </div>
-                    {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} >Stampa Conto</Button> :
-                      <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button>
-                    }
-                    &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
-                    <br />
-                    {+numeroFoglietto < 10 ? <p> Conto "non stampabile" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p> : <p> Conto "aperto" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>}
+              <footer className="bottom-section">
+                <div className="sez-sx-bassa ">
+                  <div className="z-0 text-2xl font-extralight text-end">
                   </div>
-
-                  <div className="sez-dx-bassa">
-                    <ul className="inline-block text-base md:text-2xl py-3  font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
-                      &nbsp;Chiudi conto&nbsp;&nbsp;
-                      <ButtonGroup size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} >
-                        <Button size="medium" className="rounded-full" variant="contained"  onClick={handleAChiudiPos} disabled>  POS  </Button>
-                        <Button size="medium" className="rounded-full" variant="contained"  onClick={handleAChiudi} disabled>Contanti</Button>
-                        <Button size="medium" className="rounded-full" variant="contained"  onClick={handleChiudiGratis} disabled>Altro Importo</Button>
-                      </ButtonGroup>
-                      &nbsp;&nbsp;
-                    </ul>
-                  </div>
-                </footer>
-                </div>
- 
-               
-
-                {/* Sezione che verrà stampata */}
-                <div ref={printRef} className="hidden">
-                  <TheBill item={products} />
+                  {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} >Stampa Conto</Button> :
+                    <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button>
+                  }
+                  &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
+                  <br />
+                  {+numeroFoglietto < 10 ? <p> Conto "non stampabile" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p> : <p> Conto "aperto" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>}
                 </div>
 
-            </main>
-  
+                <div className="sez-dx-bassa">
+                  <ul className="inline-block text-base md:text-2xl py-3  font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
+                    &nbsp;Chiudi conto&nbsp;&nbsp;
+                    <ButtonGroup size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} >
+                      <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudiPos} disabled>  POS  </Button>
+                      <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
+                      <Button size="medium" className="rounded-full" variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
+                    </ButtonGroup>
+                    &nbsp;&nbsp;
+                  </ul>
+                </div>
+              </footer>
+            </div>
+
+
+
+            {/* Sezione che verrà stampata */}
+            <div ref={printRef} className="hidden">
+              <TheBill item={products} />
+            </div>
+
+          </main>
+
         );
       case 'modificato':
         return (
@@ -795,22 +792,22 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                     </div>
 
                   </div>
-                <div className="sez-dx">
-                  <div className="text-base md:text-2xl py-2 md:py-4 font-extralight text-end">
-                    <Button size="medium" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
-                    &nbsp;&nbsp;
-                    <Button size="medium" color="secondary" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                  <div className="sez-dx">
+                    <div className="text-base md:text-2xl py-2 md:py-4 font-extralight text-end">
+                      <Button size="medium" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
+                      &nbsp;&nbsp;
+                      <Button size="medium" color="secondary" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
                       <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                      <p>  Conto:{" "}            <span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
-                      <p>  Conto aperto da:{" "}  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span></p>
-                      <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
-                    </ButtonGroup>
-                    <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                      <p>Conto:{" "}<span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;</span>{" ("}<span className="text-blue-800 font-bold"> {deltanow(conto?.data_apertura)}</span>{") "}
-                        &nbsp;Cameriere:{" "}<span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;</span></p>
-                    </ButtonGroup>
+                        <p>  Conto:{" "}            <span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
+                        <p>  Conto aperto da:{" "}  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span></p>
+                        <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
+                      </ButtonGroup>
+                      <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
+                        <p>Conto:{" "}<span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;</span>{" ("}<span className="text-blue-800 font-bold"> {deltanow(conto?.data_apertura)}</span>{") "}
+                          &nbsp;Cameriere:{" "}<span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;</span></p>
+                      </ButtonGroup>
+                    </div>
                   </div>
-                </div>
                 </header>
                 <main className="middle-section_XS">
                   <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
@@ -830,7 +827,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                       <ButtonGroup size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} >
                         <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudiPos} disabled>  POS  </Button>
                         <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
-                        <Button size="medium" className="rounded-full" variant="contained"  onClick={handleChiudiGratis} disabled>Altro Importo</Button>
+                        <Button size="medium" className="rounded-full" variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
                       </ButtonGroup>
                       &nbsp;&nbsp;
                     </ul>
@@ -848,7 +845,123 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         );
       case 'stampato':
         return (
+ <>
+            <main>
+              <div className="container">
+                <header className="top-section">
+                  <div className="sez-sx">
+                    <div className="p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
+                      <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}>
+                        <li className="flex-1 mr-2font-bold py-2 ">
+                          <a className="text-center block text-blue-700 font-extraligh text-2xl md:text-5xl">
+                            Casse
+                          </a>
+                          <div className="text-xs text-center text-blue-700 ">SAGRA:
+                            <span className="text-xs text-center text-blue-800 font-semibold">{sagra.stato}&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</span>
+                          </div>
+                        </li>
+                        <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4 rounded-full " style={{ borderRadius: '9999px' }}>
+                          <div className='text-center text-emerald-600'>
+                            <TextField
+                              autoFocus
+                              className="p-2"
+                              label="Numero Foglietto"
+                              variant="outlined"
+                              value={numero}
+                              onChange={handleInputChange}
+                              style={{ borderRadius: '9999px' }}
+                              sx={{
+                                input: {
+                                  textAlign: 'right', // Allinea il testo a destra
+                                },
+                              }}
+                              type="number"
+                            />
+                          </div>
 
+                        </li>
+                        <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 ">
+                          <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
+                            <Button variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>Carica Foglietto</Button>
+                          </ButtonGroup>
+                          <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
+                            <Button size="small" variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>Carica Foglietto</Button>
+                          </ButtonGroup>
+
+                        </li>
+                      </ul>
+                    </div>
+                    <div className="text-base md:text-xl" style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
+                      <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
+                        <p><span className="text-blue-800 ">Ultimi ricercati &nbsp;</span>
+                          {lastLog.map((row) => (
+                            <>
+                              <Button size="medium" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} style={{ borderRadius: '9999px' }}>{row.foglietto}</Button>
+                              &nbsp;
+                            </>
+                          ))}</p>
+                      </ButtonGroup>
+                      <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
+                        <p><span className="text-blue-800 ">Ultimi  &nbsp;</span>
+                          {lastLog.map((row) => (
+                            <>
+                              <Button size="small" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} style={{ borderRadius: '9999px' }}>{row.foglietto}</Button>
+                              &nbsp;
+                            </>
+                          ))}</p>
+                      </ButtonGroup>
+                    </div>
+
+                  </div>
+                  <div className="sez-dx">
+                    <div className="text-base md:text-2xl py-2 md:py-4 font-extralight text-end">
+                      <Button size="medium" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
+                      &nbsp;&nbsp;
+                      <Button size="medium" color="secondary" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                      <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
+                        <p>  Conto:{" "}            <span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
+                        <p>  Conto aperto da:{" "}  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span></p>
+                        <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
+                      </ButtonGroup>
+                      <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
+                        <p>Conto:{" "}<span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;</span>{" ("}<span className="text-blue-800 font-bold"> {deltanow(conto?.data_apertura)}</span>{") "}
+                          &nbsp;Cameriere:{" "}<span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;</span></p>
+                      </ButtonGroup>
+                    </div>
+                  </div>
+                </header>
+           <main className="middle-section_XS">
+                <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
+              </main>
+                <footer className="bottom-section">
+                  <div className="sez-sx-bassa ">
+                    <div className="z-0 text-2xl font-extralight text-end">
+                    </div>
+                    {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button> :
+                      <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button>
+                    }
+                    &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
+                    <br />
+                    {+numeroFoglietto < 10 ? <p> Conto "non stampabile" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p> : <p> Conto "stampato" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>}
+                  </div>
+
+                  <div className="sez-dx-bassa">
+                    <ul className="inline-block text-base md:text-2xl py-3 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
+                      &nbsp;Chiudi conto&nbsp;&nbsp;
+                      <ButtonGroup size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}>
+                        <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudiPos} >  POS  </Button>
+                        <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudi} >Contanti</Button>
+                        <Button size="medium" className="rounded-full" variant="contained" onClick={handleChiudiGratis} >Altro Importo</Button>
+                      </ButtonGroup>
+                      &nbsp;&nbsp;
+                    </ul>
+                  </div>
+                  &nbsp;&nbsp;
+
+                </footer>
+
+                {/* 
+          /*
           <>
             <main>
               <div className="container">
@@ -918,37 +1031,39 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
                   </div>
 
-                 <div className="sez-dx">
-                  <div className="text-base md:text-2xl py-2 md:py-4 font-extralight text-end">
-                    <Button size="medium" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
-                    &nbsp;&nbsp;
-                    <Button size="medium" color="secondary" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
-                    <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                      <p>  Conto:{" "}            <span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
-                      <p>  Conto aperto da:{" "}  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span></p>
-                      <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
-                    </ButtonGroup>
-                    <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                      <p>Conto:{" "}<span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;</span>{" ("}<span className="text-blue-800 font-bold"> {deltanow(conto?.data_apertura)}</span>{") "}
-                        &nbsp;Cameriere:{" "}<span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;</span></p>
-                    </ButtonGroup>
+                  <div className="sez-dx">
+                    <div className="text-base md:text-2xl py-2 md:py-4 font-extralight text-end">
+                      <Button size="medium" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
+                      &nbsp;&nbsp;
+                      <Button size="medium" color="secondary" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                      <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
+                        <p>  Conto:{" "}            <span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
+                        <p>  Conto aperto da:{" "}  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span></p>
+                        <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
+                      </ButtonGroup>
+                      <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
+                        <p>Conto:{" "}<span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;</span>{" ("}<span className="text-blue-800 font-bold"> {deltanow(conto?.data_apertura)}</span>{") "}
+                          &nbsp;Cameriere:{" "}<span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;</span></p>
+                      </ButtonGroup>
                     </div>
                   </div>
                 </header>
-                <main className="middle-section_XS">
+
+                <main className="middle-section">
                   <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
                 </main>
 
-
                 <footer className="bottom-section">
-                  <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                    {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} >Stampa Conto</Button> :
+                  <div className="sez-sx-bassa ">
+                    <div className="z-0 text-2xl font-extralight text-end">
+                    </div>
+                    {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button> :
                       <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button>
                     }
                     &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
                     <br />
-                    <p> Conto "stampato" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
-                   <br />
+                    {+numeroFoglietto < 10 ? <p> Conto "non stampabile" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p> : <p> Conto "stampato" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>}
+                  </div>
 
                   <div className="sez-dx-bassa">
                     <ul className="inline-block text-base md:text-2xl py-3 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
@@ -960,29 +1075,12 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                       </ButtonGroup>
                       &nbsp;&nbsp;
                     </ul>
-                  </div>  </ButtonGroup>
-                 
-                 
-                 
-                    <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                    <div className=" justify-center">
-                      {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} >Stampa Conto</Button> :
-                        <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button>
-                      }
-                      &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
+                  </div>
+                  &nbsp;&nbsp;
 
-                      <ButtonGroup size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}>
-                        <Button size="medium" className="rounded-full" variant="contained"  onClick={handleAChiudiPos} >  POS  </Button>
-                        <Button size="medium" className="rounded-full" variant="contained"  onClick={handleAChiudi} >Contanti</Button>
-                        <Button size="medium" className="rounded-full" variant="contained"  onClick={handleChiudiGratis} >Altro Importo</Button>
-                      </ButtonGroup>
-                    </div>
-                  </ButtonGroup>
- 
-                  
                 </footer>
 
-                {/* Sezione che verrà stampata */}
+Sezione che verrà stampata */}
                 <div ref={printRef} className="hidden">
                   <TheBill item={products} />
                 </div>
@@ -1053,7 +1151,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
             <main className="middle-section">
               <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50  text-center" role="alert">
-                <span className="text-xl font-semibold">Dark alert!</span> Conto {conto?.id_comanda} chiuso in data: {milltodatestring(conto?.data_chiusura)} totale: {conto?.totale} Euro.
+                <span className="text-xl font-semibold">Informazione:</span> conto {conto?.id_comanda} chiuso in data: {milltodatestring(conto?.data_chiusura)} totale: {conto?.totale} Euro.
               </div>
 
             </main>
@@ -1161,7 +1259,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
             <main className="middle-section">
               <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50  text-center" role="alert">
-                <span className="text-xl font-semibold">Dark alert!</span> Conto non esistente.
+                <span className="text-xl font-semibold">Informazione:</span> conto non esistente.
               </div>
             </main>
 
@@ -1190,7 +1288,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           <div className="flex flex-wrap flex-col">
             <div className='text-center '>
               <div className="p-4 mb-4 text-xl text-yellow-800 rounded-lg bg-yellow-50" role="alert">
-                <span className="text-xl font-semibold">Warning alert!</span> La giornata non è stata ancora aperta!
+                <span className="text-xl font-semibold">Attenzione:</span> |Casse [foglietto]| la giornata non è stata ancora aperta!
               </div>
             </div>
           </div>
@@ -1221,7 +1319,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         <div className="flex flex-wrap flex-col">
           <div className='text-center '>
             <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
-              <span className="text-xl font-semibold">Danger alert!</span> Utente non autorizzato.
+              <span className="text-xl font-semibold">Violazione:</span> utente non autorizzato.
             </div>
           </div>
         </div>

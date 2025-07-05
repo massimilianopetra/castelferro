@@ -80,7 +80,7 @@ html, body {
 
 /* Sezione Superiore: 25% dell'altezza */
 .top-section {
-    height: 25%;
+    height: 20%;
   /***    background-color: #e0f7fa;*/
   /***    border-bottom: 1px solid #b2ebf2; */
     align-items: center; /* Centra verticalmente le sub-sezioni */
@@ -90,10 +90,10 @@ html, body {
 .top-section .sez-sx,
 .top-section .sez-centrale-top,
 .top-section .sez-dx {
-    padding: 10px;
-    margin: 0 10px; /* Margine orizzontale per desktop */
+    padding: 3px;
+    margin: 0 3px; /* Margine orizzontale per desktop */
    /***      background-color: #b3e5fc;*/
-    border-radius: 5px;
+    border-radius: 2px;
     text-align: center;
     overflow: hidden; /* Blocca scorrimento interno */
 }
@@ -132,17 +132,17 @@ html, body {
 }
 /* Sezione Centrale: 60% dell'altezza, scorrevole verticalmente */
 .middle-section_XS {
-    height: 50%;
+    height: 70%;
      /***   background-color: #fffde7;*/
     overflow-y: auto; /* Abilita lo scorrimento verticale se il contenuto eccede */
     overflow-x: hidden; /* Disabilita lo scorrimento orizzontale */
     flex-direction: column; /* Contenuto impilato verticalmente */
-    border-bottom: 1px solid #b2ffd6;
+    border-bottom: 1px solid #ffb2bb;
 }
 
 /* Sezione Inferiore: 15% dell'altezza */
 .bottom-section {
-    height: 15%;
+    height: 10%;
     /***    background-color: #e8f5e9;   */
     border-top: 1px solid #c8e6c9;
     justify-content: space-around; /* Spazia uniformemente le sub-sezioni */
@@ -153,10 +153,10 @@ html, body {
 .bottom-section .sez-sx-bassa,
 .bottom-section .sez-dx-bassa {
     flex: 1; /* Distribuisce lo spazio equamente per desktop */
-    padding: 10px;
-    margin: 0 10px; /* Margine orizzontale per desktop */
+    padding: 2;
+    margin: 0 2px; /* Margine orizzontale per desktop */
 /***    background-color: #c8e6c9;*/
-    border-radius: 5px;
+    border-radius: 3px;
     text-align: center;
     overflow: hidden; /* Blocca scorrimento interno */
 }
@@ -228,11 +228,11 @@ p {
                  background-color: #91adf0; 
     }
       .middle-section_XS {
-        height: 350px; /* Puoi impostare un'altezza fissa o una percentuale relativa al container */
+        height: 250px; /* Puoi impostare un'altezza fissa o una percentuale relativa al container */
         /* Oppure, se .outer-wrapper ha height: auto, potresti voler usare flex-grow: 1 per farla espandere */
         /* flex-grow: 1; */
         padding: 10px;
-                         background-color: #86d228; 
+                         background-color: #aad228; 
     }
 }
 

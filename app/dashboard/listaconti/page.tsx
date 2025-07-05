@@ -91,7 +91,7 @@ export default function Page() {
                     <div className="flex flex-wrap flex-col">
                         <div className='text-center '>
                             <div className="p-4 mb-4 text-xl text-yellow-800 rounded-lg bg-yellow-50" role="alert">
-                                <span className="text-xl font-semibold">Warning alert!</span> |Lista Conti Apetri e Chiusi|  La giornata non è stata ancora aperta!
+                                <span className="text-xl font-semibold">Attenzione:</span>|Lista conti| la giornata non è stata ancora aperta!
                             </div>
                         </div>
                     </div>
@@ -99,26 +99,27 @@ export default function Page() {
             )
         } else if (phase == 'caricamento') {
             return (
-                <><header className="top-section">
-                </header><main className="middle-section">
-                        <div className='z-0 text-center'>
-                            <br></br>
-                            <br></br>
-                            <p className="text-5xl py-4">
-                                Lista Conti Aperti e Chiusi
-                            </p>
-                            <br></br>
-                            <br></br>
-                            <p className="text-5xl py-4">
-                                Caricamento in corso ...
-                            </p>
-                            <CircularProgress size="9rem" />
-                        </div>
-                    </main></>
+           <><header className="top-section">
+           </header>
+             <main className="middle-section">
+               <div className='z-0 text-center'>
+                 <br></br>
+                 <p className="text-5xl py-4">
+                   Lista conti aperti e chiusi
+                 </p>
+                 <br />
+                 <CircularProgress size="9rem" />
+                 <br />
+                 <p className="text-4xl py-4">
+                   Caricamento in corso ...
+                 </p>
+   
+               </div>
+             </main></>
             );
         } else if (phase == 'caricato') {
             return (
-                <main>
+     /*           <main>
 
                     <div className="flex flex-wrap flex-col">
                         <div className='text-center py-4'>
@@ -143,8 +144,37 @@ export default function Page() {
 
                         </div>
                     </div>
-                </main>
+                </main>*/
+                <main style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%' }}>
+                    {/* Contenuti statici sopra la griglia */}
+                    <div style={{ textAlign: 'center', padding: '4px 0' }}>
+                        <p style={{ fontSize: '3rem', padding: '8px 0' }}>Verifica conti</p>
+                        <p style={{ fontSize: '1rem', padding: '4px 0' }}>
+                            In questa schermata appaiono i conti aperti e chiusi della giornata corrente.
+                        </p>
+                    </div>
 
+                    {/* Contenitore della DataGrid */}
+                    {/* Questo div è cruciale: diventerà un contenitore flex per la griglia */}
+                    <div style={{ flexGrow: 1, minHeight: 0, width: '100%', textAlign: 'center' }}>
+                        <h2 style={{ fontWeight: 'extrabold' }}></h2>
+                        <div style={{ height: 'calc(100% - 60px)', width: '100%' }}> {/* Calcola altezza dinamica */}
+                            <StyledDataGrid
+                                rows={rows}
+                                columns={columns}
+                                slots={{ toolbar: GridToolbar }}
+                                // Se la griglia ha molte righe, è meglio gestire l'altezza tramite il contenitore
+                                initialState={{
+                                    density: 'compact',
+                                    pagination: { paginationModel: { pageSize: 12 } }, // Esempio: 10 righe per pagina
+                                }}
+                            />
+                        </div>
+                        <br /><br />
+                    </div>
+
+
+                </main>
             );
         }
     }
@@ -154,7 +184,7 @@ export default function Page() {
                 <div className="flex flex-wrap flex-col">
                     <div className='text-center '>
                         <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
-                            <span className="text-xl font-semibold">Danger alert!</span> Utente non autorizzato.
+                            <span className="text-xl font-semibold">Violazione:</span> utente non autorizzato.
                         </div>
                     </div>
                 </div>

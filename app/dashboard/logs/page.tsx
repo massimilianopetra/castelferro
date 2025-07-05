@@ -76,7 +76,7 @@ export default function Page() {
                     <div className="flex flex-wrap flex-col">
                         <div className='text-center '>
                             <div className="p-4 mb-4 text-xl text-yellow-800 rounded-lg bg-yellow-50" role="alert">
-                                <span className="text-xl font-semibold">Warning alert!</span> |Logs| La giornata non è stata ancora aperta!
+                                <span className="text-xl font-semibold">Attenzione</span> |Logs| La giornata non è stata ancora aperta!
                             </div>
                         </div>
                     </div>
@@ -84,25 +84,54 @@ export default function Page() {
             )
         } else if (phase == 'caricamento') {
             return (
-                <><header className="top-section">
-                </header><main className="middle-section">
-                        <div className='z-0 text-center'>
-                            <br></br>
-                            <br></br>
-                            <p className="text-5xl py-4">
-                                Verifica Logs
-                            </p>
-                            <br></br>
-                            <br></br>
-                            <p className="text-5xl py-4">
-                                Caricamento in corso ...
-                            </p>
-                            <CircularProgress size="9rem" />
-                        </div>
-                    </main></>
+        <><header className="top-section">
+        </header>
+          <main className="middle-section">
+            <div className='z-0 text-center'>
+              <br></br>
+              <p className="text-5xl py-4">
+                Logs
+              </p>
+              <br />
+              <CircularProgress size="9rem" />
+              <br />
+              <p className="text-4xl py-4">
+                Caricamento in corso ...
+              </p>
+            </div>
+          </main></>
             );
         } else if (phase == 'caricato') {
             return (
+                <main style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%' }}>
+                    {/* Contenuti statici sopra la griglia */}
+                    <div style={{ textAlign: 'center', padding: '4px 0' }}>
+                        <p style={{ fontSize: '3rem', padding: '8px 0' }}>Verifica logs</p>
+                        <p style={{ fontSize: '1rem', padding: '4px 0' }}>
+                            In questa schermata appaiono i logs della giornata corrente.
+                        </p>
+                    </div>
+
+                    {/* Contenitore della DataGrid */}
+                    {/* Questo div è cruciale: diventerà un contenitore flex per la griglia */}
+                    <div style={{ flexGrow: 1, minHeight: 0, width: '100%', textAlign: 'center' }}>
+                        <h2 style={{ fontWeight: 'extrabold' }}></h2>
+                        <div style={{ height: 'calc(100% - 60px)', width: '100%' }}> {/* Calcola altezza dinamica */}
+                        <StyledDataGrid
+                                rows={rows}
+                                columns={columns}
+                                slots={{ toolbar: GridToolbar }}
+                                initialState={{
+                                    density: 'compact',
+                                }}
+                            />
+                        </div>
+                        <br /><br />
+                    </div>
+
+
+                </main>
+                /*
                 <main>
 
                     <div className="flex flex-wrap flex-col">
@@ -129,7 +158,7 @@ export default function Page() {
                         </div>
                     </div>
                 </main>
-
+*/
             );
         }
     }
@@ -139,7 +168,7 @@ export default function Page() {
                 <div className="flex flex-wrap flex-col">
                     <div className='text-center '>
                         <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
-                            <span className="text-xl font-semibold">Danger alert!</span> Utente non autorizzato.
+                            <span className="text-xl font-semibold"></span> Utente non autorizzato.
                         </div>
                     </div>
                 </div>

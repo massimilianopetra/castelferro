@@ -45,29 +45,22 @@ export default function DashboardLinks() {
     case 'Casse':
       links = [
         { name: 'Apertura-Chiusura Giornata Sagra', href: '/dashboard/sagra', icon: LockOpenIcon },
-        { name: 'Gestione Camerieri', href: '/dashboard/camerieri', icon: AccessibilityIcon },
-        { name: 'Verifica conti (aperti e chiusi)', href: '/dashboard/listaconti', icon: CheckCircleOutlineIcon },
-        { name: 'Incassa Conti', href: '/dashboard/chiudiconti', icon: ShoppingCartIcon  },
+        { name: 'Configura Menu', href: '/dashboard/menus', icon: WrenchScrewdriverIcon },
         { name: 'Cruscotto di sintesi', href: '/dashboard/cruscotto', icon: EuroIcon },
         { name: 'Cruscotto di sintesi: piatti', href: '/dashboard/cruscottopiatti', icon: FoodBankIcon },
-        { name: 'Cruscotto di sintesi: conti omaggio', href: '/dashboard/cruscottogratis', icon: CardGiftcardIcon },
         { name: 'Logs', href: '/dashboard/logs', icon: AutoStoriesIcon },
-      
       ];
       break;
     case 'SuperUser':
       links = [
-        { name: 'Gestione Menu', href: '/dashboard/menus', icon: WrenchScrewdriverIcon },
         { name: 'Apertura-Chiusura Giornata Sagra', href: '/dashboard/sagra', icon: LockOpenIcon },
+        { name: 'Gestione Menu', href: '/dashboard/menus', icon: WrenchScrewdriverIcon },
         { name: 'Gestione Camerieri', href: '/dashboard/camerieri', icon: AccessibilityIcon },
         { name: 'Verifica conti (aperti e chiusi)', href: '/dashboard/listaconti', icon: CheckCircleOutlineIcon },
-        { name: 'Incassa Conti', href: '/dashboard/chiudiconti', icon: ShoppingCartIcon  },
         { name: 'Cruscotto di sintesi', href: '/dashboard/cruscotto', icon: EuroIcon },
         { name: 'Cruscotto di sintesi: piatti', href: '/dashboard/cruscottopiatti', icon: FoodBankIcon },
         { name: 'Cruscotto di sintesi: conti omaggio', href: '/dashboard/cruscottogratis', icon: CardGiftcardIcon },
         { name: 'Logs', href: '/dashboard/logs', icon: AutoStoriesIcon },
-
-
       ];
       break;
     case 'Antipasti':

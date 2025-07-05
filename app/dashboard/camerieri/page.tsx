@@ -278,25 +278,26 @@ export default function Camerieri() {
         if (phase == 'caricamento') {
             return (
                 <><header className="top-section">
-                </header><main className="middle-section">
+                </header>
+                    <main className="middle-section">
                         <div className='z-0 text-center'>
-                            <br></br>
                             <br></br>
                             <p className="text-5xl py-4">
                                 Gestione Camerieri
                             </p>
-                            <br></br>
-                            <br></br>
-                            <p className="text-5xl py-4">
+                            <br />
+                            <CircularProgress size="9rem" />
+                            <br />
+                            <p className="text-4xl py-4">
                                 Caricamento in corso ...
                             </p>
-                            <CircularProgress size="9rem" />
+
                         </div>
                     </main></>
             );
         } else if (phase == 'caricato') {
             return (
-                <main>
+    /*            <main>
                     <div className="flex flex-wrap flex-col">
                         <div className='text-center py-4'>
                             <p className="text-5xl py-4">
@@ -329,7 +330,51 @@ export default function Camerieri() {
 
                         </div>
                     </div>
-                </main>
+                </main>*/
+                        <main style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%' }}>
+            {/* Contenuti statici sopra la griglia */}
+            <div style={{ textAlign: 'center', padding: '4px 0' }}>
+                <p style={{ fontSize: '3rem', padding: '8px 0' }}>Gestione Camerieri</p>
+                <p style={{ fontSize: '1rem', padding: '4px 0' }}>
+                    Elenco dei camerieri registrati nel sistema. Puoi aggiungere, modificare o eliminare camerieri.
+                </p>
+            </div>
+
+            {/* Contenitore della DataGrid */}
+            {/* Questo div è cruciale: diventerà un contenitore flex per la griglia */}
+            <div style={{ flexGrow: 1, minHeight: 0, width: '100%', textAlign: 'center' }}>
+                <h2 style={{ fontWeight: 'extrabold' }}></h2>
+                <div style={{ height: 'calc(100% - 60px)', width: '100%' }}> {/* Calcola altezza dinamica */}
+                    <DataGrid
+                        rows={rows}
+                        columns={columns} // Le tue colonne configurate con flex e minWidth
+                        editMode="row"
+                        rowModesModel={rowModesModel}
+                        onRowModesModelChange={handleRowModesModelChange}
+                        onRowEditStop={handleRowEditStop}
+                        processRowUpdate={processRowUpdate}
+                        slots={{
+                            toolbar: EditToolbar as GridSlots['toolbar'],
+                        }}
+                        slotProps={{
+                            toolbar: { setRows, setRowModesModel },
+                        }}
+                        initialState={{
+                            sorting: {
+                                sortModel: [{ field: 'col1', sort: 'desc' }],
+                            },
+                            pagination: { paginationModel: { pageSize: 10 } }, // Default 10 righe per pagina
+                        }}
+                        pageSizeOptions={[5, 10, 25]} // Opzioni per cambiare il numero di righe per pagina
+                        // Se stai usando `StyledDataGrid`, passala qui invece di `DataGrid`
+                        // style={{ height: '100%', width: '100%' }} // La griglia occupa il 100% del suo div padre
+                    />
+                </div>
+                <br /><br />
+            </div>
+
+           
+        </main>
 
             );
         }
@@ -340,7 +385,7 @@ export default function Camerieri() {
                 <div className="flex flex-wrap flex-col">
                     <div className='text-center '>
                         <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
-                            <span className="text-xl font-semibold">Danger alert!</span> Utente non autorizzato.
+                            <span className="text-xl font-semibold">Violazione: </span> utente non autorizzato.
                         </div>
                     </div>
                 </div>

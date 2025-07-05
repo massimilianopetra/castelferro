@@ -124,7 +124,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
         const num = Number(numero);
         carica(num);
         setNumero(''); //arreza numero fogleitto input box
-        
+
     };
 
     const handleButtonClickAnnulla = () => {
@@ -183,7 +183,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                 return (item);
         });
         setProducts(newProducts);
-    
+
         setPhase('caricato');
     };
 
@@ -265,16 +265,16 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                     <>
                         <div className='z-0 text-center'>
                             <br></br>
+                            <p className="text-5xl py-4">
+                                Cucina
+                            </p><br></br>
                             <br></br>
-                            <br></br>
-                            <br></br>
+                            <CircularProgress size="9rem" />
                             <br></br>
                             <p className="text-5xl py-4">
                                 Caricamento in corso ...
                             </p>
-                            <CircularProgress size="9rem" />
                         </div>
-
                     </>
                 );
             case 'caricato':
@@ -370,7 +370,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                     <div className="flex flex-wrap flex-col">
                         <div className='text-center '>
                             <div className="p-4 mb-4 text-xl text-yellow-800 rounded-lg bg-yellow-50" role="alert">
-                                <span className="text-xl font-semibold">Warning alert!</span> La giornata non è stata ancora aperta!
+                                <span className="text-xl font-semibold">Attenzione</span> |Cucina| La giornata non è stata ancora aperta!
                             </div>
                         </div>
                     </div>
@@ -384,7 +384,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                 <main>
                     <div className="container_cucine">
                         {/* Sezione 1: Intestazione (25%) */}
-                        { phase !== 'caricato' && phase !== 'modificaquantita'  ?
+                        {phase !== 'caricato' && phase !== 'modificaquantita' ?
                             <header className="header_cucine_sup">
 
                                 <div className="p-30 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
@@ -426,9 +426,9 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                     </ul>
                                 </div>
                             </header> : <div></div>}
-                         { phase !== 'caricato' && phase !== 'modificaquantita'  ?
-                       
-                       
+                        {phase !== 'caricato' && phase !== 'modificaquantita' ?
+
+
 
                             <header className="header_cucine_inf">
                                 <div className="z-0 xl:text-3xl font-extralight xl:text-end lg:text-3xl lg:py-2 lg:text-center">
@@ -503,13 +503,13 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                             </div>}
 
                         { }
-                     {/*   <main className=".mainContent_cucine">*/}
-                            <p className=".mainContent_cucine_p">          {renderPhaseContent()}</p>
-                     {/*   </main>*/}
+                        {/*   <main className=".mainContent_cucine">*/}
+                        <p className=".mainContent_cucine_p">          {renderPhaseContent()}</p>
+                        {/*   </main>*/}
                         {/* Sezione 2: Footer (15%)*/}
 
                         <footer className="footer_cucine">
-                            <div className="buttonContainer_cucine"> 
+                            <div className="buttonContainer_cucine">
 
                                 {phase == 'caricato' ?
                                     <div className="flex justify-between items-center w-full"> {/* AGGIUNGI QUESTE CLASSI */}
@@ -520,14 +520,14 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                                 fontSize: '1.5rem', // Aumenta la dimensione del font
                                                 // Puoi aggiungere altre proprietà CSS qui, ad esempio minWidth
                                                 minWidth: '200px',
-                                            }} style={{ borderRadius: '9999px' }}>Invia</Button> &nbsp;
+                                            }} style={{ borderRadius: '9999px' }}>Invia1</Button> &nbsp;
                                         <Button size="large" variant="contained" onClick={handleButtonClickAnnulla}
                                             className=" font-extralight text-right" sx={{
                                                 padding: '15px 30px', // Aumenta il padding per renderlo più grande
                                                 fontSize: '1.5rem', // Aumenta la dimensione del font
                                                 // Puoi aggiungere altre proprietà CSS qui, ad esempio minWidth
                                                 minWidth: '200px',
-                                            }} style={{ borderRadius: '9999px' }}>Annulla</Button>&nbsp;
+                                            }} style={{ borderRadius: '9999px' }}>Annulla1</Button>&nbsp;
                                     </div> :
                                     <div className="flex justify-between items-center w-full"> {/* AGGIUNGI QUESTE CLASSI */}
                                         <Button size="large" variant="contained" onClick={handleButtonClickInvia}
@@ -536,7 +536,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                                 padding: '15px 30px',
                                                 fontSize: '1.5rem',
                                                 minWidth: '200px',
-                                            }} style={{ borderRadius: '9999px' }}>Invia</Button>
+                                            }} style={{ borderRadius: '9999px' }}>Invia2</Button>
                                         {/* Rimuovi lo spazio non-breaking &nbsp; qui, justify-between gestirà lo spazio */}
                                         <Button size="large" variant="contained" onClick={handleButtonClickAnnulla}
                                             className="font-extralight" // Rimuovi text-right
@@ -544,14 +544,14 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                                 padding: '15px 30px',
                                                 fontSize: '1.5rem',
                                                 minWidth: '200px',
-                                            }} style={{ borderRadius: '9999px' }}>Annulla</Button>
+                                            }} style={{ borderRadius: '9999px' }}>Annulla2</Button>
                                     </div>
                                 }
                                 <div className='text-center '>
 
                                 </div>
-                              </div>
-                        </footer> 
+                            </div>
+                        </footer>
                     </div>
                     <div>
                         <Snackbar
@@ -559,7 +559,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                             autoHideDuration={6001}
                             onClose={handleClose}
                             message={(+numero) > 9999 ?
-                                "Inserisci un numero foglietto valido (minore di 8999)":
+                                "Inserisci un numero foglietto valido (minore di 8999)" :
                                 "Hai inserito un numero riservato asporto (compreso tra 9000 e 9999)"
                             }
                         />
@@ -574,7 +574,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                 <div className="flex flex-wrap flex-col">
                     <div className='text-center '>
                         <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
-                            <span className="text-xl font-semibold">Danger alert!</span> Utente non autorizzato.
+                            <span className="text-xl font-semibold">Violazione:</span> utente non autorizzato.
                         </div>
                     </div>
                 </div>

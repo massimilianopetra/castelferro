@@ -36,7 +36,7 @@ export default function NavLinks() {
         { name: 'Gestione', href: '/dashboard/gestione', icon: SettingsIcon },
         { name: 'Casse', href: '/dashboard/casse', icon: EuroIcon },
         { name: 'Incassa Conti', href: '/dashboard/chiudiconti', icon: ShoppingCartIcon  },
-        { name: 'Configura Menu', href: '/dashboard/menus', icon: WrenchScrewdriverIcon },
+        { name: 'Verifica conti (aperti e chiusi)', href: '/dashboard/listaconti', icon: CheckCircleOutlineIcon },       
         { name: 'Gestione Camerieri', href: '/dashboard/camerieri', icon: AccessibilityIcon },
        ];
       break;
@@ -44,7 +44,7 @@ export default function NavLinks() {
       links = [
         { name: 'Gestione', href: '/dashboard/gestione', icon: SettingsIcon },
         { name: 'Casse', href: '/dashboard/casse', icon: EuroIcon },
-        { name: 'Configura Menu', href: '/dashboard/menus', icon: WrenchScrewdriverIcon },
+        { name: 'Incassa Conti', href: '/dashboard/chiudiconti', icon: ShoppingCartIcon  },
         { name: 'Antipasti', href: '/dashboard/antipasti', icon: KebabDiningOutlinedIcon },
         { name: 'Primi', href: '/dashboard/primi', icon: DinnerDiningIcon },
         { name: 'Secondi', href: '/dashboard/secondi', icon: RestaurantOutlinedIcon },

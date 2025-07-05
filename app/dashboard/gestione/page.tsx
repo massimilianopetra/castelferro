@@ -27,7 +27,7 @@ export default function Page() {
                 <div className="flex flex-wrap flex-col">
                     <div className='text-center '>
                         <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
-                            <span className="text-xl font-semibold">Danger alert!</span> Utente non autorizzato.
+                            <span className="text-xl font-semibold">Violazione:</span> utente non autorizzato.
                         </div>
                     </div>
                 </div>

@@ -11,7 +11,7 @@ import { deltanow } from '@/app/lib/utils';
 import { DataGrid, GridToolbar, GridColDef } from '@mui/x-data-grid';
 import { styled } from '@mui/material/styles';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Button, Fab, TextField, Typography } from '@mui/material';
+import { Button, ButtonGroup, Fab, Stack, TextField, Typography } from '@mui/material';
 
 
 const StyledDataGrid = styled(DataGrid)({
@@ -44,50 +44,37 @@ export default function Page() {
 
     const columns: GridColDef[] = [
         {
-            field: 'col1', headerName: 'N. Foglietto', align: 'right', renderCell: (params) => (
+            field: 'col1', headerName: 'N. Foglietto', align: 'right', minWidth: 50, renderCell: (params) => (
                 <Link href={`/dashboard/casse/${params.value}`} passHref>
                     {params.value}
                 </Link>
             )
         },
-        { field: 'col2', headerName: 'Cameriere', width: 150, align: 'right' },
-        { field: 'col3', headerName: 'Stampato da', width: 100, align: 'right' },
-        { field: 'col4', headerName: 'Coperti', type: "number", align: 'right' }, // type: "number",
-        { field: 'col5', headerName: 'Totale', type: "number", align: 'right' },
+        { field: 'col2', headerName: 'Cameriere', width: 70, align: 'right', minWidth: 70 },
+        { field: 'col3', headerName: 'Stampato da', width: 70, align: 'right', minWidth: 70 },
+        { field: 'col4', headerName: 'Coperti', width: 40, type: "number", align: 'right', minWidth: 40 },
+        { field: 'col5', headerName: 'Totale', width: 70, type: "number", align: 'right', minWidth: 80 },
         {
-            field: 'col6', headerName: 'Contatti', width: 100, align: 'right', renderCell: (params) => (
-                <Fab variant="extended" size="small" color="primary" onClick={() => handleOnClickFabContanti1(Number(params.value))}>
-                    <Typography variant="caption">
-                        Contanti    </Typography>
-                </Fab>
+            field: 'col6', headerName: 'Modalità pagamento', align: 'right', width: 250, minWidth: 280, renderCell: (params) => (
+                <ButtonGroup size="small" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} >
+                    <Button size="small" className="rounded-full" variant="contained" onClick={handleAChiudiPos} >  POS  </Button>
+                    <Button size="small" className="rounded-full" variant="contained" onClick={handleAChiudi} >Contanti</Button>
+                    <Button size="small" className="rounded-full" variant="contained" onClick={handleChiudiGratis} >Altro Importo</Button>
+                </ButtonGroup>
             )
         },
-        {
-            field: 'col7', headerName: 'POS', width: 100, align: 'right', renderCell: (params) => (
-                <Fab variant="extended" size="small" color="primary" onClick={() => handleOnClickFabPOS1(Number(params.value))}>
-                    <Typography variant="caption">
-                        POS    </Typography>
-                </Fab>
-            )
-        },
-        {
-            field: 'col8', headerName: 'Altro Importo', width: 150, align: 'right', renderCell: (params) => (
-                <Fab variant="extended" size="small" color="primary" onClick={() => handleOnClickFabAltroImporto1(Number(params.value))}>
-                    <Typography variant="caption">
-                        AltroImporto    </Typography>
-                </Fab>
-            )
-        },
+
     ];
 
-    const handleOnClickFabContanti1 = async (numeroF: number) => {
-        console.log('*********************HandleOnClickFabContanti1 per il conto:' + numeroF);
-        if (numeroF) {
+
+    const handleAChiudi = async () => {
+        console.log('*********************HandleOnClickFabContanti1 per il conto:' + Number(numeroFoglietto));
+        if (numeroFoglietto) {
             const fetchData = async () => {
                 setPhase('elaborazione');
-                const c = await chiudiConto(Number(numeroF), sagra.giornata, 1); //PAGATO CONTANTI 
-                const cc = await getConto(Number(numeroF), sagra.giornata);
-                await writeLog(Number(numeroF), sagra.giornata, 'Casse', '', 'CLOSE', 'Pagato contanti');
+                const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata, 1); //PAGATO CONTANTI 
+                const cc = await getConto(Number(numeroFoglietto), sagra.giornata);
+                await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', 'Pagato contanti');
                 const conti = await listContiPerChiusra(sagra.giornata);
                 if (conti) {
                     const cc = conti
@@ -103,8 +90,7 @@ export default function Page() {
                                 col4: item.coperti, //BRUNO cambiare con coperti
                                 col5: item.totale.toFixed(2),
                                 col6: item.id_comanda, //BRUNO chiuso contanti
-                                col7: item.id_comanda, //BRUNO cchiuso pos
-                                col8: item.id_comanda
+
                             }
 
                         });
@@ -116,13 +102,13 @@ export default function Page() {
         }
     };
 
-    const handleOnClickFabPOS1 = async (numeroF: number) => {
-        console.log('*********************handleOnClickFabPOS1 per il conto:' + numeroF);
-        if (numeroF) {
+    const handleAChiudiPos = async () => {
+        console.log('*********************handleOnClickFabPOS1 per il conto:' + Number(numeroFoglietto));
+        if (numeroFoglietto) {
             const fetchData = async () => {
                 setPhase('elaborazione');
-                const c = await chiudiConto(Number(numeroF), sagra.giornata, 2); //PAGATO POS
-                await writeLog(Number(numeroF), sagra.giornata, 'Casse', '', 'CLOSE', 'Pagato POS');
+                const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata, 2); //PAGATO POS
+                await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', 'Pagato POS');
                 const conti = await listContiPerChiusra(sagra.giornata);
                 if (conti) {
                     const cc = conti
@@ -138,8 +124,7 @@ export default function Page() {
                                 col4: item.coperti, //BRUNO cambiare con coperti
                                 col5: item.totale.toFixed(2),
                                 col6: item.id_comanda, //BRUNO chiuso contanti
-                                col7: item.id_comanda, //BRUNO cchiuso pos
-                                col8: item.id_comanda
+
                             }
 
                         });
@@ -151,8 +136,8 @@ export default function Page() {
         }
 
     };
-    const handleOnClickFabAltroImporto1 = async (numeroF: number) => {
-        setNumeroFoglietto(numeroF);
+    const handleChiudiGratis = async () => {
+        setNumeroFoglietto(numeroFoglietto);
         setPhase("pagaaltroimporto");
     };
 
@@ -179,8 +164,7 @@ export default function Page() {
                                 col4: item.coperti, //BRUNO cambiare con coperti
                                 col5: item.totale.toFixed(2),
                                 col6: item.id_comanda, //BRUNO chiuso contanti
-                                col7: item.id_comanda, //BRUNO cchiuso pos
-                                col8: item.id_comanda
+
                             }
 
                         });
@@ -220,8 +204,7 @@ export default function Page() {
                             col4: item.coperti, //BRUNO cambiare con coperti
                             col5: item.totale.toFixed(2),
                             col6: item.id_comanda, //BRUNO chiuso contanti
-                            col7: item.id_comanda, //BRUNO cchiuso pos
-                            col8: item.id_comanda
+
                         }
 
                     });
@@ -238,8 +221,8 @@ export default function Page() {
                     <div className="flex flex-wrap flex-col">
                         <div className='text-center '>
                             <div className="p-4 mb-4 text-xl text-yellow-800 rounded-lg bg-yellow-50" role="alert">
-                                <span className="text-xl font-semibold">Warning alert!</span> | Incassa Conti
-                            </div>
+                                <span className="text-xl font-semibold">Attenzione:</span> |Incassa conti| la giornata non è stata ancora aperta!
+                             </div>
                         </div>
                     </div>
                 </main>
@@ -247,21 +230,23 @@ export default function Page() {
         } else if (phase == 'caricamento') {
             return (
                 <><header className="top-section">
-                </header><main className="middle-section">
+                </header>
+                    <main className="middle-section">
                         <div className='z-0 text-center'>
-                            <br></br>
                             <br></br>
                             <p className="text-5xl py-4">
                                 Incassa Conti
                             </p>
-                            <br></br>
-                            <br></br>
-                            <p className="text-5xl py-4">
+                            <br />
+                            <CircularProgress size="9rem" />
+                            <br />
+                            <p className="text-4xl py-4">
                                 Caricamento in corso ...
                             </p>
-                            <CircularProgress size="9rem" />
+
                         </div>
                     </main></>
+
             );
         } else if (phase == 'elaborazione') {
             return (
@@ -282,68 +267,101 @@ export default function Page() {
         }
         else if (phase == 'pagaaltroimporto') {
             return (
-  
-                    <div className="flex items-center justify-center min-h-screen">
-                        <div className="w-[600px] p-4 border rounded-lg space-y-4">
-                            <p className="text-xl py-1">
-                                Conto numero: <span className="font-extrabold text-blue-800">{conto?.id_comanda} </span>
-                                con incasso previsto di: <span className="font-semibold text-blue-800">{conto?.totale} Euro </span>
-                            </p>
-                            <TextField
-                                label="Nuovo importo"
-                                variant="outlined"
-                                value={importValue}
-                                onChange={(e) => setImportValue(e.target.value)}
-                                type="number"
-                                fullWidth
-                            />
-                            <TextField
-                                label="Note"
-                                variant="outlined"
-                                value={textValue}
-                                onChange={(e) => setTextValue(e.target.value)}
-                                fullWidth
-                            />
-                            <div className="flex justify-center space-x-4">
-                                <Button size="small" variant="contained" color="primary" onClick={handleCompletatoGratis}>
-                                    Salva e chiudi
-                                </Button>
-                                <Button size="small" variant="contained" color="primary" onClick={handleAnnullaGratis}>
-                                    Annulla
-                                </Button>
-                            </div>
+
+                <div className="flex items-center justify-center min-h-screen">
+                    <div className="w-[600px] p-4 border rounded-lg space-y-4">
+                        <p className="text-xl py-1">
+                            Conto numero: <span className="font-extrabold text-blue-800">{conto?.id_comanda} </span>
+                            con incasso previsto di: <span className="font-semibold text-blue-800">{conto?.totale} Euro </span>
+                        </p>
+                        <TextField
+                            label="Nuovo importo"
+                            variant="outlined"
+                            value={importValue}
+                            onChange={(e) => setImportValue(e.target.value)}
+                            type="number"
+                            fullWidth
+                        />
+                        <TextField
+                            label="Note"
+                            variant="outlined"
+                            value={textValue}
+                            onChange={(e) => setTextValue(e.target.value)}
+                            fullWidth
+                        />
+                        <div className="flex justify-center space-x-4">
+                            <Button size="small" variant="contained" color="primary" onClick={handleCompletatoGratis}>
+                                Salva e chiudi
+                            </Button>
+                            <Button size="small" variant="contained" color="primary" onClick={handleAnnullaGratis}>
+                                Annulla
+                            </Button>
                         </div>
                     </div>
-)
+                </div>
+            )
         } else if (phase == 'caricato' || phase == 'chiuso') {
             return (
-   
-                    <div className="flex flex-wrap flex-col">
-                        <div className='text-center py-4'>
-                            <p className="text-5xl py-4">
-                                Incassa Conti 1
-                            </p>
-                            <p className="text-xl py-4">
-                                In questa schermata appaiono solo conti chiusi da incassare.
-                            </p>
-                        </div>
+                <main style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%' }}>
+                    {/* Contenuti statici sopra la griglia */}
+                    <div style={{ textAlign: 'center', padding: '4px 0' }}>
+                        <p style={{ fontSize: '3rem', padding: '8px 0' }}>Incassa Conti</p>
+                        <p style={{ fontSize: '1rem', padding: '4px 0' }}>
+                            In questa schermata appaiono solo conti chiusi da incassare della giornata corrente.
+                        </p>
+                    </div>
 
-                        <div className='text-center' style=
-                        {{ height: 700, width: 'auto' }} >
-                            <h2 className='font-extrabold'>Conti Giornata {sagra.giornata}</h2>
+                    {/* Contenitore della DataGrid */}
+                    {/* Questo div è cruciale: diventerà un contenitore flex per la griglia */}
+                    <div style={{ flexGrow: 1, minHeight: 0, width: '100%', textAlign: 'center' }}>
+                        <h2 style={{ fontWeight: 'extrabold' }}></h2>
+                        <div style={{ height: 'calc(100% - 60px)', width: '100%' }}> {/* Calcola altezza dinamica */}
                             <StyledDataGrid
                                 rows={rows}
                                 columns={columns}
                                 slots={{ toolbar: GridToolbar }}
+                                // Se la griglia ha molte righe, è meglio gestire l'altezza tramite il contenitore
                                 initialState={{
                                     density: 'compact',
+                                    pagination: { paginationModel: { pageSize: 10 } }, // Esempio: 10 righe per pagina
                                 }}
                             />
-                            <br /><br />
                         </div>
+                        <br /><br />
                     </div>
 
 
+                </main>
+
+                /* 
+                   <main >
+       <div className="flex flex-wrap flex-col">
+         <div className='text-center py-4'>
+           <p className="text-5xl py-4">Incassa Conti</p>
+           <p className="text-xl py-4">In questa schermata appaiono solo conti chiusi da incassare.</p>
+         </div>
+ 
+       
+     Contenitore della DataGrid 
+              Questo div è cruciale: diventerà un contenitore flex per la griglia  
+             <div style={{ flexGrow: 1, minHeight: 0, width: '100%', textAlign: 'center' }}>
+                 <h2 style={{ fontWeight: 'extrabold' }}></h2>
+                 <div style={{ height: 'calc(100% - 60px)', width: '100%' }}> {/* Calcola altezza dinamica 
+                      <StyledDataGrid
+               rows={rows}
+               columns={columns}
+               slots={{ toolbar: GridToolbar }}
+                               // Se la griglia ha molte righe, è meglio gestire l'altezza tramite il contenitore
+               initialState={{
+                 density: 'compact',
+                 pagination: { paginationModel: { pageSize: 10 } }, // Esempio: 10 righe per pagina
+               }}
+                 </div>
+                 <br /><br />
+             </div>
+ 
+       </div>          </div>   
+     </main>*/
             );
         }
     }
@@ -353,7 +371,7 @@ export default function Page() {
                 <div className="flex flex-wrap flex-col">
                     <div className='text-center '>
                         <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
-                            <span className="text-xl font-semibold">Danger alert!</span> Utente non autorizzato.
+                            <span className="text-xl font-semibold">Violazione:</span> utente non autorizzato.
                         </div>
                     </div>
                 </div>
