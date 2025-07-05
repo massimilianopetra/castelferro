@@ -291,8 +291,6 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                         <div className='text-center '>
                             <br></br>
                             <br></br>
-                            <br></br>
-                            <br></br>
                             <p className="text-5xl py-4">
                                 Inviato con successo!!
                             </p>
@@ -520,14 +518,14 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                                 fontSize: '1.5rem', // Aumenta la dimensione del font
                                                 // Puoi aggiungere altre proprietà CSS qui, ad esempio minWidth
                                                 minWidth: '200px',
-                                            }} style={{ borderRadius: '9999px' }}>Invia1</Button> &nbsp;
+                                            }} style={{ borderRadius: '9999px' }}>Invia</Button> &nbsp;
                                         <Button size="large" variant="contained" onClick={handleButtonClickAnnulla}
                                             className=" font-extralight text-right" sx={{
                                                 padding: '15px 30px', // Aumenta il padding per renderlo più grande
                                                 fontSize: '1.5rem', // Aumenta la dimensione del font
                                                 // Puoi aggiungere altre proprietà CSS qui, ad esempio minWidth
                                                 minWidth: '200px',
-                                            }} style={{ borderRadius: '9999px' }}>Annulla1</Button>&nbsp;
+                                            }} style={{ borderRadius: '9999px' }}>Annulla</Button>&nbsp;
                                     </div> :
                                     <div className="flex justify-between items-center w-full"> {/* AGGIUNGI QUESTE CLASSI */}
                                         <Button size="large" variant="contained" onClick={handleButtonClickInvia}
@@ -536,7 +534,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                                 padding: '15px 30px',
                                                 fontSize: '1.5rem',
                                                 minWidth: '200px',
-                                            }} style={{ borderRadius: '9999px' }}>Invia2</Button>
+                                            }} style={{ borderRadius: '9999px' }}>Invia</Button>
                                         {/* Rimuovi lo spazio non-breaking &nbsp; qui, justify-between gestirà lo spazio */}
                                         <Button size="large" variant="contained" onClick={handleButtonClickAnnulla}
                                             className="font-extralight" // Rimuovi text-right
@@ -544,7 +542,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                                 padding: '15px 30px',
                                                 fontSize: '1.5rem',
                                                 minWidth: '200px',
-                                            }} style={{ borderRadius: '9999px' }}>Annulla2</Button>
+                                            }} style={{ borderRadius: '9999px' }}>Annulla</Button>
                                     </div>
                                 }
                                 <div className='text-center '>
