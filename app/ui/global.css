@@ -49,7 +49,7 @@ html, body {
 
     margin: 50px auto; /* Centra il wrapper orizzontalmente e dà un po' di margine superiore */
  /***    border: 2px solid #0056b3; /* Per visualizzare i confini del layout */
- /***     box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+ /***     box-shadow: 0 4px 8px rgba(0,0,0,0.2);*/
     display: flex; /* Necessario per il Flexbox del container interno */
     align-items: center; /* Centra il container all'interno del wrapper */
     justify-content: center; /* Centra il container all'interno del wrapper */
@@ -119,7 +119,7 @@ html, body {
     overflow-y: auto; /* Abilita lo scorrimento verticale se il contenuto eccede */
     overflow-x: hidden; /* Disabilita lo scorrimento orizzontale */
     flex-direction: column; /* Contenuto impilato verticalmente */
-    border-bottom: 1px solid #ffe0b2;
+   /****  border-bottom: 1px solid #ffe0b2;*/
 }
 /* Sezione Centrale: 60% dell'altezza, scorrevole verticalmente */
 .middle-section_L {
@@ -128,7 +128,7 @@ html, body {
     overflow-y: auto; /* Abilita lo scorrimento verticale se il contenuto eccede */
     overflow-x: hidden; /* Disabilita lo scorrimento orizzontale */
     flex-direction: column; /* Contenuto impilato verticalmente */
-    border-bottom: 1px solid #b2ffd6;
+   /**** border-bottom: 1px solid #b2ffd6;*/
 }
 /* Sezione Centrale: 60% dell'altezza, scorrevole verticalmente */
 .middle-section_XS {
@@ -137,7 +137,7 @@ html, body {
     overflow-y: auto; /* Abilita lo scorrimento verticale se il contenuto eccede */
     overflow-x: hidden; /* Disabilita lo scorrimento orizzontale */
     flex-direction: column; /* Contenuto impilato verticalmente */
-    border-bottom: 1px solid #ffb2bb;
+   /**** border-bottom: 1px solid #ffb2bb;*/
 }
 
 /* Sezione Inferiore: 15% dell'altezza */
@@ -217,7 +217,7 @@ p {
         /* Oppure, se .outer-wrapper ha height: auto, potresti voler usare flex-grow: 1 per farla espandere */
         /* flex-grow: 1; */
         padding: 10px;
-            background-color: #c0d2de; 
+   /***         background-color: #c0d2de; */
     }
         /* La sezione centrale mantiene lo scorrimento ma si adatta all'altezza rimanente */
     .middle-section_L {
@@ -225,14 +225,14 @@ p {
         /* Oppure, se .outer-wrapper ha height: auto, potresti voler usare flex-grow: 1 per farla espandere */
         /* flex-grow: 1; */
         padding: 10px;
-                 background-color: #91adf0; 
+    /***              background-color: #91adf0; */
     }
       .middle-section_XS {
         height: 250px; /* Puoi impostare un'altezza fissa o una percentuale relativa al container */
         /* Oppure, se .outer-wrapper ha height: auto, potresti voler usare flex-grow: 1 per farla espandere */
         /* flex-grow: 1; */
         padding: 10px;
-                         background-color: #aad228; 
+      /***                    background-color: #aad228; */
     }
 }
 
