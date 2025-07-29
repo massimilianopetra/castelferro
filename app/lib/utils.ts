@@ -7,16 +7,34 @@ export function today(): string {
 }
 
 export function milltodatestring(dtmillis: number | undefined): string {
-   // console.log(dtmillis);
-    if (dtmillis){
-        let stringa = new Date(+dtmillis).toLocaleString()  
-        return  stringa;
-    }
-    
-    return "--:--:--";
+    if (dtmillis) {
+        let date = new Date(+dtmillis);
+        // Definisci le opzioni per il formato desiderato
+        const options: Intl.DateTimeFormatOptions = {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false // Per un formato 24 ore
+        };
+        // Usa toLocaleString con le opzioni e 'sv-SE' per il formato anno-mese-giorno
+        // o un locale che supporti il formato che vuoi per la data, e poi riorganizza
+        // In alternativa, costruiscila manualmente per un controllo preciso
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0'); // Mese è 0-based
+        const day = date.getDate().toString().padStart(2, '0');
+        const hours = date.getHours().toString().padStart(2, '0');
+        const minutes = date.getMinutes().toString().padStart(2, '0');
+        const seconds = date.getSeconds().toString().padStart(2, '0');
 
-    
+        return `${year}/${month}/${day}, ${hours}:${minutes}:${seconds}`;
+    }
+
+    return "--:--:--";
 }
+
 export function deltatime(dtmillistart: number | undefined, dtmilliend: number | undefined): string {
 
     if (dtmillistart && dtmilliend) {

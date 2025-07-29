@@ -57,42 +57,37 @@ export default function Page() {
         {
             field: 'col6', headerName: 'Modalità pagamento', align: 'right', width: 250, minWidth: 280, renderCell: (params) => (
                 <ButtonGroup size="small" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} >
-                    <Button size="small" className="rounded-full" variant="contained" onClick={handleAChiudiPos} >  POS  </Button>
-                    <Button size="small" className="rounded-full" variant="contained" onClick={handleAChiudi} >Contanti</Button>
-                    <Button size="small" className="rounded-full" variant="contained" onClick={handleChiudiGratis} >Altro Importo</Button>
+                    {/* Passa params.value alle funzioni onClick */}
+                    <Button size="small" className="rounded-full" variant="contained" onClick={() => handleAChiudiPos(params.value as number)} >  POS  </Button>
+                    <Button size="small" className="rounded-full" variant="contained" onClick={() => handleAChiudi(params.value as number)} >Contanti</Button>
+                    <Button size="small" className="rounded-full" variant="contained" onClick={() => handleChiudiGratis(params.value as number)} >Altro Importo</Button>
                 </ButtonGroup>
             )
         },
 
     ];
-
-
-    const handleAChiudi = async () => {
-        console.log('*********************HandleOnClickFabContanti1 per il conto:' + Number(numeroFoglietto));
-        if (numeroFoglietto) {
+    const handleAChiudi = async (idComanda: number) => {
+        console.log('*********************HandleOnClickFabContanti1 per il conto:' + idComanda);
+        if (idComanda) {
             const fetchData = async () => {
                 setPhase('elaborazione');
-                const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata, 1); //PAGATO CONTANTI 
-                const cc = await getConto(Number(numeroFoglietto), sagra.giornata);
-                await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', 'Pagato contanti');
+                const c = await chiudiConto(idComanda, sagra.giornata, 1); //PAGATO CONTANTI
+                // Non è necessario ricaricare l'intero conto specifico dopo la chiusura se non serve a nulla
+                // const cc = await getConto(idComanda, sagra.giornata);
+                await writeLog(idComanda, sagra.giornata, 'Casse', '', 'CLOSE', 'Pagato contanti');
                 const conti = await listContiPerChiusra(sagra.giornata);
                 if (conti) {
                     const cc = conti
                         .map((item) => {
-
-                            // var consumazione = await listConsumazioniFogliettoN(0,gg.giornata,item.id_comanda);
-
                             return {
                                 id: item.id,
                                 col1: item.id_comanda,
                                 col2: item.cameriere,
                                 col3: deltanow(item.data_stampa),
-                                col4: item.coperti, //BRUNO cambiare con coperti
+                                col4: item.coperti,
                                 col5: item.totale.toFixed(2),
-                                col6: item.id_comanda, //BRUNO chiuso contanti
-
+                                col6: item.id_comanda,
                             }
-
                         });
                     setRows(cc);
                 }
@@ -102,31 +97,26 @@ export default function Page() {
         }
     };
 
-    const handleAChiudiPos = async () => {
-        console.log('*********************handleOnClickFabPOS1 per il conto:' + Number(numeroFoglietto));
-        if (numeroFoglietto) {
+    const handleAChiudiPos = async (idComanda: number) => {
+        console.log('*********************handleOnClickFabPOS1 per il conto:' + idComanda);
+        if (idComanda) {
             const fetchData = async () => {
                 setPhase('elaborazione');
-                const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata, 2); //PAGATO POS
-                await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', 'Pagato POS');
+                const c = await chiudiConto(idComanda, sagra.giornata, 2); //PAGATO POS
+                await writeLog(idComanda, sagra.giornata, 'Casse', '', 'CLOSE', 'Pagato POS');
                 const conti = await listContiPerChiusra(sagra.giornata);
                 if (conti) {
                     const cc = conti
                         .map((item) => {
-
-                            // var consumazione = await listConsumazioniFogliettoN(0,gg.giornata,item.id_comanda);
-
                             return {
                                 id: item.id,
                                 col1: item.id_comanda,
                                 col2: item.cameriere,
                                 col3: deltanow(item.data_stampa),
-                                col4: item.coperti, //BRUNO cambiare con coperti
+                                col4: item.coperti,
                                 col5: item.totale.toFixed(2),
-                                col6: item.id_comanda, //BRUNO chiuso contanti
-
+                                col6: item.id_comanda,
                             }
-
                         });
                     setRows(cc);
                 }
@@ -134,13 +124,16 @@ export default function Page() {
             };
             fetchData();
         }
-
-    };
-    const handleChiudiGratis = async () => {
-        setNumeroFoglietto(numeroFoglietto);
-        setPhase("pagaaltroimporto");
     };
 
+    const handleChiudiGratis = async (idComanda: number) => {
+        const c = await getConto(idComanda, sagra.giornata); // Recupera il conto per visualizzare i dettagli nell'altra schermata
+        if (c) {
+            setConto(c);
+            setNumeroFoglietto(idComanda); // Imposta il numero del foglietto che verrà usato in handleCompletatoGratis
+            setPhase("pagaaltroimporto");
+        }
+    };
 
     const handleCompletatoGratis = async () => {
         console.log('*********************handleCompletatoGratis per il conto:' + numeroFoglietto);
@@ -332,36 +325,6 @@ export default function Page() {
 
 
                 </main>
-
-                /* 
-                   <main >
-       <div className="flex flex-wrap flex-col">
-         <div className='text-center py-4'>
-           <p className="text-5xl py-4">Incassa Conti</p>
-           <p className="text-xl py-4">In questa schermata appaiono solo conti chiusi da incassare.</p>
-         </div>
- 
-       
-     Contenitore della DataGrid 
-              Questo div è cruciale: diventerà un contenitore flex per la griglia  
-             <div style={{ flexGrow: 1, minHeight: 0, width: '100%', textAlign: 'center' }}>
-                 <h2 style={{ fontWeight: 'extrabold' }}></h2>
-                 <div style={{ height: 'calc(100% - 60px)', width: '100%' }}> {/* Calcola altezza dinamica 
-                      <StyledDataGrid
-               rows={rows}
-               columns={columns}
-               slots={{ toolbar: GridToolbar }}
-                               // Se la griglia ha molte righe, è meglio gestire l'altezza tramite il contenitore
-               initialState={{
-                 density: 'compact',
-                 pagination: { paginationModel: { pageSize: 10 } }, // Esempio: 10 righe per pagina
-               }}
-                 </div>
-                 <br /><br />
-             </div>
- 
-       </div>          </div>   
-     </main>*/
             );
         }
     }
