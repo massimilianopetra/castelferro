@@ -54,18 +54,20 @@ export default function TabellaCucina({ item, onAdd10, onAdd, onRemove, onSet }:
                             {(row.id_comanda === 1 || row.id_comanda > 8000) && row.id_piatto === 1 ?  
                             //se è la comanda camerieri o se è asporto >8000 non posso mettere coperti. 
                                 <><TableCell align="left" sx={{ display: { xs: 'none', sm: 'block' } }}>
-                                    <ButtonGroup>
+                             <ButtonGroup></ButtonGroup>
                                         <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} disabled />
+                               &nbsp;&nbsp;&nbsp; <ButtonGroup> 
                                         <Button onClick={() => onAdd(row.id_piatto)} size="large" variant="contained" startIcon={<AddCircleIcon />} disabled />
-                                    </ButtonGroup>
+                                      </ButtonGroup>
                                     &nbsp;&nbsp;&nbsp;
                                    &nbsp;&nbsp;&nbsp;
                                     <ButtonGroup>
                                         <Button onClick={() => onSet(row.id_piatto)} size="medium" variant="outlined" color="secondary" startIcon={<EditIcon />} disabled />
                                     </ButtonGroup>
                                 </TableCell><TableCell align="center" sx={{ display: { xs: 'block', sm: 'none' } }}>
-                                        <ButtonGroup>
+                                        <ButtonGroup></ButtonGroup>
                                             <Button onClick={() => onRemove(row.id_piatto)} size="small" variant="outlined" startIcon={<RemoveCircleSharpIcon />} disabled />
+                                         &nbsp;&nbsp;&nbsp; <ButtonGroup>  
                                             <Button onClick={() => onAdd(row.id_piatto)} size="small" variant="contained" startIcon={<AddCircleIcon />} disabled />
                                         </ButtonGroup>
                                         &nbsp;
@@ -76,8 +78,9 @@ export default function TabellaCucina({ item, onAdd10, onAdd, onRemove, onSet }:
 
                                 :
                                 <><TableCell align="left" sx={{ display: { xs: 'none', sm: 'block' } }}>
-                                    <ButtonGroup>
+                                      <ButtonGroup></ButtonGroup>
                                         <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
+                                            &nbsp;&nbsp;&nbsp; <ButtonGroup>  
                                         <Button onClick={() => onAdd(row.id_piatto)} size="large" variant="contained" startIcon={<AddCircleIcon />} />
                                     </ButtonGroup>
                                     &nbsp;&nbsp;&nbsp;
@@ -86,8 +89,9 @@ export default function TabellaCucina({ item, onAdd10, onAdd, onRemove, onSet }:
                                         <Button onClick={() => onSet(row.id_piatto)} size="medium" variant="outlined" color="secondary" startIcon={<EditIcon />} />
                                     </ButtonGroup>
                                 </TableCell><TableCell align="center" sx={{ display: { xs: 'block', sm: 'none' } }}>
-                                        <ButtonGroup>
+                                        <ButtonGroup></ButtonGroup>
                                             <Button onClick={() => onRemove(row.id_piatto)} size="small" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
+                                            &nbsp;&nbsp;&nbsp; <ButtonGroup>  
                                             <Button onClick={() => onAdd(row.id_piatto)} size="small" variant="contained" startIcon={<AddCircleIcon />} />
                                         </ButtonGroup>
                                         &nbsp;
