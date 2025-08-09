@@ -48,7 +48,7 @@ export default function DashboardLinks() {
         { name: 'Configura Menu', href: '/dashboard/menus', icon: WrenchScrewdriverIcon },
         { name: 'Cruscotto di sintesi', href: '/dashboard/cruscotto', icon: EuroIcon },
         { name: 'Cruscotto di sintesi: piatti', href: '/dashboard/cruscottopiatti', icon: FoodBankIcon },
-        { name: 'Logs', href: '/dashboard/logs', icon: AutoStoriesIcon },
+
       ];
       break;
     case 'SuperUser':

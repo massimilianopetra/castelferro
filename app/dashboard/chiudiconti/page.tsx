@@ -53,9 +53,9 @@ export default function Page() {
         { field: 'col2', headerName: 'Cameriere', width: 70, align: 'right', minWidth: 70 },
         { field: 'col3', headerName: 'Stampato da', width: 70, align: 'right', minWidth: 70 },
         { field: 'col4', headerName: 'Coperti', width: 40, type: "number", align: 'right', minWidth: 40 },
-        { field: 'col5', headerName: 'Totale', width: 70, type: "number", align: 'right', minWidth: 80 },
+        { field: 'col5', headerName: 'Totale (€)', width: 70, type: "number", align: 'right', minWidth: 80 },
         {
-            field: 'col6', headerName: 'Modalità pagamento', align: 'right', width: 250, minWidth: 280, renderCell: (params) => (
+            field: 'col6', headerName: 'Modalità pagamento', align: 'right', width: 310, minWidth: 280, renderCell: (params) => (
                 <ButtonGroup size="small" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} >
                     {/* Passa params.value alle funzioni onClick */}
                     <Button size="small" className="rounded-full" variant="contained" onClick={() => handleAChiudiPos(params.value as number)} >  POS  </Button>

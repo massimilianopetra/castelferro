@@ -31,6 +31,12 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     const [idmodificaquantitaValue, setIdModQuantita] = useState(1);
     const [piattomodificaquantitaValue, setPiattoModQuantita] = useState("non definito");
 
+    // Add missing state and handler for alternate view
+    const [showAlternateView, setShowAlternateView] = useState(false);
+    const handleToggleView = () => {
+        setShowAlternateView((prev) => !prev);
+    };
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -254,6 +260,22 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                             <p className="text-5xl py-4">
                                 Caricare un numero foglietto!!
                             </p>
+                            {/* Pulsante per attivare/disattivare la visualizzazione alternativa */}
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={handleToggleView}
+                                sx={{ mt: 3, borderRadius: '9999px' }}
+                            >
+                                {showAlternateView ? 'Disattiva Visualizzazione Elementare' : 'Attiva Visualizzazione Elementare'}
+                            </Button>
+
+                            {/* Contenuto condizionale basato su showAlternateView */}
+                       {/*     {showAlternateView && (
+                               <p className="text-3xl py-4 text-green-600">
+                                          Visualizzazione Elementare Attivata! 
+                                </p>
+                            )}*/}
                         </div>
                     </>
                 );
@@ -278,7 +300,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                 return (
                     <>
                         <div>
-                            <TabellaCucina item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
+                            <TabellaCucina item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} showDetailedControls={showAlternateView} />
                         </div>
                     </>
                 );
@@ -291,6 +313,22 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                             <p className="text-5xl py-4">
                                 Inviato con successo!!
                             </p>
+                            {/* Pulsante per attivare/disattivare la visualizzazione alternativa */}
+                            <Button
+                                variant="contained"
+                                color="primary"
+                                onClick={handleToggleView}
+                                sx={{ mt: 3, borderRadius: '9999px' }}
+                            >
+                                {showAlternateView ? 'Disattiva Visualizzazione Elementare' : 'Attiva Visualizzazione Elementare'}
+                            </Button>
+
+                            {/* Contenuto condizionale basato su showAlternateView */}
+                        {/*     {showAlternateView && (
+                               <p className="text-3xl py-4 text-green-600">
+                                          Visualizzazione Elementare Attivata! 
+                                </p>
+                            )}*/}
                         </div>
                     </>
                 );
@@ -422,52 +460,57 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                 </div>
                             </header> : <div></div>}
                         {phase !== 'caricato' && phase !== 'modificaquantita' ?
-
-
-
                             <header className="header_cucine_inf">
                                 <div className="z-0 xl:text-3xl font-extralight xl:text-end lg:text-3xl lg:py-2 lg:text-center">
-                                    <p>
-                                        <ButtonGroup sx={{ display: { xs: 'none', sm: 'block' } }}>
-                                            {lastLog.map((row) => (
-                                                <>
-                                                    {phase == 'caricato' ?
-                                                        <Button size="large" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} disabled>{row.foglietto}</Button> :
-                                                        <Button size="large" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} >{row.foglietto}</Button>
-                                                    }
 
-                                                    &nbsp;&nbsp;
-
-                                                </>
-                                            ))}
+                                    {showAlternateView ? (
+                                        <p>
+                                            {/* NON Visualizza i gli ultimi 3 conti  */}
                                             {phase == 'caricato' ?
                                                 <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1} disabled>Camerieri</Button> :
                                                 <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
                                             }
-                                        </ButtonGroup>
+                                        </p>
+                                    ) : (
+                                        <p>
+                                            {/* Visualizza i gli ultimi 3 conti  */}
+                                            <ButtonGroup sx={{ display: { xs: 'none', sm: 'block' } }}>
+                                                {lastLog.map((row) => (
+                                                    <>
+                                                        {phase == 'caricato' ?
+                                                            <Button size="large" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} disabled>{row.foglietto}</Button> :
+                                                            <Button size="large" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} >{row.foglietto}</Button>
+                                                        }
 
+                                                        &nbsp;&nbsp;
 
-                                        <ButtonGroup sx={{ display: { xs: 'block', sm: 'none' } }}>
-                                            {lastLog.map((row) => (
-                                                <>
+                                                    </>
+                                                ))}
+                                                {phase == 'caricato' ?
+                                                    <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1} disabled>Camerieri</Button> :
+                                                    <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                                                }
+                                            </ButtonGroup>
+                                            <ButtonGroup sx={{ display: { xs: 'block', sm: 'none' } }}>
+                                                {lastLog.map((row) => (
+                                                    <>
 
-                                                    {phase == 'caricato' ?
-                                                        <Button size="small" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} disabled>{row.foglietto}</Button> :
-                                                        <Button size="small" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} >{row.foglietto}</Button>
-                                                    }
-                                                    &nbsp;&nbsp;
+                                                        {phase == 'caricato' ?
+                                                            <Button size="small" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} disabled>{row.foglietto}</Button> :
+                                                            <Button size="small" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} >{row.foglietto}</Button>
+                                                        }
+                                                        &nbsp;&nbsp;
 
-                                                </>
-                                            ))}
-                                            {phase == 'caricato' ?
-                                                <Button size="small" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1} disabled>Camerieri</Button> :
-                                                <Button size="small" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
-                                            }
-                                        </ButtonGroup>
-
-
-
-                                    </p>
+                                                    </>
+                                                ))}
+                                                {phase == 'caricato' ?
+                                                    <Button size="small" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1} disabled>Camerieri</Button> :
+                                                    <Button size="small" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                                                }
+                                            </ButtonGroup>
+                                        </p>
+                                    )
+                                    }
                                 </div>
                             </header> :
                             <div className="flex justify-between items-center w-full">

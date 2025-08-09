@@ -2,13 +2,13 @@
 Pagina del portale della sagra del Salamino d'Asino di Castelferro
 
 # Docker image build
-docker build -t maxpetra/castelferro:v1 .
+docker build -t maxpetra/castelferro:v5 .
 
 # bruno
 # Modificare docker-compose.yaml  inserendo la riga 
-image: ironcastle/castelferro:v2
+image: ironcastle/castelferro:v5
 # Docker image build (da qui Visual Studio)
-docker build -t ironcastle/castelferro:v2 .
+docker build -t ironcastle/castelferro:v5 .
 # andare sul Hub repository e capire se c'e' stata caricata. 
 # Aprire: Docker Desktop loggarsi 
 # (soluzione che non sembra andare) andare su -IMAGE - HUB REPOSITORY e fare PULL dell'immagine. 
