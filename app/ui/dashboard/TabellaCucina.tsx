@@ -111,9 +111,11 @@ export default function TabellaCucina({
                                     </TableCell><TableCell align="center" sx={{ display: { xs: 'block', sm: 'none' } }}>
                                             <ButtonGroup>
                                                 <Button onClick={() => onRemove(row.id_piatto)} size="small" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
+                                              </ButtonGroup>&nbsp;&nbsp;&nbsp; <ButtonGroup>
                                                 <Button onClick={() => onAdd(row.id_piatto)} size="small" variant="contained" startIcon={<AddCircleIcon />} />
                                             </ButtonGroup>
-                                            &nbsp;
+                                        &nbsp;&nbsp;&nbsp;
+                                        &nbsp;&nbsp;&nbsp;
                                             <ButtonGroup>
                                                 <Button onClick={() => onSet(row.id_piatto)} size="small" variant="outlined" color="secondary" startIcon={<EditIcon />} />
                                             </ButtonGroup>
