@@ -31,3 +31,7 @@ docker build -t ironcastle/castelferro:v5 .
 docker save --output castelferro.tar castelferro:v1   
 
  docker load --input CASTELFERRO.tar
+
+
+# Per pulire la cache di docker:
+docker builder prune -f
