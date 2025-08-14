@@ -1,4 +1,16 @@
 
+
+
+
+
+
+
+
+
+
+
+
+
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -26,7 +38,8 @@ export default function TheBill({ item }: { item: DbConsumazioniPrezzo[] }) {
     }
 
 
-    var media = (totale / coperti);
+    var media = 0
+    if (coperti != 0) media = (totale / coperti);
 
 
     return (
@@ -35,6 +48,7 @@ export default function TheBill({ item }: { item: DbConsumazioniPrezzo[] }) {
             <Table>
                 <TableHead>
                     <TableRow><TableCell>&nbsp;&nbsp;&nbsp;&nbsp;48° SAGRA DEI SALAMINI D’ASINO dal 14 al 21 Agosto 2025</TableCell></TableRow>
+
                 </TableHead>
             </Table>
 
@@ -57,12 +71,11 @@ export default function TheBill({ item }: { item: DbConsumazioniPrezzo[] }) {
                                     &nbsp;&nbsp;&nbsp;&nbsp;{row.quantita}
 
                                 </TableCell>
-                                <TableCell className="flex-wrap">
-
+                                <TableCell align="left" className="flex-wrap">
                                     &nbsp;&nbsp;&nbsp;{row.prezzo_unitario}&nbsp;&euro;
 
                                 </TableCell>
-                                <TableCell > &nbsp;&nbsp;&nbsp;
+                                <TableCell align="left"> &nbsp;&nbsp;&nbsp;
                                     {(row.quantita * row.prezzo_unitario).toFixed(2)}&nbsp;&euro;
                                 </TableCell>
                             </TableRow>
@@ -73,7 +86,8 @@ export default function TheBill({ item }: { item: DbConsumazioniPrezzo[] }) {
                         <TableCell ></TableCell>
                         <TableCell> </TableCell>
                         <TableCell >Totale:</TableCell>
-                        <TableCell >{totale.toFixed(2)}&nbsp;&euro;
+                        <TableCell>
+                            <span className="text-base md:text-2xl font-extrabold ">{totale.toFixed(2)}</span>&nbsp;&euro;
                         </TableCell>
                     </TableHead>
                     <TableBody>
@@ -189,6 +203,8 @@ import {
 } from '@mui/material';
 import { styled, createTheme, ThemeProvider, Theme } from '@mui/material/styles'; // Importa Theme qui
 import { CssBaseline } from '@mui/material';
+import fs from 'fs';
+import path from 'path';
 
 // Definisci il tipo di dato per i tuoi elementi
 interface DbConsumazioniPrezzo {

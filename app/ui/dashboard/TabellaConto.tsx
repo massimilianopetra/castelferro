@@ -31,7 +31,7 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet }: 
 
             <Table sx={{ minWidth: 150 }} size="small" aria-label="a dense table">
                 <TableHead>
-                    <TableRow className=" text-gray-800 rounded-lg bg-gray-100 ">
+                    <TableRow className=" text-gray-800 rounded-lg bg-gray ">
                         <TableCell align="left"><p className="text-base font-bold md:text-2xl">Piatto</p></TableCell>
 
                         <TableCell align="left" sx={{ display: { xs: 'none', md: 'block' } }}>
@@ -53,9 +53,13 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet }: 
                 </TableHead>
                 <TableBody >
                     {item.map((row) => (
-                        <TableRow className="hover:bg-yellow-100 md:text-2xl" sx={{
-                            backgroundColor: row.quantita > 0 ? "rgba(144, 238, 144, 0.3)" : "white",
-                        }}>
+                        <TableRow
+        key={`${row.id_comanda}-${row.id_piatto}`} // 👈 chiave unica
+        className="hover:bg-yellow-100 md:text-2xl"
+        sx={{
+            backgroundColor: row.quantita > 0 ? "rgb(174, 258, 174)" : "white",
+        }}
+    >
                             <TableCell align="left">
                                 <span className="text-base font-normal md:text-2xl">{row.alias}</span>
                             </TableCell>
@@ -117,8 +121,6 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet }: 
                                     </TableCell></>
 
                             }
-
-
 
                             <TableCell align="right" className="text-base font-extralight md:text-2xl">
                                 {(row.quantita * row.prezzo_unitario).toFixed(2)}

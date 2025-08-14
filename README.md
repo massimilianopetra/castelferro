@@ -18,7 +18,8 @@ docker build -t ironcastle/castelferro:v5 .
 # Si aggiorna il Container. 
 
 # A CASTELFERRO
-#   aggiornare Yaml se è il caso (devo aggiornare la versione v3 v4 v5)
+#   ag8
+evo aggiornare la versione v3 v4 v5)
 #   connetti ad internet il pc della sagra
 #   lanciare il bat 
 #   si aggiorna tutto da solo  
