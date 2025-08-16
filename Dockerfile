@@ -19,6 +19,6 @@ COPY --from=base /app .
 EXPOSE 3000
 EXPOSE 3001
 
-CMD ["pnpm", "dev"]
+CMD ["pnpm", "start"]
 
 
