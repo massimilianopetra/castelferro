@@ -21,7 +21,7 @@ const pool = provider === 'pg' ? new Pool({
 }) : null;
 
 async function executeQuery<T>(query: string): Promise<T[] | undefined> {
-  console.log(query);
+  //console.log(query);
   if (provider === 'pg') {
     if (!pool) {
       throw new Error('Pool non configurato per pg');
