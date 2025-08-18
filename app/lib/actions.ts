@@ -554,8 +554,9 @@ SELECT
     SUM(CASE WHEN s.stato = 'CHIUSOALTRO' THEN c.quantita ELSE 0 END) AS pagatoaltro
 FROM consumazioni c
 LEFT JOIN (
-    SELECT DISTINCT id_comanda, stato
+    SELECT id_comanda, MAX(stato) AS stato
     FROM conti
+    GROUP BY id_comanda
 ) s ON c.id_comanda = s.id_comanda
 WHERE c.id_piatto = ${id}
   AND c.giorno = ${giorno}
