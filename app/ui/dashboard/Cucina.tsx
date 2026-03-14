@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
-import { Button, ButtonGroup, Snackbar, TextField } from '@mui/material';
+import { Button, ButtonGroup, Snackbar, TextField, Modal, Box, Typography, IconButton } from '@mui/material';
+import StarsIcon from '@mui/icons-material/Stars'; // Icona Stella
 import type { DbConsumazioni, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
 import { getConsumazioni, sendConsumazioni, getConto, apriConto, getCamerieri, updateTotaleConto } from '@/app/lib/actions';
 import { writeLog, getGiornoSagra, getLastLog } from '@/app/lib/actions';
@@ -14,6 +15,29 @@ import { number } from 'zod';
 import { useItemHighlighted } from '@mui/x-charts';
 import '@/app/ui/global.css';
 
+// Stile per il popup
+const styleModal = {
+    position: 'absolute',
+    top: '50%',
+    left: '50%',
+    transform: 'translate(-50%, -50%)',
+
+    width: '90vw',
+    height: '90vh',
+
+    maxWidth: '1200px',
+    maxHeight: '90vh',
+
+    bgcolor: 'background.paper',
+    border: '4px solid #1976d2',
+    boxShadow: 24,
+    p: 4,
+    borderRadius: '15px',
+
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'space-between'
+};
 
 export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
 
@@ -31,7 +55,11 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     const [idmodificaquantitaValue, setIdModQuantita] = useState(1);
     const [piattomodificaquantitaValue, setPiattoModQuantita] = useState("non definito");
 
-    // Add missing state and handler for alternate view
+    // Stato per il popup statistiche
+    const [openPopup, setOpenPopup] = useState(false);
+    const handleOpenPopup = () => setOpenPopup(true); 
+    const handleClosePopup = () => setOpenPopup(false);
+
     const [showAlternateView, setShowAlternateView] = useState(false);
     const handleToggleView = () => {
         setShowAlternateView((prev) => !prev);
@@ -271,10 +299,10 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                             </Button>
 
                             {/* Contenuto condizionale basato su showAlternateView */}
-                       {/*     {showAlternateView && (
-                               <p className="text-3xl py-4 text-green-600">
-                                          Visualizzazione Elementare Attivata! 
-                                </p>
+                            {/* {showAlternateView && (
+                                <p className="text-3xl py-4 text-green-600">
+                                           Visualizzazione Elementare Attivata! 
+                                 </p>
                             )}*/}
                         </div>
                     </>
@@ -324,10 +352,10 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                             </Button>
 
                             {/* Contenuto condizionale basato su showAlternateView */}
-                        {/*     {showAlternateView && (
-                               <p className="text-3xl py-4 text-green-600">
-                                          Visualizzazione Elementare Attivata! 
-                                </p>
+                            {/* {showAlternateView && (
+                                <p className="text-3xl py-4 text-green-600">
+                                           Visualizzazione Elementare Attivata! 
+                                 </p>
                             )}*/}
                         </div>
                     </>
@@ -464,51 +492,55 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                 <div className="z-0 xl:text-3xl font-extralight xl:text-end lg:text-3xl lg:py-2 lg:text-center">
 
                                     {showAlternateView ? (
-                                        <p>
+                                        <p className="flex items-center justify-center">
                                             {/* NON Visualizza i gli ultimi 3 conti  */}
                                             {phase == 'caricato' ?
                                                 <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1} disabled>Camerieri</Button> :
                                                 <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
                                             }
+                                            <IconButton onClick={handleOpenPopup} color="primary" sx={{ ml: 1, border: '1px solid', padding: '10px' }}>
+                                                <StarsIcon fontSize="large" />
+                                            </IconButton>
                                         </p>
                                     ) : (
-                                        <p>
+                                        <div className="flex items-center justify-end">
                                             {/* Visualizza i gli ultimi 3 conti  */}
                                             <ButtonGroup sx={{ display: { xs: 'none', sm: 'block' } }}>
                                                 {lastLog.map((row) => (
-                                                    <>
+                                                    <span key={row.foglietto}>
                                                         {phase == 'caricato' ?
                                                             <Button size="large" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} disabled>{row.foglietto}</Button> :
                                                             <Button size="large" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} >{row.foglietto}</Button>
                                                         }
-
                                                         &nbsp;&nbsp;
-
-                                                    </>
+                                                    </span>
                                                 ))}
                                                 {phase == 'caricato' ?
                                                     <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1} disabled>Camerieri</Button> :
                                                     <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
                                                 }
                                             </ButtonGroup>
+                                            
+                                            <IconButton onClick={handleOpenPopup} color="primary" sx={{ ml: 2, border: '2px solid', bgcolor: 'white' }}>
+                                                <StarsIcon fontSize="large" />sss
+                                            </IconButton>
+
                                             <ButtonGroup sx={{ display: { xs: 'block', sm: 'none' } }}>
                                                 {lastLog.map((row) => (
-                                                    <>
-
+                                                    <span key={row.foglietto}>
                                                         {phase == 'caricato' ?
                                                             <Button size="small" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} disabled>{row.foglietto}</Button> :
                                                             <Button size="small" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} >{row.foglietto}</Button>
                                                         }
                                                         &nbsp;&nbsp;
-
-                                                    </>
+                                                    </span>
                                                 ))}
                                                 {phase == 'caricato' ?
                                                     <Button size="small" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1} disabled>Camerieri</Button> :
                                                     <Button size="small" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
                                                 }
                                             </ButtonGroup>
-                                        </p>
+                                        </div>
                                     )
                                     }
                                 </div>
@@ -541,9 +573,9 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                             </div>}
 
                         { }
-                        {/*   <main className=".mainContent_cucine">*/}
-                        <p className=".mainContent_cucine_p">          {renderPhaseContent()}</p>
-                        {/*   </main>*/}
+                        {/* <main className=".mainContent_cucine">*/}
+                        <div className=".mainContent_cucine_p">          {renderPhaseContent()}</div>
+                        {/* </main>*/}
                         {/* Sezione 2: Footer (15%)*/}
 
                         <footer className="footer_cucine">
@@ -591,6 +623,56 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                             </div>
                         </footer>
                     </div>
+
+                    {/* POPUP STATISTICHE */}
+                    <Modal
+                        open={openPopup}
+                        onClose={handleClosePopup}
+                        aria-labelledby="modal-stats-title"
+                    >
+                        <Box sx={styleModal}>
+                            <Typography id="modal-stats-title" variant="h4" component="h2" color="primary" gutterBottom>
+                                Statistiche Cucina
+                            </Typography>
+                            <Box sx={{ mt: 2, mb: 4 }}>
+                                <Typography variant="h6">Numero persone in coda: <b>--</b></Typography>
+                                <Typography variant="h6">Numero di coperti in coda: <b>--</b></Typography>
+                                <Typography variant="h6">Numero di coperti da servire: <b>--</b></Typography>
+                            </Box>
+
+                            <Typography variant="h5" sx={{ mb: 1 }}>Piatti in preparazione</Typography>
+                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                <thead>
+                                    <tr style={{ borderBottom: '2px solid #ccc' }}>
+                                        <th style={{ textAlign: 'left', padding: '8px' }}>Piatto</th>
+                                        <th style={{ textAlign: 'right', padding: '8px' }}>Quantità</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {products
+                                        .filter((p) => p.quantita > 0)
+                                        .map((p) => (
+                                            <tr key={p.id_piatto} style={{ borderBottom: '1px solid #eee' }}>
+                                                <td style={{ padding: '8px' }}>{p.piatto}</td>
+                                                <td style={{ textAlign: 'right', padding: '8px' }}>{p.quantita}</td>
+                                            </tr>
+                                        ))}
+                                    {/* Mappare qui i piatti con l'algoritmo specifico 
+                                    <tr style={V{ borderBottom: '1px solid #eee' }}>
+                                        <td style={{ padding: '8px' }}>Esempio Piatto</td>
+                                        <td style={{ textAlign: 'right', padding: '8px' }}>23</td>
+                                    </tr>*/}
+                                </tbody>
+                            </table>
+
+                            <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
+                                <Button variant="contained" color="error" onClick={handleClosePopup} size="large">
+                                    Chiudi
+                                </Button>
+                            </Box>
+                        </Box>
+                    </Modal>
+
                     <div>
                         <Snackbar
                             open={openSnackbar}
@@ -612,12 +694,10 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                 <div className="flex flex-wrap flex-col">
                     <div className='text-center '>
                         <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
-                            <span className="text-xl font-semibold">Violazione:</span> utente non autorizzato.
+                            <span className="text-xl font-semibold">Accesso Negato</span>
                         </div>
                     </div>
                 </div>
             </main>
-
         )
-
 }
