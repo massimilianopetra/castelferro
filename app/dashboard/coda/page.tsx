@@ -1,6 +1,6 @@
 'use client';
 
-import DashboardLinks from '@/app/ui/dashboard/dashboard-links';
+import DashboardLinksCoda from '@/app/ui/dashboard/dashboard-links-coda';
 import { Typography, useMediaQuery } from '@mui/material';
 import { useSession } from 'next-auth/react';
 
@@ -13,11 +13,11 @@ export default function Page() {
                 <div className="flex flex-wrap flex-col ">
                     <div className='text-center '>
                         <Typography variant={isMobile ? "h5" : "h3"} sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold', color: '#333' }}>
-                            Link Gestione 
+                            Link Coda 
                         </Typography>
 
                     </div>
-                    {<DashboardLinks />}
+                    {<DashboardLinksCoda />}
 
                 </div>
             </main>

@@ -14,7 +14,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { DbSintesiPiatti, DbFiera } from '@/app/lib/definitions';
-import { FormControl, InputLabel, Select, MenuItem, SelectChangeEvent, Box, Typography } from '@mui/material';
+import { FormControl, InputLabel, Select, MenuItem, SelectChangeEvent, Box, Typography, useMediaQuery } from '@mui/material';
 
 export default function Page() {
 
@@ -117,20 +117,20 @@ export default function Page() {
     setPhase('caricato');
   }
 
-
+    const isMobile = useMediaQuery('(max-width:600px)');
+    
   if ((session?.user?.name == "SuperUser") || (session?.user?.name == "Casse")) {
     if (phase == 'iniziale') {
       return (
         <main>
           <div className="flex flex-wrap flex-col">
             <div className='text-center py-4'>
-              <p className="text-5xl py-4">
+              <Typography variant={isMobile ? "h5" : "h3"} sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold', color: '#333' }}>
                 Cruscotto Piatti
-              </p>
+              </Typography>
+
             </div>
-
             <div className='text-center '>
-
               <Box sx={{ p: 4, maxWidth: 400 }}>
                 <Typography variant="h5" gutterBottom>
                   Seleziona un piatto

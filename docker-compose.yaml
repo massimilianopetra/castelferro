@@ -1,9 +1,18 @@
 version: '3.9'
 services:
   castelferro:
-    image: castelferro:v2
+    # ELIMINA o COMMENTA la riga 'image:' e usa 'build:' per forzare la ricostruzione
+    # image: castelferro:v2 
+    build: . 
     container_name: castelferro-dev
-
+    # ... (il resto rimane invariato)
+    volumes:
+      # 1. Monta i sorgenti
+      - ./SORGENTI/castelferro:/app 
+      
+      # 2. **ISOLAMENTO** dei moduli compilati per Linux
+      - /app/node_modules # Esclude i moduli del tuo PC Windows
+      - /app/.next        # **NUOVO** - Esclude i file di build Next.js del tuo PC Windows
     ports:
       - "3000:3000"
 

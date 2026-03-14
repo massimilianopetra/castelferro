@@ -1,396 +1,287 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react'
 import { getListaCamerieri, updateCamerieri, addCamerieri, delCamerieri } from '@/app/lib/actions';
 
-
 import CircularProgress from '@mui/material/CircularProgress';
-import { styled } from '@mui/material/styles';
 import Button from '@mui/material/Button';
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
-import SaveIcon from '@mui/icons-material/Save';
+import SaveAltIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Close';
+import InfoIcon from '@mui/icons-material/InfoOutlined';
+import IconButton from '@mui/material/IconButton';
+
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
+import DialogTitle from '@mui/material/DialogTitle';
+import Snackbar from '@mui/material/Snackbar';
+import Alert from '@mui/material/Alert';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import { useTheme, ThemeProvider, createTheme } from '@mui/material/styles';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Stack from '@mui/material/Stack';
+
 import {
-    GridRowsProp,
     GridRowModesModel,
     GridRowModes,
     DataGrid,
     GridColDef,
     GridToolbarContainer,
     GridActionsCellItem,
-    GridEventListener,
     GridRowId,
     GridRowModel,
-    GridRowEditStopReasons,
-    GridSlots,
+    useGridApiRef,
+    GridRenderEditCellParams,
+    useGridApiContext,
 } from '@mui/x-data-grid';
 
-export default function Camerieri() {
+import InputBase from '@mui/material/InputBase';
 
-    const NUMFOGLI = 15;
+// --- TIPI ---
+type RowsData = {
+    id: number;
+    col1: number;
+    col2: string;
+    col3: number | string;
+    col4: number | string;
+    isNew: boolean;
+};
 
-    type RowsData = {
-        id: number;
-        col1: number
-        col2: string;
-        col3: number;
-        col4: number;
-        isNew: boolean;
+interface MyToolbarProps {
+    setRows: React.Dispatch<React.SetStateAction<RowsData[]>>;
+    setRowModesModel: React.Dispatch<React.SetStateAction<GridRowModesModel>>;
+    rows: RowsData[];
+    apiRef: any;
+}
+
+const defaultTheme = createTheme();
+
+// --- EDITOR INTELLIGENTE ---
+function NameEditCell(props: GridRenderEditCellParams) {
+    const { id, value, field, hasFocus } = props;
+    const apiRef = useGridApiContext();
+    const rows = apiRef.current.getAllRowIds().map(rowId => apiRef.current.getRow(rowId));
+
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        apiRef.current.setEditCellValue({ id, field, value: event.target.value });
     };
 
+    const currentName = (value?.toString() || '').trim().toLowerCase();
+    const count = currentName ? rows.filter(r => r && r.col2.trim().toLowerCase() === currentName).length : 0;
+    
+    let bgColor = 'transparent';
+    if (count === 1) bgColor = '#e3f2fd';
+    else if (count === 2) bgColor = '#fffde7';
+    else if (count === 3) bgColor = '#fff3e0';
+    else if (count >= 4) bgColor = '#ffebee';
+
+    return (
+        <InputBase
+            value={value || ''}
+            onChange={handleChange}
+            autoFocus={hasFocus}
+            fullWidth
+            sx={{ px: 1, bgcolor: bgColor, height: '100%', fontWeight: 'bold', borderRadius: '4px' }}
+        />
+    );
+}
+
+// --- LEGENDA ---
+function LegendaColori({ isMobile, onClose }: { isMobile: boolean, onClose: () => void }) {
+    const itemSx = {
+        px: 1, py: 0.3, borderRadius: '4px', fontSize: '0.70rem', fontWeight: 'bold',
+        border: '1px solid rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center'
+    };
+    return (
+        <Box sx={{ mb: 2, p: 1.5, bgcolor: 'white', borderRadius: '8px', border: '1px solid #e0e0e0', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', position: 'relative' }}>
+            <IconButton size="small" onClick={onClose} sx={{ position: 'absolute', top: 4, right: 4 }}><CancelIcon fontSize="small" /></IconButton>
+            <Typography variant="caption" sx={{ fontWeight: 'bold', display: 'block', mb: 1, color: '#666', textTransform: 'uppercase', pr: 4 }}>
+                <InfoIcon sx={{ fontSize: 14, mr: 0.5, verticalAlign: 'middle' }} /> Aiuto Duplicati (Stesso nome presente)
+            </Typography>
+            <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+                <Box sx={{ ...itemSx, bgcolor: '#e3f2fd', color: '#1976d2' }}>2 Blocchetti</Box>
+                <Box sx={{ ...itemSx, bgcolor: '#fffde7', color: '#fbc02d' }}>3 Blocchetti</Box>
+                <Box sx={{ ...itemSx, bgcolor: '#fff3e0', color: '#ef6c00' }}>4 Blocchetti</Box>
+                <Box sx={{ ...itemSx, bgcolor: '#ffebee', color: '#d32f2f' }}>+4 Blocchetti</Box>
+            </Stack>
+        </Box>
+    );
+}
+
+// --- TOOLBAR ---
+function EditToolbar(props: MyToolbarProps) {
+    const { setRows, setRowModesModel, rows, apiRef } = props;
+    const isMobile = useMediaQuery('(max-width:600px)'); 
+
+    const handleClick = () => {
+        const maxN = rows.length > 0 ? Math.max(...rows.map((r: RowsData) => Number(r.col1))) : 0;
+        const maxID = rows.length > 0 ? Math.max(...rows.map((r: RowsData) => Number(r.id))) : 0;
+        const newId = maxID + 1;
+        setRows((old: RowsData[]) => [{ id: newId, col1: maxN + 1, col2: '', col3: '', col4: '', isNew: true }, ...old]);
+        setRowModesModel((old: GridRowModesModel) => ({ ...old, [newId]: { mode: GridRowModes.Edit, fieldToFocus: 'col2' } }));
+        setTimeout(() => apiRef.current?.scrollToIndexes({ rowIndex: 0 }), 50);
+    };
+
+    return (
+        <GridToolbarContainer sx={{ p: 1 }}>
+            <Button variant="contained" startIcon={<AddIcon />} onClick={handleClick} size={isMobile ? "small" : "medium"}>Aggiungi Nuovo Cameriere</Button>
+        </GridToolbarContainer>
+    );
+}
+
+export default function CamerieriPage() {
+    const NUMFOGLI = 15;
+    const isMobile = useMediaQuery('(max-width:600px)');
+    const apiRef = useGridApiRef();
+
     const [rows, setRows] = useState<RowsData[]>([]);
-    const [phase, setPhase] = useState('caricamento');
+    const [loading, setLoading] = useState(true);
     const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
-    const { data: session } = useSession();
-
-    const columns: GridColDef[] = [
-        { field: 'col1', headerName: 'N.' },
-        { field: 'col2', headerName: 'Nome', width: 400, editable: true, },
-        { field: 'col3', headerName: 'Primo', editable: true, },
-        { field: 'col4', headerName: 'Ultimo', editable: true, },
-        {
-            field: 'actions',
-            type: 'actions',
-            headerName: 'Actions',
-            width: 100,
-            cellClassName: 'actions',
-            getActions: ({ id }) => {
-                const isInEditMode = rowModesModel[id]?.mode === GridRowModes.Edit;
-
-                if (isInEditMode) {
-                    return [
-                        <GridActionsCellItem
-                            icon={<SaveIcon />}
-                            label="Save"
-                            sx={{
-                                color: 'primary.main',
-                            }}
-                            onClick={handleSaveClick(id)}
-                        />,
-                        <GridActionsCellItem
-                            icon={<CancelIcon />}
-                            label="Cancel"
-                            className="textPrimary"
-                            onClick={handleCancelClick(id)}
-                            color="inherit"
-                        />,
-                    ];
-                }
-
-                return [
-                    <GridActionsCellItem
-                        icon={<EditIcon />}
-                        label="Edit"
-                        className="textPrimary"
-                        onClick={handleEditClick(id)}
-                        color="inherit"
-                    />,
-                    <GridActionsCellItem
-                        icon={<DeleteIcon />}
-                        label="Delete"
-                        onClick={handleDeleteClick(id)}
-                        color="inherit"
-                    />,
-                ];
-            },
-        },
-    ];
-
-    const StyledDataGrid = styled(DataGrid)({
-        '& .MuiDataGrid-columnHeader': {
-            backgroundColor: 'black', // Sfondo nero per l'header
-            color: 'white',           // Testo bianco
-        },
-        '& .MuiDataGrid-columnHeaderTitle': {
-            fontWeight: 'bold',       // Testo in grassetto
-        },
-        "& .MuiDataGrid-sortIcon": {
-            color: "white",
-        },
-        "& .MuiDataGrid-menuIconButton": {
-            opacity: 1,
-            color: "white"
-        },
+    const [showLegenda, setShowLegenda] = useState(true);
+    const [deleteDialog, setDeleteDialog] = useState<{open: boolean, id: GridRowId | null}>({ open: false, id: null });
+    const [snackbar, setSnackbar] = useState<{ open: boolean, message: string, severity: 'success' | 'error' | 'warning' }>({ 
+        open: false, message: '', severity: 'success' 
     });
 
     useEffect(() => {
-        fetchData();
+        getListaCamerieri().then((data) => {
+            if (data) setRows(data.map((item, i) => ({ id: item.id, col1: i + 1, col2: item.nome, col3: item.foglietto_start, col4: item.foglietto_end, isNew: false })));
+            setLoading(false);
+        });
     }, []);
 
-    const fetchData = async () => {
-        const c = await getListaCamerieri();
-        if (c) {
-            const cc = c.map((item, i) => {
-                // id: <Link href={`/dashboard/casse/${item.id}`}>{item.id}</Link>
-                return {
-                    id: item.id,
-                    col1: i + 1,
-                    col2: item.nome,
-                    col3: item.foglietto_start,
-                    col4: item.foglietto_end,
-                    isNew: false,
-                }
-            });
-
-            setRows(cc);
-            setPhase('caricato');
-        }
-    }
-
-    interface EditToolbarProps {
-        setRows: (newRows: (oldRows: GridRowsProp) => GridRowsProp) => void;
-        setRowModesModel: (
-            newModel: (oldModel: GridRowModesModel) => GridRowModesModel,
-        ) => void;
-    }
-
-    function EditToolbar(props: EditToolbarProps) {
-        console.log("Edit tool bar");
-        const { setRows, setRowModesModel } = props;
-
-        var maxID = 0;
-        var maxN = 0;
-        var maxFoglietto = 0;
-
-        for (var i = 0; i < rows.length; i++) {
-            if (rows[i].id > maxID)
-                maxID = rows[i].id;
-            if (rows[i].col1 > maxN)
-                maxN = rows[i].col1;
-            if (rows[i].col3 > maxFoglietto)
-                maxFoglietto = rows[i].col3;
-            if (rows[i].col4 > maxFoglietto)
-                maxFoglietto = rows[i].col4;
+    const processRowUpdate = async (newRow: GridRowModel) => {
+        // --- CONTROLLO CAMPO "PRIMO" VUOTO (WARNING) ---
+        if (newRow.col3 === '' || newRow.col3 === null || newRow.col3 === undefined) {
+            setSnackbar({ open: true, message: 'Attenzione: Inserisci il valore iniziale in "Primo"!', severity: 'warning' });
+            throw new Error('Campo Primo obbligatorio');
         }
 
-        maxFoglietto = Math.ceil((maxFoglietto + 1) / NUMFOGLI) * NUMFOGLI;
-        const handleClick = () => {
+        const start = Number(newRow.col3);
+        const end = (newRow.col4 === '' || newRow.col4 === null) ? start + NUMFOGLI - 1 : Number(newRow.col4);
 
-            console.log(maxID, maxN)
-            setRows((oldRows) => [
-                ...oldRows,
-                { id: maxID + 1, col1: maxN + 1, col2: '', col3: maxFoglietto, col4: maxFoglietto + NUMFOGLI - 1, isNew: true },
-            ]);
-            setRowModesModel((oldModel) => ({
-                ...oldModel,
-                [maxID + 1]: { mode: GridRowModes.Edit, fieldToFocus: 'col2' },
-            }));
-        };
-
-        return (
-            <GridToolbarContainer>
-                <Button color="primary" startIcon={<AddIcon />} onClick={handleClick}>
-                    Aggiungi Cameriere
-                </Button>
-            </GridToolbarContainer>
-        );
-    }
-
-    const handleRowEditStop: GridEventListener<'rowEditStop'> = (params, event) => {
-        if (params.reason === GridRowEditStopReasons.rowFocusOut) {
-            event.defaultMuiPrevented = true;
+        // Validazione: Fine < Inizio (Errore)
+        if (end < start) {
+            setSnackbar({ open: true, message: 'ERRORE: "Ultimo" non può essere minore di "Primo"!', severity: 'error' });
+            throw new Error('Validazione Fallita');
         }
-    };
 
-    const handleEditClick = (id: GridRowId) => () => {
-        setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } });
-    };
+        // Validazione: Sovrapposizione (Errore)
+        const hasOverlap = rows.some(r => r.id !== newRow.id && (start <= Number(r.col4) && end >= Number(r.col3)));
+        if (hasOverlap) { 
+            setSnackbar({ open: true, message: 'ERRORE: Sovrapposizione foglietti con un altro cameriere!', severity: 'error' }); 
+            throw new Error('Sovrapposizione');
+        }
 
-    const handleSaveClick = (id: GridRowId) => () => {
-        setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } });
-    };
-
-    const handleDeleteClick = (id: GridRowId) => () => {
-        setRows(rows.filter((row) => row.id !== id));
-        delCamerieri(Number(id));
+        try {
+            if (newRow.isNew) await addCamerieri(newRow.col2, start, end);
+            else await updateCamerieri([{ id: Number(newRow.id), nome: newRow.col2, foglietto_start: start, foglietto_end: end }]);
+            
+            const updatedRow = { ...newRow, col3: start, col4: end, isNew: false } as RowsData;
+            setRows(rows.map(r => r.id === newRow.id ? updatedRow : r));
+            setSnackbar({ open: true, message: 'Salvato correttamente!', severity: 'success' });
+            return updatedRow;
+        } catch (e) { 
+            setSnackbar({ open: true, message: 'Errore nel salvataggio!', severity: 'error' });
+            throw e;
+        }
     };
 
     const handleCancelClick = (id: GridRowId) => () => {
-        setRowModesModel({
-            ...rowModesModel,
-            [id]: { mode: GridRowModes.View, ignoreModifications: true },
-        });
-
-        const editedRow = rows.find((row) => row.id === id);
-        if (editedRow!.isNew) {
-            setRows(rows.filter((row) => row.id !== id));
-        }
+        setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View, ignoreModifications: true } });
+        const row = rows.find((r) => r.id === id);
+        if (row?.isNew) setRows(rows.filter((r) => r.id !== id));
     };
 
-    const validateRange = (newRow: GridRowModel) => {
-        const newStart = Number(newRow.col3);
-        const newEnd = Number(newRow.col4);
-        
-        // Verifica che start <= end
-        if (newStart > newEnd) {
-            return { valid: false, message: "Il primo foglietto deve essere minore o uguale all'ultimo" };
-        }
-        
-        // Verifica che il range non intersechi altri range esistenti
-        for (const row of rows) {
-            if (row.id !== newRow.id) { // Ignora la riga corrente se è una modifica
-                const existingStart = Number(row.col3);
-                const existingEnd = Number(row.col4);
-                
-                if ((newStart >= existingStart && newStart <= existingEnd) ||
-                    (newEnd >= existingStart && newEnd <= existingEnd) ||
-                    (newStart <= existingStart && newEnd >= existingEnd)) {
-                    return { 
-                        valid: false, 
-                        message: `Il range si interseca con ${row.col2} (${existingStart}-${existingEnd})` 
-                    };
-                }
+    const columns: GridColDef[] = [
+        { field: 'col1', headerName: 'N.', width: 50, align: 'center' },
+        { field: 'col2', headerName: 'Nome Cameriere', flex: 1, editable: true, renderEditCell: (p) => <NameEditCell {...p} /> },
+        { field: 'col3', headerName: 'Primo', type: 'number', width: 85, editable: true },
+        { field: 'col4', headerName: 'Ultimo', type: 'number', width: 85, editable: true },
+        {
+            field: 'actions', type: 'actions', width: 100,
+            getActions: ({ id }) => {
+                const isEdit = rowModesModel[id]?.mode === GridRowModes.Edit;
+                return isEdit ? [
+                    <GridActionsCellItem key="s" icon={<SaveAltIcon />} label="Salva" onClick={() => setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } })} color="primary" />,
+                    <GridActionsCellItem key="c" icon={<CancelIcon />} label="Annulla" onClick={handleCancelClick(id)} color="inherit" />,
+                ] : [
+                    <GridActionsCellItem key="e" icon={<EditIcon />} label="Edit" onClick={() => setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } })} color="inherit" />,
+                    <GridActionsCellItem key="d" icon={<DeleteIcon />} label="Del" onClick={() => setDeleteDialog({ open: true, id })} color="inherit" />,
+                ];
             }
         }
-        
-        return { valid: true };
-    };
+    ];
 
-    const processRowUpdate = (newRow: GridRowModel) => {
-        console.log('*********************');
-        console.log(newRow);
-        console.log('*********************');
-        const validation = validateRange(newRow);
-        if (!validation.valid) {
-            alert(validation.message); // Puoi usare un modal più elegante se preferisci
-            throw new Error(validation.message); // Questo previene il salvataggio
-        }
-        const updatedRow = { ...newRow, isNew: false };
-        setRows(rows.map((row) => (row.id === newRow.id ? { ...row, col2: newRow.col2 } : row)));
-        if (newRow.isNew == false) {
-            updateCamerieri([{ id: newRow.id, nome: newRow.col2, foglietto_start: newRow.col3, foglietto_end: newRow.col4 }])
-        } else {
-            addCamerieri(newRow.col2, newRow.col3, newRow.col4);
-        }
+    if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', p: 10 }}><CircularProgress /></Box>;
 
-        return updatedRow;
-    };
+    return (
+        <ThemeProvider theme={defaultTheme}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', p: isMobile ? 1 : 3, bgcolor: '#f4f6f8' }}>
+                <Typography variant={isMobile ? "h5" : "h3"} sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold', color: '#333' }}>Gestione Camerieri</Typography>
+                
+                {showLegenda && <LegendaColori isMobile={isMobile} onClose={() => setShowLegenda(false)} />}
 
-    const handleRowModesModelChange = (newRowModesModel: GridRowModesModel) => {
-        setRowModesModel(newRowModesModel);
-    };
-
-
-    if ((session?.user?.name == "Casse") || (session?.user?.name == "SuperUser")) {
-        if (phase == 'caricamento') {
-            return (
-                <><header className="top-section">
-                </header>
-                    <main className="middle-section">
-                        <div className='z-0 text-center'>
-                            <br></br>
-                            <p className="text-5xl py-4">
-                                Gestione Camerieri
-                            </p>
-                            <br />
-                            <CircularProgress size="9rem" />
-                            <br />
-                            <p className="text-4xl py-4">
-                                Caricamento in corso ...
-                            </p>
-
-                        </div>
-                    </main></>
-            );
-        } else if (phase == 'caricato') {
-            return (
-    /*            <main>
-                    <div className="flex flex-wrap flex-col">
-                        <div className='text-center py-4'>
-                            <p className="text-5xl py-4">
-                                Gestione Camerieri
-                            </p>
-                        </div>
-                        <div className='text-center'>
-
-                            <DataGrid
-                                rows={rows}
-                                columns={columns}
-                                editMode="row"
-                                rowModesModel={rowModesModel}
-                                onRowModesModelChange={handleRowModesModelChange}
-                                onRowEditStop={handleRowEditStop}
-                                processRowUpdate={processRowUpdate}
-                                slots={{
-                                    toolbar: EditToolbar as GridSlots['toolbar'],
-                                }}
-                                slotProps={{
-                                    toolbar: { setRows, setRowModesModel },
-                                }}
-                                initialState={{
-                                    sorting: {
-                                        sortModel: [{ field: 'col1', sort: 'desc' }],
-                                    },
-                                  }}
-
-                            />
-
-                        </div>
-                    </div>
-                </main>*/
-                        <main style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%' }}>
-            {/* Contenuti statici sopra la griglia */}
-            <div style={{ textAlign: 'center', padding: '4px 0' }}>
-                <p style={{ fontSize: '3rem', padding: '8px 0' }}>Gestione Camerieri</p>
-                <p style={{ fontSize: '1rem', padding: '4px 0' }}>
-                    Elenco dei camerieri registrati nel sistema. Puoi aggiungere, modificare o eliminare camerieri.
-                </p>
-            </div>
-
-            {/* Contenitore della DataGrid */}
-            {/* Questo div è cruciale: diventerà un contenitore flex per la griglia */}
-            <div style={{ flexGrow: 1, minHeight: 0, width: '100%', textAlign: 'center' }}>
-                <h2 style={{ fontWeight: 'extrabold' }}></h2>
-                <div style={{ height: 'calc(100% - 60px)', width: '100%' }}> {/* Calcola altezza dinamica */}
+                <Box sx={{ 
+                    width: '100%', bgcolor: 'white', borderRadius: 3, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', 
+                    height: isMobile ? (showLegenda ? '450px' : '530px') : `calc(100vh - ${showLegenda ? '280px' : '200px'})`, 
+                    minHeight: '400px', transition: 'height 0.3s ease' 
+                }}>
                     <DataGrid
+                        apiRef={apiRef}
                         rows={rows}
-                        columns={columns} // Le tue colonne configurate con flex e minWidth
+                        columns={columns}
                         editMode="row"
                         rowModesModel={rowModesModel}
-                        onRowModesModelChange={handleRowModesModelChange}
-                        onRowEditStop={handleRowEditStop}
+                        onRowModesModelChange={setRowModesModel}
                         processRowUpdate={processRowUpdate}
-                        slots={{
-                            toolbar: EditToolbar as GridSlots['toolbar'],
+                        onProcessRowUpdateError={() => {}}
+                        slots={{ toolbar: EditToolbar as any }}
+                        slotProps={{ toolbar: { setRows, setRowModesModel, rows, apiRef } as any }}
+                        initialState={{ sorting: { sortModel: [{ field: 'col1', sort: 'desc' }] } }}
+                        sx={{ 
+                            border: 'none', 
+                            '& .dup-azzurro': { bgcolor: '#e3f2fd' }, '& .dup-giallo': { bgcolor: '#fffde7' }, 
+                            '& .dup-arancio': { bgcolor: '#fff3e0' }, '& .dup-rosso': { bgcolor: '#ffebee' } 
                         }}
-                        slotProps={{
-                            toolbar: { setRows, setRowModesModel },
+                        getCellClassName={(p) => {
+                            if (p.field === 'col2' && p.value) {
+                                const val = p.value.toString().trim().toLowerCase();
+                                const count = rows.filter(r => r.col2.trim().toLowerCase() === val).length;
+                                if (count === 2) return 'dup-azzurro';
+                                if (count === 3) return 'dup-giallo';
+                                if (count === 4) return 'dup-arancio';
+                                if (count > 4) return 'dup-rosso';
+                            }
+                            return '';
                         }}
-                        initialState={{
-                            sorting: {
-                                sortModel: [{ field: 'col1', sort: 'desc' }],
-                            },
-                            pagination: { paginationModel: { pageSize: 10 } }, // Default 10 righe per pagina
-                        }}
-                        pageSizeOptions={[5, 10, 25]} // Opzioni per cambiare il numero di righe per pagina
-                        // Se stai usando `StyledDataGrid`, passala qui invece di `DataGrid`
-                        // style={{ height: '100%', width: '100%' }} // La griglia occupa il 100% del suo div padre
                     />
-                </div>
-                <br /><br />
-            </div>
+                </Box>
 
-           
-        </main>
+                <Dialog open={deleteDialog.open} onClose={() => setDeleteDialog({ open: false, id: null })}>
+                    <DialogTitle>Elimina Cameriere?</DialogTitle>
+                    <DialogActions sx={{ p: 2 }}>
+                        <Button onClick={() => setDeleteDialog({ open: false, id: null })} color="inherit">Annulla</Button>
+                        <Button onClick={async () => {
+                            if (deleteDialog.id) {
+                                await delCamerieri(Number(deleteDialog.id));
+                                setRows(rows.filter(r => r.id !== deleteDialog.id));
+                                setDeleteDialog({ open: false, id: null });
+                                setSnackbar({ open: true, message: 'Eliminato con successo', severity: 'success' });
+                            }
+                        }} color="error" variant="contained">Elimina</Button>
+                    </DialogActions>
+                </Dialog>
 
-            );
-        }
-    }
-    else {
-        return (
-            <main>
-                <div className="flex flex-wrap flex-col">
-                    <div className='text-center '>
-                        <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
-                            <span className="text-xl font-semibold">Violazione: </span> utente non autorizzato.
-                        </div>
-                    </div>
-                </div>
-            </main>
-
-        )
-    }
+                <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+                    <Alert severity={snackbar.severity} variant="filled">{snackbar.message}</Alert>
+                </Snackbar>
+            </Box>
+        </ThemeProvider>
+    );
 }

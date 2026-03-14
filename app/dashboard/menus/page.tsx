@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react'
 import type { DbMenu } from '@/app/lib/definitions';
 import { getMenu, updatetMenu, setMenuAllAvailable, overwriteMenu } from '@/app/lib/actions';
 import TabellaMenu from '@/app/ui/dashboard/TabellaMenu';
-import { Button } from '@mui/material';
+import { Button, Typography, useMediaQuery } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 
 
@@ -57,6 +57,7 @@ export default function Page() {
     const handleFileChange = async (event: Event) => {
         const input = event.target as HTMLInputElement;
         const file = input.files?.[0];
+   
         if (file) {
             const text = await file.text();
             const rows = text.trim().split("\n"); // Split by line
@@ -83,7 +84,8 @@ export default function Page() {
 
     //const session = await auth();
     //console.log(session?.user?.name);
-
+    const isMobile = useMediaQuery('(max-width:600px)');
+         
     console.log("*********************");
     console.log(session?.user?.name);
     console.log("*********************");
@@ -92,9 +94,9 @@ export default function Page() {
    
                 <div className="flex flex-wrap flex-col">
                     <div className='text-center '>
-                        <p className="text-5xl py-4">
+                         <Typography variant={isMobile ? "h5" : "h3"} sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold', color: '#333' }}>
                             Menu
-                        </p>
+                        </Typography>
                     </div>
                     <main className="middle-section_L">
                           <TabellaMenu item={products} onToggle={handleToggle} />

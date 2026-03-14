@@ -7,10 +7,6 @@ RUN npm rebuild bcrypt --build-from-source
 COPY . .
 RUN pnpm build
 
-FROM node:20-alpine3.19 as release
-WORKDIR /app
-RUN npm i -g pnpm
-
 COPY --from=base /app ./
 
 EXPOSE 3000

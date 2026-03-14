@@ -8,6 +8,7 @@ import { getGiornoSagra, listLog } from '@/app/lib/actions';
 import { milltodatestring} from '@/app/lib/utils';
 import { DataGrid, GridToolbar, GridColDef } from '@mui/x-data-grid';
 import { styled } from '@mui/material/styles';
+import { Typography, useMediaQuery } from '@mui/material';
 
 const StyledDataGrid = styled(DataGrid)({
     '& .MuiDataGrid-columnHeader': {
@@ -68,7 +69,7 @@ export default function Page() {
             setPhase('caricato');
         }
     }
-
+    const isMobile = useMediaQuery('(max-width:600px)');
     if ((session?.user?.name == "SuperUser")) {
         if (sagra.stato == 'CHIUSA')  {
             return (
@@ -105,13 +106,15 @@ export default function Page() {
             return (
                 <main style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%' }}>
                     {/* Contenuti statici sopra la griglia */}
-                    <div style={{ textAlign: 'center', padding: '4px 0' }}>
-                        <p style={{ fontSize: '3rem', padding: '8px 0' }}>Verifica logs</p>
-                        <p style={{ fontSize: '1rem', padding: '4px 0' }}>
-                            In questa schermata appaiono i logs della giornata corrente.
-                        </p>
-                    </div>
 
+                    <div style={{ textAlign: 'center', padding: '4px 0' }}>
+                        <Typography variant={isMobile ? "h5" : "h3"} sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold', color: '#333' }}>
+                            Verifica logs
+                        </Typography>
+                        <Typography variant={isMobile ? "subtitle2" : "body1"} sx={{ textAlign: 'center', mb: 2, color: '#333' }}>
+                            In questa schermata appaiono i logs della giornata corrente.
+                        </Typography>
+                    </div>
                     {/* Contenitore della DataGrid */}
                     {/* Questo div è cruciale: diventerà un contenitore flex per la griglia */}
                     <div style={{ flexGrow: 1, minHeight: 0, width: '100%', textAlign: 'center' }}>

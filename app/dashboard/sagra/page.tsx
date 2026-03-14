@@ -6,10 +6,11 @@ import type { DbFiera } from '@/app/lib/definitions';
 import { getGiornoSagra, updateGiornoSagra } from '@/app/lib/actions';
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RemoveCircleSharpIcon from '@mui/icons-material/RemoveCircleSharp';
-import { Button } from '@mui/material';
+import { Button, Typography, useMediaQuery } from '@mui/material';
 
 
 function GetDay({i}:{i:number}) {
+    
     if (i==1)
         return <h1 className=" mb-4  font-extrabold text-gray-900 text-5xl "><span className="text-transparent bg-clip-text bg-gradient-to-r to-emerald-300 from-sky-200">GIOVEDI'</span></h1>//<p>GIOVEDI'</p>
     else if (i==2)
@@ -33,7 +34,8 @@ function GetDay({i}:{i:number}) {
 export default function Page() {
     const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
     const { data: session } = useSession();
-
+    const isMobile = useMediaQuery('(max-width:600px)');
+    
     useEffect(() => {
         const fetchData = async () => {
             const gg = await getGiornoSagra();
@@ -96,9 +98,9 @@ export default function Page() {
             <main>
                 <div className="flex flex-wrap flex-col">
                     <div className='text-center '>
-                        <p className="text-5xl py-4">
+                        <Typography variant={isMobile ? "h5" : "h3"} sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold', color: '#333' }}>
                             Apertura - Chiusura Giornata Sagra
-                        </p>
+                        </Typography>
                     </div>
                     <div className='text-center'>
                         <p className="text-5xl py-4"></p>

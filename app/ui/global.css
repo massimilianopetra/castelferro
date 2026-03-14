@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+@media (prefers-reduced-motion: reduce) {
+  .animate-bounce {
+    animation: bounce 1s infinite !important;
+  }
+}
+
 .force-display-flex {
   display: flex !important;
 }

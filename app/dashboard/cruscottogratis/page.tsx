@@ -19,6 +19,7 @@ import Paper from "@mui/material/Paper";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { blue, blueGrey, yellow } from "@mui/material/colors";
 import TextField from "@mui/material/TextField";
+import { Typography, useMediaQuery } from "@mui/material";
 
 export default function Page() {
   const [phase, setPhase] = useState("caricamento");
@@ -163,7 +164,6 @@ export default function Page() {
 
     const conti = await listContiGratis();
     const cosumazioni = await listConsumazioniGratis();
-
     for (var i = 0; i < 8; i++) {
 
 
@@ -435,6 +435,8 @@ export default function Page() {
   };
 
   if (session?.user?.name == "SuperUser") {
+     const isMobile = useMediaQuery('(max-width:600px)');
+   
     if (phase == "caricamento") {
       return (
         <><header className="top-section">
@@ -456,15 +458,17 @@ export default function Page() {
           </main></>
       );
     } else if (phase == "caricato") {
-      return ( 
+      return (
         <main style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%' }}>
-      {/* Contenuti statici sopra la tabella */}
-      <div style={{ textAlign: 'center', padding: '4px 0' }}>
-        <p style={{ fontSize: '3rem', padding: '8px 0' }}>Cruscotto di Sintesi conti gratis</p>
-        <p style={{ fontSize: '1rem', padding: '4px 0' }}>
-          In questa schermata i foglietti dal 1 (Camerieri) al 9 che non rientrano nel contabilizzazione
-        </p>
-      </div>
+          {/* Contenuti statici sopra la tabella */}
+            <div style={{ textAlign: 'center', padding: '4px 0' }}>
+              <Typography variant={isMobile ? "h5" : "h3"} sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold', color: '#333' }}>
+                Cruscotto di Sintesi conti gratis
+              </Typography>
+              <Typography variant={isMobile ? "subtitle2" : "body1"} sx={{ textAlign: 'center', mb: 2, color: '#333' }}>
+                In questa schermata i foglietti dal 1 (Camerieri) al 9 che non rientrano nel contabilizzazione
+              </Typography>
+            </div>
 
       {/* Contenitore principale della tabella (con flex per occupare lo spazio verticale) */}
       <div style={{ flexGrow: 1, minHeight: 0, width: '100%', textAlign: 'center', display: 'flex', flexDirection: 'column' }}>

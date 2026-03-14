@@ -36,52 +36,21 @@ import { useSession } from 'next-auth/react'
 //  
 //];
 
-export default function DashboardLinks() {
+export default function DashboardLinksCoda() {
   const pathname = usePathname();
   const { data: session } = useSession();
   var links = undefined;
 
   switch (session?.user?.name) {
-    case 'Casse':
-      links = [
-        { name: 'Apertura-Chiusura Giornata Sagra', href: '/dashboard/sagra', icon: LockOpenIcon },
-        { name: 'Configura Menu', href: '/dashboard/menus', icon: WrenchScrewdriverIcon },
-        { name: 'Cruscotto di sintesi', href: '/dashboard/cruscotto', icon: EuroIcon },
-        { name: 'Cruscotto di sintesi: piatti', href: '/dashboard/cruscottopiatti', icon: FoodBankIcon },
-
-      ];
-      break;
     case 'SuperUser':
       links = [
-        { name: 'Apertura-Chiusura Giornata Sagra', href: '/dashboard/sagra', icon: LockOpenIcon },
-        { name: 'Gestione Menu', href: '/dashboard/menus', icon: WrenchScrewdriverIcon },
-        { name: 'Gestione Camerieri', href: '/dashboard/camerieri', icon: AccessibilityIcon },
-        { name: 'Verifica conti (aperti e chiusi)', href: '/dashboard/listaconti', icon: CheckCircleOutlineIcon },
-        { name: 'Cruscotto di sintesi', href: '/dashboard/cruscotto', icon: EuroIcon },
-        { name: 'Cruscotto di sintesi: piatti', href: '/dashboard/cruscottopiatti', icon: FoodBankIcon },
-        { name: 'Cruscotto di sintesi: conti omaggio', href: '/dashboard/cruscottogratis', icon: CardGiftcardIcon },
-        { name: 'Logs', href: '/dashboard/logs', icon: AutoStoriesIcon },
-        { name: 'Coda', href: '/dashboard/coda', icon: AutoStoriesIcon },       
+        { name: 'Contatore', href: '/dashboard/contatore', icon: EuroIcon },
+        { name: 'Telecomando', href: '/dashboard/telecomando', icon: FoodBankIcon },
+        { name: 'Distributore', href: '/dashboard/distributore', icon: CardGiftcardIcon },
+        { name: 'Statistiche', href: '/dashboard/statistiche', icon: AutoStoriesIcon },
       ];
       break;
-    case 'Antipasti':
-      links = [{ name: 'Antipasti', href: '/dashboard/antipasti', icon: KebabDiningOutlinedIcon },]
-      break;
-    case 'Primi':
-      links = [{ name: 'Primi', href: '/dashboard/primi', icon: DinnerDiningIcon },]
-      break;
-    case 'Secondi':
-      links = [{ name: 'Secondi', href: '/dashboard/secondi', icon: RestaurantOutlinedIcon },]
-      break;
-    case 'Dolci':
-      links = [{ name: 'Dolci', href: '/dashboard/dolci', icon: CakeIcon },]
-      break;
-    case 'Bevande':
-      links = [{ name: 'Bevande', href: '/dashboard/bevande', icon: LocalDrinkIcon },]
-      break;
-    case 'Birre':
-      links = [{ name: 'Birre', href: '/dashboard/birre', icon: SportsBarIcon },]
-      break;
+    
     default:
       links = [{ name: 'Home', href: '/dashboard', icon: HomeIcon },]
   }
