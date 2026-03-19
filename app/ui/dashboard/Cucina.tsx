@@ -1,70 +1,51 @@
-'use client';
+ 'use client';
 
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react'
+import { useSession } from 'next-auth/react';
 import { Button, ButtonGroup, Snackbar, TextField, Modal, Box, Typography, IconButton } from '@mui/material';
-import StarsIcon from '@mui/icons-material/Stars'; // Icona Stella
-import type { DbConsumazioni, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
-import { getConsumazioni, sendConsumazioni, getConto, apriConto, getCamerieri, updateTotaleConto } from '@/app/lib/actions';
-import { writeLog, getGiornoSagra, getLastLog } from '@/app/lib/actions';
-import TabellaCucina from '@/app/ui/dashboard/TabellaCucina';
+import StarsIcon from '@mui/icons-material/Stars';
 import CircularProgress from '@mui/material/CircularProgress';
 import Filter1Icon from '@mui/icons-material/Filter1';
-import { deltanow } from '@/app/lib/utils';
-import { number } from 'zod';
-import { useItemHighlighted } from '@mui/x-charts';
+import type { DbConsumazioni, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
+import {getConsumazioni,sendConsumazioni,getConto,apriConto,getCamerieri,updateTotaleConto,writeLog,getGiornoSagra,getLastLog} from '@/app/lib/actions';
+import TabellaCucina from '@/app/ui/dashboard/TabellaCucina';
 import '@/app/ui/global.css';
 
-// Stile per il popup
 const styleModal = {
     position: 'absolute',
     top: '50%',
     left: '50%',
     transform: 'translate(-50%, -50%)',
-
     width: '90vw',
     height: '90vh',
-
     maxWidth: '1200px',
     maxHeight: '90vh',
-
     bgcolor: 'background.paper',
     border: '4px solid #1976d2',
     boxShadow: 24,
     p: 4,
     borderRadius: '15px',
-
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between'
 };
 
 export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
-
+    const { data: session } = useSession();
     const [phase, setPhase] = useState('iniziale');
     const [lastLog, setLastLog] = useState<DbLog[]>([]);
     const [products, setProducts] = useState<DbConsumazioni[]>([]);
     const [iniProducts, setIniProducts] = useState<DbConsumazioni[]>([]);
-    const [openSnackbar, setOpenSnackbar] = useState(false);
     const [numero, setNumero] = useState<number | string>('');
     const [numeroFoglietto, setNumeroFoglietto] = useState<number | string>('');
-    const { data: session } = useSession();
     const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
     const [conto, setConto] = useState<DbConti>();
+    const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [openPopup, setOpenPopup] = useState(false);
+    const [showAlternateView, setShowAlternateView] = useState(false);
     const [nuovaquantitaValue, setQuantitaValue] = useState('');
     const [idmodificaquantitaValue, setIdModQuantita] = useState(1);
     const [piattomodificaquantitaValue, setPiattoModQuantita] = useState("non definito");
-
-    // Stato per il popup statistiche
-    const [openPopup, setOpenPopup] = useState(false);
-    const handleOpenPopup = () => setOpenPopup(true); 
-    const handleClosePopup = () => setOpenPopup(false);
-
-    const [showAlternateView, setShowAlternateView] = useState(false);
-    const handleToggleView = () => {
-        setShowAlternateView((prev) => !prev);
-    };
-
 
     useEffect(() => {
         const fetchData = async () => {
@@ -72,356 +53,263 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
             if (gg) {
                 setSagra(gg);
                 const cc = await getLastLog(gg.giornata, nomeCucina);
-                if (cc) {
-                    setLastLog(cc);
-                }
+                if (cc) setLastLog(cc);
             }
         };
-
         fetchData();
     }, []);
 
-    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) =>
         setNumero(event.target.value);
-    };
+    const handleClose = () => setOpenSnackbar(false);
+    const handleOpenPopup = () => setOpenPopup(true);
+    const handleClosePopup = () => setOpenPopup(false);
+    const handleToggleView = () =>
+        setShowAlternateView(prev => !prev);
+    const handleButtonClickCaricaConto1 = () => carica(1);
 
-    const handleClose = () => {
-        setOpenSnackbar(false);
-    };
-
-    const handleButtonClickCaricaConto1 = async () => {
-        carica(1);
-    };
-
+    /* ------------------------------CARICAMENTO CONTO------------------------------ */
     async function carica(num: number) {
         if (isNaN(num) || num < 1 || num > 8999) {
             setOpenSnackbar(true);
             return;
         }
-
-        const fetchData = async () => {
-            const c = await getConsumazioni(nomeCucina, num, sagra.giornata, 'MUST_BE_AVAILABLE');
-            if (c) {
-                setProducts(c);
-                setIniProducts(c);
-            }
-
-            const cc = await getConto(num, sagra.giornata);
-            setNumeroFoglietto(num);
-            if (cc) {
-                setConto(cc);
-                if (cc.stato == 'CHIUSO' || cc.stato == 'STAMPATO' || cc.stato == 'CHIUSOPOS' || cc.stato == 'CHIUSOALTRO') {
-                    setPhase('bloccato')
-                } else if (cc.cameriere == 'Sconosciuto') {
-                    setPhase('sconosciuto');
-                } else {
-                    await writeLog(num, sagra.giornata, nomeCucina, '', 'OPEN', ''); // Logger
-                    const cc = await getLastLog(sagra.giornata, nomeCucina);
-                    if (cc) {
-                        setLastLog(cc);
-                    }
-                    setPhase('caricato');
-                }
-
-            } else {
-                const cameriere = await getCamerieri(num);
-                if (cameriere) {
-                    if (cameriere == 'Sconosciuto') {
-                        setPhase('sconosciuto');
-                    } else {
-                        await apriConto(num, sagra.giornata, cameriere);
-                        await writeLog(num, sagra.giornata, nomeCucina, '', 'START', ''); // Logger
-                        const cc = await getLastLog(sagra.giornata, nomeCucina);
-                        if (cc) {
-                            setLastLog(cc);
-                        }
-                        const ccc = await getConto(num, sagra.giornata);
-                        setConto(ccc);
-                        setPhase('caricato');
-                    }
-                }
-            }
-
-        };
-
-        const cc = await getLastLog(sagra.giornata, nomeCucina);
-        if (cc) {
-            setLastLog(cc);
-        }
         setPhase('caricamento');
-        fetchData();
-
-        console.log(`Numero foglietto: ${numeroFoglietto}`);
+        const c = await getConsumazioni(nomeCucina, num, sagra.giornata, 'MUST_BE_AVAILABLE');
+        if (c) {
+            setProducts(c);
+            setIniProducts(c);
+        }
+        const cc = await getConto(num, sagra.giornata);
+        setNumeroFoglietto(num);
+        if (cc) {
+            setConto(cc);
+            if (['CHIUSO', 'STAMPATO', 'CHIUSOPOS', 'CHIUSOALTRO'].includes(cc.stato)) {
+                setPhase('bloccato');
+                return;
+            }
+            if (cc.cameriere === 'Sconosciuto') {
+                setPhase('sconosciuto');
+                return;
+            }
+            await writeLog(num, sagra.giornata, nomeCucina, '', 'OPEN', '');
+            const logs = await getLastLog(sagra.giornata, nomeCucina);
+            if (logs) setLastLog(logs);
+            setPhase('caricato');
+        } else {
+            const cameriere = await getCamerieri(num);
+            if (!cameriere || cameriere === 'Sconosciuto') {
+                setPhase('sconosciuto');
+                return;
+            }
+            await apriConto(num, sagra.giornata, cameriere);
+            await writeLog(num, sagra.giornata, nomeCucina, '', 'START', '');
+            const logs = await getLastLog(sagra.giornata, nomeCucina);
+            if (logs) setLastLog(logs);
+            const newConto = await getConto(num, sagra.giornata);
+            setConto(newConto);
+            setPhase('caricato');
+        }
     }
 
     const handleButtonClickCarica = () => {
-        const num = Number(numero);
-        carica(num);
-        setNumero(''); //arreza numero fogleitto input box
-
+        carica(Number(numero));
+        setNumero('');
     };
 
-    const handleButtonClickAnnulla = () => {
-        setPhase('iniziale');
-    };
+    const handleButtonClickAnnulla = () => setPhase('iniziale');
+
+    /* ------------------------------INVIO CONSUMAZIONI------------------------------ */
 
     const handleButtonClickInvia = async () => {
-        // numeroFoglietto
 
         const gc = await getConto(Number(numeroFoglietto), sagra.giornata);
-        if (gc?.stato === "APERTO") {
-            console.log(`Aggiornamento Numero foglietto: ${numeroFoglietto} da ${nomeCucina}`);
-            const logArray = products.map((item) => {
-                const orig = iniProducts.find(o => o.id_piatto == item.id_piatto);
-                if (orig) {
-                    if (item.quantita > orig.quantita) {
-                        return ({ id: item.id_comanda, message: `Aggiunti: ${item.quantita - orig.quantita} ${item.piatto}` });
-
-                    } else if (item.quantita < orig.quantita) {
-                        return ({ id: item.id_comanda, message: `Eliminati: ${orig.quantita - item.quantita} ${item.piatto}` });
-                    } else {
-                        return ({ id: -1, message: `` });
-                    }
-                }
-                return { id: -1, message: `` };
-            });
-
-            for (var index = 0; index < logArray.length; index++) {
-                if (logArray[index].id != -1) {
-                    await writeLog(logArray[index].id, sagra.giornata, nomeCucina, '', 'UPDATE', logArray[index].message);
-                }
-            }
-
-            sendConsumazioni(products);
-            updateTotaleConto(Number(numeroFoglietto), sagra.giornata);
-            setPhase('inviato');
-            setProducts([]);
-            setIniProducts([]);
-        }
-        else {
-            console.log('Aggiornamento Numero foglietto non aperto:' + { numeroFoglietto } + ' da' + { nomeCucina } + 'in bloccato');
+        if (gc?.stato !== "APERTO") {
             setPhase('bloccato');
             return;
         }
-    }
-        ;
+        const logArray = products.map(item => {
+            const orig = iniProducts.find(o => o.id_piatto === item.id_piatto);
 
-    const handleModificaQuantita = async () => {
-
-        const newProducts = products.map((item) => {
-            if (item.id_piatto == idmodificaquantitaValue) {
-                console.log(item);
-                return ({ ...item, quantita: Number(nuovaquantitaValue) });
-            }
-            else
-                return (item);
+            if (!orig) return { id: -1, message: '' };
+            if (item.quantita > orig.quantita)
+                return { id: item.id_comanda, message: `Aggiunti: ${item.quantita - orig.quantita} ${item.piatto}` };
+            if (item.quantita < orig.quantita)
+                return { id: item.id_comanda, message: `Eliminati: ${orig.quantita - item.quantita} ${item.piatto}` };
+            return { id: -1, message: '' };
         });
-        setProducts(newProducts);
 
-        setPhase('caricato');
+        for (const log of logArray)
+            if (log.id !== -1)
+                await writeLog(log.id, sagra.giornata, nomeCucina, '', 'UPDATE', log.message);
+
+        await sendConsumazioni(products);
+        await updateTotaleConto(Number(numeroFoglietto), sagra.giornata);
+
+        setPhase('inviato');
+        setProducts([]);
+        setIniProducts([]);
     };
 
-    const handleAnnulla = async () => {
-        setPhase('caricato');
-    }
+    /* ------------------------------       MODIFICA QUANTITA'    ------------------------------ */
+    const updateQuantity = (id: number, delta: number) => {
 
+        setProducts(products.map(item =>
+            item.id_piatto === id
+                ? { ...item, quantita: Math.max(0, item.quantita + delta) }
+                : item
+        ));
+    };
+
+    const handleAdd = (id: number) => updateQuantity(id, 1);
+    const handleAdd10 = (id: number) => updateQuantity(id, 10);
+    const handleRemove = (id: number) => updateQuantity(id, -1);
     const handleSet = (id: number) => {
-        setIdModQuantita(Number(id));
 
-        const newProducts = products.map((item) => {
-            if (item.id_piatto == id) {
-                setPiattoModQuantita(item.piatto);
-                setQuantitaValue(item.quantita + "");
-            }
-        });
+        const item = products.find(p => p.id_piatto === id);
+
+        if (!item) return;
+
+        setIdModQuantita(id);
+        setPiattoModQuantita(item.piatto);
+        setQuantitaValue(String(item.quantita));
+
         setPhase('modificaquantita');
     };
 
-    const handleAdd = (id: number) => {
-        const newProducts = products.map((item) => {
-            if (item.id_piatto == id) {
-                console.log(item);
-                return ({ ...item, quantita: item.quantita + 1 });
-            }
-            else
-                return (item);
-        });
-        setProducts(newProducts);
+    const handleModificaQuantita = () => {
+
+        setProducts(products.map(item =>
+            item.id_piatto === idmodificaquantitaValue
+                ? { ...item, quantita: Number(nuovaquantitaValue) }
+                : item
+        ));
+
+        setPhase('caricato');
     };
 
-    const handleAdd10 = (id: number) => {
-        const newProducts = products.map((item) => {
-            if (item.id_piatto == id) {
-                console.log(item);
-                return ({ ...item, quantita: item.quantita + 10 });
-            }
-            else
-                return (item);
-        });
-        setProducts(newProducts);
-    };
+    const handleAnnulla = () => setPhase('caricato');
 
-    const handleRemove = (id: number) => {
-        const newProducts = products.map((item) => {
-            if (item.id_piatto == id) {
-                console.log(item);
-                if (item.quantita > 0)
-                    return ({ ...item, quantita: item.quantita - 1 });
-                else
-                    return ({ ...item });
-            }
-            else
-                return (item);
-        });
-        setProducts(newProducts);
-    };
+const renderPhaseContent = () => {
 
-    const renderPhaseContent = () => {
-        switch (phase) {
-            case 'iniziale':
-                console.log('iniziale');
-                return (
-                    <>
-                        <div className='z-0 text-center'>
-                            <br></br>
-                            <br></br>
-                            <p className="text-5xl py-4">
-                                Caricare un numero foglietto!!
-                            </p>
-                            {/* Pulsante per attivare/disattivare la visualizzazione alternativa */}
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                onClick={handleToggleView}
-                                sx={{ mt: 3, borderRadius: '9999px' }}
-                            >
-                                {showAlternateView ? 'Disattiva Visualizzazione Elementare' : 'Attiva Visualizzazione Elementare'}
-                            </Button>
+    if (phase === 'iniziale')
+        return (
+            <div className='text-center'>
+                <p className="text-5xl py-4">Caricare un numero foglietto!!</p>
 
-                            {/* Contenuto condizionale basato su showAlternateView */}
-                            {/* {showAlternateView && (
-                                <p className="text-3xl py-4 text-green-600">
-                                           Visualizzazione Elementare Attivata! 
-                                 </p>
-                            )}*/}
-                        </div>
-                    </>
-                );
-            case 'caricamento':
-                return (
-                    <>
-                        <div className='z-0 text-center'>
-                            <br></br>
-                            <p className="text-5xl py-4">
-                                Cucina
-                            </p><br></br>
-                            <br></br>
-                            <CircularProgress size="9rem" />
-                            <br></br>
-                            <p className="text-5xl py-4">
-                                Caricamento in corso ...
-                            </p>
-                        </div>
-                    </>
-                );
-            case 'caricato':
-                return (
-                    <>
-                        <div>
-                            <TabellaCucina item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} showDetailedControls={showAlternateView} />
-                        </div>
-                    </>
-                );
-            case 'inviato':
-                return (
-                    <>
-                        <div className='text-center '>
-                            <br></br>
-                            <br></br>
-                            <p className="text-5xl py-4">
-                                Inviato con successo!!
-                            </p>
-                            {/* Pulsante per attivare/disattivare la visualizzazione alternativa */}
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                onClick={handleToggleView}
-                                sx={{ mt: 3, borderRadius: '9999px' }}
-                            >
-                                {showAlternateView ? 'Disattiva Visualizzazione Elementare' : 'Attiva Visualizzazione Elementare'}
-                            </Button>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleToggleView}
+                    sx={{ mt: 3, borderRadius: '9999px' }}
+                >
+                    {showAlternateView
+                        ? 'Disattiva Visualizzazione Elementare'
+                        : 'Attiva Visualizzazione Elementare'}
+                </Button>
+            </div>
+        );
 
-                            {/* Contenuto condizionale basato su showAlternateView */}
-                            {/* {showAlternateView && (
-                                <p className="text-3xl py-4 text-green-600">
-                                           Visualizzazione Elementare Attivata! 
-                                 </p>
-                            )}*/}
-                        </div>
-                    </>
-                );
-            case 'sconosciuto':
-                return (
-                    <>
-                        <div className='text-center '>
-                            <br></br>
-                            <br></br>
-                            <br></br>
-                            <br></br>
-                            <p className="text-5xl py-4">
-                                Conto non valido: cameriere sconosciuto!
-                            </p>
-                        </div>
-                    </>
-                );
-            case 'bloccato':
-                return (
-                    <>
-                        <div className='text-center '>
-                            <br></br>
-                            <br></br>
-                            <br></br>
-                            <br></br>
-                            <p className="text-5xl py-4">
-                                Conto non valido: bloccato dalle casse!
-                            </p>
-                        </div>
-                    </>
-                );
-            case 'modificaquantita':
-                return (
-                    <div className="flex items-center justify-center min-h-screen rounded">
-                        <div className="w-[600px] p-4  space-y-4 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded -translate-y-16">
-                            <p className="text-xl py-1 rounded">
-                                Per il conto numero: <span className="font-extrabold text-blue-800">{conto?.id_comanda} </span>
-                                inserisci la quantità di porzioni per il piatto: <span className="font-extrabold text-blue-800">{piattomodificaquantitaValue}
-                                </span>
-                            </p>
-                            <TextField
-                                label="Modifica quantità"
-                                variant="outlined"
-                                value={nuovaquantitaValue}
-                                onChange={(e) => setQuantitaValue(e.target.value)}
-                                type="number"
-                                size="medium"
-                                fullWidth
-                            />
-                            <div className="flex justify-center space-x-4">
-                                <Button size="small" variant="contained" color="primary" onClick={handleModificaQuantita}>
-                                    Salva e chiudi
-                                </Button>
-                                <Button size="small" variant="contained" color="primary" onClick={handleAnnulla}>
-                                    Annulla
-                                </Button>
-                            </div>
-                        </div>
+    if (phase === 'caricamento')
+        return (
+            <div className='text-center'>
+                <p className="text-5xl py-4">Cucina</p>
+                <CircularProgress size="9rem" />
+                <p className="text-5xl py-4">Caricamento in corso ...</p>
+            </div>
+        );
+
+    if (phase === 'caricato')
+        return (
+            <TabellaCucina
+                item={products}
+                onAdd10={handleAdd10}
+                onAdd={handleAdd}
+                onRemove={handleRemove}
+                onSet={handleSet}
+                showDetailedControls={showAlternateView}
+            />
+        );
+
+    if (phase === 'inviato')
+        return (
+            <div className='text-center'>
+                <p className="text-5xl py-4">Inviato con successo!!</p>
+
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleToggleView}
+                    sx={{ mt: 3, borderRadius: '9999px' }}
+                >
+                    {showAlternateView
+                        ? 'Disattiva Visualizzazione Elementare'
+                        : 'Attiva Visualizzazione Elementare'}
+                </Button>
+            </div>
+        );
+
+    if (phase === 'sconosciuto')
+        return (
+            <div className='text-center'>
+                <p className="text-5xl py-4">
+                    Conto non valido: cameriere sconosciuto!
+                </p>
+            </div>
+        );
+
+    if (phase === 'bloccato')
+        return (
+            <div className='text-center'>
+                <p className="text-5xl py-4">
+                    Conto non valido: bloccato dalle casse!
+                </p>
+            </div>
+        );
+
+    if (phase === 'modificaquantita')
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <div className="w-[600px] p-4 space-y-4 border-4 border-blue-600 shadow-2xl bg-blue-200 rounded">
+
+                    <p className="text-xl">
+                        Per il conto numero:
+                        <span className="font-extrabold text-blue-800">
+                            {conto?.id_comanda}
+                        </span>
+
+                        inserisci la quantità per:
+
+                        <span className="font-extrabold text-blue-800">
+                            {piattomodificaquantitaValue}
+                        </span>
+                    </p>
+
+                    <TextField
+                        label="Modifica quantità"
+                        variant="outlined"
+                        value={nuovaquantitaValue}
+                        onChange={(e) => setQuantitaValue(e.target.value)}
+                        type="number"
+                        fullWidth
+                    />
+
+                    <div className="flex justify-center space-x-4">
+                        <Button variant="contained" onClick={handleModificaQuantita}>
+                            Salva
+                        </Button>
+
+                        <Button variant="contained" onClick={handleAnnulla}>
+                            Annulla
+                        </Button>
                     </div>
-                );
-            default:
 
-                return null;
-        }
-    };
+                </div>
+            </div>
+        );
+
+    return null;
+};
 
     if ((session?.user?.name == nomeCucina) || (session?.user?.name == "SuperUser"))
 
@@ -567,60 +455,39 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                         Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
                                     </p>
                                 </ButtonGroup>
-
-
-
                             </div>}
-
                         { }
                         {/* <main className=".mainContent_cucine">*/}
-                        <div className=".mainContent_cucine_p">          {renderPhaseContent()}</div>
+                        <div className="mainContent_cucine_p">          {renderPhaseContent()}</div>
                         {/* </main>*/}
                         {/* Sezione 2: Footer (15%)*/}
 
                         <footer className="footer_cucine">
-                            <div className="buttonContainer_cucine">
+                        <div className="flex justify-between items-center w-full">
 
-                                {phase == 'caricato' ?
-                                    <div className="flex justify-between items-center w-full"> {/* AGGIUNGI QUESTE CLASSI */}
-                                        &nbsp;<Button size="large" variant="contained" onClick={handleButtonClickInvia}
-                                            className="font-extralight text-left"
-                                            sx={{
-                                                padding: '15px 30px', // Aumenta il padding per renderlo più grande
-                                                fontSize: '1.5rem', // Aumenta la dimensione del font
-                                                // Puoi aggiungere altre proprietà CSS qui, ad esempio minWidth
-                                                minWidth: '200px',
-                                            }} style={{ borderRadius: '9999px' }}>Invia</Button> &nbsp;
-                                        <Button size="large" variant="contained" onClick={handleButtonClickAnnulla}
-                                            className=" font-extralight text-right" sx={{
-                                                padding: '15px 30px', // Aumenta il padding per renderlo più grande
-                                                fontSize: '1.5rem', // Aumenta la dimensione del font
-                                                // Puoi aggiungere altre proprietà CSS qui, ad esempio minWidth
-                                                minWidth: '200px',
-                                            }} style={{ borderRadius: '9999px' }}>Annulla</Button>&nbsp;
-                                    </div> :
-                                    <div className="flex justify-between items-center w-full"> {/* AGGIUNGI QUESTE CLASSI */}
-                                        <Button size="large" variant="contained" onClick={handleButtonClickInvia}
-                                            className="font-extralight" // Rimuovi text-left
-                                            disabled sx={{
-                                                padding: '15px 30px',
-                                                fontSize: '1.5rem',
-                                                minWidth: '200px',
-                                            }} style={{ borderRadius: '9999px' }}>Invia</Button>
-                                        {/* Rimuovi lo spazio non-breaking &nbsp; qui, justify-between gestirà lo spazio */}
-                                        <Button size="large" variant="contained" onClick={handleButtonClickAnnulla}
-                                            className="font-extralight" // Rimuovi text-right
-                                            disabled sx={{
-                                                padding: '15px 30px',
-                                                fontSize: '1.5rem',
-                                                minWidth: '200px',
-                                            }} style={{ borderRadius: '9999px' }}>Annulla</Button>
-                                    </div>
-                                }
-                                <div className='text-center '>
+                        <Button
+                        size="large"
+                        variant="contained"
+                        onClick={handleButtonClickInvia}
+                        disabled={phase !== 'caricato'}
+                        sx={{ padding:'15px 30px', fontSize:'1.5rem', minWidth:'200px' }}
+                        style={{ borderRadius:'9999px' }}
+                        >
+                        Invia
+                        </Button>
 
-                                </div>
-                            </div>
+                        <Button
+                        size="large"
+                        variant="contained"
+                        onClick={handleButtonClickAnnulla}
+                        disabled={phase !== 'caricato'}
+                        sx={{ padding:'15px 30px', fontSize:'1.5rem', minWidth:'200px' }}
+                        style={{ borderRadius:'9999px' }}
+                        >
+                        Annulla
+                        </Button>
+
+                        </div>
                         </footer>
                     </div>
 
@@ -631,16 +498,31 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                         aria-labelledby="modal-stats-title"
                     >
                         <Box sx={styleModal}>
-                            <Typography id="modal-stats-title" variant="h4" component="h2" color="primary" gutterBottom>
-                                Statistiche Cucina
+                            <Typography
+                                id="modal-stats-title"
+                                variant="h6"
+                                component="h2"
+                                color="primary"
+                                sx={{ mb: 0.5, fontWeight: 'bold' }} // Margine minimo
+                            >
+                                Statitiche di cucina
                             </Typography>
-                            <Box sx={{ mt: 2, mb: 4 }}>
-                                <Typography variant="h6">Numero persone in coda: <b>--</b></Typography>
-                                <Typography variant="h6">Numero di coperti in coda: <b>--</b></Typography>
-                                <Typography variant="h6">Numero di coperti da servire: <b>--</b></Typography>
+
+                            <Box sx={{ mt: 1, mb: 2 }}> {/* Ridotto mt da 2 a 1 e mb da 4 a 2 */}
+                                <Typography variant="body2" sx={{ lineHeight: 1.2 }}>
+                                    Biglietti/coperti in coda: <b>--</b>
+                                </Typography>
+                                <Typography variant="body2" sx={{ lineHeight: 1.2 }}>
+                                    Numero di coperti da servire: <b>--</b>
+                                </Typography>
                             </Box>
 
-                            <Typography variant="h5" sx={{ mb: 1 }}>Piatti in preparazione</Typography>
+                            <Typography
+                                variant="subtitle2" // h5 era molto grande, subtitle2 è compatto e grassetto
+                                sx={{ mb: 0.5, textTransform: 'uppercase', fontSize: '0.75rem' }}
+                            >
+                                Piatti da servire
+                            </Typography>  
                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                 <thead>
                                     <tr style={{ borderBottom: '2px solid #ccc' }}>
@@ -649,24 +531,23 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {products
-                                        .filter((p) => p.quantita > 0)
-                                        .map((p) => (
-                                            <tr key={p.id_piatto} style={{ borderBottom: '1px solid #eee' }}>
-                                                <td style={{ padding: '8px' }}>{p.piatto}</td>
-                                                <td style={{ textAlign: 'right', padding: '8px' }}>{p.quantita}</td>
-                                            </tr>
-                                        ))}
-                                    {/* Mappare qui i piatti con l'algoritmo specifico 
-                                    <tr style={V{ borderBottom: '1px solid #eee' }}>
-                                        <td style={{ padding: '8px' }}>Esempio Piatto</td>
-                                        <td style={{ textAlign: 'right', padding: '8px' }}>23</td>
-                                    </tr>*/}
+                                    {/* Mappare qui i piatti con l'algoritmo specifico 23 */}
+
+                                    {products.map(p => (
+                                        <tr key={p.id_piatto} style={{ borderBottom: '1px solid #eee' }}>
+                                            <td style={{ padding: '8px' }}>{p.piatto}</td>
+                                            <td style={{ textAlign: 'right', padding: '8px' }}>{p.quantita}</td>
+                                        </tr>
+                                    ))}
                                 </tbody>
                             </table>
-
-                            <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
-                                <Button variant="contained" color="error" onClick={handleClosePopup} size="large">
+                            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+                                <Button
+                                    variant="contained"
+                                    color="error"
+                                    onClick={handleClosePopup}
+                                    size="large"
+                                >
                                     Chiudi
                                 </Button>
                             </Box>
