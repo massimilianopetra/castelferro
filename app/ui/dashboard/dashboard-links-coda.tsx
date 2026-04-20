@@ -47,7 +47,6 @@ export default function DashboardLinksCoda() {
         { name: 'Contatore', href: '/dashboard/contatore', icon: EuroIcon },
         { name: 'Telecomando', href: '/dashboard/telecomando', icon: FoodBankIcon },
         { name: 'Distributore', href: '/dashboard/distributore', icon: CardGiftcardIcon },
-        { name: 'Statistiche', href: '/dashboard/statistiche', icon: AutoStoriesIcon },
       ];
       break;
     

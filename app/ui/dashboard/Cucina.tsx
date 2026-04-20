@@ -9,7 +9,6 @@ import Filter1Icon from '@mui/icons-material/Filter1';
 import type { DbConsumazioni, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
 import {getConsumazioni,sendConsumazioni,getConto,apriConto,getCamerieri,updateTotaleConto,writeLog,getGiornoSagra,getLastLog} from '@/app/lib/actions';
 import TabellaCucina from '@/app/ui/dashboard/TabellaCucina';
-import '@/app/ui/global.css';
 
 const styleModal = {
     position: 'absolute',
