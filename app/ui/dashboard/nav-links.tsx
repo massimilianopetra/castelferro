@@ -11,6 +11,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import SettingsIcon from '@mui/icons-material/Settings';
 import LocalDrinkIcon from '@mui/icons-material/LocalDrink';
 import SportsBarIcon from '@mui/icons-material/SportsBar';
+import CampaignIcon from '@mui/icons-material/Campaign';
 import DinnerDiningIcon from '@mui/icons-material/DinnerDining';
 import RestaurantOutlinedIcon from '@mui/icons-material/RestaurantOutlined';
 import KebabDiningOutlinedIcon from '@mui/icons-material/KebabDiningOutlined';
@@ -51,6 +52,7 @@ export default function NavLinks() {
         { name: 'Dolci', href: '/dashboard/dolci', icon: CakeIcon },
         { name: 'Bevande', href: '/dashboard/bevande', icon: LocalDrinkIcon },
         { name: 'Birre', href: '/dashboard/birre', icon: SportsBarIcon },
+        { name: 'Chiama', href: '/dashboard/chiama', icon: CampaignIcon },
       ];
       break;
     case 'Antipasti':
