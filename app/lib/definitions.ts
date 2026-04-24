@@ -49,6 +49,12 @@ export type DbSintesiPiatti =   {
   alias: string;
 };
 
+export type DbTickets =   {
+  id: number;
+  numpersone: number;
+  seduto: number;
+};
+
 export type DbExtendedConti =   {
   id: number;
   id_comanda: number;

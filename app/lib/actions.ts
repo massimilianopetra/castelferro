@@ -2,7 +2,7 @@
 
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
-import type { DbMenu, DbConsumazioniPrezzo, DbConsumazioni, DbFiera, DbConti, DbCamerieri, DbLog, DbUser, DbSintesiPiatti, DbExtendedConti } from '@/app/lib/definitions';
+import type { DbMenu, DbConsumazioniPrezzo, DbConsumazioni, DbFiera, DbConti, DbCamerieri, DbLog, DbUser, DbSintesiPiatti, DbExtendedConti, DbTickets } from '@/app/lib/definitions';
 import { sql } from '@vercel/postgres';
 import { Pool } from 'pg';
 import { date } from 'zod';
@@ -40,6 +40,22 @@ async function executeQuery<T>(query: string): Promise<T[] | undefined> {
 
 
 /* ************************ SEED DATABASE **************************** */
+async function seedTickets() {
+  await executeQuery(`
+    CREATE TABLE IF NOT EXISTS tickets (
+       id INTEGER PRIMARY KEY,
+       numpersone  INTEGER NOT NULL,
+       seduto INTEGER NOT NULL 
+     );
+   `);
+
+  console.log(`CREATED TABLE tickets`);
+
+  return 0;
+}
+
+
+
 
 async function seedUsers() {
   await executeQuery(`
@@ -213,6 +229,7 @@ export async function seedDatabase() {
   try {
     console.log('**** Database seeding ****');
     await seedUsers();
+    await seedTickets();
     await seedMenu();
     await seedConsumazioni();
     await seedFiera();
@@ -262,6 +279,58 @@ export async function getUser(email: string): Promise<DbUser | undefined> {
 }
 
 /* ************************ GESTIONE DB **************************** */
+
+export async function getTickets(modo:string): Promise<DbTickets[] | undefined> {
+  console.log("getTickets");
+  try {
+    if (modo == 'all') {
+      const tickets = await executeQuery<DbTickets>(`SELECT * FROM tickets ORDER BY id`);
+      return tickets;
+    } else if (modo == 'seduti') {
+      const tickets = await executeQuery<DbTickets>(`SELECT * FROM tickets WHERE seduto = 1 ORDER BY id`); 
+      return tickets;
+    } else if (modo == 'non-seduti') {
+      const tickets = await executeQuery<DbTickets>(`SELECT * FROM tickets WHERE seduto = 0 ORDER BY id`); 
+      return tickets;
+    }
+  } catch (error) {
+    console.error('Failed to fetch tickets:', error);
+    throw new Error('Failed to fetch tickets.');
+  }
+}
+
+export async function updateTickets(record: DbTickets) {
+  console.log("updateTickets");
+  return await executeQuery(`
+         UPDATE tickets
+         SET seduto = ${record.seduto}
+         WHERE id = ${record.id};
+      `);
+}
+
+export async function addTickets(id: number, numero_persone: number) {
+  console.log("Add tickets")
+  return await executeQuery(`INSERT INTO tickets (id,numpersone,seduto)
+  VALUES (${id},${numero_persone},0)
+  ON CONFLICT (id) DO NOTHING;
+  `);
+}
+
+export async function getNextTickets(): Promise<number> {
+  console.log("getNextTickets");
+  try {
+    // Aggiungiamo un alias "maxId" per facilitare l'accesso ai dati
+    const tickets = await executeQuery<{ maxId: number | null }>(`SELECT MAX(id) AS maxId FROM tickets`);
+    // Se il tavolo è vuoto, MAX ritorna null, quindi usiamo 0 come fallback
+  // Prendiamo il valore (o 0 se la tabella è vuota) e aggiungiamo 1
+    const lastId = tickets?.[0]?.maxId ?? 0;
+    return lastId + 1;
+
+  } catch (error) {
+    console.error('Failed to fetch getNextTickets:', error);
+    throw new Error('Failed to fetch getNextTickets.');
+  }
+}
 
 export async function getMenu(): Promise<DbMenu[] | undefined> {
   console.log("getMenu");

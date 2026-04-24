@@ -44,8 +44,8 @@ export default function DashboardLinksCoda() {
   switch (session?.user?.name) {
     case 'SuperUser':
       links = [
-        { name: 'Contatore', href: '/dashboard/contatore', icon: EuroIcon },
-        { name: 'Telecomando', href: '/dashboard/telecomando', icon: FoodBankIcon },
+        { name: 'Display', href: '/dashboard/display', icon: EuroIcon },
+        { name: 'Chiama', href: '/dashboard/chiama', icon: FoodBankIcon },
         { name: 'Distributore', href: '/dashboard/distributore', icon: CardGiftcardIcon },
       ];
       break;
