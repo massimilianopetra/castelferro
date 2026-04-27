@@ -51,7 +51,6 @@ async function seedTickets() {
 
   console.log(`CREATED TABLE tickets`);
 
-  return 0;
 }
 
 
@@ -307,6 +306,15 @@ export async function updateTickets(record: DbTickets) {
          WHERE id = ${record.id};
       `);
 }
+export async function deleteTicket(id: number) {
+  console.log("Cancellazione ticket id:", id);
+
+  return await executeQuery(`
+      DELETE FROM tickets
+      WHERE id = ${id};
+  `);
+}
+
 
 export async function addTickets(id: number, numero_persone: number) {
   console.log("Add tickets")
@@ -319,12 +327,16 @@ export async function addTickets(id: number, numero_persone: number) {
 export async function getNextTickets(): Promise<number> {
   console.log("getNextTickets");
   try {
-    // Aggiungiamo un alias "maxId" per facilitare l'accesso ai dati
-    const tickets = await executeQuery<{ maxId: number | null }>(`SELECT MAX(id) AS maxId FROM tickets`);
-    // Se il tavolo è vuoto, MAX ritorna null, quindi usiamo 0 come fallback
-  // Prendiamo il valore (o 0 se la tabella è vuota) e aggiungiamo 1
-    const lastId = tickets?.[0]?.maxId ?? 0;
-    return lastId + 1;
+    // Usiamo le doppie virgolette per forzare il case "maxId"
+    const tickets = await executeQuery<{ maxId: number | null }>(
+      `SELECT MAX(id) AS "maxId" FROM tickets`
+    );
+    
+    // Accediamo in modo sicuro
+    const row = tickets?.[0];
+    const lastId = row ? (row.maxId ?? 0) : 0;
+
+    return Number(lastId) + 1; // Forza a numero per sicurezza
 
   } catch (error) {
     console.error('Failed to fetch getNextTickets:', error);

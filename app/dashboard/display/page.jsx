@@ -4,15 +4,30 @@ import { useState, useEffect } from 'react';
 
 export default function DisplayPage() {
   const [numero, setNumero] = useState(null);
+  const [precedenti, setPrecedenti] = useState([]); 
 
   useEffect(() => {
-    const es = new EventSource('/api/queue');
+    const es = new EventSource('/api/next-client');
 
     es.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        if (data.numero !== undefined) setNumero(data.numero);
-      } catch {}
+        
+        if (data.type === 'CALL_NUMBER') {
+          setNumero(data.numero);
+          // PUNTO 1: Gestione fino a 5 numeri precedenti
+          if (data.history) {
+            setPrecedenti(data.history); 
+          }
+        }
+        
+        // PUNTO 2: Aggiornamento quando un numero viene rimosso (Seduto o Cancellato)
+        if (data.type === 'UPDATE_HISTORY') {
+          setPrecedenti(data.history || []);
+        }
+      } catch (error) {
+        console.error("Errore parsing SSE:", error);
+      }
     };
 
     return () => es.close();
@@ -32,6 +47,7 @@ export default function DisplayPage() {
         alignItems: 'center',
         backgroundColor: '#111',
         userSelect: 'none',
+        fontFamily: 'sans-serif',
       }}
     >
       <p
@@ -42,7 +58,6 @@ export default function DisplayPage() {
           letterSpacing: '0.4em',
           margin: '0 0 1rem 0',
           textTransform: 'uppercase',
-          fontFamily: 'sans-serif',
         }}
       >
         Numero
@@ -60,6 +75,41 @@ export default function DisplayPage() {
       >
         {numero !== null ? numero : '—'}
       </p>
+
+      {/* SEZIONE ULTIMI 5 CHIAMATI */}
+      <div style={{ 
+        display: 'flex', 
+        gap: '15px', 
+        marginTop: '5vh',
+        minHeight: '150px',
+        flexWrap: 'wrap',
+        justifyContent: 'center'
+      }}>
+        {precedenti.map((num, idx) => (
+          <div 
+            key={idx} 
+            style={{
+              backgroundColor: '#222',
+              border: '2px solid #333',
+              borderRadius: '20px',
+              padding: '10px 25px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 4px 15px rgba(0,0,0,0.5)'
+            }}
+          >
+            {/* PUNTO 3: Sostituzione testo */}
+            <span style={{ color: '#666', fontSize: '0.8rem', fontWeight: 900, marginBottom: '5px' }}>
+              GIA' CHIAMATO
+            </span>
+            <span style={{ color: '#1976d2', fontSize: '3.5rem', fontWeight: 1000, fontFamily: 'monospace', lineHeight: 1 }}>
+              {num}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

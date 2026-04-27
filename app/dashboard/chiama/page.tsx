@@ -1,145 +1,223 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { Box, Typography, Button, Snackbar, Alert } from '@mui/material';
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
-import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import { 
+    Box, Typography, Button, Snackbar, Alert, 
+    Table, TableBody, TableCell, TableContainer, 
+    TableHead, TableRow, Paper, IconButton,
+    TableSortLabel, Dialog, DialogTitle, DialogContent, 
+    DialogContentText, DialogActions
+} from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import CampaignIcon from '@mui/icons-material/Campaign';
+import ChairIcon from '@mui/icons-material/Chair'; 
 import useMediaQuery from '@mui/material/useMediaQuery';
+import { getTickets, updateTickets, deleteTicket } from '@/app/lib/actions'; 
 
 const defaultTheme = createTheme({
     palette: {
         primary: { main: '#1976d2' },
         success: { main: '#2e7d32' },
-        error:   { main: '#d32f2f' },
+        warning: { main: '#ed6c02' },
+        error: { main: '#d32f2f' },
         background: { default: '#f4f6f8' },
     },
 });
 
+type Order = 'asc' | 'desc';
+
 export default function ChiamaPage() {
     const isMobile = useMediaQuery('(max-width:600px)');
-    const [numero, setNumero] = useState(0);
+    const [numeroAttuale, setNumeroAttuale] = useState(0);
+    const [lista, setLista] = useState<any[]>([]);
+    const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+    const [selectedTicket, setSelectedTicket] = useState<any>(null);
+    
+    // STATO PER ORDINAMENTO
+    const [order, setOrder] = useState<Order>('asc');
+    const [orderBy, setOrderBy] = useState<'id' | 'numpersone'>('id');
+    
+    // Memoria locale dei ticket chiamati in questa sessione (per colore Arancio)
+    const [chiamatiMemory, setChiamatiMemory] = useState<Set<number>>(new Set());
+
     const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
         open: false, message: '', severity: 'success',
     });
 
-    const broadcast = async (n: number) => {
-        await fetch('/api/next-client', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ numero: n }),
+    const fetchDati = async () => {
+        try {
+            const tickets = await getTickets('non-seduti');
+            if (tickets) setLista(tickets);
+        } catch (error) { console.error(error); }
+    };
+
+    useEffect(() => {
+        fetchDati();
+        const eventSource = new EventSource('/api/next-client');
+        eventSource.onmessage = (event) => {
+            const payload = JSON.parse(event.data);
+            if (payload.type === 'REFRESH_TABLE') fetchDati();
+            if (payload.type === 'CALL_NUMBER') setNumeroAttuale(payload.numero);
+        };
+        return () => eventSource.close();
+    }, []);
+
+    // FUNZIONE DI ORDINAMENTO
+    const handleRequestSort = (property: 'id' | 'numpersone') => {
+        const isAsc = orderBy === property && order === 'asc';
+        setOrder(isAsc ? 'desc' : 'asc');
+        setOrderBy(property);
+    };
+
+    const sortedLista = useMemo(() => {
+        return [...lista].sort((a, b) => {
+            let valA = a[orderBy] || 0;
+            let valB = b[orderBy] || 0;
+            if (order === 'asc') return valA > valB ? 1 : -1;
+            return valA < valB ? 1 : -1;
         });
-    };
+    }, [lista, order, orderBy]);
 
-    const handleProssimo = async () => {
-        const next = numero + 1;
+    const handleChiamaTicket = async (ticket: any) => {
         try {
-            await broadcast(next);
-            setNumero(next);
-            setSnackbar({ open: true, message: `Numero ${next} inviato al display`, severity: 'success' });
-        } catch {
-            setSnackbar({ open: true, message: 'Errore di connessione', severity: 'error' });
+            await fetch('/api/next-client', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ numero: ticket.id }),
+            });
+            setChiamatiMemory(prev => new Set(prev).add(ticket.id));
+            setNumeroAttuale(ticket.id);
+            setSnackbar({ open: true, message: `Ticket ${ticket.id} chiamato!`, severity: 'success' });
+        } catch (error) {
+            setSnackbar({ open: true, message: 'Errore chiamata', severity: 'error' });
         }
     };
 
-    const handleAzzera = async () => {
+    const handleSiediTicket = async (ticket: any) => {
         try {
-            await broadcast(0);
-            setNumero(0);
-            setSnackbar({ open: true, message: 'Display azzerato', severity: 'success' });
-        } catch {
-            setSnackbar({ open: true, message: 'Errore di connessione', severity: 'error' });
-        }
+            await updateTickets({ ...ticket, seduto: 1 });
+            await fetch('/api/next-client', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'SET_SITTING', numero: ticket.id }),
+            });
+            await fetchDati();
+        } catch (error) { console.error(error); }
+    };
+
+    const handleConfirmDelete = async () => {
+        if (!selectedTicket) return;
+        try {
+            await deleteTicket(selectedTicket.id);
+            await fetch('/api/next-client', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'SET_SITTING', numero: selectedTicket.id }),
+            });
+            setOpenDeleteDialog(false);
+            await fetchDati();
+        } catch (error) { console.error(error); }
     };
 
     return (
         <ThemeProvider theme={defaultTheme}>
-            <Box sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                height: '100vh',
-                width: '100vw',
-                bgcolor: 'background.default',
-                overflow: 'hidden',
-                p: 2,
-            }}>
-
-                {/* Numero corrente */}
-                <Box sx={{ pt: 1, textAlign: 'center' }}>
-                    <Typography sx={{ color: '#666', fontWeight: 900, letterSpacing: 1, fontSize: '0.9rem' }}>
-                        NUMERO IN CORSO
-                    </Typography>
-                    <Typography sx={{
-                        fontSize: isMobile ? '12vh' : '15vh',
-                        fontWeight: 900,
-                        color: '#1976d2',
-                        fontFamily: 'monospace',
-                        lineHeight: 1,
-                    }}>
-                        {numero}
+            <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100vw', bgcolor: 'background.default', p: 2 }}>
+                <Box sx={{ textAlign: 'center', mb: 1 }}>
+                    <Typography sx={{ color: '#666', fontWeight: 900, fontSize: '0.9rem' }}>ULTIMO CHIAMATO</Typography>
+                    <Typography sx={{ fontSize: isMobile ? '5.5rem' : '8rem', fontWeight: 1000, color: 'primary.main', fontFamily: 'monospace', lineHeight: 1 }}>
+                        {numeroAttuale || '—'}
                     </Typography>
                 </Box>
 
-                {/* Tasto PROSSIMO */}
-                <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    <Button
-                        variant="contained"
-                        color="success"
-                        onClick={handleProssimo}
-                        startIcon={<NavigateNextIcon sx={{ fontSize: isMobile ? '3rem !important' : '4rem !important' }} />}
-                        sx={{
-                            width: isMobile ? '90%' : '520px',
-                            py: isMobile ? 3 : 5,
-                            fontSize: isMobile ? '2rem' : '3rem',
-                            fontWeight: 1000,
-                            borderRadius: '30px',
-                            boxShadow: '0 10px 20px rgba(46, 125, 50, 0.4)',
-                        }}
-                    >
-                        PROSSIMO
-                    </Button>
-                </Box>
+                <TableContainer component={Paper} sx={{ maxWidth: '1000px', margin: '0 auto', mb: 2, maxHeight: '68vh', borderRadius: '12px' }}>
+                    <Table stickyHeader size="small">
+                        <TableHead>
+                            <TableRow>
+                                <TableCell sx={{ fontWeight: 900 }}>
+                                    <TableSortLabel 
+                                        active={orderBy === 'id'} 
+                                        direction={orderBy === 'id' ? order : 'asc'} 
+                                        onClick={() => handleRequestSort('id')}
+                                    >
+                                        Ticket
+                                    </TableSortLabel>
+                                </TableCell>
+                                <TableCell sx={{ fontWeight: 900 }}>
+                                    <TableSortLabel 
+                                        active={orderBy === 'numpersone'} 
+                                        direction={orderBy === 'numpersone' ? order : 'asc'} 
+                                        onClick={() => handleRequestSort('numpersone')}
+                                    >
+                                        Coperti
+                                    </TableSortLabel>
+                                </TableCell>
+                                <TableCell sx={{ fontWeight: 900 }} align="right">Azioni</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {sortedLista.map((row) => {
+                                let btnColor = "#2e7d32"; // Verde default
+                                let textColor = "#fff";
 
-                {/* Tasto AZZERA */}
-                <Box sx={{ pb: 3, display: 'flex', justifyContent: 'center' }}>
-                    <Button
-                        variant="outlined"
-                        color="error"
-                        onClick={handleAzzera}
-                        startIcon={<RestartAltIcon />}
-                        sx={{ px: 4, py: 1.5, fontSize: '1rem', fontWeight: 'bold', borderRadius: 2, borderWidth: 2,
-                            '&:hover': { borderWidth: 2 } }}
-                    >
-                        AZZERA
-                    </Button>
-                </Box>
+                                if (chiamatiMemory.has(row.id)) {
+                                    btnColor = "#ed6c02"; // Arancio se chiamato
+                                } else if (row.id < numeroAttuale) {
+                                    btnColor = "#ffeb3b"; // Giallo se antecedente mai chiamato
+                                    textColor = "#000";
+                                }
 
-                {/* Footer */}
-                <Box sx={{ pb: 1, textAlign: 'center' }}>
-                    <Typography
-                        variant={isMobile ? 'h6' : 'h4'}
-                        sx={{ fontWeight: 'bold', color: '#333', textTransform: 'uppercase' }}
-                    >
-                        Sagra di Castelferro 2026
-                    </Typography>
-                </Box>
+                                return (
+                                    <TableRow key={row.id} hover>
+                                        <TableCell sx={{ fontSize: '2rem', fontWeight: 1000, color: 'primary.main', fontFamily: 'monospace' }}>
+                                            {row.id}
+                                        </TableCell>
+                                        <TableCell sx={{ fontSize: '1.8rem' }}>
+                                            {row.numpersone}
+                                        </TableCell>
+                                        <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                                            <Button 
+                                                variant="contained" 
+                                                startIcon={<CampaignIcon />}
+                                                onClick={() => handleChiamaTicket(row)}
+                                                sx={{ 
+                                                    mr: 1, fontWeight: 'bold', 
+                                                    bgcolor: btnColor, color: textColor,
+                                                    '&:hover': { bgcolor: btnColor, opacity: 0.9 }
+                                                }}
+                                            >
+                                                Chiama
+                                            </Button>
+                                            <IconButton color="primary" onClick={() => handleSiediTicket(row)} sx={{ mr: 1, border: '1px solid', borderRadius: '8px' }}>
+                                                <ChairIcon />
+                                            </IconButton>
+                                            <IconButton color="error" onClick={() => { setSelectedTicket(row); setOpenDeleteDialog(true); }}>
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
+                        </TableBody>
+                    </Table>
+                </TableContainer>
 
-                <Snackbar
-                    open={snackbar.open}
-                    autoHideDuration={2000}
-                    onClose={() => setSnackbar(s => ({ ...s, open: false }))}
-                    anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-                >
-                    <Alert
-                        onClose={() => setSnackbar(s => ({ ...s, open: false }))}
-                        severity={snackbar.severity}
-                        variant="filled"
-                        sx={{ width: '100%', fontWeight: 'bold' }}
-                    >
-                        {snackbar.message}
-                    </Alert>
+                <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
+                    <DialogTitle>Conferma Cancellazione</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>
+                            Vuoi eliminare definitivamente il ticket numero <strong>{selectedTicket?.id}</strong> e i coperti <strong>{selectedTicket?.numpersone}</strong> associati?
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setOpenDeleteDialog(false)}>NO</Button>
+                        <Button onClick={handleConfirmDelete} color="error" autoFocus>SI, ELIMINA</Button>
+                    </DialogActions>
+                </Dialog>
+                
+                <Snackbar open={snackbar.open} autoHideDuration={2000} onClose={() => setSnackbar(s => ({ ...s, open: false }))}>
+                    <Alert severity={snackbar.severity} variant="filled">{snackbar.message}</Alert>
                 </Snackbar>
-
             </Box>
         </ThemeProvider>
     );
