@@ -314,7 +314,10 @@ export async function deleteTicket(id: number) {
       WHERE id = ${id};
   `);
 }
-
+export async function clearAllTickets() {
+  console.log("Cancellazione tutti i ticket e reset ID");
+  return await executeQuery(`TRUNCATE TABLE tickets RESTART IDENTITY CASCADE;`);
+}
 
 export async function addTickets(id: number, numero_persone: number) {
   console.log("Add tickets")
