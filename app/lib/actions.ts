@@ -353,7 +353,17 @@ export async function getNextTickets(): Promise<number> {
     throw new Error('Failed to fetch getNextTickets.');
   }
 }
-
+export async function getCountTicketsNonSeduti(): Promise<number> {
+  try {
+    const result = await executeQuery<{ count: string }>(
+      `SELECT SUM(numpersone) AS count FROM tickets WHERE seduto = 0`
+    );
+    return Number(result?.[0]?.count || 0);
+  } catch (error) {
+    console.error('Failed to count tickets:', error);
+    return 0;
+  }
+}
 export async function getMenu(): Promise<DbMenu[] | undefined> {
   console.log("getMenu");
   try {

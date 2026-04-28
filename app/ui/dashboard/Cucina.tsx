@@ -1,4 +1,4 @@
- 'use client';
+'use client';
 
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
@@ -7,7 +7,7 @@ import StarsIcon from '@mui/icons-material/Stars';
 import CircularProgress from '@mui/material/CircularProgress';
 import Filter1Icon from '@mui/icons-material/Filter1';
 import type { DbConsumazioni, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
-import {getConsumazioni,sendConsumazioni,getConto,apriConto,getCamerieri,updateTotaleConto,writeLog,getGiornoSagra,getLastLog} from '@/app/lib/actions';
+import { getConsumazioni, sendConsumazioni, getConto, apriConto, getCamerieri, updateTotaleConto, writeLog, getGiornoSagra, getLastLog } from '@/app/lib/actions';
 import TabellaCucina from '@/app/ui/dashboard/TabellaCucina';
 
 const styleModal = {
@@ -45,7 +45,9 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     const [nuovaquantitaValue, setQuantitaValue] = useState('');
     const [idmodificaquantitaValue, setIdModQuantita] = useState(1);
     const [piattomodificaquantitaValue, setPiattoModQuantita] = useState("non definito");
-
+    const [copertiInAttesa, setCopertiInAttesa] = useState(0);
+    const [menuPrevisionale, setMenuPrevisionale] = useState<any[]>([]);
+    const [dettaglioCoperti, setDettaglioCoperti] = useState({ seduti: 0, inCoda: 0, serviti: 0 });
     useEffect(() => {
         const fetchData = async () => {
             const gg = await getGiornoSagra();
@@ -61,7 +63,6 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) =>
         setNumero(event.target.value);
     const handleClose = () => setOpenSnackbar(false);
-    const handleOpenPopup = () => setOpenPopup(true);
     const handleClosePopup = () => setOpenPopup(false);
     const handleToggleView = () =>
         setShowAlternateView(prev => !prev);
@@ -118,6 +119,38 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
 
     const handleButtonClickAnnulla = () => setPhase('iniziale');
 
+    // Funzione per caricare le statistiche quando si apre il popup
+    const caricaStatistiche = async () => {
+        const {
+            getCountTicketsNonSeduti,
+            getMenu,
+            getTickets,
+            listConsumazioni
+        } = await import('@/app/lib/actions');
+
+        // Recupero dati
+        const inCoda = await getCountTicketsNonSeduti();
+        const ticketSedutiRows = await getTickets('seduti');
+        const seduti = ticketSedutiRows?.reduce((acc, curr) => acc + curr.numpersone, 0) || 0;
+
+        // ID 1 = Pane e Coperto (Serviti)
+        const consumazioniCoperti = await listConsumazioni(1, sagra.giornata);
+        const serviti = consumazioniCoperti?.reduce((acc, curr) => acc + curr.quantita, 0) || 0;
+
+        // Calcolo
+        const totale = (seduti + inCoda) - serviti;
+
+        setDettaglioCoperti({ seduti, inCoda, serviti });
+        setCopertiInAttesa(Math.max(0, totale));
+
+        // ... resto del caricamento menu ...
+        const fullMenu = await getMenu();
+        if (fullMenu) {
+            const filtrato = fullMenu.filter(m => m.cucina === nomeCucina);
+            setMenuPrevisionale(filtrato);
+        }
+        setOpenPopup(true);
+    };
     /* ------------------------------INVIO CONSUMAZIONI------------------------------ */
 
     const handleButtonClickInvia = async () => {
@@ -189,126 +222,126 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
 
     const handleAnnulla = () => setPhase('caricato');
 
-const renderPhaseContent = () => {
+    const renderPhaseContent = () => {
 
-    if (phase === 'iniziale')
-        return (
-            <div className='text-center'>
-                <p className="text-5xl py-4">Caricare un numero foglietto!!</p>
+        if (phase === 'iniziale')
+            return (
+                <div className='text-center'>
+                    <p className="text-5xl py-4">Caricare un numero foglietto!!</p>
 
-                <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleToggleView}
-                    sx={{ mt: 3, borderRadius: '9999px' }}
-                >
-                    {showAlternateView
-                        ? 'Disattiva Visualizzazione Elementare'
-                        : 'Attiva Visualizzazione Elementare'}
-                </Button>
-            </div>
-        );
-
-    if (phase === 'caricamento')
-        return (
-            <div className='text-center'>
-                <p className="text-5xl py-4">Cucina</p>
-                <CircularProgress size="9rem" />
-                <p className="text-5xl py-4">Caricamento in corso ...</p>
-            </div>
-        );
-
-    if (phase === 'caricato')
-        return (
-            <TabellaCucina
-                item={products}
-                onAdd10={handleAdd10}
-                onAdd={handleAdd}
-                onRemove={handleRemove}
-                onSet={handleSet}
-                showDetailedControls={showAlternateView}
-            />
-        );
-
-    if (phase === 'inviato')
-        return (
-            <div className='text-center'>
-                <p className="text-5xl py-4">Inviato con successo!!</p>
-
-                <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={handleToggleView}
-                    sx={{ mt: 3, borderRadius: '9999px' }}
-                >
-                    {showAlternateView
-                        ? 'Disattiva Visualizzazione Elementare'
-                        : 'Attiva Visualizzazione Elementare'}
-                </Button>
-            </div>
-        );
-
-    if (phase === 'sconosciuto')
-        return (
-            <div className='text-center'>
-                <p className="text-5xl py-4">
-                    Conto non valido: cameriere sconosciuto!
-                </p>
-            </div>
-        );
-
-    if (phase === 'bloccato')
-        return (
-            <div className='text-center'>
-                <p className="text-5xl py-4">
-                    Conto non valido: bloccato dalle casse!
-                </p>
-            </div>
-        );
-
-    if (phase === 'modificaquantita')
-        return (
-            <div className="flex items-center justify-center min-h-screen">
-                <div className="w-[600px] p-4 space-y-4 border-4 border-blue-600 shadow-2xl bg-blue-200 rounded">
-
-                    <p className="text-xl">
-                        Per il conto numero:
-                        <span className="font-extrabold text-blue-800">
-                            {conto?.id_comanda}
-                        </span>
-
-                        inserisci la quantità per:
-
-                        <span className="font-extrabold text-blue-800">
-                            {piattomodificaquantitaValue}
-                        </span>
-                    </p>
-
-                    <TextField
-                        label="Modifica quantità"
-                        variant="outlined"
-                        value={nuovaquantitaValue}
-                        onChange={(e) => setQuantitaValue(e.target.value)}
-                        type="number"
-                        fullWidth
-                    />
-
-                    <div className="flex justify-center space-x-4">
-                        <Button variant="contained" onClick={handleModificaQuantita}>
-                            Salva
-                        </Button>
-
-                        <Button variant="contained" onClick={handleAnnulla}>
-                            Annulla
-                        </Button>
-                    </div>
-
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleToggleView}
+                        sx={{ mt: 3, borderRadius: '9999px' }}
+                    >
+                        {showAlternateView
+                            ? 'Disattiva Visualizzazione Elementare'
+                            : 'Attiva Visualizzazione Elementare'}
+                    </Button>
                 </div>
-            </div>
-        );
+            );
 
-    return null;
-};
+        if (phase === 'caricamento')
+            return (
+                <div className='text-center'>
+                    <p className="text-5xl py-4">Cucina</p>
+                    <CircularProgress size="9rem" />
+                    <p className="text-5xl py-4">Caricamento in corso ...</p>
+                </div>
+            );
+
+        if (phase === 'caricato')
+            return (
+                <TabellaCucina
+                    item={products}
+                    onAdd10={handleAdd10}
+                    onAdd={handleAdd}
+                    onRemove={handleRemove}
+                    onSet={handleSet}
+                    showDetailedControls={showAlternateView}
+                />
+            );
+
+        if (phase === 'inviato')
+            return (
+                <div className='text-center'>
+                    <p className="text-5xl py-4">Inviato con successo!!</p>
+
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleToggleView}
+                        sx={{ mt: 3, borderRadius: '9999px' }}
+                    >
+                        {showAlternateView
+                            ? 'Disattiva Visualizzazione Elementare'
+                            : 'Attiva Visualizzazione Elementare'}
+                    </Button>
+                </div>
+            );
+
+        if (phase === 'sconosciuto')
+            return (
+                <div className='text-center'>
+                    <p className="text-5xl py-4">
+                        Conto non valido: cameriere sconosciuto!
+                    </p>
+                </div>
+            );
+
+        if (phase === 'bloccato')
+            return (
+                <div className='text-center'>
+                    <p className="text-5xl py-4">
+                        Conto non valido: bloccato dalle casse!
+                    </p>
+                </div>
+            );
+
+        if (phase === 'modificaquantita')
+            return (
+                <div className="flex items-center justify-center min-h-screen">
+                    <div className="w-[600px] p-4 space-y-4 border-4 border-blue-600 shadow-2xl bg-blue-200 rounded">
+
+                        <p className="text-xl">
+                            Per il conto numero:
+                            <span className="font-extrabold text-blue-800">
+                                {conto?.id_comanda}
+                            </span>
+
+                            inserisci la quantità per:
+
+                            <span className="font-extrabold text-blue-800">
+                                {piattomodificaquantitaValue}
+                            </span>
+                        </p>
+
+                        <TextField
+                            label="Modifica quantità"
+                            variant="outlined"
+                            value={nuovaquantitaValue}
+                            onChange={(e) => setQuantitaValue(e.target.value)}
+                            type="number"
+                            fullWidth
+                        />
+
+                        <div className="flex justify-center space-x-4">
+                            <Button variant="contained" onClick={handleModificaQuantita}>
+                                Salva
+                            </Button>
+
+                            <Button variant="contained" onClick={handleAnnulla}>
+                                Annulla
+                            </Button>
+                        </div>
+
+                    </div>
+                </div>
+            );
+
+        return null;
+    };
 
     if ((session?.user?.name == nomeCucina) || (session?.user?.name == "SuperUser"))
 
@@ -385,7 +418,7 @@ const renderPhaseContent = () => {
                                                 <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1} disabled>Camerieri</Button> :
                                                 <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
                                             }
-                                            <IconButton onClick={handleOpenPopup} color="primary" sx={{ ml: 1, border: '1px solid', padding: '10px' }}>
+                                            <IconButton onClick={caricaStatistiche} color="primary" sx={{ ml: 1, border: '1px solid', padding: '10px' }}>
                                                 <StarsIcon fontSize="large" />
                                             </IconButton>
                                         </p>
@@ -407,8 +440,8 @@ const renderPhaseContent = () => {
                                                     <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
                                                 }
                                             </ButtonGroup>
-                                            
-                                            <IconButton onClick={handleOpenPopup} color="primary" sx={{ ml: 2, border: '2px solid', bgcolor: 'white' }}>
+
+                                            <IconButton onClick={caricaStatistiche} color="primary" sx={{ ml: 2, border: '2px solid', bgcolor: 'white' }}>
                                                 <StarsIcon fontSize="large" />sss
                                             </IconButton>
 
@@ -462,96 +495,120 @@ const renderPhaseContent = () => {
                         {/* Sezione 2: Footer (15%)*/}
 
                         <footer className="footer_cucine">
-                        <div className="flex justify-between items-center w-full">
+                            <div className="flex justify-between items-center w-full">
 
-                        <Button
-                        size="large"
-                        variant="contained"
-                        onClick={handleButtonClickInvia}
-                        disabled={phase !== 'caricato'}
-                        sx={{ padding:'15px 30px', fontSize:'1.5rem', minWidth:'200px' }}
-                        style={{ borderRadius:'9999px' }}
-                        >
-                        Invia
-                        </Button>
+                                <Button
+                                    size="large"
+                                    variant="contained"
+                                    onClick={handleButtonClickInvia}
+                                    disabled={phase !== 'caricato'}
+                                    sx={{ padding: '15px 30px', fontSize: '1.5rem', minWidth: '200px' }}
+                                    style={{ borderRadius: '9999px' }}
+                                >
+                                    Invia
+                                </Button>
 
-                        <Button
-                        size="large"
-                        variant="contained"
-                        onClick={handleButtonClickAnnulla}
-                        disabled={phase !== 'caricato'}
-                        sx={{ padding:'15px 30px', fontSize:'1.5rem', minWidth:'200px' }}
-                        style={{ borderRadius:'9999px' }}
-                        >
-                        Annulla
-                        </Button>
+                                <Button
+                                    size="large"
+                                    variant="contained"
+                                    onClick={handleButtonClickAnnulla}
+                                    disabled={phase !== 'caricato'}
+                                    sx={{ padding: '15px 30px', fontSize: '1.5rem', minWidth: '200px' }}
+                                    style={{ borderRadius: '9999px' }}
+                                >
+                                    Annulla
+                                </Button>
 
-                        </div>
+                            </div>
                         </footer>
                     </div>
 
-                    {/* POPUP STATISTICHE */}
-                    <Modal
-                        open={openPopup}
-                        onClose={handleClosePopup}
-                        aria-labelledby="modal-stats-title"
-                    >
-                        <Box sx={styleModal}>
-                            <Typography
-                                id="modal-stats-title"
-                                variant="h6"
-                                component="h2"
-                                color="primary"
-                                sx={{ mb: 0.5, fontWeight: 'bold' }} // Margine minimo
-                            >
-                                Statitiche di cucina
-                            </Typography>
+                  {/* POPUP STATISTICHE */}
+<Modal
+    open={openPopup}
+    onClose={handleClosePopup}
+    aria-labelledby="modal-stats-title"
+>
+    <Box sx={{...styleModal, p: 2}}> {/* Ridotto padding del contenitore */}
+        <Typography
+            id="modal-stats-title"
+            variant="h6"
+            component="h2"
+            color="primary"
+            sx={{ mb: 1, fontWeight: 'bold', fontSize: '1.1rem' }}
+        >
+            Statistiche: {nomeCucina}
+        </Typography>
 
-                            <Box sx={{ mt: 1, mb: 2 }}> {/* Ridotto mt da 2 a 1 e mb da 4 a 2 */}
-                                <Typography variant="body2" sx={{ lineHeight: 1.2 }}>
-                                    Biglietti/coperti in coda: <b>--</b>
-                                </Typography>
-                                <Typography variant="body2" sx={{ lineHeight: 1.2 }}>
-                                    Numero di coperti da servire: <b>--</b>
-                                </Typography>
-                            </Box>
+        <Box sx={{ mb: 1.5, p: 1, bgcolor: '#f0f7ff', borderRadius: '8px', border: '1px solid #d0e3ff' }}>
+            <Typography variant="body1" sx={{ lineHeight: 1.2, fontWeight: 'medium' }}>
+                Coperti da servire: <b className="text-blue-700" style={{ fontSize: '1.3rem', marginLeft: '4px' }}>{copertiInAttesa}</b>
+            </Typography>
+            <Typography variant="caption" sx={{ color: '#555', display: 'block', mt: 0.5 }}>
+                Formula: ({dettaglioCoperti.seduti} seduti + {dettaglioCoperti.inCoda} in coda) - {dettaglioCoperti.serviti} serviti
+            </Typography>
+        </Box>
 
-                            <Typography
-                                variant="subtitle2" // h5 era molto grande, subtitle2 è compatto e grassetto
-                                sx={{ mb: 0.5, textTransform: 'uppercase', fontSize: '0.75rem' }}
-                            >
-                                Piatti da servire
-                            </Typography>  
-                            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                <thead>
-                                    <tr style={{ borderBottom: '2px solid #ccc' }}>
-                                        <th style={{ textAlign: 'left', padding: '8px' }}>Piatto</th>
-                                        <th style={{ textAlign: 'right', padding: '8px' }}>Quantità</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {/* Mappare qui i piatti con l'algoritmo specifico 23 */}
+        <Typography
+            variant="caption"
+            sx={{ mb: 0.5, textTransform: 'uppercase', fontSize: '0.65rem', color: 'gray', fontWeight: 'bold', display: 'block' }}
+        >
+            Previsione piatti (Coperti in attesa × % Storica)
+        </Typography>
 
-                                    {products.map(p => (
-                                        <tr key={p.id_piatto} style={{ borderBottom: '1px solid #eee' }}>
-                                            <td style={{ padding: '8px' }}>{p.piatto}</td>
-                                            <td style={{ textAlign: 'right', padding: '8px' }}>{p.quantita}</td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                            <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
-                                <Button
-                                    variant="contained"
-                                    color="error"
-                                    onClick={handleClosePopup}
-                                    size="large"
-                                >
-                                    Chiudi
-                                </Button>
-                            </Box>
-                        </Box>
-                    </Modal>
+        <Box sx={{ flexGrow: 1, overflowY: 'auto', border: '1px solid #eee', borderRadius: '4px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                <thead>
+                    <tr style={{ borderBottom: '2px solid #1976d2', backgroundColor: '#f8f9fa', position: 'sticky', top: 0, zIndex: 1 }}>
+                        <th style={{ textAlign: 'left', padding: '6px 10px' }}>Piatto</th>
+                        <th style={{ textAlign: 'right', padding: '6px 10px' }}>Dettaglio Calcolo</th>
+                        <th style={{ textAlign: 'right', padding: '6px 10px' }}>Stima</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {menuPrevisionale.map((item) => {
+                        const percentualeDecimale = item.percentuale / 100;
+                        const risultatoGrezzo = copertiInAttesa * percentualeDecimale;
+                        const quantitaPrevista = Math.ceil(risultatoGrezzo);
+
+                        return (
+                            <tr key={item.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
+                                <td style={{ padding: '4px 10px' }}>
+                                    <div style={{ fontWeight: 'bold', color: '#333' }}>{item.piatto}</div>
+                                    <div style={{ fontSize: '0.65rem', color: '#888' }}>Storico: {item.percentuale}%</div>
+                                </td>
+                                <td style={{ textAlign: 'right', padding: '4px 10px', color: '#666', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>
+                                    {copertiInAttesa} × {percentualeDecimale.toFixed(3)}
+                                </td>
+                                <td style={{ textAlign: 'right', padding: '4px 10px' }}>
+                                    <b style={{ fontSize: '1.05rem', color: '#1976d2' }}>{quantitaPrevista}</b>
+                                </td>
+                            </tr>
+                        );
+                    })}
+                    {menuPrevisionale.length === 0 && (
+                        <tr>
+                            <td colSpan={3} style={{ textAlign: 'center', padding: '15px', color: '#999' }}>
+                                Nessun dato disponibile
+                            </td>
+                        </tr>
+                    )}
+                </tbody>
+            </table>
+        </Box>
+
+        <Box sx={{ mt: 1.5, display: 'flex', justifyContent: 'center' }}>
+            <Button
+                variant="contained"
+                onClick={handleClosePopup}
+                size="small"
+                sx={{ borderRadius: '20px', px: 3, py: 0.5, textTransform: 'none' }}
+            >
+                Chiudi
+            </Button>
+        </Box>
+    </Box>
+</Modal>
 
                     <div>
                         <Snackbar
