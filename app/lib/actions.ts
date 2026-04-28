@@ -20,21 +20,22 @@ const pool = provider === 'pg' ? new Pool({
   connectionString: process.env.PG_CONNECTION_STRING,
 }) : null;
 
-async function executeQuery<T>(query: string): Promise<T[] | undefined> {
-  //console.log(query);
+async function executeQuery<T>(query: string, params?: any[]): Promise<T[] | undefined> {
+  //console.log(query, params);
   if (provider === 'pg') {
     if (!pool) {
       throw new Error('Pool non configurato per pg');
     }
     const client = await pool.connect();
     try {
-      const res = await client.query(query);
+      const res = params ? await client.query(query, params) : await client.query(query);
       return res.rows;
     } finally {
       client.release();
     }
   } else {
-    return (await sql.query(query)).rows;
+    const res = params ? await sql.query(query, params) : await sql.query(query);
+    return res.rows;
   }
 }
 
@@ -99,23 +100,29 @@ async function seedMenu() {
        prezzo REAL,
        cucina VARCHAR(255),
        disponibile VARCHAR(3),
-       alias VARCHAR(255)
+       alias VARCHAR(255),
+       percentuale REAL
      );
    `);
 
   console.log(`CREATED TABLE menus`);
 
+const insertedMenu = await Promise.all(
+  menu.map(async (item) => {
+    // Trasforma NaN o valori nulli in 0 per evitare il crash
+    const prezzo = isNaN(item.prezzo) ? 0 : item.prezzo;
+    const percentuale = isNaN(item.percentuale) ? 0 : item.percentuale;
 
-  const insertedMenu = await Promise.all(
-    menu.map(async (item) => {
-      console.log(`VALUES ${item.id}, ${item.piatto}, ${item.prezzo}, ${item.cucina},${item.disponibile}, ${item.alias}`);
-      return executeQuery(`
-           INSERT INTO menus (id, piatto, prezzo, cucina, disponibile, alias)
-           VALUES (${item.id}, '${item.piatto}', ${item.prezzo}, '${item.cucina}','${item.disponibile}','${item.alias}')
-           ON CONFLICT (id) DO NOTHING;
-        `);
-    }),
-  );
+    return executeQuery(
+      `INSERT INTO menus (id, piatto, prezzo, cucina, disponibile, alias, percentuale)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
+       ON CONFLICT (id) DO NOTHING;`,
+      [item.id, item.piatto, prezzo, item.cucina, item.disponibile, item.alias, percentuale]
+    );
+  })
+);
+
+
 
   console.log(`INSERTED TABLE menus`);
   return insertedMenu;
@@ -373,10 +380,10 @@ export async function overwriteMenu(record: DbMenu[]) {
       `);
 
   record.map(async (item) => {
-    console.log(`VALUES ${item.id}, '${item.piatto}', ${item.prezzo}, '${item.cucina}','${item.disponibile}', '${item.alias}'`);
+    console.log(`VALUES ${item.id}, '${item.piatto}', ${item.prezzo}, '${item.cucina}','${item.disponibile}', '${item.alias}',${item.percentuale},`);
     return await executeQuery(`
-             INSERT INTO menus (id, piatto, prezzo, cucina, disponibile, alias)
-             VALUES (${item.id}, '${item.piatto}', ${item.prezzo}, '${item.cucina}','${item.disponibile}','${item.alias}')
+             INSERT INTO menus (id, piatto, prezzo, cucina, disponibile, alias, percentuale)
+             VALUES (${item.id}, '${item.piatto}', ${item.prezzo}, '${item.cucina}','${item.disponibile}','${item.alias}',${item.percentuale})
              ON CONFLICT (id) DO NOTHING;
           `);
   })

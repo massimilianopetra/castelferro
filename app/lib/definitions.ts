@@ -16,6 +16,7 @@ export type DbMenu =   {
   cucina: string;
   disponibile: string;
   alias: string;
+  percentuale: number;  
 };
 
 export type DbConsumazioni =   {

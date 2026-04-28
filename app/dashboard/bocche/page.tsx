@@ -1,0 +1,39 @@
+'use client';
+
+import DashboardLinksBocche from '@/app/ui/dashboard/dashboard-link-bocche';
+import { Typography, useMediaQuery } from '@mui/material';
+import { useSession } from 'next-auth/react';
+
+export default function Page() {
+    const { data: session } = useSession();
+    const isMobile = useMediaQuery('(max-width:600px)');
+    if ((session?.user?.name == "Casse") || (session?.user?.name == "SuperUser")) {
+        return (
+            <main>
+                <div className="flex flex-wrap flex-col ">
+                    <div className='text-center '>
+                        <Typography variant={isMobile ? "h5" : "h3"} sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold', color: '#333' }}>
+                            Link Bocche 
+                        </Typography>
+
+                    </div>
+                    {<DashboardLinksBocche />}
+
+                </div>
+            </main>
+
+        );
+    } else {
+        return (
+            <main>
+                <div className="flex flex-wrap flex-col">
+                    <div className='text-center '>
+                        <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
+                            <span className="text-xl font-semibold">Violazione:</span> utente non autorizzato.
+                        </div>
+                    </div>
+                </div>
+            </main>
+        )
+    }
+}

@@ -62,7 +62,8 @@ const menu = [
     prezzo: 2.50,
     cucina: 'All',
     disponibile: 'Y',
-    alias: 'Pane e Coperto'
+    alias: 'Pane e Coperto',
+    percentuale: 0.033
   },
   {
     id: 2,
@@ -70,7 +71,8 @@ const menu = [
     prezzo: 5.00,
     cucina: 'Antipasti',
     disponibile: "Y",
-    alias: 'Bresaola'
+    alias: 'Bresaola',
+    percentuale: 0.033
   },
   {
     id: 3,
@@ -78,7 +80,8 @@ const menu = [
     prezzo: 5.00,
     cucina: 'Antipasti',
     disponibile: "Y",
-    alias: 'Equino'
+    alias: 'Equino',
+    percentuale: 0.033
   },
   {
     id: 4,
@@ -86,7 +89,8 @@ const menu = [
     prezzo: 5.00,
     cucina: 'Antipasti',
     disponibile: "Y",
-    alias: 'Crudo e Melone'
+    alias: 'Crudo e Melone',
+    percentuale: 0.033
   },
   {
     id: 5,
@@ -94,7 +98,8 @@ const menu = [
     prezzo: 3.50,
     cucina: 'Antipasti',
     disponibile: "Y",
-    alias: 'Robiola'
+    alias: 'Robiola',
+    percentuale: 0.033
   },
   {
     id: 6,
@@ -102,7 +107,8 @@ const menu = [
     prezzo: 3.50,
     cucina: 'Antipasti',
     disponibile: "Y",
-    alias: 'Caprino'
+    alias: 'Caprino',
+    percentuale: 0.033
   },
   {
     id: 7,
@@ -110,7 +116,8 @@ const menu = [
     prezzo: 7.50,
     cucina: 'Primi',
     disponibile: "Y",
-    alias: 'Agnolotti al sugo'
+    alias: 'Agnolotti al sugo',
+    percentuale: 0.033
   },
   {
     id: 8,
@@ -118,7 +125,8 @@ const menu = [
     prezzo: 6.00,
     cucina: 'Primi',
     disponibile: "Y",
-    alias: 'Agnolotti al vino'
+    alias: 'Agnolotti al vino',
+    percentuale: 0.033
   },
   {
     id: 9,
@@ -126,7 +134,8 @@ const menu = [
     prezzo: 6.00,
     cucina: 'Primi',
     disponibile: "Y",
-    alias: 'Agnolotti burro/form.'
+    alias: 'Agnolotti burro/form.',
+    percentuale: 0.033
   },
   {
     id: 10,
@@ -134,7 +143,8 @@ const menu = [
     prezzo: 8.00,
     cucina: 'Primi',
     disponibile: "Y",
-    alias: 'Polenta e tapulone'
+    alias: 'Polenta e tapulone',
+    percentuale: 0.033
   },
   {
     id: 11,
@@ -142,7 +152,8 @@ const menu = [
     prezzo: 4.00,
     cucina: 'Primi',
     disponibile: "Y",
-    alias: 'Polenta'
+    alias: 'Polenta',
+    percentuale: 0.033
   },
   {
     id: 12,
@@ -150,7 +161,8 @@ const menu = [
     prezzo: 5.00,
     cucina: 'Antipasti',
     disponibile: "Y",
-    alias: 'Prosciutto Crudo'
+    alias: 'Prosciutto Crudo',
+    percentuale: 0.033
   },
   {
     id: 13,
@@ -158,7 +170,8 @@ const menu = [
     prezzo: 8.00,
     cucina: 'Primi',
     disponibile: "Y",
-    alias: 'Polenta al sugo'
+    alias: 'Polenta al sugo',
+    percentuale: 0.033
   },
   {
     id: 14,
@@ -166,7 +179,8 @@ const menu = [
     prezzo: 12.00,
     cucina: 'Primi',
     disponibile: "Y",
-    alias: 'Polenta e stracotto'
+    alias: 'Polenta e stracotto',
+    percentuale: 0.033
   },
   {
     id: 15,
@@ -174,7 +188,8 @@ const menu = [
     prezzo: 9.00,
     cucina: 'Secondi',
     disponibile: "Y",
-    alias: 'Arrosto d`asino'
+    alias: 'Arrosto d`asino',
+    percentuale: 0.033
   },
   {
     id: 16,
@@ -182,7 +197,8 @@ const menu = [
     prezzo: 9.00,
     cucina: 'Secondi',
     disponibile: "Y",
-    alias: 'Stracotto d`asino'
+    alias: 'Stracotto d`asino',
+    percentuale: 0.033
   },
   {
     id: 17,
@@ -190,7 +206,8 @@ const menu = [
     prezzo: 7.00,
     cucina: 'Secondi',
     disponibile: "Y",
-    alias: 'Salamini al cartoccio'
+    alias: 'Salamini al cartoccio',
+    percentuale: 0.033
   },
   {
     id: 18,
@@ -198,7 +215,8 @@ const menu = [
     prezzo: 6.00,
     cucina: 'Secondi',
     disponibile: "Y",
-    alias: 'Braciola di maiale'
+    alias: 'Braciola di maiale',
+    percentuale: 0.033
   }, 
   {
     id: 19,
@@ -206,7 +224,8 @@ const menu = [
     prezzo: 3.00,
     cucina: 'Secondi',
     disponibile: "Y",
-    alias: 'Patatine'
+    alias: 'Patatine',
+    percentuale: 0.033
   },
   {
     id: 20,
@@ -214,7 +233,8 @@ const menu = [
     prezzo: 3.50,
     cucina: 'Secondi',
     disponibile: "Y",
-    alias: 'Peperonata'
+    alias: 'Peperonata',
+    percentuale: 0.033
   },
   {
     id: 21,
@@ -222,7 +242,8 @@ const menu = [
     prezzo: 3.00,
     cucina: 'Secondi',
     disponibile: "Y",
-    alias: 'Insalata'
+    alias: 'Insalata',
+    percentuale: 0.033
   },
   {
     id: 23,
@@ -230,7 +251,8 @@ const menu = [
     prezzo: 3.50,
     cucina: 'Secondi',
     disponibile: "Y",
-    alias: 'Fagioli'
+    alias: 'Fagioli',
+    percentuale: 0.033
   },
   {
     id: 24,
@@ -238,7 +260,8 @@ const menu = [
     prezzo: 2.00,
     cucina: 'Antipasti',
     disponibile: "Y",
-    alias: 'Melone'
+    alias: 'Melone',
+    percentuale: 0.033
   },
   {
     id: 25,
@@ -246,7 +269,8 @@ const menu = [
     prezzo: 3.50,
     cucina: 'Dolci',
     disponibile: "Y",
-    alias: 'Torta nocciole'
+    alias: 'Torta nocciole',
+    percentuale: 0.033
   },
   {
     id: 26,
@@ -254,7 +278,8 @@ const menu = [
     prezzo: 3.50,
     cucina: 'Dolci',
     disponibile: "Y",
-    alias: 'Crostata'
+    alias: 'Crostata',
+    percentuale: 0.033
   },
   {
     id: 27,
@@ -262,7 +287,8 @@ const menu = [
     prezzo: 3.50,
     cucina: 'Dolci',
     disponibile: "Y",
-    alias: 'Salame cioccolato'
+    alias: 'Salame cioccolato',
+    percentuale: 0.033
   },
   {
     id: 28,
@@ -270,7 +296,8 @@ const menu = [
     prezzo: 3.50,
     cucina: 'Dolci',
     disponibile: "Y",
-    alias: 'Salame marmellata'
+    alias: 'Salame marmellata',
+    percentuale: 0.033
   },
   {
     id: 29,
@@ -278,7 +305,8 @@ const menu = [
     prezzo: 2.50,
     cucina: 'Dolci',
     disponibile: "Y",
-    alias: 'Pastine'
+    alias: 'Pastine',
+    percentuale: 0.033
   },
   {
     id: 30,
@@ -286,7 +314,8 @@ const menu = [
     prezzo: 7.00,
     cucina: 'Bevande',
     disponibile: "Y",
-    alias: 'Dolcetto'
+    alias: 'Dolcetto',
+    percentuale: 0.033
   },
   {
     id: 31,
@@ -294,7 +323,8 @@ const menu = [
     prezzo: 7.00,
     cucina: 'Bevande',
     disponibile: "Y",
-    alias: 'Barbera'
+    alias: 'Barbera',
+    percentuale: 0.033
   },
   {
     id: 32,
@@ -302,7 +332,8 @@ const menu = [
     prezzo: 7.00,
     cucina: 'Bevande',
     disponibile: "Y",
-    alias: 'Bonarda'
+    alias: 'Bonarda',
+    percentuale: 0.033
   },
   {
     id: 33,
@@ -310,7 +341,8 @@ const menu = [
     prezzo: 7.00,
     cucina: 'Bevande',
     disponibile: "Y",
-    alias: 'Pinot Bianco'
+    alias: 'Pinot Bianco',
+    percentuale: 0.033
   },
   {
     id: 34,
@@ -318,7 +350,8 @@ const menu = [
     prezzo: 7.00,
     cucina: 'Bevande',
     disponibile: "Y",
-    alias: 'Rugiada'
+    alias: 'Rugiada',
+    percentuale: 0.033
   },
   {
     id: 35,
@@ -326,7 +359,8 @@ const menu = [
     prezzo: 7.00,
     cucina: 'Bevande',
     disponibile: "Y",
-    alias: 'Moascato'
+    alias: 'Moascato',
+    percentuale: 0.033
   },
   {
     id: 36,
@@ -334,7 +368,8 @@ const menu = [
     prezzo: 4.00,
     cucina: 'Birre',
     disponibile: "Y",
-    alias: 'Birra'
+    alias: 'Birra',
+    percentuale: 0.033
   },
   {
     id: 37,
@@ -342,7 +377,8 @@ const menu = [
     prezzo: 1.00,
     cucina: 'Bevande',
     disponibile: "Y",
-    alias: 'Acqua Naturale'
+    alias: 'Acqua Naturale',
+    percentuale: 0.033
   },
   {
     id: 38,
@@ -350,7 +386,8 @@ const menu = [
     prezzo: 1.00,
     cucina: 'Bevande',
     disponibile: "Y",
-    alias: 'Acqua Frizzante'
+    alias: 'Acqua Frizzante',
+    percentuale: 0.033
   },
   {
     id: 39,
@@ -358,7 +395,8 @@ const menu = [
     prezzo: 2.00,
     cucina: 'Cassa',
     disponibile: "Y",
-    alias: 'Salamini asporto'
+    alias: 'Salamini asporto',
+    percentuale: 0.033
   },
 ];
 export { menu };

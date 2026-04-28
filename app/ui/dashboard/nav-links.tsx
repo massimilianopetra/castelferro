@@ -46,13 +46,8 @@ export default function NavLinks() {
         { name: 'Gestione', href: '/dashboard/gestione', icon: SettingsIcon },
         { name: 'Casse', href: '/dashboard/casse', icon: EuroIcon },
         { name: 'Incassa Conti', href: '/dashboard/chiudiconti', icon: ShoppingCartIcon  },
-        { name: 'Antipasti', href: '/dashboard/antipasti', icon: KebabDiningOutlinedIcon },
-        { name: 'Primi', href: '/dashboard/primi', icon: DinnerDiningIcon },
-        { name: 'Secondi', href: '/dashboard/secondi', icon: RestaurantOutlinedIcon },
-        { name: 'Dolci', href: '/dashboard/dolci', icon: CakeIcon },
-        { name: 'Bevande', href: '/dashboard/bevande', icon: LocalDrinkIcon },
-        { name: 'Birre', href: '/dashboard/birre', icon: SportsBarIcon },
-        { name: 'Chiama', href: '/dashboard/chiama', icon: CampaignIcon },
+        { name: 'Cucine', href: '/dashboard/bocche', icon: AutoStoriesIcon },
+        { name: 'Ingresso', href: '/dashboard/coda', icon: CampaignIcon },
       ];
       break;
     case 'Antipasti':

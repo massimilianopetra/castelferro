@@ -64,7 +64,7 @@ export default function Page() {
 
             const data = rows.slice(1).map((row) => {
                 const values = row.split(",");
-                const entry: DbMenu = { id: Number(values[0]), piatto: values[1], prezzo: Number(values[2]), cucina: values[3], disponibile: values[4], alias: values[5] };
+                const entry: DbMenu = { id: Number(values[0]), piatto: values[1], prezzo: Number(values[2]), cucina: values[3], disponibile: values[4], alias: values[5], percentuale: Number(values[6]) };  
                 return entry;
             });
 
