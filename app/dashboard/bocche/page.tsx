@@ -13,12 +13,12 @@ export default function Page() {
                 <div className="flex flex-wrap flex-col ">
                     <div className='text-center '>
                         <Typography variant={isMobile ? "h5" : "h3"} sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold', color: '#333' }}>
-                            Link Bocche 
+                            Link Bocche
                         </Typography>
-
                     </div>
-                    {<DashboardLinksBocche />}
-
+                    <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar max-h-[calc(100vh-150px)]">
+                        <DashboardLinksBocche />
+                    </div>
                 </div>
             </main>
 

@@ -335,7 +335,6 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                 Annulla
                             </Button>
                         </div>
-
                     </div>
                 </div>
             );
@@ -367,7 +366,6 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                         {/* Sezione 1: Intestazione (25%) */}
                         {phase !== 'caricato' && phase !== 'modificaquantita' ?
                             <header className="header_cucine_sup">
-
                                 <div className="p-30 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
                                     <ul className="flex" style={{ borderRadius: '9999px' }}>
                                         <li className="flex-1 mr-2font-bold py-2 ">
@@ -523,62 +521,75 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                         </footer>
                     </div>
 
-                  {/* POPUP STATISTICHE */}
+                    {/* POPUP STATISTICHE */}
 <Modal
     open={openPopup}
     onClose={handleClosePopup}
     aria-labelledby="modal-stats-title"
 >
-    <Box sx={{...styleModal, p: 2}}> {/* Ridotto padding del contenitore */}
-        <Typography
-            id="modal-stats-title"
-            variant="h6"
-            component="h2"
-            color="primary"
-            sx={{ mb: 1, fontWeight: 'bold', fontSize: '1.1rem' }}
-        >
+    <Box sx={{ 
+        ...styleModal, 
+        p: 2,
+        // Impostiamo larghezza fissa ma altezza automatica
+        width: '90%', 
+        maxWidth: '450px', // Leggermente più stretto per essere più elegante
+        height: 'auto',    // FONDAMENTALE: l'altezza si adatta al contenuto
+        maxHeight: '90vh', // Limite per schermi molto piccoli
+        display: 'flex',
+        flexDirection: 'column',
+        borderRadius: '12px',
+        overflow: 'hidden'
+    }}> 
+        
+        {/* HEADER */}
+        <Typography id="modal-stats-title" variant="h6" color="primary" sx={{ mb: 1, fontWeight: 'bold', fontSize: '1.1rem', flexShrink: 0 }}>
             Statistiche: {nomeCucina}
         </Typography>
 
-        <Box sx={{ mb: 1.5, p: 1, bgcolor: '#f0f7ff', borderRadius: '8px', border: '1px solid #d0e3ff' }}>
+        {/* INFO BOX */}
+        <Box sx={{ mb: 1.5, p: 1, bgcolor: '#f0f7ff', borderRadius: '8px', border: '1px solid #d0e3ff', flexShrink: 0 }}>
             <Typography variant="body1" sx={{ lineHeight: 1.2, fontWeight: 'medium' }}>
                 Coperti da servire: <b className="text-blue-700" style={{ fontSize: '1.3rem', marginLeft: '4px' }}>{copertiInAttesa}</b>
             </Typography>
             <Typography variant="caption" sx={{ color: '#555', display: 'block', mt: 0.5 }}>
-                Formula: ({dettaglioCoperti.seduti} seduti + {dettaglioCoperti.inCoda} in coda) - {dettaglioCoperti.serviti} serviti
+                Formula: ({dettaglioCoperti.seduti} + {dettaglioCoperti.inCoda}) - {dettaglioCoperti.serviti}
             </Typography>
         </Box>
 
-        <Typography
-            variant="caption"
-            sx={{ mb: 0.5, textTransform: 'uppercase', fontSize: '0.65rem', color: 'gray', fontWeight: 'bold', display: 'block' }}
-        >
-            Previsione piatti (Coperti in attesa × % Storica)
+        <Typography variant="caption" sx={{ mb: 0.5, textTransform: 'uppercase', fontSize: '0.65rem', color: 'gray', fontWeight: 'bold', display: 'block', flexShrink: 0 }}>
+            Previsione piatti
         </Typography>
 
-        <Box sx={{ flexGrow: 1, overflowY: 'auto', border: '1px solid #eee', borderRadius: '4px' }}>
+        {/* TABELLA CON ALTEZZA AUTOMATICA (RIMOSSO flexGrow) */}
+        <Box sx={{ 
+            border: '1px solid #eee', 
+            borderRadius: '4px',
+            flexGrow: 0,       // FONDAMENTALE: non si espande per riempire lo spazio
+            height: 'auto',    // Si adatta al numero di righe
+            maxHeight: '40vh', // Mantiene la scrollbar SOLO se ci sono moltissime righe
+            overflowY: 'auto'
+        }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                <thead>
-                    <tr style={{ borderBottom: '2px solid #1976d2', backgroundColor: '#f8f9fa', position: 'sticky', top: 0, zIndex: 1 }}>
+                <thead style={{ position: 'sticky', top: 0, zIndex: 1, backgroundColor: '#f8f9fa' }}>
+                    <tr style={{ borderBottom: '2px solid #1976d2' }}>
                         <th style={{ textAlign: 'left', padding: '6px 10px' }}>Piatto</th>
-                        <th style={{ textAlign: 'right', padding: '6px 10px' }}>Dettaglio Calcolo</th>
+                        <th style={{ textAlign: 'right', padding: '6px 10px' }}>Calcolo</th>
                         <th style={{ textAlign: 'right', padding: '6px 10px' }}>Stima</th>
                     </tr>
                 </thead>
                 <tbody>
                     {menuPrevisionale.map((item) => {
                         const percentualeDecimale = item.percentuale / 100;
-                        const risultatoGrezzo = copertiInAttesa * percentualeDecimale;
-                        const quantitaPrevista = Math.ceil(risultatoGrezzo);
+                        const quantitaPrevista = Math.ceil(copertiInAttesa * percentualeDecimale);
 
                         return (
                             <tr key={item.id} style={{ borderBottom: '1px solid #f0f0f0' }}>
                                 <td style={{ padding: '4px 10px' }}>
                                     <div style={{ fontWeight: 'bold', color: '#333' }}>{item.piatto}</div>
-                                    <div style={{ fontSize: '0.65rem', color: '#888' }}>Storico: {item.percentuale}%</div>
+                                    <div style={{ fontSize: '0.65rem', color: '#888' }}>{item.percentuale}%</div>
                                 </td>
-                                <td style={{ textAlign: 'right', padding: '4px 10px', color: '#666', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>
-                                    {copertiInAttesa} × {percentualeDecimale.toFixed(3)}
+                                <td style={{ textAlign: 'right', padding: '4px 10px', color: '#666', fontSize: '0.75rem' }}>
+                                    {copertiInAttesa}×{percentualeDecimale.toFixed(2)}
                                 </td>
                                 <td style={{ textAlign: 'right', padding: '4px 10px' }}>
                                     <b style={{ fontSize: '1.05rem', color: '#1976d2' }}>{quantitaPrevista}</b>
@@ -586,23 +597,17 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                             </tr>
                         );
                     })}
-                    {menuPrevisionale.length === 0 && (
-                        <tr>
-                            <td colSpan={3} style={{ textAlign: 'center', padding: '15px', color: '#999' }}>
-                                Nessun dato disponibile
-                            </td>
-                        </tr>
-                    )}
                 </tbody>
             </table>
         </Box>
 
-        <Box sx={{ mt: 1.5, display: 'flex', justifyContent: 'center' }}>
+        {/* BOTTONE CHIUDI (Ridotto mt da 2 a 1.5 per compattare ulteriormente) */}
+        <Box sx={{ mt: 1.5, display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
             <Button
                 variant="contained"
                 onClick={handleClosePopup}
                 size="small"
-                sx={{ borderRadius: '20px', px: 3, py: 0.5, textTransform: 'none' }}
+                sx={{ borderRadius: '20px', px: 4, textTransform: 'none' }}
             >
                 Chiudi
             </Button>

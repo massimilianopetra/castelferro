@@ -1,10 +1,7 @@
 'use client';
 
-import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
 import AccessibilityIcon from '@mui/icons-material/Accessibility';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import AutoStoriesIcon from '@mui/icons-material/AutoStories';
-import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import CakeIcon from '@mui/icons-material/Cake';
 import EuroIcon from '@mui/icons-material/Euro';
 import HomeIcon from '@mui/icons-material/Home';
@@ -15,7 +12,8 @@ import CampaignIcon from '@mui/icons-material/Campaign';
 import DinnerDiningIcon from '@mui/icons-material/DinnerDining';
 import RestaurantOutlinedIcon from '@mui/icons-material/RestaurantOutlined';
 import KebabDiningOutlinedIcon from '@mui/icons-material/KebabDiningOutlined';
-import { LockOpenIcon, ShoppingCartIcon } from '@heroicons/react/20/solid';
+import { ShoppingCartIcon } from '@heroicons/react/20/solid';
+import KitchenIcon from '@mui/icons-material/Kitchen';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -46,7 +44,7 @@ export default function NavLinks() {
         { name: 'Gestione', href: '/dashboard/gestione', icon: SettingsIcon },
         { name: 'Casse', href: '/dashboard/casse', icon: EuroIcon },
         { name: 'Incassa Conti', href: '/dashboard/chiudiconti', icon: ShoppingCartIcon  },
-        { name: 'Cucine', href: '/dashboard/bocche', icon: AutoStoriesIcon },
+        { name: 'Cucine', href: '/dashboard/bocche', icon: KitchenIcon },
         { name: 'Ingresso', href: '/dashboard/coda', icon: CampaignIcon },
       ];
       break;

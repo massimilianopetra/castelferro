@@ -1,16 +1,4 @@
 
-
-
-
-
-
-
-
-
-
-
-
-
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -22,12 +10,20 @@ import Paper from '@mui/material/Paper';
 import type { DbConsumazioniPrezzo } from '@/app/lib/definitions';
 import { idID } from '@mui/material/locale';
 
-export default function TheBill({ item }: { item: DbConsumazioniPrezzo[] }) {
 
+export default function TheBill({ item }: { item: DbConsumazioniPrezzo[] }) {
+   
     var totale = 0;
     var coperti = 1;
     var comanda = -1;
     var giorno = -1;
+
+    const anno = process.env.NEXT_PUBLIC_ANNO_SAGRA;
+    const titolo = process.env.NEXT_PUBLIC_TITOLO_HOME;
+    const edizione = process.env.NEXT_PUBLIC_EDIZIONE_SAGRA;
+    const inizio = process.env.NEXT_PUBLIC_INIZIO_SAGRA;
+    const fine = process.env.NEXT_PUBLIC_FINE_SAGRA;
+    const mese = process.env.NEXT_PUBLIC_MESE_SAGRA;
 
     for (let i of item) {
         totale += i.quantita * i.prezzo_unitario;
@@ -47,7 +43,7 @@ export default function TheBill({ item }: { item: DbConsumazioniPrezzo[] }) {
         <div>
             <Table>
                 <TableHead>
-                    <TableRow><TableCell>&nbsp;&nbsp;&nbsp;&nbsp;48° SAGRA DEI SALAMINI D’ASINO dal 14 al 21 Agosto 2025</TableCell></TableRow>
+                    <TableRow><TableCell>&nbsp;&nbsp;&nbsp;&nbsp;{edizione}° SAGRA DEI SALAMINI D’ASINO dal {inizio} al {fine} {mese} {anno}</TableCell></TableRow>
 
                 </TableHead>
             </Table>

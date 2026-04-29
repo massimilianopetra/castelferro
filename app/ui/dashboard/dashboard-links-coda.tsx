@@ -29,7 +29,7 @@ export default function DashboardLinksCoda() {
     ];
   }
 
-  return (
+   return (
     <div className="flex justify-center w-full px-4 py-8">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full max-w-7xl">
         {links.map((link) => {
@@ -49,7 +49,7 @@ export default function DashboardLinksCoda() {
             >
               <div className={clsx(
                 'flex h-14 w-14 items-center justify-center rounded-2xl shrink-0 transition-transform group-hover:rotate-3',
-                isActive ? 'bg-orange-600 text-white shadow-lg' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-600'
+                isActive ? 'bg-orange-600 text-white shadow-lg shadow-orange-200' : 'bg-slate-100 text-slate-500 group-hover:bg-orange-100 group-hover:text-orange-600'
               )}>
                 <LinkIcon className="w-7 h-7" />
               </div>

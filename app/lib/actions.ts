@@ -41,6 +41,7 @@ async function executeQuery<T>(query: string, params?: any[]): Promise<T[] | und
 
 
 /* ************************ SEED DATABASE **************************** */
+
 async function seedTickets() {
   await executeQuery(`
     CREATE TABLE IF NOT EXISTS tickets (
@@ -53,9 +54,6 @@ async function seedTickets() {
   console.log(`CREATED TABLE tickets`);
 
 }
-
-
-
 
 async function seedUsers() {
   await executeQuery(`
@@ -1002,4 +1000,4 @@ export async function clearConti() {
 
 export async function clearConsumazioni() {
   await executeQuery(`TRUNCATE TABLE consumazioni`);
-}
+} 

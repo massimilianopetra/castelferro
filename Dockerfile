@@ -6,8 +6,7 @@ RUN pnpm install --frozen-lockfile
 RUN npm rebuild bcrypt --build-from-source
 COPY . .
 RUN pnpm build
-
-COPY --from=base /app ./
+ 
 
 EXPOSE 3000
 CMD ["pnpm", "start"]

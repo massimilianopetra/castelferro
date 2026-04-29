@@ -7,43 +7,40 @@ import { useSession } from 'next-auth/react';
 import clsx from 'clsx';
 
 // IMPORT ICONE
-import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline';
-import { LockOpenIcon, ShoppingCartIcon } from '@heroicons/react/20/solid';
-import AccessibilityIcon from '@mui/icons-material/Accessibility';
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import AutoStoriesIcon from '@mui/icons-material/AutoStories';
-import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
-import CakeIcon from '@mui/icons-material/Cake';
-import EuroIcon from '@mui/icons-material/Euro';
 import HomeIcon from '@mui/icons-material/Home';
-import SettingsIcon from '@mui/icons-material/Settings';
-import LocalDrinkIcon from '@mui/icons-material/LocalDrink';
-import SportsBarIcon from '@mui/icons-material/SportsBar';
-import DinnerDiningIcon from '@mui/icons-material/DinnerDining';
 import RestaurantOutlinedIcon from '@mui/icons-material/RestaurantOutlined';
-import KebabDiningOutlinedIcon from '@mui/icons-material/KebabDiningOutlined';
 import FoodBankIcon from '@mui/icons-material/FoodBank';
-import Groups2Icon from '@mui/icons-material/Groups2';
-
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import BackupIcon from '@mui/icons-material/Backup';
+import ChecklistRtlIcon from '@mui/icons-material/ChecklistRtl';
+import WcIcon from '@mui/icons-material/Wc';
+import AssessmentIcon from '@mui/icons-material/Assessment';
+ 
 export default function DashboardLinks() {
   const pathname = usePathname();
   const { data: session } = useSession();
-
-  const links = [
+  let links = [
     { name: 'Home', href: '/dashboard', icon: HomeIcon },
-    { name: 'Cassa', href: '/dashboard/cassa', icon: ShoppingCartIcon },
-    { name: 'Antipasti', href: '/dashboard/antipasti', icon: KebabDiningOutlinedIcon },
-    { name: 'Primi', href: '/dashboard/primi', icon: RestaurantOutlinedIcon },
-    { name: 'Secondi', href: '/dashboard/secondi', icon: DinnerDiningIcon },
-    { name: 'Bevande', href: '/dashboard/bevande', icon: LocalDrinkIcon },
-    { name: 'Birre', href: '/dashboard/birre', icon: SportsBarIcon },
-    { name: 'Dolci', href: '/dashboard/dolci', icon: CakeIcon },
-    { name: 'Sintesi Piatti', href: '/dashboard/sintesi', icon: AutoStoriesIcon },
-    { name: 'Totali Incassi', href: '/dashboard/totali', icon: EuroIcon },
-    { name: 'Configurazione', href: '/dashboard/configurazione', icon: SettingsIcon },
-    { name: 'Gestione Utenti', href: '/dashboard/utenti', icon: Groups2Icon },
   ];
 
+  if (session?.user?.name === 'SuperUser') {
+  links = [
+    { name: 'Home', href: '/dashboard', icon: HomeIcon },
+    { name: 'Menus', href: '/dashboard/menus', icon: MenuBookIcon },
+    { name: 'Giornata Sagra', href: '/dashboard/sagra', icon: StorefrontIcon },
+    { name: 'Camerieri', href: '/dashboard/camerieri', icon: WcIcon },
+    { name: 'Cruscotto Piatti', href: '/dashboard/cruscottopiatti', icon: RestaurantOutlinedIcon },
+    { name: 'Cruscotto di Sintesi', href: '/dashboard/cruscotto', icon: FoodBankIcon },
+    { name: 'Cruscotto Gratis', href: '/dashboard/cruscottogratis', icon: AssessmentIcon },
+    { name: 'Verifica Conti', href: '/dashboard/listaconti', icon: ChecklistRtlIcon },
+    { name: 'Logs', href: '/dashboard/logs', icon: BackupIcon },
+   
+  ];
+  } 
+
+  
+  
   return (
     <div className="flex justify-center w-full px-4 py-8">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full max-w-7xl">
