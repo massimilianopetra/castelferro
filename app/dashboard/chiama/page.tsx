@@ -7,7 +7,8 @@ import {
     Table, TableBody, TableCell, TableContainer, 
     TableHead, TableRow, Paper, IconButton,
     TableSortLabel, Dialog, DialogTitle, DialogContent, 
-    DialogContentText, DialogActions
+    DialogContentText, DialogActions,
+    Stack
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CampaignIcon from '@mui/icons-material/Campaign';
@@ -121,86 +122,121 @@ export default function ChiamaPage() {
     };
 
     return (
-        <ThemeProvider theme={defaultTheme}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100vw', bgcolor: 'background.default', p: 2 }}>
-                <Box sx={{ textAlign: 'center', mb: 1 }}>
-                    <Typography sx={{ color: '#666', fontWeight: 900, fontSize: '0.9rem' }}>ULTIMO CHIAMATO</Typography>
-                    <Typography sx={{ fontSize: isMobile ? '5.5rem' : '8rem', fontWeight: 1000, color: 'primary.main', fontFamily: 'monospace', lineHeight: 1 }}>
-                        {numeroAttuale || '—'}
-                    </Typography>
-                </Box>
+<ThemeProvider theme={defaultTheme}>
+    {/* Box Principale: Centra tutto verticalmente e orizzontalmente */}
+    <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        justifyContent: 'center', // Centra in verticale
+        alignItems: 'center',     // Centra in orizzontale
+        minHeight: '100dvh',      // Occupa tutta l'altezza dello schermo (dinamico)
+        width: '100%', 
+        bgcolor: 'background.default', 
+        p: isMobile ? 1 : 2,
+        boxSizing: 'border-box'
+    }}>
+        
+        {/* Header: Titolo e Numero attuale */}
+        <Box sx={{ textAlign: 'center', mb: 2 }}>
+            <Typography sx={{ color: '#666', fontWeight: 900, fontSize: '0.9rem' }}>
+                ULTIMO CHIAMATO
+            </Typography>
+            <Typography sx={{ 
+                fontSize: isMobile ? '5.5rem' : '8rem', 
+                fontWeight: 1000, 
+                color: 'primary.main', 
+                fontFamily: 'monospace', 
+                lineHeight: 1 
+            }}>
+                {numeroAttuale || '—'}
+            </Typography>
+        </Box>
 
-                <TableContainer component={Paper} sx={{ maxWidth: '1000px', margin: '0 auto', mb: 2, maxHeight: '68vh', borderRadius: '12px' }}>
-                    <Table stickyHeader size="small">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell sx={{ fontWeight: 900 }}>
-                                    <TableSortLabel 
-                                        active={orderBy === 'id'} 
-                                        direction={orderBy === 'id' ? order : 'asc'} 
-                                        onClick={() => handleRequestSort('id')}
-                                    >
-                                        Ticket
-                                    </TableSortLabel>
+        {/* Tabella: max-width e margin auto per restare centrata */}
+        <TableContainer component={Paper} sx={{ 
+            maxWidth: '900px', 
+            width: '100%', 
+            maxHeight: '60vh', // Limita altezza tabella per non spingere fuori l'header
+            borderRadius: '12px',
+            overflowY: 'auto',
+            boxShadow: 3
+        }}>
+            <Table stickyHeader size="small">
+                <TableHead>
+                    <TableRow>
+                        <TableCell sx={{ fontWeight: 900 }}>
+                            <TableSortLabel 
+                                active={orderBy === 'id'} 
+                                direction={orderBy === 'id' ? order : 'asc'} 
+                                onClick={() => handleRequestSort('id')}
+                            >
+                                Ticket
+                            </TableSortLabel>
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: 900 }}>
+                            <TableSortLabel 
+                                active={orderBy === 'numpersone'} 
+                                direction={orderBy === 'numpersone' ? order : 'asc'} 
+                                onClick={() => handleRequestSort('numpersone')}
+                            >
+                                Coperti
+                            </TableSortLabel>
+                        </TableCell>
+                        <TableCell sx={{ fontWeight: 900 }} align="right">Azioni</TableCell>
+                    </TableRow>
+                </TableHead>
+                <TableBody>
+                    {sortedLista.map((row) => {
+                        let btnColor = "#2e7d32"; 
+                        let textColor = "#fff";
+
+                        if (chiamatiMemory.has(row.id)) {
+                            btnColor = "#ed6c02"; 
+                        } else if (row.id < numeroAttuale) {
+                            btnColor = "#ffeb3b"; 
+                            textColor = "#000";
+                        }
+
+                        return (
+                            <TableRow key={row.id} hover>
+                                <TableCell sx={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: 1000, color: 'primary.main', fontFamily: 'monospace' }}>
+                                    {row.id}
                                 </TableCell>
-                                <TableCell sx={{ fontWeight: 900 }}>
-                                    <TableSortLabel 
-                                        active={orderBy === 'numpersone'} 
-                                        direction={orderBy === 'numpersone' ? order : 'asc'} 
-                                        onClick={() => handleRequestSort('numpersone')}
-                                    >
-                                        Coperti
-                                    </TableSortLabel>
+                                <TableCell sx={{ fontSize: isMobile ? '1.2rem' : '1.8rem' }}>
+                                    {row.numpersone}
                                 </TableCell>
-                                <TableCell sx={{ fontWeight: 900 }} align="right">Azioni</TableCell>
+                                <TableCell align="right">
+                                    {/* Stack per tenere i bottoni allineati a destra */}
+                                    <Stack direction="row" spacing={1} justifyContent="flex-end">
+                                        <Button 
+                                            variant="contained" 
+                                            size={isMobile ? "small" : "medium"}
+                                            onClick={() => handleChiamaTicket(row)}
+                                            sx={{ 
+                                                fontWeight: 'bold', 
+                                                bgcolor: btnColor, 
+                                                color: textColor,
+                                                minWidth: isMobile ? 'auto' : '100px',
+                                                '&:hover': { bgcolor: btnColor, opacity: 0.9 }
+                                            }}
+                                        >
+                                            <CampaignIcon fontSize={isMobile ? "small" : "medium"} />
+                                            {!isMobile && " Chiama"}
+                                        </Button>
+                                        <IconButton color="primary" onClick={() => handleSiediTicket(row)} sx={{ border: '1px solid', borderRadius: '8px' }}>
+                                            <ChairIcon fontSize={isMobile ? "small" : "medium"} />
+                                        </IconButton>
+                                        <IconButton color="error" onClick={() => { setSelectedTicket(row); setOpenDeleteDialog(true); }} sx={{ border: '1px solid', borderRadius: '8px' }}>
+                                            <DeleteIcon fontSize={isMobile ? "small" : "medium"} />
+                                        </IconButton>
+                                    </Stack>
+                                </TableCell>
                             </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {sortedLista.map((row) => {
-                                let btnColor = "#2e7d32"; // Verde default
-                                let textColor = "#fff";
-
-                                if (chiamatiMemory.has(row.id)) {
-                                    btnColor = "#ed6c02"; // Arancio se chiamato
-                                } else if (row.id < numeroAttuale) {
-                                    btnColor = "#ffeb3b"; // Giallo se antecedente mai chiamato
-                                    textColor = "#000";
-                                }
-
-                                return (
-                                    <TableRow key={row.id} hover>
-                                        <TableCell sx={{ fontSize: '2rem', fontWeight: 1000, color: 'primary.main', fontFamily: 'monospace' }}>
-                                            {row.id}
-                                        </TableCell>
-                                        <TableCell sx={{ fontSize: '1.8rem' }}>
-                                            {row.numpersone}
-                                        </TableCell>
-                                        <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
-                                            <Button 
-                                                variant="contained" 
-                                                startIcon={<CampaignIcon />}
-                                                onClick={() => handleChiamaTicket(row)}
-                                                sx={{ 
-                                                    mr: 1, fontWeight: 'bold', 
-                                                    bgcolor: btnColor, color: textColor,
-                                                    '&:hover': { bgcolor: btnColor, opacity: 0.9 }
-                                                }}
-                                            >
-                                                Chiama
-                                            </Button>
-                                            <IconButton color="primary" onClick={() => handleSiediTicket(row)} sx={{ mr: 1, border: '1px solid', borderRadius: '8px' }}>
-                                                <ChairIcon />
-                                            </IconButton>
-                                            <IconButton color="error" onClick={() => { setSelectedTicket(row); setOpenDeleteDialog(true); }}>
-                                                <DeleteIcon />
-                                            </IconButton>
-                                        </TableCell>
-                                    </TableRow>
-                                );
-                            })}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                        );
+                    })}
+                </TableBody>
+            </Table>
+        </TableContainer>
 
                 <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
                     <DialogTitle>Conferma Cancellazione</DialogTitle>

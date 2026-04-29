@@ -10,7 +10,6 @@ import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
 import TextField from '@mui/material/TextField';
 import Paper from '@mui/material/Paper';
-import useMediaQuery from '@mui/material/useMediaQuery';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
@@ -36,8 +35,6 @@ const defaultTheme = createTheme({
 });
 
 export default function DistributorePage() {
-    const isMobile = useMediaQuery('(max-width:600px)');
-    const isTablet = useMediaQuery('(max-width:960px)');
     const [loading, setLoading] = useState(true);
     const [prossimoTicket, setProssimoTicket] = useState<number>(0);
     const [coperti, setCoperti] = useState<number | ''>(0); 
@@ -111,8 +108,8 @@ export default function DistributorePage() {
     };
 
     const actionButtonStyle = {
-        width: isMobile ? '30%' : '140px',
-        height: isMobile ? '90px' : '130px',
+        width: '30%',
+        height: '90px',
         borderRadius: '20px',
         display: 'flex',
         flexDirection: 'column',
@@ -130,67 +127,89 @@ export default function DistributorePage() {
 
     return (
         <ThemeProvider theme={defaultTheme}>
-            <Box sx={{
-                display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw',
-                bgcolor: 'background.default', position: 'relative', overflow: 'hidden'
-            }}>
+<Box sx={{
+    display: 'flex', 
+    flexDirection: 'column', 
+    justifyContent: 'center', // Centra verticalmente
+    alignItems: 'center',     // Centra orizzontalmente
+    minHeight: '100dvh', 
+    flexGrow: 1,              // Importante: dice al box di occupare tutto lo spazio disponibile dopo la sidebar
+    bgcolor: 'background.default', 
+    p: 2,
+    position: 'relative'      // Serve per il tasto AZZERA assoluto
+}}>
 
-                {/* Tasto Azzera */}
-                <Box sx={{ position: 'absolute', top: 12, right: 12, zIndex: 10 }}>
-                    <Button 
-                        variant="outlined" color="error" size="small"
-                        onClick={() => setOpenResetDialog(true)}
-                        startIcon={<DeleteForeverIcon />}
-                        sx={{ fontWeight: 'bold', bgcolor: 'white', borderRadius: '10px' }}
-                    >
-                        AZZERA
-                    </Button>
-                </Box>
-
-                {/* Info Ultimo Ticket */}
-                {lastEntry && (
-                    <Paper elevation={4} sx={{
-                        position: 'absolute', top: 12, left: 12, p: 1.5,
-                        bgcolor: 'rgba(255, 255, 255, 0.9)', borderRadius: 2,
-                        borderLeft: '5px solid #9c27b0', zIndex: 10
-                    }}>
-                        <Stack direction="row" spacing={1} alignItems="center">
-                            <HistoryIcon sx={{ fontSize: 18, color: '#666' }} />
-                            <Typography variant="caption" sx={{ fontWeight: 900, color: '#666' }}>ULTIMO</Typography>
-                        </Stack>
-                        <Typography sx={{ fontWeight: 900, fontSize: '1rem' }}>
-                            N: <span style={{ color: '#1976d2' }}>{lastEntry.numero}</span> | C: <span style={{ color: '#9c27b0' }}>{lastEntry.coperti}</span>
-                        </Typography>
-                    </Paper>
-                )}
+{/* Tasto Azzera - Spostato in alto a sinistra */}
+<Box sx={{ position: 'absolute', top: 12, left: 12, zIndex: 10 }}>
+    <Button 
+        variant="outlined" 
+        color="error" 
+        size="small"
+        onClick={() => setOpenResetDialog(true)}
+        startIcon={<DeleteForeverIcon />}
+        sx={{ 
+            fontWeight: 'bold', 
+            bgcolor: 'rgba(255, 255, 255, 0.8)', // Leggermente trasparente per non "pesare"
+            backdropFilter: 'blur(4px)',         // Effetto moderno
+            borderRadius: '10px',
+            borderWidth: '1px',
+            '&:hover': {
+                borderWidth: '1px',
+                bgcolor: 'white'
+            }
+        }}
+    >
+        AZZERA
+    </Button>
+</Box>
 
                 {/* CONTENITORE CENTRALE */}
                 <Box sx={{ 
-                    flex: 1, 
                     display: 'flex', 
                     flexDirection: 'column', 
-                    justifyContent: 'space-evenly', // Distribuisce equamente Ticket, Coperti e Tasti
                     alignItems: 'center',
-                    py: 2
+                    justifyContent: 'center',
+                    width: '100%',
+                    maxWidth: '600px',
+                    gap: 2 // Ridotto il gap per far stare tutto bene
                 }}>
                     
                     {/* SEZIONE PROSSIMO TICKET */}
                     <Box sx={{ textAlign: 'center' }}>
-                        <Typography sx={{ color: '#666', fontWeight: 1000, fontSize: isMobile ? '1rem' : '1.4rem', letterSpacing: 2 }}>
+                        <Typography sx={{ color: '#666', fontWeight: 1000, fontSize: '1rem', letterSpacing: 2 }}>
                             PROSSIMO TICKET
                         </Typography>
                         <Typography sx={{ 
                             fontWeight: 1000, 
                             color: 'primary.main', 
-                            fontSize: isMobile ? '5.5rem' : '8rem', 
-                            lineHeight: 0.9,
+                            fontSize: '5.5rem', 
+                            lineHeight: 1,
                             mt: 1
                         }}>
                             {prossimoTicket}
                         </Typography>
                     </Box>
 
-                    {/* SEZIONE COPERTI (CLICCABILE) */}
+                    {/* SEZIONE INFO ULTIMO TICKET (Piccola e centrata) */}
+                    <Box sx={{ minHeight: '60px', display: 'flex', alignItems: 'center' }}>
+                        {lastEntry && (
+                            <Paper variant="outlined" sx={{
+                                px: 2, py: 0.5,
+                                bgcolor: '#fff', borderRadius: '12px',
+                                border: '1px solid #ddd',
+                                display: 'flex', alignItems: 'center', gap: 1.5
+                            }}>
+                                <HistoryIcon sx={{ fontSize: 16, color: '#9c27b0' }} />
+                                <Typography sx={{ fontSize: '0.85rem', fontWeight: 800, color: '#666' }}>
+                                    ULTIMO TICKET: <span style={{ color: '#1976d2' }}>{lastEntry.numero}</span> 
+                                    <span style={{ margin: '0 8px', color: '#ccc' }}>|</span> 
+                                    COPERTI: <span style={{ color: '#9c27b0' }}>{lastEntry.coperti}</span>
+                                </Typography>
+                            </Paper>
+                        )}
+                    </Box>
+
+                    {/* SEZIONE COPERTI */}
                     <Box 
                         onClick={() => setIsEditing(true)}
                         sx={{ 
@@ -213,16 +232,15 @@ export default function DistributorePage() {
                                 InputProps={{ disableUnderline: true }}
                                 sx={{
                                     '& input': {
-                                        fontSize: isMobile ? '8.5rem' : '13rem',
+                                        fontSize: '8.5rem',
                                         textAlign: 'center', fontWeight: 1000,
                                         color: 'primary.main', fontFamily: 'monospace', padding: 0,
-                                        width: '100%'
                                     }
                                 }}
                             />
                         ) : (
                             <Typography sx={{ 
-                                fontSize: isMobile ? '8.5rem' : '13rem', 
+                                fontSize: '8.5rem', 
                                 fontWeight: 1000, 
                                 fontFamily: 'monospace', 
                                 color: coperti === 0 ? '#ddd' : '#000', 
@@ -231,42 +249,25 @@ export default function DistributorePage() {
                                 {coperti}
                             </Typography>
                         )}
-                        <Typography sx={{ color: '#555', fontWeight: 1000, fontSize: isMobile ? '1.4rem' : '2rem', mt: 1 }}>
+                        <Typography sx={{ color: '#555', fontWeight: 1000, fontSize: '1.4rem', mt: 1 }}>
                             COPERTI
                         </Typography>
                     </Box>
 
                     {/* SEZIONE PULSANTIERA E STAMPA */}
-                    <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                        <Stack direction="row" spacing={isMobile ? 2 : 4} justifyContent="center" sx={{ width: '100%', px: 2, mb: isMobile ? 3 : 5 }}>
-                            <Button 
-                                variant="contained" 
-                                disabled={Number(coperti) <= 0 || Number(coperti) >= 999} 
-                                onClick={(e) => { e.stopPropagation(); onRemove(); }} 
-                                sx={actionButtonStyle}
-                            >
-                                <RemoveCircleSharpIcon sx={{ fontSize: isMobile ? 45 : 60 }} />
-                                <Typography sx={{ fontWeight: 1000, fontSize: isMobile ? '1rem' : '1.2rem' }}>MENO</Typography>
+                    <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 2 }}>
+                        <Stack direction="row" spacing={2} justifyContent="center" sx={{ width: '100%', px: 2, mb: 3 }}>
+                            <Button variant="contained" disabled={Number(coperti) <= 0} onClick={(e) => { e.stopPropagation(); onRemove(); }} sx={actionButtonStyle}>
+                                <RemoveCircleSharpIcon sx={{ fontSize: 45 }} />
+                                <Typography sx={{ fontWeight: 1000, fontSize: '1rem' }}>MENO</Typography>
                             </Button>
-
-                            <Button 
-                                variant="contained" 
-                                disabled={Number(coperti) >= 999}
-                                onClick={(e) => { e.stopPropagation(); onAdd(); }} 
-                                sx={actionButtonStyle}
-                            >
-                                <AddCircleIcon sx={{ fontSize: isMobile ? 45 : 60 }} />
-                                <Typography sx={{ fontWeight: 1000, fontSize: isMobile ? '1rem' : '1.2rem' }}>PIÙ</Typography>
+                            <Button variant="contained" onClick={(e) => { e.stopPropagation(); onAdd(); }} sx={actionButtonStyle}>
+                                <AddCircleIcon sx={{ fontSize: 45 }} />
+                                <Typography sx={{ fontWeight: 1000, fontSize: '1rem' }}>PIÙ</Typography>
                             </Button>
-
-                            <Button 
-                                variant="contained" 
-                                disabled={Number(coperti) >= 999}
-                                onClick={(e) => { e.stopPropagation(); onAdd10(); }} 
-                                sx={actionButtonStyle}
-                            >
-                                <Replay10Icon sx={{ fontSize: isMobile ? 45 : 60 }} />
-                                <Typography sx={{ fontWeight: 1000, fontSize: isMobile ? '1rem' : '1.2rem' }}>+10</Typography>
+                            <Button variant="contained" onClick={(e) => { e.stopPropagation(); onAdd10(); }} sx={actionButtonStyle}>
+                                <Replay10Icon sx={{ fontSize: 45 }} />
+                                <Typography sx={{ fontWeight: 1000, fontSize: '1rem' }}>+10</Typography>
                             </Button>
                         </Stack>
 
@@ -275,15 +276,11 @@ export default function DistributorePage() {
                             variant="contained"
                             color="secondary"
                             disabled={Number(coperti) <= 0}
-                            startIcon={<PrintIcon sx={{ fontSize: isMobile ? 45 : 70 }} />}
+                            startIcon={<PrintIcon sx={{ fontSize: 45 }} />}
                             sx={{
-                                width: isMobile ? '92%' : '650px', 
-                                py: isMobile ? 2.5 : 4,
-                                fontSize: isMobile ? '2.2rem' : '4rem',
-                                fontWeight: 1000, 
-                                borderRadius: '40px',
+                                width: '92%', py: 2.5,
+                                fontSize: '2.2rem', fontWeight: 1000, borderRadius: '40px',
                                 boxShadow: '0 15px 30px rgba(156, 39, 176, 0.3)',
-                                transition: 'all 0.2s',
                                 '&:active': { transform: 'scale(0.98)' }
                             }}
                         >
@@ -292,58 +289,22 @@ export default function DistributorePage() {
                     </Box>
                 </Box>
 
-                {/* DIALOG RESET (STILIZZATO) */}
-                <Dialog 
-                    open={openResetDialog} 
-                    onClose={() => setOpenResetDialog(false)}
-                    PaperProps={{
-                        sx: {
-                            borderRadius: 4,
-                            borderLeft: '10px solid #9c27b0',
-                            p: 1,
-                            minWidth: isMobile ? '90%' : '450px'
-                        }
-                    }}
-                >
-                    <DialogTitle sx={{ color: 'error.main', fontWeight: 1000, fontSize: '1.6rem', textAlign: 'center' }}>
-                        AZZERARE TICKETS?
-                    </DialogTitle>
+                {/* DIALOG RESET */}
+                <Dialog open={openResetDialog} onClose={() => setOpenResetDialog(false)} PaperProps={{ sx: { borderRadius: 4, borderLeft: '10px solid #9c27b0', p: 1, minWidth: '90%' } }}>
+                    <DialogTitle sx={{ color: 'error.main', fontWeight: 1000, fontSize: '1.6rem', textAlign: 'center' }}>AZZERARE TICKETS?</DialogTitle>
                     <DialogContent>
                         <DialogContentText sx={{ fontWeight: 700, color: '#444', mb: 3, textAlign: 'center' }}>
-                            Operazione irreversibile svuot la tabella Tickets.
-                           <br /> Azzererà il contatore e la cronologia dei ticket.
-                                                        <br /><br />
-                            Digita <span style={{ color: '#9c27b0' }}>CONFERMA</span> per continuare.
+                            Operazione irreversibile. Digita <span style={{ color: '#9c27b0' }}>CONFERMA</span> per continuare.
                         </DialogContentText>
                         <TextField
-                            autoFocus
-                            fullWidth
-                            variant="outlined"
-                            placeholder="CONFERMA"
-                            value={confirmText}
+                            autoFocus fullWidth variant="outlined" placeholder="CONFERMA" value={confirmText}
                             onChange={(e) => setConfirmText(e.target.value.toUpperCase())}
-                            sx={{ 
-                                '& .MuiOutlinedInput-root': { borderRadius: '15px', bgcolor: '#f9f9f9' },
-                                input: { fontWeight: 'bold', textAlign: 'center', fontSize: '1.2rem' }
-                            }}
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: '15px', bgcolor: '#f9f9f9' }, input: { fontWeight: 'bold', textAlign: 'center', fontSize: '1.2rem' } }}
                         />
                     </DialogContent>
                     <DialogActions sx={{ justifyContent: 'center', gap: 2, pb: 3 }}>
-                        <Button 
-                            onClick={() => { setOpenResetDialog(false); setConfirmText(""); }}
-                            sx={{ fontWeight: 900, color: '#666', fontSize: '1rem' }}
-                        >
-                            ANNULLA
-                        </Button>
-                        <Button 
-                            onClick={handleResetTotale} 
-                            color="error" 
-                            variant="contained" 
-                            disabled={confirmText !== "CONFERMA"}
-                            sx={{ fontWeight: 1000, borderRadius: '12px', px: 5, py: 1.5, fontSize: '1rem' }}
-                        >
-                            AZZERA ORA
-                        </Button>
+                        <Button onClick={() => { setOpenResetDialog(false); setConfirmText(""); }} sx={{ fontWeight: 900, color: '#666' }}>ANNULLA</Button>
+                        <Button onClick={handleResetTotale} color="error" variant="contained" disabled={confirmText !== "CONFERMA"} sx={{ fontWeight: 1000, borderRadius: '12px', px: 5 }}>AZZERA ORA</Button>
                     </DialogActions>
                 </Dialog>
             </Box>
