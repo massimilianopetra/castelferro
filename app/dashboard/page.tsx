@@ -12,7 +12,7 @@ export default function Page() {
             <div className="flex flex-col items-center">
                 <div className='text-center'>
                     <p className="text-5xl py-4">
-                        Home
+                        Homeless
                     </p>
                 </div>
                 <div>
