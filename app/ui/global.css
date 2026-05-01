@@ -39,7 +39,18 @@ main {
 .fantasy {
   font-family: fantasy;
 }
+/* In globals.css */
+@media screen {
+  .solo-stampa {
+    display: none; /* Nasconde a video */
+  }
+}
 
+@media print {
+  .solo-stampa {
+    display: block !important; /* Mostra in stampa */
+  }
+}
 /* Stili globali per assicurare che la pagina occupi tutto lo spazio visibile */
 html, body {
     margin: 0;

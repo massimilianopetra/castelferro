@@ -3,24 +3,20 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation';
-import { Button, ButtonGroup, Grid2, Link, Paper, Snackbar, TextField } from '@mui/material';
+import { Button, ButtonGroup, Link, Paper, Snackbar, TextField } from '@mui/material';
 import type { DbConsumazioniPrezzo, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
 import { getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto, aggiornaConto, stampaConto, riapriConto, apriConto, getContoPiuAlto } from '@/app/lib/actions';
 import { writeLog, getGiornoSagra, getLastLog } from '@/app/lib/actions';
 import { deltanow, milltodatestring } from '@/app/lib/utils'
 import TabellaConto from '@/app/ui/dashboard/TabellaConto';
 import TheBill from '@/app/ui/dashboard/thebill';
- import Summary from '@/app/ui/dashboard/summary';
- 
-import CircularProgress from '@mui/material/CircularProgress';
+import Summary from '@/app/ui/dashboard/summary';
 import Filter1Icon from '@mui/icons-material/Filter1';
-
 import * as React from 'react';
+import Summarythebill from '@/app/ui/dashboard/summarythebill';
 
 
 export default function Page({ params }: { params: { foglietto: string } }) {
-
-
 
   const router = useRouter();
   const printRef = useRef<HTMLDivElement | null>(null);
@@ -63,12 +59,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           setIniProducts(c);
         }
 
-        // console.log('----------');
-        // console.log(`estrazione conto ${num} giornata: ${gg.giornata}`);
         const cc = await getConto(num, gg.giornata);
-        //  console.log('>>>record: ');
-        //  console.log(cc?.stato);
-        //  console.log('----------');
         setConto(cc);
         if (cc?.stato == 'APERTO') {
           setNumeroFoglietto(num.toString());
@@ -243,29 +234,63 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     }
   }
 
-
+  /*METODO VECCHIO CHE NON PRENDE GLI STILI
+    const print = () => {
+      const printArea = printRef.current;
+  
+      if (!printArea) return; // Se il riferimento non esiste, interrompe l'esecuzione.
+  
+      const newWindow = window.open("", "", "width=600,height=400");
+  
+      // Verifica se newWindow non è null prima di proseguire
+      if (newWindow) {
+        newWindow.document.write('<html><head><title>Stampa Documento</title>');
+        newWindow.document.write('</head><body >');
+        newWindow.document.write(printArea.innerHTML);
+        newWindow.document.write('</body></html>');
+        newWindow.document.close();
+        newWindow.focus();
+        newWindow.print();
+        newWindow.close();
+      } else {
+        console.error("Impossibile aprire la finestra di stampa.");
+      }
+    };*/
+  /*METODO NUOVO CHE PRENDE GLI STILI*/
   const print = () => {
     const printArea = printRef.current;
+    if (!printArea) return;
 
-    if (!printArea) return; // Se il riferimento non esiste, interrompe l'esecuzione.
+    const newWindow = window.open("", "", "width=800,height=900");
 
-    const newWindow = window.open("", "", "width=600,height=400");
-
-    // Verifica se newWindow non è null prima di proseguire
     if (newWindow) {
-      newWindow.document.write('<html><head><title>Stampa Documento</title>');
-      newWindow.document.write('</head><body >');
+      newWindow.document.write('<html><head><title>Stampa Conto</title>');
+
+      // --- IL TRUCCO: Copia tutti i link e gli stili della pagina attuale ---
+      const styles = document.querySelectorAll('link[rel="stylesheet"], style');
+      styles.forEach(style => {
+        newWindow.document.write(style.outerHTML);
+      });
+
+      newWindow.document.write('</head><body>');
+      // Usiamo una classe container se necessario per il font
+      newWindow.document.write('<div class="print-container">');
       newWindow.document.write(printArea.innerHTML);
+      newWindow.document.write('</div>');
       newWindow.document.write('</body></html>');
+
       newWindow.document.close();
-      newWindow.focus();
-      newWindow.print();
-      newWindow.close();
+
+      // Diamo un piccolo delay per permettere al browser di caricare i CSS nella nuova finestra
+      setTimeout(() => {
+        newWindow.focus();
+        newWindow.print();
+        newWindow.close();
+      }, 500);
     } else {
       console.error("Impossibile aprire la finestra di stampa.");
     }
   };
-
   const handleAChiudi = async () => {
 
     const fetchData = async () => {
@@ -373,39 +398,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   const renderPhaseContent = () => {
 
     switch (phase) {
-      case 'iniziale':
-        console.log('iniziale');
-        return (
-          <>
-            <main>
-              <div className="container">
-                <header className="top-section">
-                </header>
 
-                <main className="middle-section">
-                  <div className='z-0 text-center'>
-                    <br></br>
-                    <br></br>
-                    <br></br>
-                    <br></br>
-                    <br></br>
-                    <br></br>
-                    <p className="text-2xl md:text-5xl py-4">
-                      Inserire Numero del Foglietto
-                    </p>
-                    <CircularProgress size="9rem" />
-                  </div>
-                </main>
-
-                <footer className="bottom-section">
-                  <div className="sez-sx-bassa"></div>
-                  <div className="sez-dx-bassa"></div>
-                </footer>
-              </div>
-            </main>
-          </>
-
-        );
       case 'iniziale_stampato':
         console.log('iniziale_stampato');
         return (
@@ -413,18 +406,27 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             <div className="container">
               <header className="top-section">
                 <div className="sez-sx">
-                  <div className="p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
+                  <div
+                    className="p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full"
+                    style={{ borderRadius: '9999px' }}
+                  >
                     <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}>
-                      <li className="flex-1 mr-2font-bold py-2 ">
+                      {/* Sezione Titolo e Stato */}
+                      <li className="flex-1 mr-2 font-bold py-2">
                         <a className="text-center block text-blue-700 font-extraligh text-2xl md:text-5xl">
                           Casse
                         </a>
-                        <div className="text-xs text-center text-blue-700 ">SAGRA:
-                          <span className="text-xs text-center text-blue-800 font-semibold">{sagra.stato}&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</span>
+                        <div className="text-xs text-center text-blue-700">
+                          SAGRA:
+                          <span className="text-xs text-center text-blue-800 font-semibold">
+                            {` ${sagra.stato} ${sagra.stato !== 'CHIUSA' ? `(${sagra.giornata})` : ""}`}
+                          </span>
                         </div>
                       </li>
-                      <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4 rounded-full " style={{ borderRadius: '9999px' }}>
-                        <div className='text-center text-emerald-600'>
+
+                      {/* Input Numero Foglietto */}
+                      <li className="text-right flex-1 mr-2 text-5xl text-white font-bold py-4 rounded-full" style={{ borderRadius: '9999px' }}>
+                        <div className="text-center text-emerald-600">
                           <TextField
                             autoFocus
                             className="p-2"
@@ -433,68 +435,94 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                             value={numero}
                             onChange={handleInputChange}
                             style={{ borderRadius: '9999px' }}
-                            sx={{
-                              input: {
-                                textAlign: 'right', // Allinea il testo a destra
-                              },
-                            }}
+                            sx={{ input: { textAlign: 'right' } }}
                             type="number"
                           />
                         </div>
-
                       </li>
-                      <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 ">
+
+                      {/* Bottone Carica (Desktop e Mobile) */}
+                      <li className="text-left flex-1 mr-2 text-5xl font-bold py-4">
                         <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                          <Button variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>Carica Foglietto</Button>
+                          <Button variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>
+                            Carica Foglietto
+                          </Button>
                         </ButtonGroup>
                         <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                          <Button size="small" variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>Carica Foglietto</Button>
+                          <Button size="small" variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>
+                            Carica Foglietto
+                          </Button>
                         </ButtonGroup>
-
                       </li>
                     </ul>
                   </div>
+
+                  {/* Elenco Ultimi Ricercati */}
                   <div className="text-base md:text-xl" style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
                     <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                      <p><span className="text-blue-800 ">Ultimi ricercati &nbsp;</span>
-                        {lastLog.map((row) => (
-                          <>
-                            <Button size="medium" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} style={{ borderRadius: '9999px' }}>{row.foglietto}</Button>
+                      <p>
+                        <span className="text-blue-800">Ultimi ricercati &nbsp;</span>
+                        {lastLog.map((row, index) => (
+                          <span key={`desktop-${row.foglietto}-${index}`}>
+                            <Button
+                              size="medium"
+                              variant="contained"
+                              onClick={() => carica(row.foglietto)}
+                              startIcon={<Filter1Icon />}
+                              style={{ borderRadius: '9999px' }}
+                            >
+                              {row.foglietto}
+                            </Button>
                             &nbsp;
-                          </>
-                        ))}</p>
+                          </span>
+                        ))}
+                      </p>
                     </ButtonGroup>
+
                     <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                      <p><span className="text-blue-800 ">Ultimi  &nbsp;</span>
-                        {lastLog.map((row) => (
-                          <>
-                            <Button size="small" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} style={{ borderRadius: '9999px' }}>{row.foglietto}</Button>
+                      <p>
+                        <span className="text-blue-800">Ultimi &nbsp;</span>
+                        {lastLog.map((row, index) => (
+                          <span key={`mobile-${row.foglietto}-${index}`}>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              onClick={() => carica(row.foglietto)}
+                              startIcon={<Filter1Icon />}
+                              style={{ borderRadius: '9999px' }}
+                            >
+                              {row.foglietto}
+                            </Button>
                             &nbsp;
-                          </>
-                        ))}</p>
+                          </span>
+                        ))}
+                      </p>
                     </ButtonGroup>
                   </div>
-
                 </div>
+
+                {/* Bottoni laterali Asporto/Camerieri */}
                 <div className="sez-dx" style={{ display: 'flex', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
                   <div className="xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
-                    <Button size="medium" className="font-semibold" variant="outlined" onClick={handleButtonClickCaricaAsporto} style={{ borderRadius: '9999px' }}>Asporto</Button>
+                    <Button size="medium" className="font-semibold" variant="outlined" onClick={handleButtonClickCaricaAsporto} style={{ borderRadius: '9999px' }}>
+                      Asporto
+                    </Button>
                     &nbsp;&nbsp;
-                    <Button size="medium" color="secondary" className="font-semibold " variant="outlined" onClick={handleButtonClickCaricaConto1} style={{ borderRadius: '9999px' }}>Camerieri</Button>
+                    <Button size="medium" color="secondary" className="font-semibold" variant="outlined" onClick={handleButtonClickCaricaConto1} style={{ borderRadius: '9999px' }}>
+                      Camerieri
+                    </Button>
                   </div>
-
                 </div>
               </header>
 
               <main className="middle-section">
-                <br></br>
-                <p className="text-2xl md:text-5xl py-4 text-center  text-blue-800">
+                <br />
+                <p className="text-2xl md:text-5xl py-4 text-center text-blue-800">
                   Conto:&nbsp;
                   <span className="font-extrabold text-blue-800">
                     <Link href={`/dashboard/casse/${numeroFoglietto}`}>{numeroFoglietto}</Link>
                   </span> inviato in stampa.
-                  <br></br>
-                  <br></br>
+                  <br /><br />
                   Caricare un nuovo foglietto!
                 </p>
               </main>
@@ -506,73 +534,14 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             </div>
           </main>
         );
-      case 'caricamento':
-        return (
-          <>
-            <><header className="top-section">
-            </header>
-              <main className="middle-section">
-                <div className='z-0 text-center'>
-                  <br></br>
-                  <p className="text-5xl py-4">
-                    Casse
-                  </p>
-                  <br />
-                  <CircularProgress size="9rem" />
-                  <br />
-                  <p className="text-4xl py-4">
-                    Caricamento in corso ...
-                  </p>
-
-                </div>
-              </main></>
-
-            <footer className="bottom-section">
-              <div className="sez-sx-bassa"></div>
-              <div className="sez-dx-bassa"></div>
-            </footer>
-
-          </>
-        );
-      case 'elaborazione':
-        return (
-          <>
-            <main>
-              <div className="container">
-                <header className="top-section">
-                </header>
-
-                <main className="middle-section">
-                  <div className='z-0 text-center'>
-                    <br></br>
-                    <br></br>
-                    <br></br>
-                    <br></br>
-                    <br></br>
-                    <br></br>
-                    <p className="text-2xl md:text-5xl py-4">
-                      Elaborazione in corso ...
-                    </p>
-                    <CircularProgress size="9rem" />
-                  </div>
-                </main>
-
-                <footer className="bottom-section">
-                  <div className="sez-sx-bassa"></div>
-                  <div className="sez-dx-bassa"></div>
-                </footer>
-              </div>
-            </main>
-          </>
-        );
       case 'gratis':
         return (
           <div className="flex items-center justify-center min-h-screen">
             <div className="w-[600px] p-4 border rounded-lg space-y-4">
               <p className="text-xl py-1">
-                Conto numero: <span className="font-extrabold text-blue-800">{conto?.id_comanda} </span>
-                con incasso previsto di: <span className="font-semibold text-blue-800">{conto?.totale} Euro </span>
+                Conto numero: <span className="font-extrabold text-blue-800">{conto?.id_comanda}</span> con incasso previsto di: <span className="font-semibold text-blue-800">{conto?.totale} Euro</span>
               </p>
+
               <TextField
                 label="Nuovo importo"
                 variant="outlined"
@@ -581,6 +550,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 type="number"
                 fullWidth
               />
+
               <TextField
                 label="Note"
                 variant="outlined"
@@ -588,11 +558,23 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 onChange={(e) => setTextValue(e.target.value)}
                 fullWidth
               />
+
               <div className="flex justify-center space-x-4">
-                <Button size="small" variant="contained" color="primary" onClick={handleCompletatoGratis}>
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="primary"
+                  onClick={handleCompletatoGratis}
+                >
                   Salva e chiudi
                 </Button>
-                <Button size="small" variant="contained" color="primary" onClick={handleAnnullaGratis}>
+
+                <Button
+                  size="small"
+                  variant="contained"
+                  color="primary"
+                  onClick={handleAnnullaGratis}
+                >
                   Annulla
                 </Button>
               </div>
@@ -601,493 +583,493 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         )
       case 'aperto':
         return (
-
-                    <>
-            <main>
-              <div className="container">
-                <header className="top-section">
-                  <div className="sez-sx">
-                    <div className="p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
-                      <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}>
-                        <li className="flex-1 mr-2font-bold py-2 ">
-                          <a className="text-center block text-blue-700 font-extraligh text-2xl md:text-5xl">
-                            Casse
-                          </a>
-                          <div className="text-xs text-center text-blue-700 ">SAGRA:
-                            <span className="text-xs text-center text-blue-800 font-semibold">{sagra.stato}&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</span>
-                          </div>
-                        </li>
-                        <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4 rounded-full " style={{ borderRadius: '9999px' }}>
-                          <div className='text-center text-emerald-600'>
-                            <TextField
-                              autoFocus
-                              className="p-2"
-                              label="Numero Foglietto"
-                              variant="outlined"
-                              value={numero}
-                              onChange={handleInputChange}
-                              style={{ borderRadius: '9999px' }}
-                              sx={{
-                                input: {
-                                  textAlign: 'right', // Allinea il testo a destra
-                                },
-                              }}
-                              type="number"
-                            />
-                          </div>
-
-                        </li>
-                        <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 ">
-                          <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                            <Button variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>Carica Foglietto</Button>
-                          </ButtonGroup>
-                          <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                            <Button size="small" variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>Carica Foglietto</Button>
-                          </ButtonGroup>
-
-                        </li>
-                      </ul>
-                    </div>
-                    <div className="text-base md:text-xl" style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
-                      <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                        <p><span className="text-blue-800 ">Ultimi ricercati &nbsp;</span>
-                          {lastLog.map((row) => (
-                            <>
-                              <Button size="medium" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} style={{ borderRadius: '9999px' }}>{row.foglietto}</Button>
-                              &nbsp;
-                            </>
-                          ))}</p>
-                      </ButtonGroup>
-                      <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                        <p><span className="text-blue-800 ">Ultimi  &nbsp;</span>
-                          {lastLog.map((row) => (
-                            <>
-                              <Button size="small" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} style={{ borderRadius: '9999px' }}>{row.foglietto}</Button>
-                              &nbsp;
-                            </>
-                          ))}</p>
-                      </ButtonGroup>
-                    </div>
-
-                  </div>
-                  <div className="sez-dx">
-                    <div className="text-base md:text-2xl py-2 md:py-4 font-extralight text-end">
-                      <Button size="medium" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
-                      &nbsp;&nbsp;
-                      <Button size="medium" color="secondary" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
-                      <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                        <p>  Conto:{" "}            <span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
-                        <p>  Conto aperto da:{" "}  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span></p>
-                        <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
-                      </ButtonGroup>
-                      <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                        <p>Conto:{" "}<span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;</span>{" ("}<span className="text-blue-800 font-bold"> {deltanow(conto?.data_apertura)}</span>{") "}
-                          &nbsp;Cameriere:{" "}<span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;</span></p>
-                      </ButtonGroup>
-                    </div>
-                  </div>
-                </header>
-                <main className="middle-section_XS">
-                  <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
-                </main>
-
-                <footer className="bottom-section">
-                  <div className="sez-sx-bassa ">
-                    <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa}  >Stampa Conto</Button>
-                    &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled >Aggiorna Conto</Button>
-                    <br />
-                    <p> Conto "aperto" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
-                  </div>
-
-                  <div className="sez-dx-bassa">
-                    <ul className="inline-block text-base md:text-2xl py-3 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
-                      &nbsp;Chiudi conto&nbsp;&nbsp;
-                      <ButtonGroup size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} >
-                        <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudiPos} disabled>  POS  </Button>
-                        <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
-                        <Button size="medium" className="rounded-full" variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
-                      </ButtonGroup>
-                      &nbsp;&nbsp;
+          <main>
+            <div className="container">
+              <header className="top-section">
+                <div className="sez-sx">
+                  <div
+                    className="p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full"
+                    style={{ borderRadius: '9999px' }}
+                  >
+                    <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}>
+                      <li className="flex-1 mr-2 font-bold py-2">
+                        <a className="text-center block text-blue-700 font-extraligh text-2xl md:text-5xl">
+                          Casse
+                        </a>
+                        <div className="text-xs text-center text-blue-700">
+                          SAGRA:
+                          <span className="text-xs text-center text-blue-800 font-semibold">
+                            {` ${sagra.stato} ${sagra.stato === 'CHIUSA' ? "" : `(${sagra.giornata})`}`}
+                          </span>
+                        </div>
+                      </li>
+                      <li className="text-right flex-1 mr-2 text-5xl text-white font-bold py-4 rounded-full" style={{ borderRadius: '9999px' }}>
+                        <div className="text-center text-emerald-600">
+                          <TextField
+                            autoFocus
+                            className="p-2"
+                            label="Numero Foglietto"
+                            variant="outlined"
+                            value={numero}
+                            onChange={handleInputChange}
+                            style={{ borderRadius: '9999px' }}
+                            sx={{ input: { textAlign: 'right' } }}
+                            type="number"
+                          />
+                        </div>
+                      </li>
+                      <li className="text-left flex-1 mr-2 text-5xl font-bold py-4">
+                        <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
+                          <Button variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>
+                            Carica Foglietto
+                          </Button>
+                        </ButtonGroup>
+                        <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
+                          <Button size="small" variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>
+                            Carica Foglietto
+                          </Button>
+                        </ButtonGroup>
+                      </li>
                     </ul>
                   </div>
-                </footer>
 
-                {/* Sezione che verrà stampata */}
-                <div ref={printRef} className="hidden">
-                 <TheBill item={products} />
-               </div>
+                  <div className="text-base md:text-xl" style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
+                    <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
+                      <p>
+                        <span className="text-blue-800">Ultimi ricercati &nbsp;</span>
+                        {lastLog.map((row, idx) => (
+                          <span key={`last-log-desktop-${idx}`}>
+                            <Button
+                              size="medium"
+                              variant="contained"
+                              onClick={() => carica(row.foglietto)}
+                              startIcon={<Filter1Icon />}
+                              style={{ borderRadius: '9999px' }}
+                            >
+                              {row.foglietto}
+                            </Button>
+                            &nbsp;
+                          </span>
+                        ))}
+                      </p>
+                    </ButtonGroup>
+                    <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
+                      <p>
+                        <span className="text-blue-800">Ultimi &nbsp;</span>
+                        {lastLog.map((row, idx) => (
+                          <span key={`last-log-mobile-${idx}`}>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              onClick={() => carica(row.foglietto)}
+                              startIcon={<Filter1Icon />}
+                              style={{ borderRadius: '9999px' }}
+                            >
+                              {row.foglietto}
+                            </Button>
+                            &nbsp;
+                          </span>
+                        ))}
+                      </p>
+                    </ButtonGroup>
+                  </div>
+                </div>
+
+                <div className="sez-dx">
+                  <div className="text-base md:text-2xl py-2 md:py-4 font-extralight text-end">
+                    <Button size="medium" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaAsporto}>
+                      Asporto
+                    </Button>
+                    &nbsp;&nbsp;
+                    <Button size="medium" color="secondary" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaConto1}>
+                      Camerieri
+                    </Button>
+
+                    <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
+                      <p>Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
+                      <p>Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span></p>
+                      <p>Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
+                    </ButtonGroup>
+
+                    <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
+                      <p>
+                        Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;</span>
+                        ({<span className="text-blue-800 font-bold">{deltanow(conto?.data_apertura)}</span>})
+                        &nbsp;Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;</span>
+                      </p>
+                    </ButtonGroup>
+                  </div>
+                </div>
+              </header>
+
+              <main className="middle-section_XS">
+                <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
+              </main>
+
+              <footer className="bottom-section">
+                <div className="sez-sx-bassa">
+                  <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa}>
+                    Stampa Conto
+                  </Button>
+                  &nbsp;
+                  <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>
+                    Aggiorna Conto
+                  </Button>
+                  <br />
+                  <p>Conto "aperto" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
+                </div>
+
+                <div className="sez-dx-bassa">
+                  <ul className="inline-block text-base md:text-2xl py-3 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 rounded-full">
+                    &nbsp;Chiudi conto&nbsp;&nbsp;
+                    <ButtonGroup size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}>
+                      <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudiPos} disabled>POS</Button>
+                      <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
+                      <Button size="medium" className="rounded-full" variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
+                    </ButtonGroup>
+                    &nbsp;&nbsp;
+                  </ul>
+                </div>
+              </footer>
+
+              <div ref={printRef} className="hidden">
+                <Summarythebill item={products} />
               </div>
-            </main>
-          </>
-
-
+            </div>
+          </main>
         );
       case 'modificato':
         return (
-          <>
-            <main>
-              <div className="container">
-                <header className="top-section">
-                  <div className="sez-sx">
-                    <div className="p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
-                      <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}>
-                        <li className="flex-1 mr-2font-bold py-2 ">
-                          <a className="text-center block text-blue-700 font-extraligh text-2xl md:text-5xl">
-                            Casse
-                          </a>
-                          <div className="text-xs text-center text-blue-700 ">SAGRA:
-                            <span className="text-xs text-center text-blue-800 font-semibold">{sagra.stato}&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</span>
-                          </div>
-                        </li>
-                        <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4 rounded-full " style={{ borderRadius: '9999px' }}>
-                          <div className='text-center text-emerald-600'>
-                            <TextField
-                              autoFocus
-                              className="p-2"
-                              label="Numero Foglietto"
-                              variant="outlined"
-                              value={numero}
-                              onChange={handleInputChange}
-                              style={{ borderRadius: '9999px' }}
-                              sx={{
-                                input: {
-                                  textAlign: 'right', // Allinea il testo a destra
-                                },
-                              }}
-                              type="number"
-                            />
-                          </div>
+          <main>
+            <div className="container">
+              <header className="top-section">
+                <div className="sez-sx">
+                  {/* Header Badge: Casse e Stato Sagra */}
+                  <div
+                    className="p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full"
+                    style={{ borderRadius: '9999px' }}
+                  >
+                    <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}>
+                      <li className="flex-1 mr-2 font-bold py-2">
+                        <a className="text-center block text-blue-700 font-extraligh text-2xl md:text-5xl">
+                          Casse
+                        </a>
+                        <div className="text-xs text-center text-blue-700">
+                          SAGRA:
+                          <span className="text-xs text-center text-blue-800 font-semibold">
+                            {` ${sagra.stato} ${sagra.stato === 'CHIUSA' ? "" : `(${sagra.giornata})`}`}
+                          </span>
+                        </div>
+                      </li>
 
-                        </li>
-                        <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 ">
-                          <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                            <Button variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>Carica Foglietto</Button>
-                          </ButtonGroup>
-                          <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                            <Button size="small" variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>Carica Foglietto</Button>
-                          </ButtonGroup>
+                      {/* Input Numero Foglietto */}
+                      <li className="text-right flex-1 mr-2 text-5xl text-white font-bold py-4 rounded-full" style={{ borderRadius: '9999px' }}>
+                        <div className="text-center text-emerald-600">
+                          <TextField
+                            autoFocus
+                            className="p-2"
+                            label="Numero Foglietto"
+                            variant="outlined"
+                            value={numero}
+                            onChange={handleInputChange}
+                            style={{ borderRadius: '9999px' }}
+                            sx={{ input: { textAlign: 'right' } }}
+                            type="number"
+                          />
+                        </div>
+                      </li>
 
-                        </li>
-                      </ul>
-                    </div>
-                    <div className="text-base md:text-xl" style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
-                      <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                        <p><span className="text-blue-800 ">Ultimi ricercati &nbsp;</span>
-                          {lastLog.map((row) => (
-                            <>
-                              <Button size="medium" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} style={{ borderRadius: '9999px' }}>{row.foglietto}</Button>
-                              &nbsp;
-                            </>
-                          ))}</p>
-                      </ButtonGroup>
-                      <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                        <p><span className="text-blue-800 ">Ultimi  &nbsp;</span>
-                          {lastLog.map((row) => (
-                            <>
-                              <Button size="small" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} style={{ borderRadius: '9999px' }}>{row.foglietto}</Button>
-                              &nbsp;
-                            </>
-                          ))}</p>
-                      </ButtonGroup>
-                    </div>
-
-                  </div>
-                  <div className="sez-dx">
-                    <div className="text-base md:text-2xl py-2 md:py-4 font-extralight text-end">
-                      <Button size="medium" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
-                      &nbsp;&nbsp;
-                      <Button size="medium" color="secondary" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
-                      <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                        <p>  Conto:{" "}            <span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
-                        <p>  Conto aperto da:{" "}  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span></p>
-                        <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
-                      </ButtonGroup>
-                      <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                        <p>Conto:{" "}<span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;</span>{" ("}<span className="text-blue-800 font-bold"> {deltanow(conto?.data_apertura)}</span>{") "}
-                          &nbsp;Cameriere:{" "}<span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;</span></p>
-                      </ButtonGroup>
-                    </div>
-                  </div>
-                </header>
-                <main className="middle-section_XS">
-                  <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
-                </main>
-
-                <footer className="bottom-section">
-                  <div className="sez-sx-bassa ">
-                    <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button>
-                    &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} >Aggiorna Conto</Button>
-                    <br />
-                    <p> Conto "modificato" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
-                  </div>
-
-                  <div className="sez-dx-bassa">
-                    <ul className="inline-block text-base md:text-2xl py-3 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
-                      &nbsp;Chiudi conto&nbsp;&nbsp;
-                      <ButtonGroup size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} >
-                        <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudiPos} disabled>  POS  </Button>
-                        <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
-                        <Button size="medium" className="rounded-full" variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
-                      </ButtonGroup>
-                      &nbsp;&nbsp;
+                      {/* Azione Carica */}
+                      <li className="text-left flex-1 mr-2 text-5xl font-bold py-4">
+                        <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
+                          <Button variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>
+                            Carica Foglietto
+                          </Button>
+                        </ButtonGroup>
+                        <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
+                          <Button size="small" variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>
+                            Carica Foglietto
+                          </Button>
+                        </ButtonGroup>
+                      </li>
                     </ul>
                   </div>
-                </footer>
 
-                {/* Sezione che verrà stampata */}
-                <div ref={printRef} className="hidden">
-                <TheBill item={products} />
+                  {/* Lista Ultimi Ricercati */}
+                  <div className="text-base md:text-xl" style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
+                    <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
+                      <p>
+                        <span className="text-blue-800">Ultimi ricercati &nbsp;</span>
+                        {lastLog.map((row, idx) => (
+                          <span key={`desktop-log-${idx}`}>
+                            <Button
+                              size="medium"
+                              variant="contained"
+                              onClick={() => carica(row.foglietto)}
+                              startIcon={<Filter1Icon />}
+                              style={{ borderRadius: '9999px' }}
+                            >
+                              {row.foglietto}
+                            </Button>
+                            &nbsp;
+                          </span>
+                        ))}
+                      </p>
+                    </ButtonGroup>
+                    <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
+                      <p>
+                        <span className="text-blue-800">Ultimi &nbsp;</span>
+                        {lastLog.map((row, idx) => (
+                          <span key={`mobile-log-${idx}`}>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              onClick={() => carica(row.foglietto)}
+                              startIcon={<Filter1Icon />}
+                              style={{ borderRadius: '9999px' }}
+                            >
+                              {row.foglietto}
+                            </Button>
+                            &nbsp;
+                          </span>
+                        ))}
+                      </p>
+                    </ButtonGroup>
+                  </div>
                 </div>
-              </div>
-            </main>
-          </>
 
+                {/* Sezione Destra: Info Conto e Tipologia */}
+                <div className="sez-dx">
+                  <div className="text-base md:text-2xl py-2 md:py-4 font-extralight text-end">
+                    <Button size="medium" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaAsporto}>
+                      Asporto
+                    </Button>
+                    &nbsp;&nbsp;
+                    <Button size="medium" color="secondary" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaConto1}>
+                      Camerieri
+                    </Button>
+
+                    {/* Info Conto Desktop */}
+                    <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
+                      <p>Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
+                      <p>Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span></p>
+                      <p>Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
+                    </ButtonGroup>
+
+                    {/* Info Conto Mobile */}
+                    <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
+                      <p>
+                        Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;</span>
+                        ({<span className="text-blue-800 font-bold">{deltanow(conto?.data_apertura)}</span>})
+                        &nbsp;Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;</span>
+                      </p>
+                    </ButtonGroup>
+                  </div>
+                </div>
+              </header>
+
+              {/* Main Table */}
+              <main className="middle-section_XS">
+                <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
+              </main>
+
+              {/* Footer: Azioni Stampa e Chiusura */}
+              <footer className="bottom-section">
+                <div className="sez-sx-bassa">
+                  <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled>
+                    Stampa Conto
+                  </Button>
+                  &nbsp;
+                  <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna}>
+                    Aggiorna Conto
+                  </Button>
+                  <br />
+                  <p>Conto "modificato" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
+                </div>
+
+                <div className="sez-dx-bassa">
+                  <ul className="inline-block text-base md:text-2xl py-3 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 rounded-full">
+                    &nbsp;Chiudi conto&nbsp;&nbsp;
+                    <ButtonGroup size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}>
+                      <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudiPos} disabled>POS</Button>
+                      <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
+                      <Button size="medium" className="rounded-full" variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
+                    </ButtonGroup>
+                    &nbsp;&nbsp;
+                  </ul>
+                </div>
+              </footer>
+            </div>
+          </main>
         );
       case 'stampato':
         return (
- <>
-            <main>
-              <div className="container">
-                <header className="top-section">
-                  <div className="sez-sx">
-                    <div className="p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
-                      <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}>
-                        <li className="flex-1 mr-2font-bold py-2 ">
-                          <a className="text-center block text-blue-700 font-extraligh text-2xl md:text-5xl">
-                            Casse
-                          </a>
-                          <div className="text-xs text-center text-blue-700 ">SAGRA:
-                            <span className="text-xs text-center text-blue-800 font-semibold">{sagra.stato}&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</span>
-                          </div>
-                        </li>
-                        <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4 rounded-full " style={{ borderRadius: '9999px' }}>
-                          <div className='text-center text-emerald-600'>
-                            <TextField
-                              autoFocus
-                              className="p-2"
-                              label="Numero Foglietto"
-                              variant="outlined"
-                              value={numero}
-                              onChange={handleInputChange}
+          <main>
+            <div className="container">
+              <header className="top-section">
+                <div className="sez-sx">
+                  {/* Header Badge: Stato Sagra e Input Numero */}
+                  <div
+                    className="p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full"
+                    style={{ borderRadius: '9999px' }}
+                  >
+                    <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}>
+                      <li className="flex-1 mr-2 font-bold py-2">
+                        <a className="text-center block text-blue-700 font-extraligh text-2xl md:text-5xl">
+                          Casse
+                        </a>
+                        <div className="text-xs text-center text-blue-700">
+                          SAGRA:
+                          <span className="text-xs text-center text-blue-800 font-semibold">
+                            {` ${sagra.stato} ${sagra.stato === 'CHIUSA' ? "" : `(${sagra.giornata})`}`}
+                          </span>
+                        </div>
+                      </li>
+
+                      <li className="text-right flex-1 mr-2 text-5xl text-white font-bold py-4 rounded-full" style={{ borderRadius: '9999px' }}>
+                        <div className="text-center text-emerald-600">
+                          <TextField
+                            autoFocus
+                            className="p-2"
+                            label="Numero Foglietto"
+                            variant="outlined"
+                            value={numero}
+                            onChange={handleInputChange}
+                            style={{ borderRadius: '9999px' }}
+                            sx={{ input: { textAlign: 'right' } }}
+                            type="number"
+                          />
+                        </div>
+                      </li>
+
+                      <li className="text-left flex-1 mr-2 text-5xl font-bold py-4">
+                        {/* Desktop Button */}
+                        <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
+                          <Button variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>
+                            Carica Foglietto
+                          </Button>
+                        </ButtonGroup>
+                        {/* Mobile Button */}
+                        <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
+                          <Button size="small" variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>
+                            Carica Foglietto
+                          </Button>
+                        </ButtonGroup>
+                      </li>
+                    </ul>
+                  </div>
+
+                  {/* Sezione Ultimi Ricercati */}
+                  <div className="text-base md:text-xl" style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
+                    {/* Desktop View */}
+                    <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
+                      <p>
+                        <span className="text-blue-800">Ultimi ricercati &nbsp;</span>
+                        {lastLog.map((row, idx) => (
+                          <span key={`lastlog-dt-${idx}`}>
+                            <Button
+                              size="medium"
+                              variant="contained"
+                              onClick={() => carica(row.foglietto)}
+                              startIcon={<Filter1Icon />}
                               style={{ borderRadius: '9999px' }}
-                              sx={{
-                                input: {
-                                  textAlign: 'right', // Allinea il testo a destra
-                                },
-                              }}
-                              type="number"
-                            />
-                          </div>
-
-                        </li>
-                        <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 ">
-                          <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                            <Button variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>Carica Foglietto</Button>
-                          </ButtonGroup>
-                          <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                            <Button size="small" variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>Carica Foglietto</Button>
-                          </ButtonGroup>
-
-                        </li>
-                      </ul>
-                    </div>
-                    <div className="text-base md:text-xl" style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
-                      <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                        <p><span className="text-blue-800 ">Ultimi ricercati &nbsp;</span>
-                          {lastLog.map((row) => (
-                            <>
-                              <Button size="medium" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} style={{ borderRadius: '9999px' }}>{row.foglietto}</Button>
-                              &nbsp;
-                            </>
-                          ))}</p>
-                      </ButtonGroup>
-                      <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                        <p><span className="text-blue-800 ">Ultimi  &nbsp;</span>
-                          {lastLog.map((row) => (
-                            <>
-                              <Button size="small" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} style={{ borderRadius: '9999px' }}>{row.foglietto}</Button>
-                              &nbsp;
-                            </>
-                          ))}</p>
-                      </ButtonGroup>
-                    </div>
-
+                            >
+                              {row.foglietto}
+                            </Button>
+                            &nbsp;
+                          </span>
+                        ))}
+                      </p>
+                    </ButtonGroup>
+                    {/* Mobile View */}
+                    <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
+                      <p>
+                        <span className="text-blue-800">Ultimi &nbsp;</span>
+                        {lastLog.map((row, idx) => (
+                          <span key={`lastlog-mb-${idx}`}>
+                            <Button
+                              size="small"
+                              variant="contained"
+                              onClick={() => carica(row.foglietto)}
+                              startIcon={<Filter1Icon />}
+                              style={{ borderRadius: '9999px' }}
+                            >
+                              {row.foglietto}
+                            </Button>
+                            &nbsp;
+                          </span>
+                        ))}
+                      </p>
+                    </ButtonGroup>
                   </div>
-                  <div className="sez-dx">
-                    <div className="text-base md:text-2xl py-2 md:py-4 font-extralight text-end">
-                      <Button size="medium" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
-                      &nbsp;&nbsp;
-                      <Button size="medium" color="secondary" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
-                      <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                        <p>  Conto:{" "}            <span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
-                        <p>  Conto aperto da:{" "}  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span></p>
-                        <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
-                      </ButtonGroup>
-                      <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                        <p>Conto:{" "}<span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;</span>{" ("}<span className="text-blue-800 font-bold"> {deltanow(conto?.data_apertura)}</span>{") "}
-                          &nbsp;Cameriere:{" "}<span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;</span></p>
-                      </ButtonGroup>
-                    </div>
+                </div>
+
+                <div className="sez-dx">
+                  <div className="text-base md:text-2xl py-2 md:py-4 font-extralight text-end">
+                    <Button size="medium" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaAsporto}>
+                      Asporto
+                    </Button>
+                    &nbsp;&nbsp;
+                    <Button size="medium" color="secondary" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaConto1}>
+                      Camerieri
+                    </Button>
+
+                    {/* Info Conto Desktop */}
+                    <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
+                      <p>Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
+                      <p>Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span></p>
+                      <p>Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
+                    </ButtonGroup>
+
+                    {/* Info Conto Mobile */}
+                    <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
+                      <p>
+                        Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;</span>
+                        ({<span className="text-blue-800 font-bold">{deltanow(conto?.data_apertura)}</span>})
+                        &nbsp;Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;</span>
+                      </p>
+                    </ButtonGroup>
                   </div>
-                </header>
-           <main className="middle-section_XS">
+                </div>
+              </header>
+
+              <main className="middle-section_XS">
                 <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
               </main>
-                <footer className="bottom-section">
-                  <div className="sez-sx-bassa ">
-                    <div className="z-0 text-2xl font-extralight text-end">
-                    </div>
-                    {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button> :
-                      <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button>
-                    }
-                    &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
-                    <br />
-                    {+numeroFoglietto < 10 ? <p> Conto "non stampabile" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p> : <p> Conto "stampato" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>}
-                  </div>
 
-                  <div className="sez-dx-bassa">
-                    <ul className="inline-block text-base md:text-2xl py-3 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
-                      &nbsp;Chiudi conto&nbsp;&nbsp;
-                      <ButtonGroup size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}>
-                        <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudiPos} >  POS  </Button>
-                        <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudi} >Contanti</Button>
-                        <Button size="medium" className="rounded-full" variant="contained" onClick={handleChiudiGratis} >Altro Importo</Button>
-                      </ButtonGroup>
-                      &nbsp;&nbsp;
-                    </ul>
-                  </div>
-                  &nbsp;&nbsp;
+              <footer className="bottom-section">
+                <div className="sez-sx-bassa">
+                  <div className="z-0 text-2xl font-extralight text-end"></div>
 
-                </footer>
+                  <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled>
+                    Stampa Conto
+                  </Button>
+                  &nbsp;
+                  <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>
+                    Aggiorna Conto
+                  </Button>
+                  <br />
 
-                {/* 
-          /*
-          <>
-            <main>
-              <div className="container">
-                <header className="top-section">
-                  <div className="sez-sx">
-                    <div className="p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
-                      <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}>
-                        <li className="flex-1 mr-2font-bold py-2 ">
-                          <a className="text-center block text-blue-700 font-extraligh text-2xl md:text-5xl">
-                            Casse
-                          </a>
-                          <div className="text-xs text-center text-blue-700 ">SAGRA:
-                            <span className="text-xs text-center text-blue-800 font-semibold">{sagra.stato}&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</span>
-                          </div>
-                        </li>
-                        <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4 rounded-full " style={{ borderRadius: '9999px' }}>
-                          <div className='text-center text-emerald-600'>
-                            <TextField
-                              autoFocus
-                              className="p-2"
-                              label="Numero Foglietto"
-                              variant="outlined"
-                              value={numero}
-                              onChange={handleInputChange}
-                              style={{ borderRadius: '9999px' }}
-                              sx={{
-                                input: {
-                                  textAlign: 'right', // Allinea il testo a destra
-                                },
-                              }}
-                              type="number"
-                            />
-                          </div>
-
-                        </li>
-                        <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 ">
-                          <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                            <Button variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>Carica Foglietto</Button>
-                          </ButtonGroup>
-                          <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                            <Button size="small" variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>Carica Foglietto</Button>
-                          </ButtonGroup>
-
-                        </li>
-                      </ul>
-                    </div>
-                    <div className="text-base md:text-xl" style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
-                      <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                        <p><span className="text-blue-800 ">Ultimi ricercati &nbsp;</span>
-                          {lastLog.map((row) => (
-                            <>
-                              <Button size="medium" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} style={{ borderRadius: '9999px' }}>{row.foglietto}</Button>
-                              &nbsp;
-                            </>
-                          ))}</p>
-                      </ButtonGroup>
-                      <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                        <p><span className="text-blue-800 ">Ultimi  &nbsp;</span>
-                          {lastLog.map((row) => (
-                            <>
-                              <Button size="small" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} style={{ borderRadius: '9999px' }}>{row.foglietto}</Button>
-                              &nbsp;
-                            </>
-                          ))}</p>
-                      </ButtonGroup>
-                    </div>
-
-                  </div>
-
-                  <div className="sez-dx">
-                    <div className="text-base md:text-2xl py-2 md:py-4 font-extralight text-end">
-                      <Button size="medium" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
-                      &nbsp;&nbsp;
-                      <Button size="medium" color="secondary" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
-                      <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                        <p>  Conto:{" "}            <span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
-                        <p>  Conto aperto da:{" "}  <span className="font-extrabold text-blue-800"> {deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp; </span></p>
-                        <p>  Cameriere:{" "}        <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
-                      </ButtonGroup>
-                      <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                        <p>Conto:{" "}<span className="font-extrabold text-blue-800 ">{numeroFoglietto}&nbsp;</span>{" ("}<span className="text-blue-800 font-bold"> {deltanow(conto?.data_apertura)}</span>{") "}
-                          &nbsp;Cameriere:{" "}<span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;</span></p>
-                      </ButtonGroup>
-                    </div>
-                  </div>
-                </header>
-
-                <main className="middle-section">
-                  <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
-                </main>
-
-                <footer className="bottom-section">
-                  <div className="sez-sx-bassa ">
-                    <div className="z-0 text-2xl font-extralight text-end">
-                    </div>
-                    {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button> :
-                      <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button>
-                    }
-                    &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
-                    <br />
-                    {+numeroFoglietto < 10 ? <p> Conto "non stampabile" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p> : <p> Conto "stampato" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>}
-                  </div>
-
-                  <div className="sez-dx-bassa">
-                    <ul className="inline-block text-base md:text-2xl py-3 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
-                      &nbsp;Chiudi conto&nbsp;&nbsp;
-                      <ButtonGroup size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}>
-                        <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudiPos} >  POS  </Button>
-                        <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudi} >Contanti</Button>
-                        <Button size="medium" className="rounded-full" variant="contained" onClick={handleChiudiGratis} >Altro Importo</Button>
-                      </ButtonGroup>
-                      &nbsp;&nbsp;
-                    </ul>
-                  </div>
-                  &nbsp;&nbsp;
-
-                </footer>
-
-Sezione che verrà stampata */}
-                <div ref={printRef} className="hidden">
-                  <TheBill item={products} />
-
+                  <p>
+                    Conto {+numeroFoglietto < 10 ? '"non stampabile"' : '"stampato"'} numero:
+                    <span className="font-extrabold text-blue-800"> {numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
+                  </p>
                 </div>
-              </div>
-            </main>
-          </>
+
+                <div className="sez-dx-bassa">
+                  <ul className="inline-block text-base md:text-2xl py-3 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 rounded-full">
+                    &nbsp;Chiudi conto&nbsp;&nbsp;
+                    <ButtonGroup size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}>
+                      <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudiPos}>POS</Button>
+                      <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudi}>Contanti</Button>
+                      <Button size="medium" className="rounded-full" variant="contained" onClick={handleChiudiGratis}>Altro Importo</Button>
+                    </ButtonGroup>
+                    &nbsp;&nbsp;
+                  </ul>
+                </div>
+              </footer>
+            </div>
+          </main>
 
         );
       case 'chiuso':
@@ -1095,17 +1077,20 @@ Sezione che verrà stampata */}
           <>
             <header className="top-section">
               <div className="sez-sx">
+                {/* Container Intestazione Casse */}
                 <div className="font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
                   <ul className="flex rounded-full">
                     <li className="flex-1 mr-2 font-bold py-4 rounded-full">
-                      <a className="text-center block text-white font-extralight text-2xl  md:text-5xl ">
+                      <a className="text-center block text-white font-extralight text-2xl md:text-5xl">
                         Casse
                       </a>
-                      <div className="text-xs text-center text-white ">SAGRA:  {sagra.stato}&nbsp;&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</div>
+                      <div className="text-xs text-center text-white">
+                        SAGRA: {sagra.stato} {sagra.stato !== 'CHIUSA' && `(${sagra.giornata})`}
+                      </div>
                     </li>
-                    <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4">
 
-                      <div className='text-center text-emerald-600'>
+                    <li className="text-right flex-1 mr-2 text-5xl text-white font-bold py-4">
+                      <div className="text-center text-emerald-600">
                         <TextField
                           autoFocus
                           className="p-2"
@@ -1113,108 +1098,91 @@ Sezione che verrà stampata */}
                           variant="outlined"
                           value={numero}
                           onChange={handleInputChange}
-                          sx={{
-                            input: {
-                              textAlign: 'right', // Allinea il testo a destra
-                            },
-                          }}
+                          sx={{ input: { textAlign: 'right' } }}
                           type="number"
                         />
                       </div>
-
                     </li>
+
                     <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
-                      <Button className="rounded-full" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
+                      <Button className="rounded-full" variant="contained" onClick={handleButtonClickCarica}>
+                        Carica Foglietto
+                      </Button>
                     </li>
                   </ul>
                 </div>
-                <div className=" xl:text-2xl  xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
+
+                {/* Sezione Ultimi Ricercati */}
+                <div className="xl:text-2xl xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
                   Ultimi ricercati: &nbsp;
-                  {lastLog.map((row) => (
-                    <>
-                      <Button size="medium" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
+                  {lastLog.map((row, index) => (
+                    <span key={`log-${row.foglietto}-${index}`}>
+                      <Button
+                        size="medium"
+                        className="rounded-full"
+                        variant="contained"
+                        onClick={() => carica(row.foglietto)}
+                        startIcon={<Filter1Icon />}
+                      >
+                        {row.foglietto}
+                      </Button>
                       &nbsp;&nbsp;
-                    </>
+                    </span>
                   ))}
-
                 </div>
-
               </div>
+
               <div className="sez-dx">
                 <div className="xl:text-2xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
-                  <Button size="medium" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
+                  <Button size="medium" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaAsporto}>
+                    Asporto
+                  </Button>
                   &nbsp;&nbsp;
-                  <Button size="medium" color="secondary" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                  <Button size="medium" color="secondary" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaConto1}>
+                    Camerieri
+                  </Button>
                 </div>
-                <br /><br /><br /><br /><br />
               </div>
             </header>
 
             <main className="middle-section">
-              <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50  text-center" role="alert">
-                <span className="text-xl font-semibold">Informazione:</span> conto {conto?.id_comanda} chiuso in data: {milltodatestring(conto?.data_chiusura)} totale: {conto?.totale} Euro.
-                                <Summary item={products} />
+              {/* Alert riepilogo conto chiuso */}
+              <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50 text-center" role="alert">
+                <span className="text-xl font-semibold">Informazione:</span>
+                {` conto ${conto?.id_comanda} chiuso in data: ${milltodatestring(conto?.data_chiusura)} totale: ${conto?.totale} Euro.`}
+                <Summary item={products} />
               </div>
-
             </main>
+
             <footer className="bottom-section">
               <div className="sez-sx-bassa">
-                <div>
-                  <Button size="medium" className="rounded-full" variant="contained" onClick={handleButtonRiapri}>Riapri Conto</Button>
-                </div>
+                <Button size="medium" className="rounded-full" variant="contained" onClick={handleButtonRiapri}>
+                  Riapri Conto
+                </Button>
               </div>
-              <div className="sez-dx-bassa">
-              </div>
+              <div className="sez-dx-bassa" />
             </footer>
           </>
-        );
-      case 'modificaquantita':
-        return (
-          <div className="flex items-center justify-center min-h-screen rounded">
-            <div className="w-[600px] p-4  space-y-4 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded -translate-y-16">
-              <p className="text-xl py-1 rounded">
-                Per il conto numero: <span className="font-extrabold text-blue-800">{conto?.id_comanda} </span>
-                inserisci la quantità di porzioni per il piatto: <span className="font-extrabold text-blue-800">{piattomodificaquantitaValue}
-                </span>
-              </p>
-              <TextField
-                label="Modifica quantità"
-                variant="outlined"
-                value={nuovaquantitaValue}
-                onChange={(e) => setQuantitaValue(e.target.value)}
-                type="number"
-                size="medium"
-                fullWidth
-              />
-
-              <div className="flex justify-center space-x-4">
-                <Button size="small" variant="contained" color="primary" onClick={handleModificaQuantita}>
-                  Salva e chiudi
-                </Button>
-                <Button size="small" variant="contained" color="primary" onClick={handleAnnulla}>
-                  Annulla
-                </Button>
-              </div>
-            </div>
-          </div>
         );
       case 'none':
         return (
           <>
-
             <header className="top-section">
               <div className="sez-sx">
+                {/* Container Testata Casse */}
                 <div className="font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
                   <ul className="flex rounded-full">
-                    <li className="flex-1 mr-2  font-bold py-4 rounded-full">
-                      <a className="text-center block text-white font-extralight text-2xl  md:text-5xl ">
+                    <li className="flex-1 mr-2 font-bold py-4 rounded-full">
+                      <a className="text-center block text-white font-extralight text-2xl md:text-5xl">
                         Casse
                       </a>
-                      <div className="text-xs text-center text-white ">SAGRA:  {sagra.stato}&nbsp;&nbsp;{(sagra.stato == 'CHIUSA') ? "" : "(" + sagra.giornata + ")"}</div>
+                      <div className="text-xs text-center text-white">
+                        SAGRA: {sagra.stato} {sagra.stato !== 'CHIUSA' && `(${sagra.giornata})`}
+                      </div>
                     </li>
-                    <li className="text-right flex-1 mr-2 text-5xl  text-white font-bold py-4">
 
-                      <div className='text-center text-emerald-600'>
+                    <li className="text-right flex-1 mr-2 text-5xl text-white font-bold py-4">
+                      <div className="text-center text-emerald-600">
                         <TextField
                           autoFocus
                           className="p-2"
@@ -1222,57 +1190,67 @@ Sezione che verrà stampata */}
                           variant="outlined"
                           value={numero}
                           onChange={handleInputChange}
-                          sx={{
-                            input: {
-                              textAlign: 'right', // Allinea il testo a destra
-                            },
-                          }}
+                          sx={{ input: { textAlign: 'right' } }}
                           type="number"
                         />
                       </div>
-
                     </li>
+
                     <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
-                      <Button className="rounded-full" variant="contained" onClick={handleButtonClickCarica}>Carica Foglietto</Button>
+                      <Button className="rounded-full" variant="contained" onClick={handleButtonClickCarica}>
+                        Carica Foglietto
+                      </Button>
                     </li>
                   </ul>
                 </div>
-                <div className=" xl:text-2xl  xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
+
+                {/* Sezione Storico Ricerche */}
+                <div className="xl:text-2xl xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
                   Ultimi ricercati: &nbsp;
-                  {lastLog.map((row) => (
-                    <>
-                      <Button size="medium" className="rounded-full" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />}>{row.foglietto}</Button>
+                  {lastLog.map((row, index) => (
+                    <span key={`lastlog-${index}`}>
+                      <Button
+                        size="medium"
+                        className="rounded-full"
+                        variant="contained"
+                        onClick={() => carica(row.foglietto)}
+                        startIcon={<Filter1Icon />}
+                      >
+                        {row.foglietto}
+                      </Button>
                       &nbsp;&nbsp;
-                    </>
+                    </span>
                   ))}
-
                 </div>
-
               </div>
+
               <div className="sez-dx">
                 <div className="xl:text-2xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
-                  <Button size="medium" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaAsporto}>Asporto</Button>
+                  <Button size="medium" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaAsporto}>
+                    Asporto
+                  </Button>
                   &nbsp;&nbsp;
-                  <Button size="medium" color="secondary" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
+                  <Button size="medium" color="secondary" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaConto1}>
+                    Camerieri
+                  </Button>
                 </div>
-                <br /><br /><br /><br /><br />
               </div>
             </header>
 
             <main className="middle-section">
-              <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50  text-center" role="alert">
+              {/* Messaggio Stato Conto */}
+              <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50 text-center" role="alert">
                 <span className="text-xl font-semibold">Informazione:</span> conto non esistente.
               </div>
             </main>
 
             <footer className="bottom-section">
               <div className="sez-sx-bassa">
-                <div>
-                  <Button size="medium" className="rounded-full" variant="contained" onClick={handleButtonCrea}>Crea Nuovo Conto</Button>
-                </div>
+                <Button size="medium" className="rounded-full" variant="contained" onClick={handleButtonCrea}>
+                  Crea Nuovo Conto
+                </Button>
               </div>
-              <div className="sez-dx-bassa">
-              </div>
+              <div className="sez-dx-bassa" />
             </footer>
           </>
         );
@@ -1295,13 +1273,11 @@ Sezione che verrà stampata */}
             </div>
           </div>
         </main>
-
       )
     } else {
       return (
         <main>
           {renderPhaseContent()}
-
           <Snackbar
             open={openSnackbar}
             autoHideDuration={6001}
@@ -1311,7 +1287,6 @@ Sezione che verrà stampata */}
               "4 Hai inserito un numero riservato asporto (compreso tra 9000 e 9999)"
             }
           />
-
         </main>
       )
     }
