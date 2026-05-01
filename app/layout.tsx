@@ -1,5 +1,6 @@
-import '@/app/ui/global.css';
-import { inter } from '@/app/ui/fonts';
+// @ts-ignore: allow side-effect CSS import in app layout
+import './ui/global.css';
+import { inter } from './ui/fonts';
 import { ConfigProvider } from '@/context/ConfigContext'; // Importa il provider
 
 export default function RootLayout({
@@ -16,7 +17,8 @@ export default function RootLayout({
     fine: process.env.FINE_SAGRA,
     mese: process.env.MESE_SAGRA,
   };
-
+  console.log("CONFIG CARICATA DA DOCKER:", config);
+  
   return (
     <html lang="en">
       <body className={`${inter.className} antialiased`}>

@@ -7,7 +7,7 @@ import { Button, ButtonGroup, Snackbar, TextField } from '@mui/material';
 import type { DbFiera, DbLog } from '@/app/lib/definitions';
 import { getContoPiuAlto, getGiornoSagra, getLastLog } from '@/app/lib/actions';
 import Filter1Icon from '@mui/icons-material/Filter1';
-import '@/app/ui/global.css';
+
 
 export default function Page() {
 
