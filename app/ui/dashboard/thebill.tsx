@@ -1,3 +1,4 @@
+'use client'; // 1. Fondamentale per accedere al Context nel browser
 
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -8,22 +9,18 @@ import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 
 import type { DbConsumazioniPrezzo } from '@/app/lib/definitions';
-import { idID } from '@mui/material/locale';
-
+import { useConfig } from '@/context/ConfigContext'; // 2. Importa l'hook
 
 export default function TheBill({ item }: { item: DbConsumazioniPrezzo[] }) {
    
+    // 3. Recupera tutte le variabili dal Context
+    // Nota: i nomi devono corrispondere a quelli definiti nel layout.tsx
+    const { anno, edizione, inizio, fine, mese } = useConfig();
+
     var totale = 0;
     var coperti = 1;
     var comanda = -1;
     var giorno = -1;
-
-    const anno = process.env.NEXT_PUBLIC_ANNO_SAGRA;
-    const titolo = process.env.NEXT_PUBLIC_TITOLO_HOME;
-    const edizione = process.env.NEXT_PUBLIC_EDIZIONE_SAGRA;
-    const inizio = process.env.NEXT_PUBLIC_INIZIO_SAGRA;
-    const fine = process.env.NEXT_PUBLIC_FINE_SAGRA;
-    const mese = process.env.NEXT_PUBLIC_MESE_SAGRA;
 
     for (let i of item) {
         totale += i.quantita * i.prezzo_unitario;
@@ -33,18 +30,19 @@ export default function TheBill({ item }: { item: DbConsumazioniPrezzo[] }) {
         if (giorno == -1) giorno = i.giorno;
     }
 
-
     var media = 0
     if (coperti != 0) media = (totale / coperti);
 
-
     return (
-
         <div>
             <Table>
                 <TableHead>
-                    <TableRow><TableCell>&nbsp;&nbsp;&nbsp;&nbsp;{edizione}° SAGRA DEI SALAMINI D’ASINO dal {inizio} al {fine} {mese} {anno}</TableCell></TableRow>
-
+                    <TableRow>
+                        {/* 4. Usa le variabili del context qui */}
+                        <TableCell>
+                            &nbsp;&nbsp;&nbsp;&nbsp;{edizione}° SAGRA DEI SALAMINI D’ASINO dal {inizio} al {fine} {mese} {anno}
+                        </TableCell>
+                    </TableRow>
                 </TableHead>
             </Table>
 
@@ -60,16 +58,13 @@ export default function TheBill({ item }: { item: DbConsumazioniPrezzo[] }) {
                 <TableBody >
                     {item.map((row) => (
                         row.quantita > 0 ?
-                            <TableRow>
+                            <TableRow key={row.piatto}> {/* Aggiunta key per best practice */}
                                 <TableCell >{row.piatto}</TableCell>
                                 <TableCell >
-
                                     &nbsp;&nbsp;&nbsp;&nbsp;{row.quantita}
-
                                 </TableCell>
                                 <TableCell align="left" className="flex-wrap">
                                     &nbsp;&nbsp;&nbsp;{row.prezzo_unitario}&nbsp;&euro;
-
                                 </TableCell>
                                 <TableCell align="left"> &nbsp;&nbsp;&nbsp;
                                     {(row.quantita * row.prezzo_unitario).toFixed(2)}&nbsp;&euro;
@@ -78,27 +73,26 @@ export default function TheBill({ item }: { item: DbConsumazioniPrezzo[] }) {
                             :
                             <></>
                     ))}
-                    <TableHead >
+                    <TableRow> {/* Corretto: TableHead non dovrebbe stare dentro TableBody */}
                         <TableCell ></TableCell>
                         <TableCell> </TableCell>
                         <TableCell >Totale:</TableCell>
                         <TableCell>
                             <span className="text-base md:text-2xl font-extrabold ">{totale.toFixed(2)}</span>&nbsp;&euro;
                         </TableCell>
-                    </TableHead>
-                    <TableBody>
+                    </TableRow>
+                    <TableRow>
                         <TableCell></TableCell>
                         <TableCell ></TableCell>
                         <TableCell>&nbsp;&nbsp;&nbsp;A coperto:</TableCell>
                         <TableCell>&nbsp;&nbsp;{media.toFixed(2)}&nbsp;&euro; </TableCell>
-                    </TableBody>
+                    </TableRow>
                 </TableBody>
             </Table>
             <br />
             &nbsp;&nbsp;&nbsp;&nbsp; Id: {comanda}_{giorno}
         </div >
     );
-
 }
 /*
 import Table from '@mui/material/Table';

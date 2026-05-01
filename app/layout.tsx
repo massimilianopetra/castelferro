@@ -1,14 +1,30 @@
 import '@/app/ui/global.css';
 import { inter } from '@/app/ui/fonts';
+import { ConfigProvider } from '@/context/ConfigContext'; // Importa il provider
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  // Leggiamo le variabili dal server (Docker le inietta qui a runtime)
+  const config = {
+    edizione: process.env.EDIZIONE_SAGRA,
+    anno: process.env.ANNO_SAGRA,
+    titolo: process.env.TITOLO_HOME,
+    inizio: process.env.INIZIO_SAGRA,
+    fine: process.env.FINE_SAGRA,
+    mese: process.env.MESE_SAGRA,
+  };
+
   return (
     <html lang="en">
-      <body className={`${inter.className} antialiased`}>{children}</body>
+      <body className={`${inter.className} antialiased`}>
+        {/* Avvolgiamo tutta l'app con il provider e passiamo la config */}
+        <ConfigProvider config={config}>
+          {children}
+        </ConfigProvider>
+      </body>
     </html>
   );
 }
