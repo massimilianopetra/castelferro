@@ -10,8 +10,7 @@ import {
     DialogContentText, DialogActions,
     Stack,
     FormControlLabel,
-    Switch,
-    TextField // Aggiunto import per coerenza grafica se servisse in futuro
+    Switch
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CampaignIcon from '@mui/icons-material/Campaign';
@@ -121,46 +120,57 @@ export default function ChiamaPage() {
         } catch (error) { console.error(error); }
     };
 
-return (
-    <ThemeProvider theme={defaultTheme}>
-        <Box sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            justifyContent: 'center', 
-            alignItems: 'center', 
-            // MODIFICA QUI: height 100% invece di minHeight 100dvh
-            height: '100%', 
-            width: '100%', 
-            bgcolor: 'background.default', 
-            p: isMobile ? 1 : 2, 
-            boxSizing: 'border-box',
-            // Aggiungiamo overflow hidden per sicurezza contro i micro-scroll
-            overflow: 'hidden' 
-        }}>
-            
-            <Box sx={{ textAlign: 'center', mb: 2, flexShrink: 0 }}>
-                <Typography sx={{ color: '#666', fontWeight: 900, fontSize: '0.9rem' }}>
-                    ULTIMO CHIAMATO
-                </Typography>
-             
+    return (
+        <ThemeProvider theme={defaultTheme}>
+            <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                // CORREZIONE: height 100% per stare dentro i limiti del parent dashboard
+                height: '100%', 
+                maxHeight: '100%',
+                width: '100%', 
+                bgcolor: 'background.default', 
+                p: isMobile ? 1 : 2, 
+                boxSizing: 'border-box',
+                overflow: 'hidden', // Blocca categoricamente lo scroll esterno
+                position: 'relative'
+            }}>
+                
+                {/* HEADER FISSO */}
+                <Box sx={{ textAlign: 'center', mb: isMobile ? 0.5 : 1, flexShrink: 0 }}>
+                    <Typography sx={{ color: '#666', fontWeight: 900, fontSize: '0.8rem' }}>
+                        ULTIMO CHIAMATO
+                    </Typography>
+                 
                     <Typography sx={{ 
-                        fontSize: isMobile ? '5.5rem' : '8rem', fontWeight: 1000, 
-                        color: 'primary.main', fontFamily: 'monospace', lineHeight: 1 
+                        fontSize: isMobile ? '4.5rem' : '7rem', 
+                        fontWeight: 1000, 
+                        color: 'primary.main', 
+                        fontFamily: 'monospace', 
+                        lineHeight: 1 
                     }}>
                         {numeroAttuale || '—'}
                     </Typography>
                 </Box>
 
-                <Box sx={{ width: '100%', maxWidth: '900px', display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+                {/* SWITCH FISSO */}
+                <Box sx={{ width: '100%', maxWidth: '900px', mx: 'auto', display: 'flex', justifyContent: 'flex-end', mb: 0.5, flexShrink: 0 }}>
                     <FormControlLabel
-                        control={<Switch checked={showActions} onChange={(e) => setShowActions(e.target.checked)} color="primary" />}
-                        label={<Typography sx={{ fontWeight: 'bold', fontSize: '0.8rem' }}>Funzioni aggiuntive</Typography>}
+                        control={<Switch checked={showActions} onChange={(e) => setShowActions(e.target.checked)} color="primary" size="small" />}
+                        label={<Typography sx={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Funzioni aggiuntive</Typography>}
                     />
                 </Box>
 
+                {/* TABELLA ELASTICA */}
                 <TableContainer component={Paper} sx={{ 
-                    maxWidth: '900px', width: '100%', maxHeight: '60vh', 
-                    borderRadius: '12px', overflowY: 'auto', boxShadow: 3
+                    maxWidth: '900px', 
+                    width: '100%', 
+                    mx: 'auto',
+                    flexGrow: 1, 
+                    minHeight: 0, 
+                    borderRadius: '12px', 
+                    overflowY: 'auto', // Solo la tabella deve scorrere
+                    boxShadow: 3
                 }}>
                     <Table stickyHeader size="small">
                         <TableHead>
@@ -186,27 +196,27 @@ return (
 
                                 return (
                                     <TableRow key={row.id} hover>
-                                        <TableCell sx={{ fontSize: isMobile ? '1.5rem' : '2rem', fontWeight: 1000, color: 'primary.main', fontFamily: 'monospace' }}>
+                                        <TableCell sx={{ fontSize: isMobile ? '1.4rem' : '2rem', fontWeight: 1000, color: 'primary.main', fontFamily: 'monospace' }}>
                                             {row.id}
                                         </TableCell>
-                                        <TableCell sx={{ fontSize: isMobile ? '1.2rem' : '1.8rem' }}>{row.numpersone}</TableCell>
+                                        <TableCell sx={{ fontSize: isMobile ? '1.1rem' : '1.8rem' }}>{row.numpersone}</TableCell>
                                         <TableCell align="right">
                                             <Stack direction="row" spacing={1} justifyContent="flex-end">
                                                 <Button 
-                                                    variant="contained" size={isMobile ? "small" : "medium"}
+                                                    variant="contained" size="small"
                                                     onClick={() => handleChiamaTicket(row)}
-                                                    sx={{ fontWeight: 'bold', bgcolor: btnColor, color: textColor, minWidth: isMobile ? 'auto' : '100px', '&:hover': { bgcolor: btnColor, opacity: 0.9 } }}
+                                                    sx={{ fontWeight: 'bold', bgcolor: btnColor, color: textColor, minWidth: isMobile ? '45px' : '100px', '&:hover': { bgcolor: btnColor, opacity: 0.9 } }}
                                                 >
                                                     <CampaignIcon fontSize={isMobile ? "small" : "medium"} />
-                                                    {/* {!isMobile && " Chiama"}*/} 
+                                                    <Typography component="span" sx={{ fontSize: isMobile ? '0.5rem' : '1.8rem' }}>chiama</Typography>
                                                 </Button>
                                                 {showActions && (
                                                     <>
-                                                        <IconButton color="primary" onClick={() => handleSiediTicket(row)} sx={{ border: '1px solid', borderRadius: '8px' }}>
-                                                            <ChairIcon fontSize={isMobile ? "small" : "medium"} />
+                                                        <IconButton color="primary" size="small" onClick={() => handleSiediTicket(row)} sx={{ border: '1px solid', borderRadius: '8px' }}>
+                                                            <ChairIcon fontSize="small" />
                                                         </IconButton>
-                                                        <IconButton color="error" onClick={() => { setSelectedTicket(row); setOpenDeleteDialog(true); }} sx={{ border: '1px solid', borderRadius: '8px' }}> 
-                                                            <DeleteIcon fontSize={isMobile ? "small" : "medium"} />
+                                                        <IconButton color="error" size="small" onClick={() => { setSelectedTicket(row); setOpenDeleteDialog(true); }} sx={{ border: '1px solid', borderRadius: '8px' }}> 
+                                                            <DeleteIcon fontSize="small" />
                                                         </IconButton>
                                                     </>
                                                 )}
@@ -219,43 +229,14 @@ return (
                     </Table>
                 </TableContainer>
 
-                {/* DIALOG ELIMINA TICKET UNIFORMATA GRAFICAMENTE */}
-                <Dialog 
-                    open={openDeleteDialog} 
-                    onClose={() => setOpenDeleteDialog(false)}
-                    PaperProps={{ 
-                        sx: { 
-                            borderRadius: 4, 
-                            borderLeft: '10px solid #d32f2f', // Rosso per delete
-                            p: 1, 
-                            minWidth: isMobile ? '90%' : '500px' 
-                        } 
-                    }}
-                >
-                    <DialogTitle sx={{ color: 'error.main', fontWeight: 1000, fontSize: '1.6rem', textAlign: 'center' }}>
-                        CONFERMA CANCELLAZIONE
-                    </DialogTitle>
-                    <DialogContent>
-                        <DialogContentText sx={{ fontWeight: 700, color: '#444', mb: 2, mt: 1, textAlign: 'center' }}>
-                            Vuoi eliminare definitivamente il ticket numero <span style={{ color: '#d32f2f' }}>{selectedTicket?.id}</span> e i <span style={{ color: '#d32f2f' }}>{selectedTicket?.numpersone}</span> coperti associati?
-                        </DialogContentText>
-                    </DialogContent>
-                    <DialogActions sx={{ justifyContent: 'center', gap: 2, pb: 3 }}>
-                        <Button 
-                            onClick={() => setOpenDeleteDialog(false)} 
-                            sx={{ fontWeight: 900, color: '#666' }}
-                        >
-                            NO, ANNULLA
-                        </Button>
-                        <Button 
-                            onClick={handleConfirmDelete} 
-                            color="error" 
-                            variant="contained" 
-                            sx={{ fontWeight: 1000, borderRadius: '12px', px: 5 }}
-                        >
-                            SI, ELIMINA
-                        </Button>
-                    </DialogActions>
+                {/* Snackbar e Dialog (stessa logica) */}
+                <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
+                     <DialogTitle>ELIMINA TICKET</DialogTitle>
+                     <DialogContent><DialogContentText>Vuoi eliminare il ticket {selectedTicket?.id}?</DialogContentText></DialogContent>
+                     <DialogActions>
+                        <Button onClick={() => setOpenDeleteDialog(false)}>NO</Button>
+                        <Button onClick={handleConfirmDelete} color="error">SI, ELIMINA</Button>
+                     </DialogActions>
                 </Dialog>
                 
                 <Snackbar open={snackbar.open} autoHideDuration={2000} onClose={() => setSnackbar(s => ({ ...s, open: false }))}>
