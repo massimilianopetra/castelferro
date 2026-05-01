@@ -208,7 +208,7 @@ export default function ChiamaPage() {
                                                     sx={{ fontWeight: 'bold', bgcolor: btnColor, color: textColor, minWidth: isMobile ? '45px' : '100px', '&:hover': { bgcolor: btnColor, opacity: 0.9 } }}
                                                 >
                                                     <CampaignIcon fontSize={isMobile ? "small" : "medium"} />
-                                                    <Typography component="span" sx={{ fontSize: isMobile ? '0.5rem' : '1.8rem' }}>chiama</Typography>
+                                                    <Typography component="span" sx={{ fontSize: isMobile ? '0.5rem' : '0.7rem' }}>chiama</Typography>
                                                 </Button>
                                                 {showActions && (
                                                     <>
