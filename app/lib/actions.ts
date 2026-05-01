@@ -350,6 +350,7 @@ export async function getNextTickets(): Promise<number> {
     console.error('Failed to fetch getNextTickets:', error);
     throw new Error('Failed to fetch getNextTickets.');
   }
+  
 }
 export async function getCountTicketsNonSeduti(): Promise<number> {
   try {
@@ -362,6 +363,32 @@ export async function getCountTicketsNonSeduti(): Promise<number> {
     return 0;
   }
 }
+export async function getFirstFreeTicket(): Promise<number> {
+  console.log("getFirstFreeTicket");
+  try {
+    // Questa query trova il più piccolo ID dove non esiste un ID + 1
+    // In pratica trova il primo "buco" nella sequenza
+    const result = await executeQuery<{ freeId: number }>(`
+      SELECT MIN(t1.id + 1) AS "freeId"
+      FROM tickets t1
+      LEFT JOIN tickets t2 ON t1.id + 1 = t2.id
+      WHERE t2.id IS NULL
+    `);
+
+    const firstGap = result?.[0]?.freeId;
+
+    // Se la tabella è vuota, iniziamo da 1. 
+    // Controlliamo anche se l'ID 1 è libero (il LEFT JOIN sopra parte da t1.id + 1)
+    const checkOne = await executeQuery(`SELECT id FROM tickets WHERE id = 1`);
+    if (!checkOne || checkOne.length === 0) return 1;
+
+    return firstGap ? Number(firstGap) : 1;
+  } catch (error) {
+    console.error('Failed to fetch getFirstFreeTicket:', error);
+    return 1;
+  }
+}
+
 export async function getMenu(): Promise<DbMenu[] | undefined> {
   console.log("getMenu");
   try {
