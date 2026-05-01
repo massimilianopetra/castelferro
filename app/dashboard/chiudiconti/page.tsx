@@ -10,17 +10,15 @@ import { writeLog, getLastLog, listContiPerChiusra } from '@/app/lib/actions';
 import { deltanow } from '@/app/lib/utils';
 import { DataGrid, GridToolbar, GridColDef } from '@mui/x-data-grid';
 import { styled } from '@mui/material/styles';
-import DeleteIcon from '@mui/icons-material/Delete';
-import { Button, ButtonGroup, Fab, Stack, TextField, Typography } from '@mui/material';
-
+import { Button, ButtonGroup, Typography, Box, Alert, TextField, Stack } from '@mui/material';
 
 const StyledDataGrid = styled(DataGrid)({
     '& .MuiDataGrid-columnHeader': {
-        backgroundColor: 'purple', // Sfondo viola per l'header
-        color: 'white',           // Testo bianco
+        backgroundColor: 'purple',
+        color: 'white',
     },
     '& .MuiDataGrid-columnHeaderTitle': {
-        fontWeight: 'bold',       // Testo in grassetto
+        fontWeight: 'bold',
     },
     "& .MuiDataGrid-sortIcon": {
         color: "white",
@@ -29,10 +27,10 @@ const StyledDataGrid = styled(DataGrid)({
         opacity: 1,
         color: "white"
     },
+    border: 'none',
 });
 
 export default function Page() {
-
     const [importValue, setImportValue] = useState('');
     const [textValue, setTextValue] = useState('');
     const [numeroFoglietto, setNumeroFoglietto] = useState<number | string>('');
@@ -42,87 +40,54 @@ export default function Page() {
     const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
     const { data: session } = useSession();
 
-    // DEFINIZIONE COLONNE: flex permette l'espansione dinamica al 100%
     const columns: GridColDef[] = [
         {
             field: 'col1', 
             headerName: 'N. Foglietto', 
-            align: 'right', 
-            minWidth: 100, 
-            flex: 1, 
+            width: 100,
             renderCell: (params) => (
-                <Link href={`/dashboard/casse/${params.value}`} passHref>
+                <Link href={`/dashboard/casse/${params.value}`} passHref className="text-blue-600 underline font-bold">
                     {params.value}
                 </Link>
             )
         },
-        { field: 'col2', headerName: 'Cameriere', minWidth: 120, flex: 1.5, align: 'right' },
-        { field: 'col3', headerName: 'Stampato da', minWidth: 120, flex: 1.5, align: 'right' },
-        { field: 'col4', headerName: 'Coperti', type: "number", minWidth: 80, flex: 1, align: 'right' },
-        { field: 'col5', headerName: 'Totale (€)', type: "number", minWidth: 100, flex: 1, align: 'right' },
+        { field: 'col2', headerName: 'Cameriere', width: 150 },
+        { field: 'col3', headerName: 'Stampato da', width: 130 },
+        { field: 'col4', headerName: 'Coperti', type: "number", width: 80 },
+        { field: 'col5', headerName: 'Totale (€)', type: "number", width: 100, valueFormatter: (params) => `${params} €` },
         {
             field: 'col6', 
             headerName: 'Modalità pagamento', 
-            align: 'center', 
             minWidth: 320, 
-            flex: 3, // Spazio maggiore per i pulsanti
+            flex: 1, 
             renderCell: (params) => (
-                <ButtonGroup size="small" variant="contained" sx={{ borderRadius: '9999px' }} >
-                    <Button onClick={() => handleAChiudiPos(params.value as number)} >POS</Button>
-                    <Button onClick={() => handleAChiudi(params.value as number)} >Contanti</Button>
-                    <Button onClick={() => handleChiudiGratis(params.value as number)} >Altro Importo</Button>
+                <ButtonGroup size="small" variant="contained" color="primary" sx={{ borderRadius: '9999px', my: 1 }} >
+                    <Button onClick={() => handleAChiudiPos(params.value as number)}>POS</Button>
+                    <Button onClick={() => handleAChiudi(params.value as number)}>Contanti</Button>
+                    <Button onClick={() => handleChiudiGratis(params.value as number)}>Altro</Button>
                 </ButtonGroup>
             )
         },
     ];
 
+    // --- LOGICHE (Invariate) ---
     const handleAChiudi = async (idComanda: number) => {
         if (idComanda) {
-            const fetchData = async () => {
-                setPhase('elaborazione');
-                await chiudiConto(idComanda, sagra.giornata, 1);
-                await writeLog(idComanda, sagra.giornata, 'Casse', '', 'CLOSE', 'Pagato contanti');
-                const conti = await listContiPerChiusra(sagra.giornata);
-                if (conti) {
-                    const cc = conti.map((item) => ({
-                        id: item.id,
-                        col1: item.id_comanda,
-                        col2: item.cameriere,
-                        col3: deltanow(item.data_stampa),
-                        col4: item.coperti,
-                        col5: item.totale.toFixed(2),
-                        col6: item.id_comanda,
-                    }));
-                    setRows(cc);
-                }
-                setPhase('chiuso');
-            };
-            fetchData();
+            setPhase('elaborazione');
+            await chiudiConto(idComanda, sagra.giornata, 1);
+            await writeLog(idComanda, sagra.giornata, 'Casse', '', 'CLOSE', 'Pagato contanti');
+            await refreshData();
+            setPhase('chiuso');
         }
     };
 
     const handleAChiudiPos = async (idComanda: number) => {
         if (idComanda) {
-            const fetchData = async () => {
-                setPhase('elaborazione');
-                await chiudiConto(idComanda, sagra.giornata, 2);
-                await writeLog(idComanda, sagra.giornata, 'Casse', '', 'CLOSE', 'Pagato POS');
-                const conti = await listContiPerChiusra(sagra.giornata);
-                if (conti) {
-                    const cc = conti.map((item) => ({
-                        id: item.id,
-                        col1: item.id_comanda,
-                        col2: item.cameriere,
-                        col3: deltanow(item.data_stampa),
-                        col4: item.coperti,
-                        col5: item.totale.toFixed(2),
-                        col6: item.id_comanda,
-                    }));
-                    setRows(cc);
-                }
-                setPhase('chiuso');
-            };
-            fetchData();
+            setPhase('elaborazione');
+            await chiudiConto(idComanda, sagra.giornata, 2);
+            await writeLog(idComanda, sagra.giornata, 'Casse', '', 'CLOSE', 'Pagato POS');
+            await refreshData();
+            setPhase('chiuso');
         }
     };
 
@@ -137,32 +102,31 @@ export default function Page() {
 
     const handleCompletatoGratis = async () => {
         if (numeroFoglietto) {
-            const fetchData = async () => {
-                setPhase('elaborazione');
-                await chiudiConto(Number(numeroFoglietto), sagra.giornata, 3, textValue, importValue);
-                await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', 'Altro Importo');
-                const conti = await listContiPerChiusra(sagra.giornata);
-                if (conti) {
-                    const cc = conti.map((item) => ({
-                        id: item.id,
-                        col1: item.id_comanda,
-                        col2: item.cameriere,
-                        col3: deltanow(item.data_stampa),
-                        col4: item.coperti,
-                        col5: item.totale.toFixed(2),
-                        col6: item.id_comanda,
-                    }));
-                    setRows(cc);
-                }
-                setPhase('chiuso');
-            };
-            fetchData();
+            setPhase('elaborazione');
+            await chiudiConto(Number(numeroFoglietto), sagra.giornata, 3, textValue, importValue);
+            await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', 'Altro Importo');
+            await refreshData();
+            setPhase('chiuso');
         }
     };
 
-    const handleAnnullaGratis = async () => {
-        setPhase('caricato');
-    }
+    const handleAnnullaGratis = () => setPhase('caricato');
+
+    const refreshData = async () => {
+        const conti = await listContiPerChiusra(sagra.giornata);
+        if (conti) {
+            const cc = conti.map((item) => ({
+                id: item.id,
+                col1: item.id_comanda,
+                col2: item.cameriere,
+                col3: deltanow(item.data_stampa),
+                col4: item.coperti,
+                col5: item.totale.toFixed(2),
+                col6: item.id_comanda,
+            }));
+            setRows(cc);
+        }
+    };
 
     useEffect(() => {
         fetchData();
@@ -189,85 +153,73 @@ export default function Page() {
         }
     }
 
-    if ((session?.user?.name == "Casse") || (session?.user?.name == "SuperUser")) {
-        if (sagra.stato == 'CHIUSA') {
-            return (
-                <main className="p-4">
-                    <div className="text-center">
-                        <div className="p-4 mb-4 text-xl text-yellow-800 rounded-lg bg-yellow-50" role="alert">
-                            <span className="text-xl font-semibold">Attenzione:</span> |Incassa conti| la giornata non è stata ancora aperta!
-                        </div>
-                    </div>
-                </main>
-            )
-        } else if (phase == 'caricamento') {
-            return (
-                <main className="flex flex-col items-center justify-center h-screen text-center">
-                    <p className="text-5xl py-4">Incassa Conti</p>
-                    <CircularProgress size="6rem" />
-                    <p className="text-4xl py-4">Caricamento in corso ...</p>
-                </main>
-            );
-        } else if (phase == 'elaborazione') {
-            return (
-                <main className="flex flex-col items-center justify-center h-screen text-center">
-                    <p className="text-5xl py-4">Elaborazione in corso ...</p>
-                    <CircularProgress size="6rem" />
-                </main>
-            )
-        }
-        else if (phase == 'pagaaltroimporto') {
-            return (
-                <div className="flex items-center justify-center min-h-screen p-4">
-                    <div className="w-full max-w-[600px] p-6 border rounded-lg shadow-sm space-y-4 bg-white">
-                        <p className="text-xl">
-                            Conto numero: <span className="font-extrabold text-blue-800">{conto?.id_comanda}</span><br/>
-                            Incasso previsto: <span className="font-semibold text-blue-800">{conto?.totale} Euro</span>
-                        </p>
-                        <TextField label="Nuovo importo" variant="outlined" value={importValue} onChange={(e) => setImportValue(e.target.value)} type="number" fullWidth />
-                        <TextField label="Note" variant="outlined" value={textValue} onChange={(e) => setTextValue(e.target.value)} fullWidth />
-                        <div className="flex justify-center gap-4">
-                            <Button variant="contained" color="primary" onClick={handleCompletatoGratis}>Salva e chiudi</Button>
-                            <Button variant="outlined" onClick={handleAnnullaGratis}>Annulla</Button>
-                        </div>
-                    </div>
-                </div>
-            )
-        } else if (phase == 'caricato' || phase == 'chiuso') {
-            return (
-                <main style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%' }}>
-                    <div style={{ textAlign: 'center', padding: '10px' }}>
-                        <p className="text-4xl md:text-5xl font-bold py-2">Incassa Conti</p>
-                        <p className="text-gray-600">
-                            In questa schermata appaiono solo conti chiusi da incassare della giornata corrente.
-                        </p>
-                    </div>
-
-                    <div style={{ flexGrow: 1, padding: '0 10px 10px 10px', width: '100%' }}>
-                        <div style={{ height: '100%', width: '100%' }}>
-                            <StyledDataGrid
-                                rows={rows}
-                                columns={columns}
-                                slots={{ toolbar: GridToolbar }}
-                                autosizeOnMount
-                                disableRowSelectionOnClick
-                                initialState={{
-                                    density: 'compact',
-                                    pagination: { paginationModel: { pageSize: 25 } },
-                                }}
-                            />
-                        </div>
-                    </div>
-                </main>
-            );
-        }
-    } else {
-        return (
-            <main className="p-4 text-center">
-                <div className="p-4 text-red-800 rounded-lg bg-red-50">
-                    <span className="font-semibold">Violazione:</span> utente non autorizzato.
-                </div>
-            </main>
-        )
+    // --- RENDERING ---
+    if (!((session?.user?.name == "Casse") || (session?.user?.name == "SuperUser"))) {
+        return <Box sx={{ p: 4 }}><Alert severity="error">Accesso Negato</Alert></Box>;
     }
+
+    if (sagra.stato == 'CHIUSA') {
+        return <Box sx={{ p: 4 }}><Alert severity="warning">Giornata non ancora aperta!</Alert></Box>;
+    }
+
+    if (phase == 'caricamento' || phase == 'elaborazione') {
+        return (
+            <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
+                <Typography variant="h4" sx={{ mb: 2 }}>{phase === 'caricamento' ? 'Caricamento...' : 'Elaborazione...'}</Typography>
+                <CircularProgress size="5rem" />
+            </Box>
+        );
+    }
+
+    if (phase == 'pagaaltroimporto') {
+        return (
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', p: 2 }}>
+                <Box sx={{ width: '100%', maxWidth: 500, p: 4, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 3 }}>
+                    <Typography variant="h5" sx={{ mb: 2 }}>Modifica Incasso</Typography>
+                    <TextField label="Nuovo importo" fullWidth sx={{ mb: 2 }} value={importValue} onChange={(e) => setImportValue(e.target.value)} type="number" />
+                    <TextField label="Note" fullWidth sx={{ mb: 3 }} value={textValue} onChange={(e) => setTextValue(e.target.value)} />
+                    <Stack direction="row" spacing={2} justifyContent="center">
+                        <Button variant="contained" onClick={handleCompletatoGratis}>Salva</Button>
+                        <Button variant="outlined" onClick={handleAnnullaGratis}>Annulla</Button>
+                    </Stack>
+                </Box>
+            </Box>
+        );
+    }
+
+    return (
+        <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            height: '100%', // Usa il 100% dell'area contenitore del layout
+            width: '100%', 
+            overflow: 'hidden', // Impedisce la scrollbar esterna
+            p: 1,
+            boxSizing: 'border-box'
+        }}>
+            {/* Titolo Nero */}
+            <Box sx={{ textAlign: 'center', mb: 1, flexShrink: 0 }}>
+                <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'black' }}>
+                    Incassa Conti
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                    Solo conti chiusi da incassare (Giornata {sagra.giornata})
+                </Typography>
+            </Box>
+
+            {/* Tabella con scorrimento interno */}
+            <Box sx={{ flexGrow: 1, minHeight: 0, width: '100%' }}>
+                <StyledDataGrid
+                    rows={rows}
+                    columns={columns}
+                    slots={{ toolbar: GridToolbar }}
+                    density="compact"
+                    disableRowSelectionOnClick
+                    initialState={{
+                        pagination: { paginationModel: { pageSize: 50 } },
+                    }}
+                />
+            </Box>
+        </Box>
+    );
 }

@@ -121,18 +121,28 @@ export default function ChiamaPage() {
         } catch (error) { console.error(error); }
     };
 
-    return (
-        <ThemeProvider theme={defaultTheme}>
-            <Box sx={{ 
-                display: 'flex', flexDirection: 'column', justifyContent: 'center', 
-                alignItems: 'center', minHeight: '100dvh', width: '100%', 
-                bgcolor: 'background.default', p: isMobile ? 1 : 2, boxSizing: 'border-box'
-            }}>
-                
-                <Box sx={{ textAlign: 'center', mb: 2 }}>
-                    <Typography sx={{ color: '#666', fontWeight: 900, fontSize: '0.9rem' }}>
-                        ULTIMO CHIAMATO
-                    </Typography>
+return (
+    <ThemeProvider theme={defaultTheme}>
+        <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            justifyContent: 'center', 
+            alignItems: 'center', 
+            // MODIFICA QUI: height 100% invece di minHeight 100dvh
+            height: '100%', 
+            width: '100%', 
+            bgcolor: 'background.default', 
+            p: isMobile ? 1 : 2, 
+            boxSizing: 'border-box',
+            // Aggiungiamo overflow hidden per sicurezza contro i micro-scroll
+            overflow: 'hidden' 
+        }}>
+            
+            <Box sx={{ textAlign: 'center', mb: 2, flexShrink: 0 }}>
+                <Typography sx={{ color: '#666', fontWeight: 900, fontSize: '0.9rem' }}>
+                    ULTIMO CHIAMATO
+                </Typography>
+             
                     <Typography sx={{ 
                         fontSize: isMobile ? '5.5rem' : '8rem', fontWeight: 1000, 
                         color: 'primary.main', fontFamily: 'monospace', lineHeight: 1 
@@ -188,7 +198,7 @@ export default function ChiamaPage() {
                                                     sx={{ fontWeight: 'bold', bgcolor: btnColor, color: textColor, minWidth: isMobile ? 'auto' : '100px', '&:hover': { bgcolor: btnColor, opacity: 0.9 } }}
                                                 >
                                                     <CampaignIcon fontSize={isMobile ? "small" : "medium"} />
-                                                    Chiama {/* {!isMobile && " Chiama"}*/} 
+                                                    {/* {!isMobile && " Chiama"}*/} 
                                                 </Button>
                                                 {showActions && (
                                                     <>

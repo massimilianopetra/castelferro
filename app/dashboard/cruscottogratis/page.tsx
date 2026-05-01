@@ -1,835 +1,218 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
-import CircularProgress from "@mui/material/CircularProgress";
-import {
-  listConsumazioniGratis,
-  listContiGratis,
-} from "@/app/lib/actions";
-import * as React from "react";
-import { styled } from "@mui/material/styles";
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell, { tableCellClasses } from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
-import Paper from "@mui/material/Paper";
-import { BarChart } from "@mui/x-charts/BarChart";
-import { blue, blueGrey, yellow } from "@mui/material/colors";
-import TextField from "@mui/material/TextField";
-import { Typography, useMediaQuery } from "@mui/material";
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import CircularProgress from '@mui/material/CircularProgress';
+import { listConsumazioniGratis, listContiGratis } from '@/app/lib/actions';
+import * as React from 'react';
+import { styled } from '@mui/material/styles';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell, { tableCellClasses } from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper';
+import { Box, Typography, useMediaQuery, Alert } from '@mui/material';
 
 export default function Page() {
-  const [phase, setPhase] = useState("caricamento");
-  const [record, setRecord] = useState<RecordCruscotto[]>([]);
-  const { data: session } = useSession();
+    const [phase, setPhase] = useState('caricamento');
+    const [record, setRecord] = useState<RecordCruscotto[]>([]);
+    const { data: session } = useSession();
+    const isMobile = useMediaQuery('(max-width:600px)');
 
-  const CustomTextField = styled(TextField)({
-    "& .MuiInputBase-input": {
-      //   label: 'filled-size-small',
-      textAlign: "right", // Allinea il testo a dx
-      width: "100%",
-      fontSize: "13px", // Cambia la dimensione del carattere del testo inserito
-    },
-    "& .MuiInputLabel-root": {
-      fontSize: "12px", // Cambia la dimensione del carattere dell'etichetta
-    },
-  });
+    const StyledTableCell = styled(TableCell)(({ theme }) => ({
+        [`&.${tableCellClasses.head}`]: {
+            backgroundColor: "#2f6feb",
+            color: "white",
+            fontWeight: "bold",
+            fontSize: isMobile ? 14 : 16,
+        },
+        [`&.${tableCellClasses.body}`]: {
+            color: "#2f6feb",
+            fontSize: 13,
+        },
+    }));
 
-  const StyledTableCell = styled(TableCell)(({}) => ({
-    [`&.${tableCellClasses.head}`]: {
-      backgroundColor: "#2f6feb", //'#1e40af',  // Imposta lo sfondo blu
-      color: "white", // Imposta il colore del testo giallo
-      fontWeight: "bold",
-      fontSize: 16,
-    },
-    [`&.${tableCellClasses.body}`]: {
-      color: "#2f6feb",
-      fontSize: 14,
-    },
-  }));
+    const StyledTableRow = styled(TableRow)(({ theme }) => ({
+        '&:nth-of-type(odd)': {
+            backgroundColor: theme.palette.action.hover,
+        },
+        '&:last-child td, &:last-child th': {
+            border: 0,
+        },
+    }));
 
-  const StyledTableRow = styled(TableRow)(({ theme }) => ({
-    "&:nth-of-type(odd)": {
-      backgroundColor: theme.palette.action.hover,
-    },
-    // hide last border
-    "&:last-child td, &:last-child th": {
-      border: 0,
-    },
-  }));
-
-  type RecordCruscotto = {
-    giornata: string;
-    incasso: number;
-    incassopos: number;
-    incassoconto1: number;
-    incassoconto2: number;
-    incassoconto3: number;
-    incassoconto4: number;
-    incassoconto5: number;
-    incassoconto6: number;
-    incassoconto7: number;
-    incassoconto8: number;
-    incassoconto9: number;
-    consumazioni1: number;
-    consumazioni2: number;
-    consumazioni3: number;
-    consumazioni4: number;
-    consumazioni5: number;
-    consumazioni6: number;
-    consumazioni7: number;
-    consumazioni8: number;
-    consumazioni9: number;
-    consumazionitot: number;
-    consumazionipatatine: number;
-    consumazionibirre: number;
-    consumazioniagnolotti: number
-  };
-
-  function createData(
-    giornata: string,
-    incasso: number,
-    incassopos: number,
-    incassoconto1: number,
-    incassoconto2: number,
-    incassoconto3: number,
-    incassoconto4: number,
-    incassoconto5: number,
-    incassoconto6: number,
-    incassoconto7: number,
-    incassoconto8: number,
-    incassoconto9: number,
-    consumazioni1: number,
-    consumazioni2: number,
-    consumazioni3: number,
-    consumazioni4: number,
-    consumazioni5: number,
-    consumazioni6: number,
-    consumazioni7: number,
-    consumazioni8: number,
-    consumazioni9: number,
-    consumazionitot: number,
-    consumazionipatatine: number,
-    consumazionibirre: number,
-    consumazioniagnolotti: number
-  ) {
-    return {
-      giornata,
-      incasso,
-      incassopos,
-      incassoconto1,
-      incassoconto2,
-      incassoconto3,
-      incassoconto4,
-      incassoconto5,
-      incassoconto6,
-      incassoconto7,
-      incassoconto8,
-      incassoconto9,
-      consumazioni1,
-      consumazioni2,
-      consumazioni3,
-      consumazioni4,
-      consumazioni5,
-      consumazioni6,
-      consumazioni7,
-      consumazioni8,
-      consumazioni9,
-      consumazionitot,
-      consumazionipatatine,
-      consumazionibirre,
-      consumazioniagnolotti
+    type RecordCruscotto = {
+        giornata: string;
+        incasso: number;
+        incassopos: number;
+        incassoconto1: number;
+        incassoconto2: number;
+        incassoconto3: number;
+        incassoconto4: number;
+        incassoconto5: number;
+        incassoconto6: number;
+        incassoconto7: number;
+        incassoconto8: number;
+        incassoconto9: number;
+        consumazioni1: number;
+        consumazioni2: number;
+        consumazioni3: number;
+        consumazioni4: number;
+        consumazioni5: number;
+        consumazioni6: number;
+        consumazioni7: number;
+        consumazioni8: number;
+        consumazioni9: number;
+        consumazionitot: number;
+        consumazionipatatine: number;
+        consumazionibirre: number;
+        consumazioniagnolotti: number
     };
-  }
 
-  var rows = [
-    createData("Giovedi -1giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20,21,22,23),
-    createData("Venerdì -2giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20,21,22,23),
-    createData("Sabato  -3giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20,21,22,23),
-    createData("Domenica -4giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20,21,22,23),
-    createData("Lunedì -5giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20,21,22,23),
-    createData("Martedì -6giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20,21,22,23),
-    createData("Mercoledì -7giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20,21,22,23),
-    createData("Giovedì -8giorno", 1, 2, 2, 3, 4, 5, 6, 7, 8, 9, 10,11,12,13,14,15,16,17,18,19,20,21,22,23),
-  ];
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-
-    const conti = await listContiGratis();
-    const cosumazioni = await listConsumazioniGratis();
-    for (var i = 0; i < 8; i++) {
-
-
-      
-      var sum = conti?.reduce((accumulator, currentValue) => {
-        if (currentValue.giorno == i+1) {
-          return accumulator + currentValue.totale;
-        } else {
-          return accumulator
-        }
-        
-      }, 0);
-      if (!sum) sum = 0;
-
-      var sum1 = conti?.reduce((accumulator, currentValue) => {
-        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 1)) {
-          return accumulator + currentValue.totale;
-        } else {
-          return accumulator
-        }
-      }, 0);
-      if (!sum1) sum1 = 0;
-
-      var sum2 = conti?.reduce((accumulator, currentValue) => {
-        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 2)) {
-          return accumulator + currentValue.totale;
-        } else {
-          return accumulator
-        }
-      }, 0);
-      if (!sum2) sum2 = 0;
-
-      var sum3 = conti?.reduce((accumulator, currentValue) => {
-        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 3)) {
-          return accumulator + currentValue.totale;
-        } else {
-          return accumulator
-        }
-      }, 0);
-      if (!sum3) sum3 = 0;
-
-      var sum4 = conti?.reduce((accumulator, currentValue) => {
-        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 4)) {
-          return accumulator + currentValue.totale;
-        } else {
-          return accumulator
-        }
-      }, 0);
-      if (!sum4) sum4 = 0;
-
-      var sum5 = conti?.reduce((accumulator, currentValue) => {
-        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 5)) {
-          return accumulator + currentValue.totale;
-        } else {
-          return accumulator
-        }
-      }, 0);
-      if (!sum5) sum5 = 0;
-
-      var sum6 = conti?.reduce((accumulator, currentValue) => {
-        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 6)) {
-          return accumulator + currentValue.totale;
-        } else {
-          return accumulator
-        }
-      }, 0);
-      if (!sum6) sum6 = 0;
-
-      var sum7 = conti?.reduce((accumulator, currentValue) => {
-        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 7)) {
-          return accumulator + currentValue.totale;
-        } else {
-          return accumulator
-        }
-      }, 0);
-      if (!sum7) sum7 = 0;
-
-      var sum8 = conti?.reduce((accumulator, currentValue) => {
-        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 8)) {
-          return accumulator + currentValue.totale;
-        } else {
-          return accumulator
-        }
-      }, 0);
-      if (!sum8) sum8 = 0;
-
-      var sum9 = conti?.reduce((accumulator, currentValue) => {
-        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 9)) {
-          return accumulator + currentValue.totale;
-        } else {
-          return accumulator
-        }
-      }, 0);
-      if (!sum9) sum9 = 0;
-
-      var sumc1 = cosumazioni?.reduce((accumulator, currentValue) => {
-        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 1)) {
-          return accumulator + currentValue.quantita;
-        } else {
-          return accumulator
-        }
-        
-      }, 0);
-      if (!sumc1) sumc1 = 0;
-
-      var sumc2 = cosumazioni?.reduce((accumulator, currentValue) => {
-        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 2)) {
-          return accumulator + currentValue.quantita;
-        } else {
-          return accumulator
-        }
-        
-      }, 0);
-      if (!sumc2) sumc2 = 0;
-    
-      var sumc3 = cosumazioni?.reduce((accumulator, currentValue) => {
-        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 3)) {
-          return accumulator + currentValue.quantita;
-        } else {
-          return accumulator
-        }
-        
-      }, 0);
-      if (!sumc3) sumc3 = 0;
-
-      var sumc4 = cosumazioni?.reduce((accumulator, currentValue) => {
-        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 4)) {
-          return accumulator + currentValue.quantita;
-        } else {
-          return accumulator
-        }
-        
-      }, 0);
-      if (!sumc4) sumc4 = 0;
-
-      var sumc5 = cosumazioni?.reduce((accumulator, currentValue) => {
-        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 5)) {
-          return accumulator + currentValue.quantita;
-        } else {
-          return accumulator
-        }
-        
-      }, 0);
-      if (!sumc5) sumc5 = 0;
-
-      var sumc6 = cosumazioni?.reduce((accumulator, currentValue) => {
-        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 6)) {
-          return accumulator + currentValue.quantita;
-        } else {
-          return accumulator
-        }
-        
-      }, 0);
-      if (!sumc6) sumc6 = 0;
-
-      var sumc7 = cosumazioni?.reduce((accumulator, currentValue) => {
-        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 7)) {
-          return accumulator + currentValue.quantita;
-        } else {
-          return accumulator
-        }
-        
-      }, 0);
-      if (!sumc7) sumc7 = 0;
-
-      var sumc8 = cosumazioni?.reduce((accumulator, currentValue) => {
-        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 8)) {
-          return accumulator + currentValue.quantita;
-        } else {
-          return accumulator
-        }
-        
-      }, 0);
-      if (!sumc8) sumc8 = 0;
-
-      var sumc9 = cosumazioni?.reduce((accumulator, currentValue) => {
-        if ((currentValue.giorno == i+1) && (currentValue.id_comanda == 9)) {
-          return accumulator + currentValue.quantita;
-        } else {
-          return accumulator
-        }
-        
-      }, 0);
-      if (!sumc9) sumc9 = 0;
-
-
-      var sumct = cosumazioni?.reduce((accumulator, currentValue) => {
-        if ((currentValue.giorno == i+1)) {
-          return accumulator + currentValue.quantita;
-        } else {
-          return accumulator
-        }
-        
-      }, 0);
-      if (!sumct) sumct = 0;
-
-      var sumcpatatine = cosumazioni?.reduce((accumulator, currentValue) => {
-        if ((currentValue.giorno == i+1) && 
-        (currentValue.id_comanda == 1) &&
-        (currentValue.piatto == "Patatine fritte")) {
-          return accumulator + currentValue.quantita;
-        } else {
-          return accumulator
-        }
-        
-      }, 0);
-      if (!sumcpatatine) sumcpatatine = 0;
-
-      var sumcbirre = cosumazioni?.reduce((accumulator, currentValue) => {
-                if ((currentValue.giorno == i+1) && 
-        (currentValue.id_comanda == 1) &&
-        (currentValue.piatto == 'Birra artigianale 0.4lt')) {
-          return accumulator + currentValue.quantita;
-        } else {
-          return accumulator
-        }
-        
-      }, 0);
-
-      if (!sumcbirre) sumcbirre = 0;
-
-      var sumcagnolotti = cosumazioni?.reduce((accumulator, currentValue) => {
-        if ((currentValue.giorno == i+1) && 
-            (currentValue.id_comanda == 1) && 
-         
-            ((currentValue.piatto == 'Agnolotti al burro e/o formaggio') ||
-            (currentValue.piatto == "Agnolotti al vino") ||
-            (currentValue.piatto == "Agnolotti al sugo"))
-          ) {
-          return accumulator + currentValue.quantita;
-        } else {
-          return accumulator
-        }
-        
-      }, 0);
-      if (!sumcagnolotti) sumcagnolotti = 0;
-
-      rows[i] = {
-        ...rows[i],
-        incasso: sum,
-        incassopos: 0,
-        incassoconto1: sum1,
-        incassoconto2: sum2,
-        incassoconto3: sum3,
-        incassoconto4: sum4,
-        incassoconto5: sum5,
-        incassoconto6: sum6,
-        incassoconto7: sum7,
-        incassoconto8: sum8,
-        incassoconto9: sum9,
-        consumazioni1: sumc1,
-        consumazioni2: sumc2,
-        consumazioni3: sumc3,
-        consumazioni4: sumc4,
-        consumazioni5: sumc5,
-        consumazioni6: sumc6,
-        consumazioni7: sumc7,
-        consumazioni8: sumc8,
-        consumazioni9: sumc9,
-        consumazionitot: sumct,
-        consumazionipatatine:sumcpatatine,
-        consumazionibirre:sumcbirre,
-        consumazioniagnolotti:sumcagnolotti,
-        
-      };
+    function createData(
+        giornata: string, incasso: number, incassopos: number, incassoconto1: number, incassoconto2: number,
+        incassoconto3: number, incassoconto4: number, incassoconto5: number, incassoconto6: number,
+        incassoconto7: number, incassoconto8: number, incassoconto9: number, consumazioni1: number,
+        consumazioni2: number, consumazioni3: number, consumazioni4: number, consumazioni5: number,
+        consumazioni6: number, consumazioni7: number, consumazioni8: number, consumazioni9: number,
+        consumazionitot: number, consumazionipatatine: number, consumazionibirre: number, consumazioniagnolotti: number
+    ) {
+        return {
+            giornata, incasso, incassopos, incassoconto1, incassoconto2, incassoconto3, incassoconto4,
+            incassoconto5, incassoconto6, incassoconto7, incassoconto8, incassoconto9, consumazioni1,
+            consumazioni2, consumazioni3, consumazioni4, consumazioni5, consumazioni6, consumazioni7,
+            consumazioni8, consumazioni9, consumazionitot, consumazionipatatine, consumazionibirre, consumazioniagnolotti
+        };
     }
-    setRecord(rows);
-    setPhase("caricato");
-  };
 
-  if (session?.user?.name == "SuperUser") {
-     const isMobile = useMediaQuery('(max-width:600px)');
-   
-    if (phase == "caricamento") {
-      return (
-        <><header className="top-section">
-        </header>
-          <main className="middle-section">
-            <div className='z-0 text-center'>
-              <br></br>
-              <p className="text-5xl py-4">
-                Cruscotto di Sintesi Conti Gratis
-              </p>
-              <br />
-              <CircularProgress size="9rem" />
-              <br />
-              <p className="text-4xl py-4">
-                Caricamento in corso ...
-              </p>
+    useEffect(() => {
+        const fetchData = async () => {
+            const initialRows = [
+                "Giovedi - 1giorno", "Venerdì - 2giorno", "Sabato - 3giorno", "Domenica - 4giorno",
+                "Lunedì - 5giorno", "Martedì - 6giorno", "Mercoledì - 7giorno", "Giovedì - 8giorno"
+            ].map(day => createData(day, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
 
-            </div>
-          </main></>
-      );
-    } else if (phase == "caricato") {
-      return (
-        <main style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%' }}>
-          {/* Contenuti statici sopra la tabella */}
-            <div style={{ textAlign: 'center', padding: '4px 0' }}>
-              <Typography variant={isMobile ? "h5" : "h3"} sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold', color: '#333' }}>
-                Cruscotto di Sintesi conti gratis
-              </Typography>
-              <Typography variant={isMobile ? "subtitle2" : "body1"} sx={{ textAlign: 'center', mb: 2, color: '#333' }}>
-                In questa schermata i foglietti dal 1 (Camerieri) al 9 che non rientrano nel contabilizzazione
-              </Typography>
-            </div>
+            const conti = await listContiGratis();
+            const cosumazioni = await listConsumazioniGratis();
+            
+            const updatedRows = initialRows.map((row, i) => {
+                const giorno = i + 1;
+                const getSum = (id?: number) => conti?.filter(c => c.giorno === giorno && (!id || c.id_comanda === id)).reduce((a, b) => a + b.totale, 0) || 0;
+                const getCons = (id: number) => cosumazioni?.filter(c => c.giorno === giorno && c.id_comanda === id).reduce((a, b) => a + b.quantita, 0) || 0;
 
-      {/* Contenitore principale della tabella (con flex per occupare lo spazio verticale) */}
-      <div style={{ flexGrow: 1, minHeight: 0, width: '100%', textAlign: 'center', display: 'flex', flexDirection: 'column' }}>
-        <h2 style={{ fontWeight: 'extrabold' }}></h2>
+                return {
+                    ...row,
+                    incasso: getSum(),
+                    incassoconto1: getSum(1), incassoconto2: getSum(2), incassoconto3: getSum(3),
+                    incassoconto4: getSum(4), incassoconto5: getSum(5), incassoconto6: getSum(6),
+                    incassoconto7: getSum(7), incassoconto8: getSum(8), incassoconto9: getSum(9),
+                    consumazioni1: getCons(1), consumazioni2: getCons(2), consumazioni3: getCons(3),
+                    consumazioni4: getCons(4), consumazioni5: getCons(5), consumazioni6: getCons(6),
+                    consumazioni7: getCons(7), consumazioni8: getCons(8), consumazioni9: getCons(9),
+                    consumazionitot: cosumazioni?.filter(c => c.giorno === giorno).reduce((a, b) => a + b.quantita, 0) || 0,
+                    consumazionipatatine: cosumazioni?.filter(c => c.giorno === giorno && c.id_comanda === 1 && c.piatto === "Patatine fritte").reduce((a, b) => a + b.quantita, 0) || 0,
+                    consumazionibirre: cosumazioni?.filter(c => c.giorno === giorno && c.id_comanda === 1 && c.piatto === 'Birra artigianale 0.4lt').reduce((a, b) => a + b.quantita, 0) || 0,
+                    consumazioniagnolotti: cosumazioni?.filter(c => c.giorno === giorno && c.id_comanda === 1 && ['Agnolotti al burro e/o formaggio', "Agnolotti al vino", "Agnolotti al sugo"].includes(c.piatto)).reduce((a, b) => a + b.quantita, 0) || 0,
+                };
+            });
+            setRecord(updatedRows);
+            setPhase("caricato");
+        };
+        fetchData();
+    }, []);
 
-        {/* Div che gestisce lo spazio disponibile per il TableContainer.
-            Questo è il div con 'height: calc(100% - 60px)' nel tuo codice originale.
-            Gli diamo flexGrow per occupare lo spazio e minHeight: 0 per la compatibilità flex. */}
-        <div style={{ flexGrow: 1, minHeight: 0, width: '100%', overflow: 'hidden' }}>
-          <TableContainer
-            component={Paper}
-            sx={{
-              // --- CRUCIALE per lo SCROLL VERTICALE ---
-              // Imposta un'altezza massima. Se il contenuto della tabella la supera, apparirà lo scroll.
-              // '100%' qui significa il 100% dell'altezza del suo contenitore genitore (il div con flexGrow: 1).
-              // Se vuoi una scrollbar che appare a un'altezza fissa, usa un valore in px, es. '400px'.
-              maxHeight: '100%',
-              
-              // --- CRUCIALE per lo SCROLL ORIZZONTALE ---
-              // Se la tabella (con il suo minWidth) è più larga del TableContainer, abilita lo scroll.
-              overflowX: 'auto', 
-            }}
-          >
-            <Table
-              // --- CRUCIALE per lo SCROLL ORIZZONTALE ---
-              // Questo è il valore minimo in pixel che la tabella cercherà di mantenere.
-              // Se la larghezza disponibile scende sotto questo valore, apparirà lo scroll orizzontale.
-              // È molto importante che questo valore sia sufficientemente grande da contenere tutte le tue colonne.
-              // Data la quantità di colonne (GIORNATA, VALORE, + 9 FOGLIETTI), 500px è probabile sia troppo poco.
-              // Ti consiglio di iniziare con 1000px o 1200px e aggiustare.
-              sx={{ minWidth: 1500 }} 
-              size="small"
-              aria-label="a dense table"
-              stickyHeader // Rende l'intestazione della tabella fissa durante lo scroll verticale
-            >
-              <TableHead>
-                <TableRow>
-                  <StyledTableCell>GIORNATA</StyledTableCell>
-                  <StyledTableCell align="right">Valore&nbsp;</StyledTableCell>
-                  <StyledTableCell align="right">Foglietto 1 <br />            <p style={{ fontSize: '0.7rem', padding: '4px 0' }}>
-              Camerieri
-            </p></StyledTableCell>
-                  <StyledTableCell align="right">Foglietto 2&nbsp;</StyledTableCell>
-                  <StyledTableCell align="right">Foglietto 3&nbsp;</StyledTableCell>
-                  <StyledTableCell align="right">Foglietto 4&nbsp;</StyledTableCell>
-                  <StyledTableCell align="right">Foglietto 5&nbsp;</StyledTableCell>
-                  <StyledTableCell align="right">Foglietto 6&nbsp;</StyledTableCell>
-                  <StyledTableCell align="right">Foglietto 7&nbsp;</StyledTableCell>
-                  <StyledTableCell align="right">Foglietto 8&nbsp;</StyledTableCell>
-                  <StyledTableCell align="right">Foglietto 9&nbsp;</StyledTableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {record.map((row) => (
-                  <StyledTableRow key={row.giornata}>
-                    <StyledTableCell component="th" scope="row" className="font-bold">
-                      {row.giornata}
-                    </StyledTableCell>
-                    <StyledTableCell align="right">
-                      <b>{row.incasso.toFixed(2)}&nbsp;&euro;</b>
-                      <br></br>
-                    </StyledTableCell>
-                    <StyledTableCell align="right">
-                      {row.incassoconto1.toFixed(2)}&nbsp;&euro;
-                      <br></br>
-                      <b>
-                        <small>N.Cons. {row.consumazioni1.toFixed(0)}&nbsp;&nbsp;</small>
-                      </b>
-                      <br></br>
-                      <small>Birre {row.consumazionibirre.toFixed(0)}&nbsp;&nbsp;</small>
-                      <br></br>
-                      <small>Patatine {row.consumazionipatatine.toFixed(0)}&nbsp;&nbsp;</small>
-                      <br></br>
-                      <small>Agnolotti {row.consumazioniagnolotti.toFixed(0)}&nbsp;&nbsp;</small>
-                    </StyledTableCell>
-                    <StyledTableCell align="right">
-                      {row.incassoconto2.toFixed(2)}&nbsp;&euro;
-                      <br></br>
-                      <b>
-                        <small>N.Cons. {row.consumazioni2.toFixed(0)}&nbsp;&nbsp;</small>
-                      </b>
-                    </StyledTableCell>
-                    <StyledTableCell align="right">
-                      {row.incassoconto3.toFixed(2)}&nbsp;&euro;
-                      <br></br>
-                      <b>
-                        <small>N.Cons.{row.consumazioni3.toFixed(0)}&nbsp;&nbsp;</small>
-                      </b>
-                    </StyledTableCell>
-                    <StyledTableCell align="right">
-                      {row.incassoconto4.toFixed(2)}&nbsp;&euro;
-                      <br></br>
-                      <b>
-                        <small>N.Cons. {row.consumazioni4.toFixed(0)}&nbsp;&nbsp;</small>
-                      </b>
-                    </StyledTableCell>
-                    <StyledTableCell align="right">
-                      {row.incassoconto5.toFixed(2)}&nbsp;&euro;
-                      <br></br>
-                      <b>
-                        <small>N.Cons. {row.consumazioni5.toFixed(0)}&nbsp;&nbsp;</small>
-                      </b>
-                    </StyledTableCell>
-                    <StyledTableCell align="right">
-                      {row.incassoconto6.toFixed(2)}&nbsp;&euro;
-                      <br></br>
-                      <b>
-                        <small>N.Cons. {row.consumazioni6.toFixed(0)}&nbsp;&nbsp;</small>
-                      </b>
-                    </StyledTableCell>
-                    <StyledTableCell align="right">
-                      {row.incassoconto7.toFixed(2)}&nbsp;&euro;
-                      <br></br>
-                      <b>
-                        <small>N.Cons. {row.consumazioni7.toFixed(0)}&nbsp;&nbsp;</small>
-                      </b>
-                    </StyledTableCell>
-                    <StyledTableCell align="right">
-                      {row.incassoconto8.toFixed(2)}&nbsp;&euro;
-                      <br></br>
-                      <b>
-                        <small>N.Cons. {row.consumazioni8.toFixed(0)}&nbsp;&nbsp;</small>
-                      </b>
-                    </StyledTableCell>
-                    <StyledTableCell align="right">
-                      {row.incassoconto9.toFixed(2)}&nbsp;&euro;
-                      <br></br>
-                      <b>
-                        <small>N.Cons. {row.consumazioni9.toFixed(0)}&nbsp;&nbsp;</small>
-                      </b>
-                    </StyledTableCell>
-                  </StyledTableRow>
-                ))}
-                {/* Riga del totale */}
-                <TableRow>
-                  {/* Assicurati che rowSpan sia corretto per le tue righe di riepilogo.
-                      Se hai 3 righe sotto questa, rowSpan=3 potrebbe essere corretto. */}
-                  <TableCell rowSpan={5} /> 
-                  <TableCell
-                    colSpan={2}
-                    className="text-xl font-extralight text-blue-600"
-                  >
-                    <b>Valore totale</b>
-                  </TableCell>
-                  <TableCell
-                    align="right"
-                    className="text-xl font-extralight text-blue-600"
-                  >
-                    <b>
-                      {record
-                        .reduce((accumulator, currentValue) => {
-                          return accumulator + currentValue.incasso;
-                        }, 0)
-                        .toFixed(2)}
-                      &nbsp;&euro;
-                    </b>
-                    <br></br>
-                    <small>N.Cons.{" "}
-                      {record
-                        .reduce((accumulator, currentValue) => {
-                          return accumulator + currentValue.consumazionitot;
-                        }, 0)
-                        .toFixed(0)}
-                      &nbsp;</small>
-                  </TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </div>
-        <br /><br />
-        <br /><br />
-        <br />
-      </div>
-    </main>
-        /*
-        <main>
-          <div className="flex flex-wrap flex-col">
-            <div className="text-center py-4">
-              <p className="text-5xl py-4">Cruscotto di Sintesi conti gratis</p>
-            </div>
-            <TableContainer component={Paper}>
-              <Table
-                sx={{ minWidth: 500 }}
-                size="small"
-                aria-label="a dense table"
-              >
-                <TableHead>
-                  <TableRow>
-                    <StyledTableCell>
-                      GIORNATA
-                    </StyledTableCell>
-                    <StyledTableCell align="right" >
-                      Valore&nbsp;
-                    </StyledTableCell>
-                    <StyledTableCell align="right" >
-                      Foglietto 1&nbsp;
-                    </StyledTableCell>
-                    <StyledTableCell align="right" >
-                      Foglietto 2&nbsp;
-                    </StyledTableCell>
-                    <StyledTableCell align="right" >
-                      Foglietto 3&nbsp;
-                    </StyledTableCell>
-                    <StyledTableCell align="right" >
-                      Foglietto 4&nbsp;
-                    </StyledTableCell>
-                    <StyledTableCell align="right" >
-                      Foglietto 5&nbsp;
-                    </StyledTableCell>
-                    <StyledTableCell align="right" >
-                      Foglietto 6&nbsp;
-                    </StyledTableCell>
-                    <StyledTableCell align="right" >
-                      Foglietto 7&nbsp;
-                    </StyledTableCell>
-                    <StyledTableCell align="right">
-                      Foglietto 8&nbsp;
-                    </StyledTableCell>
-                    <StyledTableCell align="right">
-                      Foglietto 9&nbsp;
-                    </StyledTableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {record.map((row) => (
-                    <StyledTableRow key={row.giornata}>
-                      <StyledTableCell
-                        component="th"
-                        scope="row"
-                        className="font-bold "
-                      >
-                        {row.giornata}
-                      </StyledTableCell>
-                      <StyledTableCell align="right">
-                        <b>{row.incasso.toFixed(2)}&nbsp;&euro;</b>
-                        <br></br>
-                      </StyledTableCell>
-                      <StyledTableCell align="right">
-                        {row.incassoconto1.toFixed(2)}&nbsp;&euro;
-                        <br></br>
-                        <b>
-                          <small>N.Cons. {row.consumazioni1.toFixed(0)}&nbsp;&nbsp;</small>
-                        </b>
-                        <br></br>
-                        <small>Birre {row.consumazionibirre.toFixed(0)}&nbsp;&nbsp;</small>
-                        <br></br>
-                        <small>Patatine {row.consumazionipatatine.toFixed(0)}&nbsp;&nbsp;</small>
-                        <br></br>
-                        <small>Agnolotti {row.consumazioniagnolotti.toFixed(0)}&nbsp;&nbsp;</small>
-                      </StyledTableCell>
-                      <StyledTableCell align="right">
-                        {row.incassoconto2.toFixed(2)}&nbsp;&euro;
-                        <br></br>
-                        <b>
-                          <small>N.Cons. {row.consumazioni2.toFixed(0)}&nbsp;&nbsp;</small>
-                        </b>
-                      </StyledTableCell>
-                      <StyledTableCell align="right">
-                        {row.incassoconto3.toFixed(2)}&nbsp;&euro;
-                        <br></br>
-                        <b>
-                          <small>N.Cons.{row.consumazioni3.toFixed(0)}&nbsp;&nbsp;</small>
-                        </b>
-                      </StyledTableCell>
-                      <StyledTableCell align="right">
-                        {row.incassoconto4.toFixed(2)}&nbsp;&euro;
-                        <br></br>
-                        <b>
-                          <small>N.Cons. {row.consumazioni4.toFixed(0)}&nbsp;&nbsp;</small>
-                        </b>
-                      </StyledTableCell>
-                      <StyledTableCell align="right">
-                        {row.incassoconto5.toFixed(2)}&nbsp;&euro;
-                        <br></br>
-                        <b>
-                          <small>N.Cons. {row.consumazioni5.toFixed(0)}&nbsp;&nbsp;</small>
-                        </b>
-                      </StyledTableCell>
-                      <StyledTableCell align="right">
-                        {row.incassoconto6.toFixed(2)}&nbsp;&euro;
-                        <br></br>
-                        <b>
-                        <small>N.Cons. {row.consumazioni6.toFixed(0)}&nbsp;&nbsp;</small>
-                        </b>
-                      </StyledTableCell>
-                      <StyledTableCell align="right">
-                        {row.incassoconto7.toFixed(2)}&nbsp;&euro;
-                        <br></br>
-                        <b>
-                        <small>N.Cons. {row.consumazioni7.toFixed(0)}&nbsp;&nbsp;</small>
-                        </b>
-                      </StyledTableCell>
-                      <StyledTableCell align="right">
-                        {row.incassoconto8.toFixed(2)}&nbsp;&euro;
-                        <br></br>
-                        <b>
-                        <small>N.Cons. {row.consumazioni8.toFixed(0)}&nbsp;&nbsp;</small>
-                        </b>
-                      </StyledTableCell>
-                      <StyledTableCell align="right">
-                        {row.incassoconto9.toFixed(2)}&nbsp;&euro;
-                        <br></br>
-                        <b>
-                        <small>N.Cons. {row.consumazioni9.toFixed(0)}&nbsp;&nbsp;</small>
-                        </b>
-                      </StyledTableCell>
-                    </StyledTableRow>
-                  ))}
-                  <TableRow>
-                    <TableCell rowSpan={5} />
-                    <TableCell
-                      colSpan={2}
-                      className="text-xl  font-extralight  text-blue-600"
-                    >
-                      <b>Valore totale</b>
-                    </TableCell>
-                    <TableCell
-                      align="right"
-                      className="text-xl  font-extralight  text-blue-600"
-                    >
-                      <b>
-                        {record
-                          .reduce((accumulator, currentValue) => {
-                            return accumulator + currentValue.incasso;
-                          }, 0)
-                          .toFixed(2)}
-                        &nbsp;&euro;
-                      </b>
-                      <br></br>
-                      <small>N.Cons.     {record
-                          .reduce((accumulator, currentValue) => {
-                            return accumulator + currentValue.consumazionitot;
-                          }, 0)
-                          .toFixed(0)}
-                        &nbsp;</small>
-                    </TableCell>
-                  </TableRow>
-                </TableBody>
-              </Table>
-            </TableContainer>
-            <br></br>
-          </div>
-        </main>
-        */
-      );
+    if (session?.user?.name !== "SuperUser") {
+        return (
+            <Box sx={{ p: 4 }}><Alert severity="error">Violazione: utente non autorizzato.</Alert></Box>
+        );
     }
-  } else {
+
+    if (phase === "caricamento") {
+        return (
+            <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', alignItems: 'center', justifyContent: 'center' }}>
+                <CircularProgress size="6rem" />
+                <Typography variant="h5" sx={{ mt: 2 }}>Caricamento in corso ...</Typography>
+            </Box>
+        );
+    }
+
     return (
-      <main>
-        <div className="flex flex-wrap flex-col">
-          <div className="text-center ">
-            <div
-              className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50"
-              role="alert"
-            >
-              <span className="text-xl font-semibold">Violazione:</span> utente non autorizzato.
-            </div>
-          </div>
-        </div>
-      </main>
+        <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            height: '100vh', 
+            width: '100%', 
+            overflow: 'hidden', // Evita il doppio scroll della pagina
+            p: { xs: 1, sm: 2 } 
+        }}>
+            {/* Header statico */}
+            <Box sx={{ textAlign: 'center', mb: 2, flexShrink: 0 }}>
+                <Typography variant={isMobile ? "h5" : "h3"} sx={{ fontWeight: 'bold', color: '#333' }}>
+                    Cruscotto di Sintesi Conti Gratis
+                </Typography>
+                <Typography variant="body2" sx={{ color: '#666' }}>
+                    Foglietti dal 1 al 9 esclusi dalla contabilizzazione ordinaria
+                </Typography>
+            </Box>
+
+            {/* Container Tabella con Scroll Interno */}
+            <TableContainer component={Paper} sx={{ 
+                flexGrow: 1, 
+                overflowY: 'auto', 
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                borderRadius: 2
+            }}>
+                <Table stickyHeader size="small" sx={{ minWidth: 1500 }}>
+                    <TableHead>
+                        <TableRow>
+                            <StyledTableCell>GIORNATA</StyledTableCell>
+                            <StyledTableCell align="right">Valore Tot</StyledTableCell>
+                            <StyledTableCell align="right">Foglietto 1<br/><small>Camerieri</small></StyledTableCell>
+                            <StyledTableCell align="right">Foglietto 2</StyledTableCell>
+                            <StyledTableCell align="right">Foglietto 3</StyledTableCell>
+                            <StyledTableCell align="right">Foglietto 4</StyledTableCell>
+                            <StyledTableCell align="right">Foglietto 5</StyledTableCell>
+                            <StyledTableCell align="right">Foglietto 6</StyledTableCell>
+                            <StyledTableCell align="right">Foglietto 7</StyledTableCell>
+                            <StyledTableCell align="right">Foglietto 8</StyledTableCell>
+                            <StyledTableCell align="right">Foglietto 9</StyledTableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {record.map((row) => (
+                            <StyledTableRow key={row.giornata}>
+                                <StyledTableCell sx={{ fontWeight: 'bold' }}>{row.giornata}</StyledTableCell>
+                                <StyledTableCell align="right"><b>{row.incasso.toFixed(2)} €</b></StyledTableCell>
+                                <StyledTableCell align="right">
+                                    {row.incassoconto1.toFixed(2)} €<br/>
+                                    <small><b>N.Cons: {row.consumazioni1}</b></small><br/>
+                                    <small>B: {row.consumazionibirre} | P: {row.consumazionipatatine} | A: {row.consumazioniagnolotti}</small>
+                                </StyledTableCell>
+                                {[2, 3, 4, 5, 6, 7, 8, 9].map(n => (
+                                    <StyledTableCell key={n} align="right">
+                                        {(row as any)[`incassoconto${n}`].toFixed(2)} €<br/>
+                                        <small><b>N.Cons: {(row as any)[`consumazioni${n}`]}</b></small>
+                                    </StyledTableCell>
+                                ))}
+                            </StyledTableRow>
+                        ))}
+                        {/* Riga Totali */}
+                        <TableRow sx={{ backgroundColor: '#f0f4ff' }}>
+                            <TableCell colSpan={2} sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
+                                TOTALE COMPLESSIVO:
+                            </TableCell>
+                            <TableCell align="right" colSpan={9} sx={{ fontWeight: 'bold', fontSize: '1.1rem', color: '#2f6feb' }}>
+                                {record.reduce((a, b) => a + b.incasso, 0).toFixed(2)} € 
+                                <Typography variant="caption" sx={{ ml: 2, color: 'text.secondary' }}>
+                                    (Consumazioni totali: {record.reduce((a, b) => a + b.consumazionitot, 0)})
+                                </Typography>
+                            </TableCell>
+                        </TableRow>
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        </Box>
     );
-  }
 }

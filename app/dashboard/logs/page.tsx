@@ -5,18 +5,18 @@ import { useSession } from 'next-auth/react'
 import type { DbLog, DbFiera } from '@/app/lib/definitions';
 import CircularProgress from '@mui/material/CircularProgress';
 import { getGiornoSagra, listLog } from '@/app/lib/actions';
-import { milltodatestring} from '@/app/lib/utils';
+import { milltodatestring } from '@/app/lib/utils';
 import { DataGrid, GridToolbar, GridColDef } from '@mui/x-data-grid';
 import { styled } from '@mui/material/styles';
-import { Typography, useMediaQuery } from '@mui/material';
+import { Typography, useMediaQuery, Box } from '@mui/material';
 
 const StyledDataGrid = styled(DataGrid)({
     '& .MuiDataGrid-columnHeader': {
-        backgroundColor: 'black', // Sfondo nero per l'header
-        color: 'white',           // Testo bianco
+        backgroundColor: 'black',
+        color: 'white',
     },
     '& .MuiDataGrid-columnHeaderTitle': {
-        fontWeight: 'bold',       // Testo in grassetto
+        fontWeight: 'bold',
     },
     "& .MuiDataGrid-sortIcon": {
         color: "white",
@@ -28,17 +28,17 @@ const StyledDataGrid = styled(DataGrid)({
 });
 
 export default function Page() {
-
     const [phase, setPhase] = useState('caricamento');
     const [rows, setRows] = useState<any[]>([]);
     const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
     const { data: session } = useSession();
+    const isMobile = useMediaQuery('(max-width:600px)');
 
     const columns: GridColDef[] = [
-        { field: 'col1', headerName: 'N. Foglietto' },
-        { field: 'col2', headerName: 'Azione' },
-        { field: 'col3', headerName: 'Note',  width: 400 },
-        { field: 'col4', headerName: 'Cucina', },
+        { field: 'col1', headerName: 'N. Foglietto', width: 120 },
+        { field: 'col2', headerName: 'Azione', width: 150 },
+        { field: 'col3', headerName: 'Note', flex: 1, minWidth: 250 },
+        { field: 'col4', headerName: 'Cucina', width: 150 },
         { field: 'col5', headerName: 'Data', width: 200 },
     ];
 
@@ -52,131 +52,98 @@ export default function Page() {
             setSagra(gg);
             const logs = await listLog(gg.giornata);
             if (logs) {
-                const cc = logs.map((item) => {
-                    // id: <Link href={`/dashboard/casse/${item.id}`}>{item.id}</Link>
-                    return {
-                        id: item.id,
-                        col1: item.foglietto,
-                        col2: item.azione,
-                        col3: item.note,
-                        col4: item.cucina,
-                        col5: milltodatestring(item.data),
-                    }
-                });
-
+                const cc = logs.map((item) => ({
+                    id: item.id,
+                    col1: item.foglietto,
+                    col2: item.azione,
+                    col3: item.note,
+                    col4: item.cucina,
+                    col5: milltodatestring(item.data),
+                }));
                 setRows(cc);
             }
             setPhase('caricato');
         }
     }
-    const isMobile = useMediaQuery('(max-width:600px)');
-    if ((session?.user?.name == "SuperUser")) {
-        if (sagra.stato == 'CHIUSA')  {
-            return (
-                <main>
-                    <div className="flex flex-wrap flex-col">
-                        <div className='text-center '>
-                            <div className="p-4 mb-4 text-xl text-yellow-800 rounded-lg bg-yellow-50" role="alert">
-                                <span className="text-xl font-semibold">Attenzione</span> |Logs| La giornata non è stata ancora aperta!
-                            </div>
-                        </div>
-                    </div>
-                </main>
-            )
-        } else if (phase == 'caricamento') {
-            return (
-        <><header className="top-section">
-        </header>
-          <main className="middle-section">
-            <div className='z-0 text-center'>
-              <br></br>
-              <p className="text-5xl py-4">
-                Logs
-              </p>
-              <br />
-              <CircularProgress size="9rem" />
-              <br />
-              <p className="text-4xl py-4">
-                Caricamento in corso ...
-              </p>
-            </div>
-          </main></>
-            );
-        } else if (phase == 'caricato') {
-            return (
-                <main style={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100%' }}>
-                    {/* Contenuti statici sopra la griglia */}
 
-                    <div style={{ textAlign: 'center', padding: '4px 0' }}>
-                        <Typography variant={isMobile ? "h5" : "h3"} sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold', color: '#333' }}>
-                            Verifica logs
-                        </Typography>
-                        <Typography variant={isMobile ? "subtitle2" : "body1"} sx={{ textAlign: 'center', mb: 2, color: '#333' }}>
-                            In questa schermata appaiono i logs della giornata corrente.
-                        </Typography>
-                    </div>
-                    {/* Contenitore della DataGrid */}
-                    {/* Questo div è cruciale: diventerà un contenitore flex per la griglia */}
-                    <div style={{ flexGrow: 1, minHeight: 0, width: '100%', textAlign: 'center' }}>
-                        <h2 style={{ fontWeight: 'extrabold' }}></h2>
-                        <div style={{ height: 'calc(100% - 60px)', width: '100%' }}> {/* Calcola altezza dinamica */}
-                        <StyledDataGrid
-                                rows={rows}
-                                columns={columns}
-                                slots={{ toolbar: GridToolbar }}
-                                initialState={{
-                                    density: 'compact',
-                                }}
-                            />
-                        </div>
-                        <br /><br />
-                    </div>
-
-
-                </main>
-                /*
-                <main>
-
-                    <div className="flex flex-wrap flex-col">
-                        <div className='text-center py-4'>
-                            <p className="text-5xl py-4">
-                                Verifica logs
-                            </p>
-                        </div>
-
-                        <div className='text-center' style={{ height: 700, width: 'auto' }} >
-                            <h2 className='font-extrabold'>Logs Giornata {sagra.giornata}</h2>
-                            <StyledDataGrid
-                                rows={rows}
-                                columns={columns}
-                                slots={{ toolbar: GridToolbar }}
-                                initialState={{
-                                    density: 'compact',
-                                  }}
-                            />
-
-                            <br /><br />
-
-
-                        </div>
-                    </div>
-                </main>
-*/
-            );
-        }
-    }
-    else {
+    // GESTIONE ACCESSO NON AUTORIZZATO
+    if (session?.user?.name !== "SuperUser") {
         return (
-            <main>
-                <div className="flex flex-wrap flex-col">
-                    <div className='text-center '>
-                        <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
-                            <span className="text-xl font-semibold"></span> Utente non autorizzato.
-                        </div>
-                    </div>
-                </div>
-            </main>
-
-        )
+            <Box sx={{ p: 4 }}>
+                <Box sx={{ p: 2, bgcolor: 'error.light', color: 'error.dark', borderRadius: 2, textAlign: 'center' }}>
+                    <Typography variant="h6">Utente non autorizzato.</Typography>
+                </Box>
+            </Box>
+        );
     }
+
+    // GESTIONE GIORNATA CHIUSA
+    if (sagra.stato === 'CHIUSA') {
+        return (
+            <Box sx={{ p: 4 }}>
+                <Box sx={{ p: 2, bgcolor: 'warning.light', color: 'warning.dark', borderRadius: 2, textAlign: 'center' }}>
+                    <Typography variant="h6"><b>Attenzione</b> | Logs | La giornata non è stata ancora aperta!</Typography>
+                </Box>
+            </Box>
+        );
+    }
+
+    // LOADING STATE
+    if (phase === 'caricamento') {
+        return (
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                <Typography variant="h4" sx={{ mb: 4 }}>Logs</Typography>
+                <CircularProgress size="6rem" />
+                <Typography variant="h6" sx={{ mt: 2 }}>Caricamento in corso ...</Typography>
+            </Box>
+        );
+    }
+
+    // VIEW LOGS (FASE CARICATO)
+    return (
+        <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            height: '100%', // Prende l'altezza del layout genitore
+            width: '100%',
+            overflow: 'hidden', // Impedisce la scrollbar esterna
+            p: { xs: 1, sm: 2 },
+            boxSizing: 'border-box'
+        }}>
+            
+            {/* Header fisso */}
+            <Box sx={{ textAlign: 'center', mb: 2, flexShrink: 0 }}>
+                <Typography variant={isMobile ? "h5" : "h3"} sx={{ fontWeight: 'bold', color: '#333' }}>
+                    Verifica logs
+                </Typography>
+                <Typography variant={isMobile ? "subtitle2" : "body1"} sx={{ color: '#666' }}>
+                    Logs Giornata {sagra.giornata} - Corrente
+                </Typography>
+            </Box>
+
+            {/* Contenitore DataGrid che occupa tutto lo spazio restante */}
+            <Box sx={{ 
+                flexGrow: 1, 
+                minHeight: 0, // CRUCIALE per permettere alla tabella di scrollare internamente
+                width: '100%',
+                bgcolor: 'background.paper',
+                borderRadius: '8px',
+                boxShadow: 1
+            }}>
+                <StyledDataGrid
+                    rows={rows}
+                    columns={columns}
+                    slots={{ toolbar: GridToolbar }}
+                    initialState={{
+                        density: 'compact',
+                        pagination: {
+                            paginationModel: { pageSize: 100 },
+                        },
+                    }}
+                    pageSizeOptions={[25, 50, 100]}
+                    disableRowSelectionOnClick
+                />
+            </Box>
+        </Box>
+    );
 }

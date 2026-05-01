@@ -21,7 +21,6 @@ import DialogTitle from '@mui/material/DialogTitle';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { useTheme, ThemeProvider, createTheme } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import Stack from '@mui/material/Stack';
@@ -59,8 +58,6 @@ interface MyToolbarProps {
     apiRef: any;
 }
 
-const defaultTheme = createTheme();
-
 // --- EDITOR INTELLIGENTE ---
 function NameEditCell(props: GridRenderEditCellParams) {
     const { id, value, field, hasFocus } = props;
@@ -92,13 +89,13 @@ function NameEditCell(props: GridRenderEditCellParams) {
 }
 
 // --- LEGENDA ---
-function LegendaColori({ isMobile, onClose }: { isMobile: boolean, onClose: () => void }) {
+function LegendaColori({ onClose }: { onClose: () => void }) {
     const itemSx = {
         px: 1, py: 0.3, borderRadius: '4px', fontSize: '0.70rem', fontWeight: 'bold',
         border: '1px solid rgba(0,0,0,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center'
     };
     return (
-        <Box sx={{ mb: 2, p: 1.5, bgcolor: 'white', borderRadius: '8px', border: '1px solid #e0e0e0', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', position: 'relative' }}>
+        <Box sx={{ mb: 2, p: 1.5, bgcolor: 'white', borderRadius: '8px', border: '1px solid #e0e0e0', boxShadow: '0 2px 4px rgba(0,0,0,0.05)', position: 'relative', flexShrink: 0 }}>
             <IconButton size="small" onClick={onClose} sx={{ position: 'absolute', top: 4, right: 4 }}><CancelIcon fontSize="small" /></IconButton>
             <Typography variant="caption" sx={{ fontWeight: 'bold', display: 'block', mb: 1, color: '#666', textTransform: 'uppercase', pr: 4 }}>
                 <InfoIcon sx={{ fontSize: 14, mr: 0.5, verticalAlign: 'middle' }} /> Aiuto Duplicati (Stesso nome presente)
@@ -129,7 +126,7 @@ function EditToolbar(props: MyToolbarProps) {
 
     return (
         <GridToolbarContainer sx={{ p: 1 }}>
-            <Button variant="contained" startIcon={<AddIcon />} onClick={handleClick} size={isMobile ? "small" : "medium"}>Aggiungi Nuovo Cameriere</Button>
+            <Button variant="contained" startIcon={<AddIcon />} onClick={handleClick} size={isMobile ? "small" : "medium"}>Aggiungi Cameriere</Button>
         </GridToolbarContainer>
     );
 }
@@ -156,25 +153,22 @@ export default function CamerieriPage() {
     }, []);
 
     const processRowUpdate = async (newRow: GridRowModel) => {
-        // --- CONTROLLO CAMPO "PRIMO" VUOTO (WARNING) ---
-        if (newRow.col3 === '' || newRow.col3 === null || newRow.col3 === undefined) {
-            setSnackbar({ open: true, message: 'Attenzione: Inserisci il valore iniziale in "Primo"!', severity: 'warning' });
+        if (!newRow.col3) {
+            setSnackbar({ open: true, message: 'Inserisci il valore iniziale in "Primo"!', severity: 'warning' });
             throw new Error('Campo Primo obbligatorio');
         }
 
         const start = Number(newRow.col3);
         const end = (newRow.col4 === '' || newRow.col4 === null) ? start + NUMFOGLI - 1 : Number(newRow.col4);
 
-        // Validazione: Fine < Inizio (Errore)
         if (end < start) {
-            setSnackbar({ open: true, message: 'ERRORE: "Ultimo" non può essere minore di "Primo"!', severity: 'error' });
+            setSnackbar({ open: true, message: 'ERRORE: "Ultimo" < "Primo"!', severity: 'error' });
             throw new Error('Validazione Fallita');
         }
 
-        // Validazione: Sovrapposizione (Errore)
         const hasOverlap = rows.some(r => r.id !== newRow.id && (start <= Number(r.col4) && end >= Number(r.col3)));
         if (hasOverlap) { 
-            setSnackbar({ open: true, message: 'ERRORE: Sovrapposizione foglietti con un altro cameriere!', severity: 'error' }); 
+            setSnackbar({ open: true, message: 'ERRORE: Sovrapposizione foglietti!', severity: 'error' }); 
             throw new Error('Sovrapposizione');
         }
 
@@ -184,7 +178,7 @@ export default function CamerieriPage() {
             
             const updatedRow = { ...newRow, col3: start, col4: end, isNew: false } as RowsData;
             setRows(rows.map(r => r.id === newRow.id ? updatedRow : r));
-            setSnackbar({ open: true, message: 'Salvato correttamente!', severity: 'success' });
+            setSnackbar({ open: true, message: 'Salvato!', severity: 'success' });
             return updatedRow;
         } catch (e) { 
             setSnackbar({ open: true, message: 'Errore nel salvataggio!', severity: 'error' });
@@ -200,7 +194,7 @@ export default function CamerieriPage() {
 
     const columns: GridColDef[] = [
         { field: 'col1', headerName: 'N.', width: 50, align: 'center' },
-        { field: 'col2', headerName: 'Nome Cameriere', flex: 1, editable: true, renderEditCell: (p) => <NameEditCell {...p} /> },
+        { field: 'col2', headerName: 'Nome Cameriere', flex: 1, minWidth: 150, editable: true, renderEditCell: (p) => <NameEditCell {...p} /> },
         { field: 'col3', headerName: 'Primo', type: 'number', width: 85, editable: true },
         { field: 'col4', headerName: 'Ultimo', type: 'number', width: 85, editable: true },
         {
@@ -221,67 +215,84 @@ export default function CamerieriPage() {
     if (loading) return <Box sx={{ display: 'flex', justifyContent: 'center', p: 10 }}><CircularProgress /></Box>;
 
     return (
-        <ThemeProvider theme={defaultTheme}>
-            <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', p: isMobile ? 1 : 3, bgcolor: '#f4f6f8' }}>
-                <Typography variant={isMobile ? "h5" : "h3"} sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold', color: '#333' }}>Gestione Camerieri</Typography>
-                
-                {showLegenda && <LegendaColori isMobile={isMobile} onClose={() => setShowLegenda(false)} />}
+        <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            height: '100%', // Prende l'altezza del layout
+            width: '100%',
+            p: { xs: 1, sm: 2 },
+            bgcolor: '#f4f6f8',
+            overflow: 'hidden', // Blocca la scrollbar esterna
+            boxSizing: 'border-box'
+        }}>
+            <Typography variant={isMobile ? "h5" : "h3"} sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold', color: '#333', flexShrink: 0 }}>
+                Gestione Camerieri
+            </Typography>
+            
+            {showLegenda && <LegendaColori onClose={() => setShowLegenda(false)} />}
 
-                <Box sx={{ 
-                    width: '100%', bgcolor: 'white', borderRadius: 3, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', 
-                    height: isMobile ? (showLegenda ? '450px' : '530px') : `calc(100vh - ${showLegenda ? '280px' : '200px'})`, 
-                    minHeight: '400px', transition: 'height 0.3s ease' 
-                }}>
-                    <DataGrid
-                        apiRef={apiRef}
-                        rows={rows}
-                        columns={columns}
-                        editMode="row"
-                        rowModesModel={rowModesModel}
-                        onRowModesModelChange={setRowModesModel}
-                        processRowUpdate={processRowUpdate}
-                        onProcessRowUpdateError={() => {}}
-                        slots={{ toolbar: EditToolbar as any }}
-                        slotProps={{ toolbar: { setRows, setRowModesModel, rows, apiRef } as any }}
-                        initialState={{ sorting: { sortModel: [{ field: 'col1', sort: 'desc' }] } }}
-                        sx={{ 
-                            border: 'none', 
-                            '& .dup-azzurro': { bgcolor: '#e3f2fd' }, '& .dup-giallo': { bgcolor: '#fffde7' }, 
-                            '& .dup-arancio': { bgcolor: '#fff3e0' }, '& .dup-rosso': { bgcolor: '#ffebee' } 
-                        }}
-                        getCellClassName={(p) => {
-                            if (p.field === 'col2' && p.value) {
-                                const val = p.value.toString().trim().toLowerCase();
-                                const count = rows.filter(r => r.col2.trim().toLowerCase() === val).length;
-                                if (count === 2) return 'dup-azzurro';
-                                if (count === 3) return 'dup-giallo';
-                                if (count === 4) return 'dup-arancio';
-                                if (count > 4) return 'dup-rosso';
-                            }
-                            return '';
-                        }}
-                    />
-                </Box>
-
-                <Dialog open={deleteDialog.open} onClose={() => setDeleteDialog({ open: false, id: null })}>
-                    <DialogTitle>Elimina Cameriere?</DialogTitle>
-                    <DialogActions sx={{ p: 2 }}>
-                        <Button onClick={() => setDeleteDialog({ open: false, id: null })} color="inherit">Annulla</Button>
-                        <Button onClick={async () => {
-                            if (deleteDialog.id) {
-                                await delCamerieri(Number(deleteDialog.id));
-                                setRows(rows.filter(r => r.id !== deleteDialog.id));
-                                setDeleteDialog({ open: false, id: null });
-                                setSnackbar({ open: true, message: 'Eliminato con successo', severity: 'success' });
-                            }
-                        }} color="error" variant="contained">Elimina</Button>
-                    </DialogActions>
-                </Dialog>
-
-                <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })}>
-                    <Alert severity={snackbar.severity} variant="filled">{snackbar.message}</Alert>
-                </Snackbar>
+            {/* CONTAINER TABELLA DINAMICO */}
+            <Box sx={{ 
+                flexGrow: 1, // Occupa tutto lo spazio rimasto
+                minHeight: 0, // Permette alla DataGrid di attivare lo scroll interno
+                width: '100%',
+                bgcolor: 'white', 
+                borderRadius: 3, 
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                display: 'flex',
+                flexDirection: 'column'
+            }}>
+                <DataGrid
+                    apiRef={apiRef}
+                    rows={rows}
+                    columns={columns}
+                    editMode="row"
+                    rowModesModel={rowModesModel}
+                    onRowModesModelChange={setRowModesModel}
+                    processRowUpdate={processRowUpdate}
+                    onProcessRowUpdateError={() => {}}
+                    slots={{ toolbar: EditToolbar as any }}
+                    slotProps={{ toolbar: { setRows, setRowModesModel, rows, apiRef } as any }}
+                    initialState={{ sorting: { sortModel: [{ field: 'col1', sort: 'desc' }] } }}
+                    sx={{ 
+                        border: 'none', 
+                        height: '100%',
+                        '& .dup-azzurro': { bgcolor: '#e3f2fd' }, '& .dup-giallo': { bgcolor: '#fffde7' }, 
+                        '& .dup-arancio': { bgcolor: '#fff3e0' }, '& .dup-rosso': { bgcolor: '#ffebee' } 
+                    }}
+                    getCellClassName={(p) => {
+                        if (p.field === 'col2' && p.value) {
+                            const val = p.value.toString().trim().toLowerCase();
+                            const count = rows.filter(r => r.col2.trim().toLowerCase() === val).length;
+                            if (count === 2) return 'dup-azzurro';
+                            if (count === 3) return 'dup-giallo';
+                            if (count === 4) return 'dup-arancio';
+                            if (count > 4) return 'dup-rosso';
+                        }
+                        return '';
+                    }}
+                />
             </Box>
-        </ThemeProvider>
+
+            {/* DIALOG E SNACKBAR */}
+            <Dialog open={deleteDialog.open} onClose={() => setDeleteDialog({ open: false, id: null })}>
+                <DialogTitle>Elimina Cameriere?</DialogTitle>
+                <DialogActions sx={{ p: 2 }}>
+                    <Button onClick={() => setDeleteDialog({ open: false, id: null })} color="inherit">Annulla</Button>
+                    <Button onClick={async () => {
+                        if (deleteDialog.id) {
+                            await delCamerieri(Number(deleteDialog.id));
+                            setRows(rows.filter(r => r.id !== deleteDialog.id));
+                            setDeleteDialog({ open: false, id: null });
+                            setSnackbar({ open: true, message: 'Eliminato!', severity: 'success' });
+                        }
+                    }} color="error" variant="contained">Elimina</Button>
+                </DialogActions>
+            </Dialog>
+
+            <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={() => setSnackbar({ ...snackbar, open: false })}>
+                <Alert severity={snackbar.severity} variant="filled">{snackbar.message}</Alert>
+            </Snackbar>
+        </Box>
     );
 }

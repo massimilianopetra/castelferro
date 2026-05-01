@@ -1,4 +1,5 @@
  
+import { Alert } from '@mui/material';
 import Image from 'next/image';
 
 export default function Page() {
@@ -19,6 +20,7 @@ export default function Page() {
                   <h1>{titolo}</h1>
                     <p>Edizione: {edizione}° del {anno}</p>
                 </div>
+ 
                 {/* Contenitore Immagine */}
                 <div className="mt-8">
                     <Image

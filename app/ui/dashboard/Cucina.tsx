@@ -440,7 +440,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                             </ButtonGroup>
 
                                             <IconButton onClick={caricaStatistiche} color="primary" sx={{ ml: 2, border: '2px solid', bgcolor: 'white' }}>
-                                                <StarsIcon fontSize="large" />sss
+                                                <StarsIcon fontSize="large" />
                                             </IconButton>
 
                                             <ButtonGroup sx={{ display: { xs: 'block', sm: 'none' } }}>
