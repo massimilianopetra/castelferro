@@ -324,13 +324,14 @@ export async function clearAllTickets() {
   return await executeQuery(`TRUNCATE TABLE tickets RESTART IDENTITY CASCADE;`);
 }
 
-export async function addTickets(id: number, numero_persone: number) {
+export async function addTickets(id: number, numero_persone: number, seduto: number) {
   console.log("Add tickets")
   return await executeQuery(`INSERT INTO tickets (id,numpersone,seduto)
-  VALUES (${id},${numero_persone},0)
+  VALUES (${id},${numero_persone},${seduto})
   ON CONFLICT (id) DO NOTHING;
   `);
 }
+ 
 
 export async function getNextTickets(): Promise<number> {
   console.log("getNextTickets");

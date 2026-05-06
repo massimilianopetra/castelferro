@@ -18,6 +18,12 @@ export default function RootLayout({
     inizio: process.env.INIZIO_SAGRA,
     fine: process.env.FINE_SAGRA,
     mese: process.env.MESE_SAGRA,
+    stampante_wifi: process.env.STAMPANTE_WIFI,
+    stampante_uno:process.env.STAMPANTE_UNO,
+    stampante_due:process.env.STAMPANTE_DUE,
+    stampante_tre:process.env.STAMPANTE_TRE,
+    stampante_quattro:process.env.STAMPANTE_QUATTRO,
+    wellcome_msg:process.env.WELLCOME_MSG,
   };
   console.log("CONFIG CARICATA DA DOCKER:", config);
   

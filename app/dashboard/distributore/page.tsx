@@ -1,19 +1,16 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { addTickets, getNextTickets, clearAllTickets, getFirstFreeTicket } from '@/app/lib/actions'; 
+import { addTickets, getFirstFreeTicket, clearAllTickets } from '@/app/lib/actions'; 
 import CircularProgress from '@mui/material/CircularProgress';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { 
     Box, Typography, Button, Stack, TextField, Paper, Dialog, 
-    DialogActions, DialogContent, DialogContentText, DialogTitle,
-    Switch, FormControlLabel 
+    DialogActions, DialogContent, DialogTitle
 } from '@mui/material';
 
-// Icone... (omesse per brevità, mantieni le tue)
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RemoveCircleSharpIcon from '@mui/icons-material/RemoveCircleSharp';
-import Replay10Icon from '@mui/icons-material/Replay10';
 import PrintIcon from '@mui/icons-material/Print';
 import HistoryIcon from '@mui/icons-material/History';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
@@ -23,39 +20,41 @@ const defaultTheme = createTheme({
         primary: { main: '#1976d2' },
         secondary: { main: '#9c27b0' },
         success: { main: '#2e7d32' },
+        warning: { main: '#ed6c02' },
         error: { main: '#d32f2f' },
         background: { default: '#f4f6f8' }
     },
 });
 
+type Mode = 'AUTO' | 'MANUALE' | 'LIBERA';
+
 export default function DistributorePage() {
     const [loading, setLoading] = useState(true);
-    // Cambiamo il tipo per accettare null (per il trattino)
     const [prossimoTicket, setProssimoTicket] = useState<number | null>(null);
     const [coperti, setCoperti] = useState<number | ''>(0); 
     const [isEditing, setIsEditing] = useState(false);
-    const [isAutoMode, setIsAutoMode] = useState(true); 
+    const [mode, setMode] = useState<Mode>('AUTO'); 
     const [lastEntry, setLastEntry] = useState<{ numero: number, coperti: number } | null>(null);
     const [openResetDialog, setOpenResetDialog] = useState(false);
     const [confirmText, setConfirmText] = useState("");
 
     const fetchData = useCallback(async () => {
-        if (!isAutoMode) {
-            setProssimoTicket(null); // In manuale parte vuoto
+        if (mode === 'MANUALE') {
+            setProssimoTicket(null);
             setLoading(false);
             return;
         }
         
         setLoading(true);
         try {
-            const nextId = await getFirstFreeTicket(); // In auto cerca il primo buco[cite: 3]
+            const nextId = await getFirstFreeTicket();
             setProssimoTicket(nextId);
         } catch (error) {
             console.error(error);
         } finally {
             setLoading(false);
         }
-    }, [isAutoMode]);
+    }, [mode]);
 
     useEffect(() => {
         fetchData();
@@ -63,29 +62,29 @@ export default function DistributorePage() {
 
     const handleStampa = async () => {
         const numeroCopertiValido = Number(coperti);
-        // Validazione: serve sia il numero ticket (se manuale) che i coperti
         if (numeroCopertiValido <= 0 || prossimoTicket === null) return;
         
         setLoading(true);
         try {
-            await addTickets(prossimoTicket, numeroCopertiValido);
+            const seduto = mode === 'LIBERA' ? 1 : 0;
+            await addTickets(prossimoTicket, numeroCopertiValido, seduto);
 
-            await fetch('/api/next-client', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type: 'NEW_TICKET' }),
-            });
+            if (mode !== 'LIBERA') {
+                await fetch('/api/next-client', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'NEW_TICKET' }),
+                });
+            }
 
             setLastEntry({ numero: prossimoTicket, coperti: numeroCopertiValido });
             setCoperti(0); 
             
-            // Se siamo in manuale, resetta a null (trattino), altrimenti ricalcola automatico[cite: 2, 3]
-            if (isAutoMode) {
-                await fetchData();
-            } else {
+            if (mode === 'MANUALE') {
                 setProssimoTicket(null);
+            } else {
+                await fetchData();
             }
-            
         } catch (error) {
             alert("Errore durante la stampa");
         } finally {
@@ -93,7 +92,6 @@ export default function DistributorePage() {
         }
     };
 
-    // ... funzioni onAdd, onRemove, handleResetTotale invariate ...
     const onAdd = () => setCoperti(prev => (Number(prev) < 999 ? Number(prev) + 1 : 999));
     const onRemove = () => setCoperti(prev => (Number(prev) > 0 ? Number(prev) - 1 : 0));
     const onAdd10 = () => setCoperti(prev => (Number(prev) <= 989 ? Number(prev) + 10 : 999));
@@ -121,81 +119,74 @@ export default function DistributorePage() {
         }
     };
 
-    if (loading) return 
-    <ThemeProvider theme={defaultTheme}>
-            <Box sx={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
-                // MODIFICA CHIAVE: height 100% per stare nel layout senza scrollbar
-                height: '100%', 
-                width: '100%',
-                bgcolor: 'background.default', 
-                p: 2, 
-                position: 'relative',
-                boxSizing: 'border-box',
-                overflow: 'hidden' // Impedisce scroll orizzontali/verticali indesiderati
-            }}>
-            <CircularProgress />
-        </Box>
-    </ThemeProvider>
- 
+    if (loading && prossimoTicket === null && mode !== 'MANUALE') {
+        return (
+            <ThemeProvider theme={defaultTheme}>
+                <Box sx={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center' }}>
+                    <CircularProgress />
+                </Box>
+            </ThemeProvider>
+        );
+    }
 
     return (
- 
         <ThemeProvider theme={defaultTheme}>
             <Box sx={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
-                // MODIFICA CHIAVE: height 100% per stare nel layout senza scrollbar
-                height: '100%', 
-                width: '100%',
-                bgcolor: 'background.default', 
-                p: 2, 
-                position: 'relative',
-                boxSizing: 'border-box',
-                overflow: 'hidden' // Impedisce scroll orizzontali/verticali indesiderati
+                display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', 
+                height: '100%', width: '100%', bgcolor: 'background.default', p: 2, position: 'relative',
+                boxSizing: 'border-box', overflow: 'hidden' 
             }}>
 
-                {/* CONTROLLI - Modificato top per non appiccicarsi troppo al bordo su mobile */}
-                <Box sx={{ position: 'absolute', top: 16, left: 16, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {/* CONTROLLI LATERALI SINISTRA */}
+                <Box sx={{ 
+                    position: 'absolute', top: 16, left: 16, zIndex: 10, 
+                    display: 'flex', flexDirection: 'column', gap: 1 
+                }}>
                     <Button 
-                        variant="outlined" 
-                        color="error" 
-                        size="small" 
+                        variant="outlined" color="error" size="small" 
                         onClick={() => setOpenResetDialog(true)} 
                         startIcon={<DeleteForeverIcon />} 
-                        sx={{ fontWeight: 'bold', bgcolor: 'white', borderRadius: '10px' }}
+                        sx={{ fontWeight: 'bold', bgcolor: 'white', borderRadius: '10px', mb: 2 }}
                     >
                         AZZERA
                     </Button>
-                    <FormControlLabel
-                        control={<Switch size="small" checked={!isAutoMode} onChange={(e) => setIsAutoMode(!e.target.checked)} />}
-                        label={<Typography sx={{ fontSize: '0.7rem', fontWeight: 900, color: isAutoMode ? 'success.main' : 'warning.main' }}>
-                            {isAutoMode ? "AUTO (RECUPERO)" : "MANUALE"}
-                        </Typography>}
-                    />
+
+                    <Button 
+                        variant={mode === 'AUTO' ? "contained" : "outlined"} 
+                        color="primary" size="small" 
+                        onClick={() => setMode('AUTO')}
+                        sx={{ fontWeight: 'bold', bgcolor: mode === 'AUTO' ? 'primary.main' : 'white', borderRadius: '10px', fontSize: '0.7rem' }}
+                    >
+                        AUTO
+                    </Button>
+
+                    <Button 
+                        variant={mode === 'MANUALE' ? "contained" : "outlined"} 
+                        color="warning" size="small" 
+                        onClick={() => setMode('MANUALE')}
+                        sx={{ fontWeight: 'bold', bgcolor: mode === 'MANUALE' ? 'warning.main' : 'white', borderRadius: '10px', fontSize: '0.7rem' }}
+                    >
+                        MANUALE
+                    </Button>
+
+                    <Button 
+                        variant={mode === 'LIBERA' ? "contained" : "outlined"} 
+                        color="success" size="small" 
+                        onClick={() => setMode('LIBERA')}
+                        sx={{ fontWeight: 'bold', bgcolor: mode === 'LIBERA' ? 'success.main' : 'white', borderRadius: '10px', fontSize: '0.7rem' }}
+                    >
+                        LIBERA
+                    </Button>
                 </Box>
 
-                {/* CONTAINER CENTRALE */}
-                <Box sx={{ 
-                    display: 'flex', 
-                    flexDirection: 'column', 
-                    alignItems: 'center', 
-                    width: '100%', 
-                    maxWidth: '600px', 
-                    gap: { xs: 1, sm: 2 }, // Spaziatura dinamica per schermi piccoli
-                    flexGrow: 1,
-                    justifyContent: 'center'
-                }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '600px', gap: { xs: 1, sm: 2 }, flexGrow: 1, justifyContent: 'center' }}>
                     
                     <Box sx={{ textAlign: 'center' }}>
-                        <Typography sx={{ color: '#666', fontWeight: 1000, fontSize: '1rem', letterSpacing: 2 }}>PROSSIMO TICKET</Typography>
+                        <Typography sx={{ color: '#666', fontWeight: 1000, fontSize: '0.9rem', letterSpacing: 2 }}>
+                            {mode === 'LIBERA' ? 'ENTRATA LIBERA' : 'PROSSIMO TICKET'}
+                        </Typography>
                         
-                        {!isAutoMode ? (
+                        {mode === 'MANUALE' ? (
                              <TextField
                                 type="number"
                                 value={prossimoTicket === null ? '' : prossimoTicket}
@@ -205,20 +196,24 @@ export default function DistributorePage() {
                                 InputProps={{ disableUnderline: true }}
                                 sx={{
                                     '& input': {
-                                        fontSize: { xs: '4rem', sm: '5.5rem' }, 
-                                        textAlign: 'center', fontWeight: 1000,
+                                        fontSize: { xs: '4rem', sm: '5.5rem' }, textAlign: 'center', fontWeight: 1000,
                                         color: 'warning.main', fontFamily: 'monospace', padding: 0, width: '250px'
                                     }
                                 }}
                             />
                         ) : (
-                            <Typography sx={{ fontWeight: 1000, color: 'primary.main', fontSize: { xs: '4rem', sm: '5.5rem' }, lineHeight: 1, mt: 1 }}>
+                            /* QUI RISOLTO: Se non è MANUALE, controlla solo se è LIBERA, altrimenti è AUTO (primary) */
+                            <Typography sx={{ 
+                                fontWeight: 1000, 
+                                color: mode === 'LIBERA' ? 'success.main' : 'primary.main', 
+                                fontSize: { xs: '4rem', sm: '5.5rem' }, lineHeight: 1, mt: 1 
+                            }}>
                                 {prossimoTicket ?? '-'}
                             </Typography>
                         )}
                     </Box>
 
-                    {/* STORIA */}
+                    {/* RESTO DEL CODICE INVARIATO... */}
                     <Box sx={{ minHeight: '40px', display: 'flex', alignItems: 'center' }}>
                         {lastEntry && (
                             <Paper variant="outlined" sx={{ px: 2, py: 0.5, bgcolor: '#fff', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -230,7 +225,6 @@ export default function DistributorePage() {
                         )}
                     </Box>
 
-                    {/* COPERTI */}
                     <Box onClick={() => setIsEditing(true)} sx={{ textAlign: 'center', cursor: 'pointer', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         {isEditing ? (
                             <TextField
@@ -248,7 +242,6 @@ export default function DistributorePage() {
                         <Typography sx={{ color: '#555', fontWeight: 1000, fontSize: '1.4rem', mt: 1 }}>COPERTI</Typography>
                     </Box>
 
-                    {/* PULSANTI */}
                     <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 1 }}>
                         <Stack direction="row" spacing={2} justifyContent="center" sx={{ width: '100%', px: 2, mb: { xs: 2, sm: 3 } }}>
                             <Button variant="contained" disabled={Number(coperti) <= 0} onClick={onRemove} sx={{ width: '30%', height: { xs: '70px', sm: '90px' }, borderRadius: '20px' }}>
@@ -263,25 +256,25 @@ export default function DistributorePage() {
                         </Stack>
 
                         <Button
-                            onClick={handleStampa} variant="contained" color="secondary" 
+                            onClick={handleStampa} variant="contained" 
+                            color={mode === 'LIBERA' ? "success" : "secondary"} 
                             disabled={Number(coperti) <= 0 || prossimoTicket === null}
                             startIcon={<PrintIcon sx={{ fontSize: { xs: 30, sm: 45 } }} />}
                             sx={{ width: '92%', py: 2, fontSize: { xs: '1.5rem', sm: '2.2rem' }, fontWeight: 1000, borderRadius: '40px' }}
                         >
-                            STAMPA
+                            {mode === 'LIBERA' ? 'ENTRA' : 'STAMPA'}
                         </Button>
                     </Box>
                 </Box>
 
-                {/* DIALOG RESET... */}
                 <Dialog open={openResetDialog} onClose={() => setOpenResetDialog(false)}>
                     <DialogTitle>AZZERARE?</DialogTitle>
-                    <DialogContent>
+                    <Box sx={{ p: 3 }}>
                         <TextField fullWidth value={confirmText} onChange={(e) => setConfirmText(e.target.value.toUpperCase())} placeholder="CONFERMA" />
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={handleResetTotale} disabled={confirmText !== "CONFERMA"}>AZZERA</Button>
-                    </DialogActions>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+                            <Button onClick={handleResetTotale} disabled={confirmText !== "CONFERMA"} color="error" variant="contained">AZZERA</Button>
+                        </Box>
+                    </Box>
                 </Dialog>
             </Box>
         </ThemeProvider>
