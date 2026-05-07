@@ -139,8 +139,8 @@ export default function DistributorePage() {
 
                 {/* CONTROLLI LATERALI SINISTRA */}
                 <Box sx={{ 
-                    position: 'absolute', top: 16, left: 16, zIndex: 10, 
-                    display: 'flex', flexDirection: 'column', gap: 1 
+                    position: 'flex', top: 16, left: 16, zIndex: 10, 
+                    display: 'flex', gap: 1 
                 }}>
                     <Button 
                         variant="outlined" color="error" size="small" 
@@ -155,7 +155,7 @@ export default function DistributorePage() {
                         variant={mode === 'AUTO' ? "contained" : "outlined"} 
                         color="primary" size="small" 
                         onClick={() => setMode('AUTO')}
-                        sx={{ fontWeight: 'bold', bgcolor: mode === 'AUTO' ? 'primary.main' : 'white', borderRadius: '10px', fontSize: '0.7rem' }}
+                        sx={{ fontWeight: 'bold', bgcolor: mode === 'AUTO' ? 'primary.main' : 'white', borderRadius: '10px', fontSize: '0.7rem', mb: 2  }}
                     >
                         AUTO
                     </Button>
@@ -164,7 +164,7 @@ export default function DistributorePage() {
                         variant={mode === 'MANUALE' ? "contained" : "outlined"} 
                         color="warning" size="small" 
                         onClick={() => setMode('MANUALE')}
-                        sx={{ fontWeight: 'bold', bgcolor: mode === 'MANUALE' ? 'warning.main' : 'white', borderRadius: '10px', fontSize: '0.7rem' }}
+                        sx={{ fontWeight: 'bold', bgcolor: mode === 'MANUALE' ? 'warning.main' : 'white', borderRadius: '10px', fontSize: '0.7rem', mb: 2  }}
                     >
                         MANUALE
                     </Button>
@@ -173,10 +173,11 @@ export default function DistributorePage() {
                         variant={mode === 'LIBERA' ? "contained" : "outlined"} 
                         color="success" size="small" 
                         onClick={() => setMode('LIBERA')}
-                        sx={{ fontWeight: 'bold', bgcolor: mode === 'LIBERA' ? 'success.main' : 'white', borderRadius: '10px', fontSize: '0.7rem' }}
+                        sx={{ fontWeight: 'bold', bgcolor: mode === 'LIBERA' ? 'success.main' : 'white', borderRadius: '10px', fontSize: '0.7rem', mb: 2  }}
                     >
                         LIBERA
                     </Button>
+                   
                 </Box>
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '600px', gap: { xs: 1, sm: 2 }, flexGrow: 1, justifyContent: 'center' }}>
