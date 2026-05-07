@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { addTickets, getFirstFreeTicket, clearAllTickets } from '@/app/lib/actions'; 
+import { addTickets, clearAllTickets, getFirstFreeTicket } from '@/app/lib/actions'; 
 import CircularProgress from '@mui/material/CircularProgress';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { 
     Box, Typography, Button, Stack, TextField, Paper, Dialog, 
-    DialogActions, DialogContent, DialogTitle
+    DialogTitle
 } from '@mui/material';
 
 import AddCircleIcon from '@mui/icons-material/AddCircle';
@@ -44,7 +44,6 @@ export default function DistributorePage() {
             setLoading(false);
             return;
         }
-        
         setLoading(true);
         try {
             const nextId = await getFirstFreeTicket();
@@ -63,12 +62,10 @@ export default function DistributorePage() {
     const handleStampa = async () => {
         const numeroCopertiValido = Number(coperti);
         if (numeroCopertiValido <= 0 || prossimoTicket === null) return;
-        
         setLoading(true);
         try {
             const seduto = mode === 'LIBERA' ? 1 : 0;
             await addTickets(prossimoTicket, numeroCopertiValido, seduto);
-
             if (mode !== 'LIBERA') {
                 await fetch('/api/next-client', {
                     method: 'POST',
@@ -76,10 +73,8 @@ export default function DistributorePage() {
                     body: JSON.stringify({ type: 'NEW_TICKET' }),
                 });
             }
-
             setLastEntry({ numero: prossimoTicket, coperti: numeroCopertiValido });
             setCoperti(0); 
-            
             if (mode === 'MANUALE') {
                 setProssimoTicket(null);
             } else {
@@ -132,57 +127,55 @@ export default function DistributorePage() {
     return (
         <ThemeProvider theme={defaultTheme}>
             <Box sx={{ 
-                display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', 
-                height: '100%', width: '100%', bgcolor: 'background.default', p: 2, position: 'relative',
-                boxSizing: 'border-box', overflow: 'hidden' 
+                display: 'flex', flexDirection: 'column', height: '100dvh', width: '100%', 
+                bgcolor: 'background.default', p: 2, boxSizing: 'border-box'
             }}>
-
-                {/* CONTROLLI LATERALI SINISTRA */}
-                <Box sx={{ 
-                    position: 'absolute', top: 16, left: 16, zIndex: 10, 
-                    display: 'flex', flexDirection: 'column', gap: 1 
-                }}>
-                    <Button 
-                        variant="outlined" color="error" size="small" 
-                        onClick={() => setOpenResetDialog(true)} 
-                        startIcon={<DeleteForeverIcon />} 
-                        sx={{ fontWeight: 'bold', bgcolor: 'white', borderRadius: '10px', mb: 2 }}
-                    >
-                        AZZERA
-                    </Button>
-
-                    <Button 
-                        variant={mode === 'AUTO' ? "contained" : "outlined"} 
-                        color="primary" size="small" 
-                        onClick={() => setMode('AUTO')}
-                        sx={{ fontWeight: 'bold', bgcolor: mode === 'AUTO' ? 'primary.main' : 'white', borderRadius: '10px', fontSize: '0.7rem' }}
-                    >
-                        AUTO
-                    </Button>
-
-                    <Button 
-                        variant={mode === 'MANUALE' ? "contained" : "outlined"} 
-                        color="warning" size="small" 
-                        onClick={() => setMode('MANUALE')}
-                        sx={{ fontWeight: 'bold', bgcolor: mode === 'MANUALE' ? 'warning.main' : 'white', borderRadius: '10px', fontSize: '0.7rem' }}
-                    >
-                        MANUALE
-                    </Button>
-
-                    <Button 
-                        variant={mode === 'LIBERA' ? "contained" : "outlined"} 
-                        color="success" size="small" 
-                        onClick={() => setMode('LIBERA')}
-                        sx={{ fontWeight: 'bold', bgcolor: mode === 'LIBERA' ? 'success.main' : 'white', borderRadius: '10px', fontSize: '0.7rem' }}
-                    >
-                        LIBERA
-                    </Button>
-                </Box>
-
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '600px', gap: { xs: 1, sm: 2 }, flexGrow: 1, justifyContent: 'center' }}>
+                
+                {/* RIGA SUPERIORE: PULSANTI A SINISTRA + SPAZIO CENTRALE */}
+                <Box sx={{ display: 'flex', width: '100%', alignItems: 'flex-start', mb: 1 }}>
                     
-                    <Box sx={{ textAlign: 'center' }}>
-                        <Typography sx={{ color: '#666', fontWeight: 1000, fontSize: '0.9rem', letterSpacing: 2 }}>
+                    {/* COLONNA PULSANTI CONTROLLO */}
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: '100px' }}>
+                        <Button 
+                            variant="outlined" color="error" size="small" 
+                            onClick={() => setOpenResetDialog(true)} 
+                            startIcon={<DeleteForeverIcon />} 
+                            sx={{ fontWeight: 'bold', bgcolor: 'white', borderRadius: '10px', mb: 1, fontSize: '0.65rem' }}
+                        >
+                            AZZERA
+                        </Button>
+
+                        <Button 
+                            variant={mode === 'AUTO' ? "contained" : "outlined"} 
+                            color="primary" size="small" 
+                            onClick={() => setMode('AUTO')}
+                            sx={{ fontWeight: 'bold', bgcolor: mode === 'AUTO' ? 'primary.main' : 'white', borderRadius: '10px', fontSize: '0.65rem' }}
+                        >
+                            AUTO
+                        </Button>
+
+                        <Button 
+                            variant={mode === 'MANUALE' ? "contained" : "outlined"} 
+                            color="warning" size="small" 
+                            onClick={() => setMode('MANUALE')}
+                            sx={{ fontWeight: 'bold', bgcolor: mode === 'MANUALE' ? 'warning.main' : 'white', borderRadius: '10px', fontSize: '0.65rem' }}
+                        >
+                            MANUALE
+                        </Button>
+
+                        <Button 
+                            variant={mode === 'LIBERA' ? "contained" : "outlined"} 
+                            color="success" size="small" 
+                            onClick={() => setMode('LIBERA')}
+                            sx={{ fontWeight: 'bold', bgcolor: mode === 'LIBERA' ? 'success.main' : 'white', borderRadius: '10px', fontSize: '0.65rem' }}
+                        >
+                            LIBERA
+                        </Button>
+                    </Box>
+
+                    {/* AREA CENTRALE (TICKET) - Si espande per centrare il numero nel resto dello spazio */}
+                    <Box sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', pr: '100px' /* Bilancia il minWidth dei tasti per centratura ottica */ }}>
+                        <Typography sx={{ color: '#666', fontWeight: 1000, fontSize: '0.9rem', letterSpacing: 2, mt: 2 }}>
                             {mode === 'LIBERA' ? 'ENTRATA LIBERA' : 'PROSSIMO TICKET'}
                         </Typography>
                         
@@ -191,30 +184,31 @@ export default function DistributorePage() {
                                 type="number"
                                 value={prossimoTicket === null ? '' : prossimoTicket}
                                 onChange={(e) => setProssimoTicket(e.target.value === '' ? null : Number(e.target.value))}
-                                variant="standard"
-                                placeholder="-"
+                                variant="standard" placeholder="-"
                                 InputProps={{ disableUnderline: true }}
                                 sx={{
                                     '& input': {
-                                        fontSize: { xs: '4rem', sm: '5.5rem' }, textAlign: 'center', fontWeight: 1000,
-                                        color: 'warning.main', fontFamily: 'monospace', padding: 0, width: '250px'
+                                        fontSize: { xs: '4.5rem', sm: '6rem' }, textAlign: 'center', fontWeight: 1000,
+                                        color: 'warning.main', fontFamily: 'monospace', padding: 0, width: '180px'
                                     }
                                 }}
                             />
                         ) : (
-                            /* QUI RISOLTO: Se non è MANUALE, controlla solo se è LIBERA, altrimenti è AUTO (primary) */
                             <Typography sx={{ 
                                 fontWeight: 1000, 
                                 color: mode === 'LIBERA' ? 'success.main' : 'primary.main', 
-                                fontSize: { xs: '4rem', sm: '5.5rem' }, lineHeight: 1, mt: 1 
+                                fontSize: { xs: '5rem', sm: '7rem' }, lineHeight: 1 
                             }}>
                                 {prossimoTicket ?? '-'}
                             </Typography>
                         )}
                     </Box>
+                </Box>
 
-                    {/* RESTO DEL CODICE INVARIATO... */}
-                    <Box sx={{ minHeight: '40px', display: 'flex', alignItems: 'center' }}>
+                {/* CONTENUTO INFERIORE */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexGrow: 1, justifyContent: 'center', gap: 2 }}>
+                    
+                    <Box sx={{ minHeight: '40px' }}>
                         {lastEntry && (
                             <Paper variant="outlined" sx={{ px: 2, py: 0.5, bgcolor: '#fff', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: 1.5 }}>
                                 <HistoryIcon sx={{ fontSize: 16, color: '#9c27b0' }} />
@@ -225,32 +219,32 @@ export default function DistributorePage() {
                         )}
                     </Box>
 
-                    <Box onClick={() => setIsEditing(true)} sx={{ textAlign: 'center', cursor: 'pointer', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Box onClick={() => setIsEditing(true)} sx={{ textAlign: 'center', cursor: 'pointer' }}>
                         {isEditing ? (
                             <TextField
                                 type="number" autoFocus variant="standard" InputProps={{ disableUnderline: true }}
                                 value={coperti === 0 ? '' : coperti}
                                 onChange={(e) => setCoperti(e.target.value === '' ? 0 : Number(e.target.value))}
                                 onBlur={() => setIsEditing(false)}
-                                sx={{ '& input': { fontSize: { xs: '6rem', sm: '8.5rem' }, textAlign: 'center', fontWeight: 1000, color: 'primary.main', padding: 0 } }}
+                                sx={{ '& input': { fontSize: { xs: '7rem', sm: '9rem' }, textAlign: 'center', fontWeight: 1000, color: 'primary.main', padding: 0 } }}
                             />
                         ) : (
-                            <Typography sx={{ fontSize: { xs: '6rem', sm: '8.5rem' }, fontWeight: 1000, color: coperti === 0 ? '#ddd' : '#000', lineHeight: 0.9 }}>
+                            <Typography sx={{ fontSize: { xs: '7rem', sm: '9rem' }, fontWeight: 1000, color: coperti === 0 ? '#ddd' : '#000', lineHeight: 0.9 }}>
                                 {coperti}
                             </Typography>
                         )}
-                        <Typography sx={{ color: '#555', fontWeight: 1000, fontSize: '1.4rem', mt: 1 }}>COPERTI</Typography>
+                        <Typography sx={{ color: '#555', fontWeight: 1000, fontSize: '1.4rem' }}>COPERTI</Typography>
                     </Box>
 
-                    <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 1 }}>
-                        <Stack direction="row" spacing={2} justifyContent="center" sx={{ width: '100%', px: 2, mb: { xs: 2, sm: 3 } }}>
-                            <Button variant="contained" disabled={Number(coperti) <= 0} onClick={onRemove} sx={{ width: '30%', height: { xs: '70px', sm: '90px' }, borderRadius: '20px' }}>
+                    <Box sx={{ width: '100%', maxWidth: '500px' }}>
+                        <Stack direction="row" spacing={2} justifyContent="center" sx={{ mb: 3 }}>
+                            <Button variant="contained" disabled={Number(coperti) <= 0} onClick={onRemove} sx={{ width: '30%', height: '80px', borderRadius: '20px', bgcolor: '#ccc', '&:hover': {bgcolor: '#bbb'} }}>
                                 <RemoveCircleSharpIcon sx={{ fontSize: 40 }} />
                             </Button>
-                            <Button variant="contained" onClick={onAdd} sx={{ width: '30%', height: { xs: '70px', sm: '90px' }, borderRadius: '20px' }}>
+                            <Button variant="contained" onClick={onAdd} sx={{ width: '30%', height: '80px', borderRadius: '20px' }}>
                                 <AddCircleIcon sx={{ fontSize: 40 }} />
                             </Button>
-                            <Button variant="contained" onClick={onAdd10} sx={{ width: '30%', height: { xs: '70px', sm: '90px' }, borderRadius: '20px' }}>
+                            <Button variant="contained" onClick={onAdd10} sx={{ width: '30%', height: '80px', borderRadius: '20px' }}>
                                 <Typography sx={{ fontWeight: 1000, fontSize: '1.5rem' }}>+10</Typography>
                             </Button>
                         </Stack>
@@ -259,8 +253,8 @@ export default function DistributorePage() {
                             onClick={handleStampa} variant="contained" 
                             color={mode === 'LIBERA' ? "success" : "secondary"} 
                             disabled={Number(coperti) <= 0 || prossimoTicket === null}
-                            startIcon={<PrintIcon sx={{ fontSize: { xs: 30, sm: 45 } }} />}
-                            sx={{ width: '92%', py: 2, fontSize: { xs: '1.5rem', sm: '2.2rem' }, fontWeight: 1000, borderRadius: '40px' }}
+                            startIcon={<PrintIcon sx={{ fontSize: 35 }} />}
+                            sx={{ width: '100%', py: 2.5, fontSize: '1.8rem', fontWeight: 1000, borderRadius: '40px' }}
                         >
                             {mode === 'LIBERA' ? 'ENTRA' : 'STAMPA'}
                         </Button>
