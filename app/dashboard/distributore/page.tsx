@@ -6,7 +6,8 @@ import CircularProgress from '@mui/material/CircularProgress';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { 
     Box, Typography, Button, Stack, TextField, Paper, Dialog, 
-    DialogActions, DialogContent, DialogTitle
+    DialogActions, DialogContent, DialogTitle, useMediaQuery,
+    DialogContentText
 } from '@mui/material';
 
 import AddCircleIcon from '@mui/icons-material/AddCircle';
@@ -37,6 +38,7 @@ export default function DistributorePage() {
     const [lastEntry, setLastEntry] = useState<{ numero: number, coperti: number } | null>(null);
     const [openResetDialog, setOpenResetDialog] = useState(false);
     const [confirmText, setConfirmText] = useState("");
+
 
     const fetchData = useCallback(async () => {
         if (mode === 'MANUALE') {
@@ -183,7 +185,7 @@ export default function DistributorePage() {
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '600px', gap: { xs: 1, sm: 2 }, flexGrow: 1, justifyContent: 'center' }}>
                     
                     <Box sx={{ textAlign: 'center' }}>
-                        <Typography sx={{ color: '#666', fontWeight: 1000, fontSize: '0.9rem', letterSpacing: 2 }}>
+                        <Typography sx={{ color: '#666', fontWeight: 1000, fontSize: '1.4rem', letterSpacing: 2 }}>
                             {mode === 'LIBERA' ? 'ENTRATA LIBERA' : 'PROSSIMO TICKET'}
                         </Typography>
                         
@@ -197,7 +199,7 @@ export default function DistributorePage() {
                                 InputProps={{ disableUnderline: true }}
                                 sx={{
                                     '& input': {
-                                        fontSize: { xs: '4rem', sm: '5.5rem' }, textAlign: 'center', fontWeight: 1000,
+                                        fontSize: { xs: '5.5rem', sm: '6rem' }, textAlign: 'center', fontWeight: 1000,
                                         color: 'warning.main', fontFamily: 'monospace', padding: 0, width: '250px'
                                     }
                                 }}
@@ -207,7 +209,7 @@ export default function DistributorePage() {
                             <Typography sx={{ 
                                 fontWeight: 1000, 
                                 color: mode === 'LIBERA' ? 'success.main' : 'primary.main', 
-                                fontSize: { xs: '4rem', sm: '5.5rem' }, lineHeight: 1, mt: 1 
+                                fontSize: { xs: '5.5rem', sm: '6rem' }, lineHeight: 1, mt: 1 
                             }}>
                                 {prossimoTicket ?? '-'}
                             </Typography>
@@ -242,8 +244,7 @@ export default function DistributorePage() {
                         )}
                         <Typography sx={{ color: '#555', fontWeight: 1000, fontSize: '1.4rem', mt: 1 }}>COPERTI</Typography>
                     </Box>
-
-                    <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 1 }}>
+                  <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 1 }}>
                         <Stack direction="row" spacing={2} justifyContent="center" sx={{ width: '100%', px: 2, mb: { xs: 2, sm: 3 } }}>
                             <Button variant="contained" disabled={Number(coperti) <= 0} onClick={onRemove} sx={{ width: '30%', height: { xs: '70px', sm: '90px' }, borderRadius: '20px' }}>
                                 <RemoveCircleSharpIcon sx={{ fontSize: 40 }} />
@@ -268,15 +269,56 @@ export default function DistributorePage() {
                     </Box>
                 </Box>
 
-                <Dialog open={openResetDialog} onClose={() => setOpenResetDialog(false)}>
-                    <DialogTitle>AZZERARE?</DialogTitle>
-                    <Box sx={{ p: 3 }}>
-                        <TextField fullWidth value={confirmText} onChange={(e) => setConfirmText(e.target.value.toUpperCase())} placeholder="CONFERMA" />
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
-                            <Button onClick={handleResetTotale} disabled={confirmText !== "CONFERMA"} color="error" variant="contained">AZZERA</Button>
-                        </Box>
-                    </Box>
-                </Dialog>
+        {/* DIALOG RESET - (Invariato per logica, migliorato spacing) */}
+        <Dialog 
+            open={openResetDialog} 
+            onClose={() => setOpenResetDialog(false)}
+            PaperProps={{
+                sx: {
+                    borderRadius: 4,
+                    borderLeft: '10px solid #9c27b0',
+                    p: 1,
+                    minWidth: { xs: '90%', sm: '400px' },
+                }
+            }}
+        >
+            <DialogTitle sx={{ color: 'error.main', fontWeight: 1000, fontSize: '1.4rem', textAlign: 'center' }}>
+                AZZERARE TICKETS?
+            </DialogTitle>
+            <DialogContent>
+                <DialogContentText sx={{ fontWeight: 700, color: '#444', mb: 2, textAlign: 'center' }}>
+                    Operazione irreversibile. Svuota la tabella e azzera il contatore.
+                    <br /><br />
+                    Digita <span style={{ color: '#9c27b0' }}>CONFERMA</span> per continuare.
+                </DialogContentText>
+                <TextField
+                    autoFocus
+                    fullWidth
+                    variant="outlined"
+                    placeholder="CONFERMA"
+                    value={confirmText}
+                    onChange={(e) => setConfirmText(e.target.value.toUpperCase())}
+                    sx={{ 
+                        '& .MuiOutlinedInput-root': { borderRadius: '15px', bgcolor: '#f9f9f9' },
+                        input: { fontWeight: 'bold', textAlign: 'center', fontSize: '1.1rem' }
+                    }}
+                />
+            </DialogContent>
+            <DialogActions sx={{ justifyContent: 'center', gap: 2, pb: 2 }}>
+                <Button onClick={() => { setOpenResetDialog(false); setConfirmText(""); }}>
+                    ANNULLA
+                </Button>
+                <Button 
+                    onClick={handleResetTotale} 
+                    color="error" 
+                    variant="contained" 
+                    disabled={confirmText !== "CONFERMA"}
+                    sx={{ fontWeight: 1000, borderRadius: '10px' }}
+                >
+                    AZZERA ORA
+                </Button>
+            </DialogActions>
+        </Dialog>
             </Box>
         </ThemeProvider>
     );
