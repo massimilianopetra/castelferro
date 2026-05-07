@@ -73,11 +73,8 @@ export default function DistributorePage() {
             });
             setLastEntry({ numero: prossimoTicket, coperti: numeroCopertiValido });
             setCoperti(0); 
-            if (mode === 'MANUALE') {
-                setProssimoTicket(null);
-            } else {
-                await fetchData();
-            }
+            if (mode === 'MANUALE') setProssimoTicket(null);
+            else await fetchData();
         } catch (error) {
             alert("Errore stampa");
         } finally {
@@ -89,119 +86,90 @@ export default function DistributorePage() {
     const onRemove = () => setCoperti(prev => (Number(prev) > 0 ? Number(prev) - 1 : 0));
     const onAdd10 = () => setCoperti(prev => (Number(prev) <= 989 ? Number(prev) + 10 : 999));
 
-    const handleResetTotale = async () => {
-        if (confirmText === "CONFERMA") {
-            setLoading(true);
-            try {
-                await clearAllTickets();
-                setLastEntry(null);
-                setCoperti(0);
-                setOpenResetDialog(false);
-                setConfirmText("");
-                await fetch('/api/next-client', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type: 'REFRESH_TABLE' }),
-                });
-                await fetchData();
-            } catch (error) {
-                alert("Errore reset");
-            } finally {
-                setLoading(false);
-            }
-        }
-    };
-
     if (loading && prossimoTicket === null && mode !== 'MANUALE') {
-        return (
-            <ThemeProvider theme={defaultTheme}>
-                <Box sx={{ display: 'flex', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
-                    <CircularProgress />
-                </Box>
-            </ThemeProvider>
-        );
+        return <Box sx={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center' }}><CircularProgress /></Box>;
     }
 
     return (
         <ThemeProvider theme={defaultTheme}>
+            {/* Il contenitore principale ora usa 100dvh (dynamic viewport height) */}
             <Box sx={{ 
                 display: 'flex', flexDirection: 'column', 
-                height: '100%', width: '100%', maxWidth: '600px', mx: 'auto',
-                p: { xs: 1, sm: 2 }, boxSizing: 'border-box'
+                height: '100%', minHeight: {xs: '80vh', sm: '100%'},
+                width: '100%', maxWidth: '500px', mx: 'auto',
+                p: { xs: 0.5, sm: 2 }, boxSizing: 'border-box',
+                justifyContent: 'space-between', // Distribuisce i blocchi sopra e sotto
+                overflow: 'hidden'
             }}>
                 
-                {/* 1. TASTI ALTO */}
-                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 1, flexWrap: 'wrap', mb: 1 }}>
+                {/* 1. HEADER TASTI - Molto compatti */}
+                <Box sx={{ display: 'flex', justifyContent: 'center', gap: 0.5, pt: 0.5 }}>
                     {['AZZERA', 'AUTO', 'MANUALE', 'LIBERA'].map((m) => (
                         <Button 
                             key={m}
-                            variant={mode === m || (m === 'AZZERA' && openResetDialog) ? "contained" : "outlined"} 
+                            variant={mode === m ? "contained" : "outlined"} 
                             color={m === 'AZZERA' ? "error" : m === 'AUTO' ? "primary" : m === 'MANUALE' ? "warning" : "success"}
                             size="small"
                             onClick={() => m === 'AZZERA' ? setOpenResetDialog(true) : setMode(m as Mode)}
-                            sx={{ fontWeight: 'bold', borderRadius: '8px', fontSize: '0.65rem' }}
+                            sx={{ fontWeight: 'bold', borderRadius: '6px', fontSize: '0.6rem', minWidth: '65px', p: '4px' }}
                         >
                             {m}
                         </Button>
                     ))}
                 </Box>
 
-                {/* SPACER FLESSIBILE */}
-                <Box sx={{ flexGrow: 0.5 }} />
+                {/* 2. BLOCCO NUMERI CENTRALE */}
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexGrow: 1, justifyContent: 'center' }}>
+                    
+                    {/* Ticket */}
+                    <Box sx={{ textAlign: 'center', mb: 1 }}>
+                        <Typography sx={{ color: '#666', fontWeight: 1000, fontSize: '0.75rem', letterSpacing: 1, mb: -0.5 }}>
+                            {mode === 'LIBERA' ? 'ENTRATA LIBERA' : 'PROSSIMO TICKET'}
+                        </Typography>
+                        <Typography sx={{ 
+                            fontWeight: 1000, 
+                            color: mode === 'LIBERA' ? 'success.main' : mode === 'MANUALE' ? 'warning.main' : 'primary.main', 
+                            fontSize: { xs: '18vh', sm: '8rem' }, // Scalo basato sull'altezza
+                            lineHeight: 0.9 
+                        }}>
+                            {prossimoTicket ?? '-'}
+                        </Typography>
+                    </Box>
 
-                {/* 2. AREA TICKET */}
-                <Box sx={{ textAlign: 'center' }}>
-                    <Typography sx={{ color: '#666', fontWeight: 1000, fontSize: '0.9rem', letterSpacing: 2 }}>
-                        {mode === 'LIBERA' ? 'ENTRATA LIBERA' : 'PROSSIMO TICKET'}
-                    </Typography>
-                    <Typography sx={{ 
-                        fontWeight: 1000, 
-                        color: mode === 'LIBERA' ? 'success.main' : mode === 'MANUALE' ? 'warning.main' : 'primary.main', 
-                        fontSize: { xs: '6rem', sm: '10rem' }, lineHeight: 1 
-                    }}>
-                        {prossimoTicket ?? '-'}
-                    </Typography>
-                </Box>
-
-                {/* 3. AREA STORIA (CENTRO) */}
-                <Box sx={{ display: 'flex', justifyContent: 'center', my: 1, minHeight: '24px' }}>
+                    {/* Storia (Ultimo) - Quasi invisibile ma utile */}
                     {lastEntry && (
-                        <Paper variant="outlined" sx={{ px: 1.5, py: 0.2, bgcolor: '#fff', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <HistoryIcon sx={{ fontSize: 14, color: '#9c27b0' }} />
-                            <Typography sx={{ fontSize: '0.75rem', fontWeight: 800, color: '#666' }}>
+                        <Paper variant="outlined" sx={{ px: 1, py: 0, bgcolor: '#fff', borderRadius: '6px', mb: 1 }}>
+                            <Typography sx={{ fontSize: '0.65rem', fontWeight: 800, color: '#666' }}>
                                 ULTIMO: {lastEntry.numero} | COPERTI: {lastEntry.coperti}
                             </Typography>
                         </Paper>
                     )}
+
+                    {/* Coperti */}
+                    <Box onClick={() => setIsEditing(true)} sx={{ textAlign: 'center', cursor: 'pointer' }}>
+                        <Typography sx={{ 
+                            fontSize: { xs: '18vh', sm: '8rem' }, 
+                            fontWeight: 1000, 
+                            color: coperti === 0 ? '#ddd' : '#000', 
+                            lineHeight: 0.8 
+                        }}>
+                            {coperti === '' ? 0 : coperti}
+                        </Typography>
+                        <Typography sx={{ color: '#555', fontWeight: 1000, fontSize: '0.9rem', mt: -0.5 }}>COPERTI</Typography>
+                    </Box>
                 </Box>
 
-                {/* 4. AREA COPERTI */}
-                <Box onClick={() => setIsEditing(true)} sx={{ textAlign: 'center', cursor: 'pointer' }}>
-                    <Typography sx={{ 
-                        fontSize: { xs: '6.5rem', sm: '9rem' }, 
-                        fontWeight: 1000, 
-                        color: coperti === 0 ? '#ddd' : '#000', 
-                        lineHeight: 1 
-                    }}>
-                        {coperti === '' ? 0 : coperti}
-                    </Typography>
-                    <Typography sx={{ color: '#555', fontWeight: 1000, fontSize: '1.2rem', mt: 0.5 }}>COPERTI</Typography>
-                </Box>
-
-                {/* SPACER FLESSIBILE - Spinge i pulsanti verso il basso */}
-                <Box sx={{ flexGrow: 1 }} />
-
-                {/* 5. PULSANTI AZIONE (ANCORATI AL FONDO) */}
-                <Box sx={{ width: '100%', pb: { xs: 1, sm: 2 } }}>
-                    <Stack direction="row" spacing={2} justifyContent="center" sx={{ mb: 2 }}>
-                        <Button variant="contained" disabled={Number(coperti) <= 0} onClick={onRemove} sx={{ width: '30%', height: '70px', borderRadius: '18px', bgcolor: '#ccc' }}>
-                            <RemoveCircleSharpIcon sx={{ fontSize: 35 }} />
+                {/* 3. FOOTER PULSANTI - Sempre visibili in basso */}
+                <Box sx={{ width: '100%', pb: 1 }}>
+                    <Stack direction="row" spacing={1} justifyContent="center" sx={{ mb: 1 }}>
+                        <Button variant="contained" disabled={Number(coperti) <= 0} onClick={onRemove} sx={{ width: '30%', height: '55px', borderRadius: '12px', bgcolor: '#ccc' }}>
+                            <RemoveCircleSharpIcon sx={{ fontSize: 28 }} />
                         </Button>
-                        <Button variant="contained" onClick={onAdd} sx={{ width: '30%', height: '70px', borderRadius: '18px' }}>
-                            <AddCircleIcon sx={{ fontSize: 35 }} />
+                        <Button variant="contained" onClick={onAdd} sx={{ width: '30%', height: '55px', borderRadius: '12px' }}>
+                            <AddCircleIcon sx={{ fontSize: 28 }} />
                         </Button>
-                        <Button variant="contained" onClick={onAdd10} sx={{ width: '30%', height: '70px', borderRadius: '18px' }}>
-                            <Typography sx={{ fontWeight: 1000, fontSize: '1.4rem' }}>+10</Typography>
+                        <Button variant="contained" onClick={onAdd10} sx={{ width: '30%', height: '55px', borderRadius: '12px' }}>
+                            <Typography sx={{ fontWeight: 1000, fontSize: '1.1rem' }}>+10</Typography>
                         </Button>
                     </Stack>
 
@@ -209,22 +177,25 @@ export default function DistributorePage() {
                         onClick={handleStampa} variant="contained" 
                         color={mode === 'LIBERA' ? "success" : "secondary"} 
                         disabled={Number(coperti) <= 0 || prossimoTicket === null}
-                        startIcon={<PrintIcon sx={{ fontSize: 32 }} />}
-                        sx={{ width: '100%', py: 2, fontSize: '1.7rem', fontWeight: 1000, borderRadius: '35px' }}
+                        startIcon={<PrintIcon sx={{ fontSize: 24 }} />}
+                        sx={{ width: '100%', py: 1.2, fontSize: '1.3rem', fontWeight: 1000, borderRadius: '25px' }}
                     >
                         {mode === 'LIBERA' ? 'ENTRA' : 'STAMPA'}
                     </Button>
                 </Box>
 
-                {/* DIALOG RESET */}
+                {/* Dialog Reset... */}
                 <Dialog open={openResetDialog} onClose={() => setOpenResetDialog(false)}>
-                    <DialogTitle sx={{ fontWeight: 1000 }}>AZZERARE TUTTO?</DialogTitle>
-                    <Box sx={{ p: 3, textAlign: 'center' }}>
-                        <TextField fullWidth value={confirmText} onChange={(e) => setConfirmText(e.target.value.toUpperCase())} placeholder="CONFERMA" />
-                        <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
-                            <Button fullWidth onClick={() => setOpenResetDialog(false)} variant="outlined">ANNULLA</Button>
-                            <Button fullWidth onClick={handleResetTotale} disabled={confirmText !== "CONFERMA"} color="error" variant="contained">AZZERA</Button>
-                        </Box>
+                    <Box sx={{ p: 2, textAlign: 'center' }}>
+                        <Typography sx={{ fontWeight: 1000, mb: 1 }}>AZZERARE TUTTO?</Typography>
+                        <TextField fullWidth size="small" value={confirmText} onChange={(e) => setConfirmText(e.target.value.toUpperCase())} placeholder="CONFERMA" />
+                        <Button fullWidth onClick={async () => {
+                             if (confirmText === "CONFERMA") {
+                                await clearAllTickets();
+                                setCoperti(0); setLastEntry(null); setOpenResetDialog(false); setConfirmText("");
+                                await fetchData();
+                             }
+                        }} disabled={confirmText !== "CONFERMA"} color="error" variant="contained" sx={{ mt: 2 }}>AZZERA</Button>
                     </Box>
                 </Dialog>
             </Box>
