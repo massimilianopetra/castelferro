@@ -1,10 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useConfig } from '@/context/ConfigContext';
 
 export default function DisplayPage() {
+  const { anno, titolo, edizione, inizio, fine, mese } = useConfig();
   const [numero, setNumero] = useState(null);
-  const [precedenti, setPrecedenti] = useState([]); 
+  const [precedenti, setPrecedenti] = useState([]);
 
   useEffect(() => {
     const es = new EventSource('/api/next-client');
@@ -12,21 +14,17 @@ export default function DisplayPage() {
     es.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        
         if (data.type === 'CALL_NUMBER') {
           setNumero(data.numero);
-          // PUNTO 1: Gestione fino a 5 numeri precedenti
           if (data.history) {
-            setPrecedenti(data.history); 
+            setPrecedenti(data.history.slice(0, 5));
           }
         }
-        
-        // PUNTO 2: Aggiornamento quando un numero viene rimosso (Seduto o Cancellato)
         if (data.type === 'UPDATE_HISTORY') {
-          setPrecedenti(data.history || []);
+          setPrecedenti((data.history || []).slice(0, 5));
         }
       } catch (error) {
-        console.error("Errore parsing SSE:", error);
+        console.error('Errore parsing SSE:', error);
       }
     };
 
@@ -43,73 +41,124 @@ export default function DisplayPage() {
         height: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'center',
+        justifyContent: 'space-between', // Distribuisce lo spazio tra header, numero e cubetti
         alignItems: 'center',
-        backgroundColor: '#111',
+        backgroundColor: '#000',
         userSelect: 'none',
         fontFamily: 'sans-serif',
+        overflow: 'hidden',
+        padding: '1vh 0' // Un po' di margine sopra e sotto
       }}
     >
-      <p
-        style={{
-          color: '#888',
-          fontSize: '3rem',
-          fontWeight: 900,
-          letterSpacing: '0.4em',
-          margin: '0 0 1rem 0',
-          textTransform: 'uppercase',
-        }}
-      >
-        Numero
-      </p>
-      <p
-        style={{
-          color: numero !== null ? '#ffffff' : '#444444',
-          fontSize: 'clamp(8rem, 30vw, 22rem)',
-          fontWeight: 900,
-          lineHeight: 1,
-          margin: 0,
-          fontFamily: 'monospace',
-          transition: 'color 0.3s ease',
-        }}
-      >
-        {numero !== null ? numero : '—'}
-      </p>
+      <style>{`
+        @keyframes neonGlow {
+          0%, 100% {
+            text-shadow: 0 0 20px #ffff00, 0 0 40px #ffcc00;
+            color: #ffff00;
+          }
+          50% {
+            text-shadow: 0 0 20px #fff, 0 0 40px #fff;
+            color: #ffffff;
+          }
+        }
+      `}</style>
 
-      {/* SEZIONE ULTIMI 5 CHIAMATI */}
-      <div style={{ 
-        display: 'flex', 
-        gap: '15px', 
-        marginTop: '5vh',
-        minHeight: '150px',
-        flexWrap: 'wrap',
-        justifyContent: 'center'
-      }}>
-        {precedenti.map((num, idx) => (
-          <div 
-            key={idx} 
+      {numero === null ? (
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+            width: '100%',
+            textAlign: 'center',
+            animation: 'neonGlow 5s ease-in-out infinite'
+          }}
+        >
+          <div style={{ fontSize: '8vw', fontWeight: '900', textTransform: 'uppercase', margin: 0 }}>
+            {edizione}° {titolo}
+          </div>
+          <div style={{ fontSize: '4vw', fontWeight: '900', textTransform: 'uppercase', marginTop: '10px' }}>
+            {inizio}-{fine} {mese} {anno}
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* HEADER NUMERO */}
+          <div style={{ textAlign: 'center', marginTop: '1vh' }}>
+            <p style={{ color: '#888', fontSize: '3rem', fontWeight: 900, letterSpacing: '0.4em', margin: 0 }}>
+              NUMERO
+            </p>
+          </div>
+
+          {/* NUMERO CENTRALE (Leggermente ridotto per far spazio sotto) */}
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+            <p
+              style={{
+                color: '#ff0000',
+                fontSize: 'clamp(8rem, 38vw, 30 rem)', 
+                fontWeight: 900,
+                lineHeight: 1,
+                margin: 0,
+                fontFamily: 'monospace',
+                textShadow: '0 0 50px rgba(255,0,0,0.5)'
+              }}
+            >
+              {numero}
+            </p>
+          </div>
+
+          {/* SEZIONE 5 CUBETTI ORIZZONTALI */}
+          <div
             style={{
-              backgroundColor: '#222',
-              border: '2px solid #333',
-              borderRadius: '20px',
-              padding: '10px 25px',
               display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 4px 15px rgba(0,0,0,0.5)'
+              flexDirection: 'row',
+              gap: '20px',
+              width: '100%',
+              padding: '0 3vw',
+              boxSizing: 'border-box',
+              marginBottom: '3vh'
             }}
           >
-            {/* PUNTO 3: Sostituzione testo */}
-            <span style={{ color: '#666', fontSize: '0.8rem', fontWeight: 900, marginBottom: '5px' }}>
-              GIA' CHIAMATO
-            </span>
-            <span style={{ color: '#1976d2', fontSize: '3.5rem', fontWeight: 1000, fontFamily: 'monospace', lineHeight: 1 }}>
-              {num}
-            </span>
+            {precedenti.map((num, idx) => (
+              <div
+                key={idx}
+                style={{
+                  backgroundColor: '#1a1a1a',
+                  border: '3px solid #333',
+                  borderRadius: '20px',
+                  padding: '1.5vh 1vw',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flex: 1, // Fa sì che i cubetti occupino tutto lo spazio disponibile in larghezza
+                  minWidth: 0
+                }}
+              >
+                <span style={{ 
+                  color: '#666', 
+                  fontSize: '1.5vw', // Testo dinamico che scala con la larghezza
+                  fontWeight: 800, 
+                  whiteSpace: 'nowrap',
+                  textTransform: 'uppercase'
+                }}>
+                  Precedente
+                </span>
+                <span style={{ 
+                  color: '#fff', 
+                  fontSize: '5vw', // Numero grande che scala con il cubetto
+                  fontWeight: 900, 
+                  fontFamily: 'monospace', 
+                  lineHeight: 1 
+                }}>
+                  {num}
+                </span>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </>
+      )}
     </div>
   );
 }

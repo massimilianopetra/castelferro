@@ -39,7 +39,7 @@ export default function Page() {
     const columns: GridColDef[] = [
         {
             field: 'col1', headerName: 'N. Foglietto', width: 100, renderCell: (params) => (
-                <Link href={`/dashboard/casse/${params.id}`} passHref className="text-blue-600 underline">
+                <Link href={`/dashboard/casse/${params.value}`} passHref className="text-blue-600 underline">
                     {params.value}
                 </Link>
             )
