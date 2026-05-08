@@ -1,41 +1,54 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useSession } from 'next-auth/react'
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Button, ButtonGroup, Link, Paper, Snackbar, TextField } from '@mui/material';
-import type { DbConsumazioniPrezzo, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
-import { getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto, aggiornaConto, stampaConto, riapriConto, apriConto, getContoPiuAlto } from '@/app/lib/actions';
-import { writeLog, getGiornoSagra, getLastLog } from '@/app/lib/actions';
-import { deltanow, milltodatestring } from '@/app/lib/utils'
-import TabellaConto from '@/app/ui/dashboard/TabellaConto';
-import TheBill from '@/app/ui/dashboard/thebill';
-import Summary from '@/app/ui/dashboard/summary';
+import { 
+  Button, ButtonGroup, Link, Snackbar, TextField, 
+  Dialog, DialogTitle, DialogContent, DialogActions 
+} from '@mui/material';
 import Filter1Icon from '@mui/icons-material/Filter1';
 import * as React from 'react';
+
+import type { DbConsumazioniPrezzo, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
+import { 
+  getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto, 
+  aggiornaConto, stampaConto, riapriConto, apriConto, getContoPiuAlto,
+  writeLog, getGiornoSagra, getLastLog 
+} from '@/app/lib/actions';
+import { deltanow, milltodatestring } from '@/app/lib/utils';
+import { useConfig } from '@/context/ConfigContext';
+
+import TabellaConto from '@/app/ui/dashboard/TabellaConto';
+import Summary from '@/app/ui/dashboard/summary';
 import Summarythebill from '@/app/ui/dashboard/summarythebill';
 
-
 export default function Page({ params }: { params: { foglietto: string } }) {
-
+  const config = useConfig();
   const router = useRouter();
+  const { data: session } = useSession();
+  
   const printRef = useRef<HTMLDivElement | null>(null);
+
   const [importValue, setImportValue] = useState('');
   const [textValue, setTextValue] = useState('');
   const [phase, setPhase] = useState('elaborazione');
   const [openSnackbar, setOpenSnackbar] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
   const [products, setProducts] = useState<DbConsumazioniPrezzo[]>([]);
   const [iniProducts, setIniProducts] = useState<DbConsumazioniPrezzo[]>([]);
   const [numero, setNumero] = useState<number | string>('');
   const [numeroFoglietto, setNumeroFoglietto] = useState<number | string>('');
   const [conto, setConto] = useState<DbConti>();
   const [lastLog, setLastLog] = useState<DbLog[]>([]);
-  const { data: session } = useSession();
   const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
-  const [nuovaquantitaValue, setQuantitaValue] = useState('');
-  const [idmodificaquantitaValue, setIdModQuantita] = useState(1);
-  const [piattomodificaquantitaValue, setPiattoModQuantita] = useState("non definito");
-  const tableContainerRef = useRef<HTMLDivElement>(null);
+  
+  const [openDialogQty, setOpenDialogQty] = useState(false);
+  const [tempQty, setTempQty] = useState('');
+  const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
+  const [selectedProductName, setSelectedProductName] = useState('');
+
+  const [copertipass, setCopertiPass] = useState<number>(1);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,12 +56,11 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       if (gg) {
         setSagra(gg);
         const log = await getLastLog(gg.giornata, 'Casse');
-        if (log) {
-          setLastLog(log);
-        }
+        if (log) setLastLog(log);
 
         const num = +params.foglietto;
         if (isNaN(num) || num < 1 || num > 9999) {
+          setSnackbarMessage("Il foglietto non è gestibile, troppo grande.");
           setOpenSnackbar(true);
           return;
         }
@@ -57,1250 +69,427 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         if (c) {
           setProducts(c);
           setIniProducts(c);
+          setCopertiPass(c.find((o) => o.id_piatto === 1)?.quantita || 0);
         }
-
+   
         const cc = await getConto(num, gg.giornata);
         setConto(cc);
-        if (cc?.stato == 'APERTO') {
+
+        if (cc?.stato == 'APERTO' || cc?.stato == 'STAMPATO') {
+          // Se esiste (anche se > 8999), permetti la modifica
           setNumeroFoglietto(num.toString());
-          await writeLog(num, gg.giornata, 'Casse', '', 'OPEN', ''); // Logger
-          const cc = await getLastLog(gg.giornata, 'Casse');
-          if (cc) {
-            setLastLog(cc);
-          }
-          setPhase('aperto');
-        } else if (cc?.stato == 'STAMPATO') {
-          setNumeroFoglietto(num.toString());
-          await writeLog(num, gg.giornata, 'Casse', '', 'OPEN', ''); // Logger
-          const cc = await getLastLog(gg.giornata, 'Casse');
-          if (cc) {
-            setLastLog(cc);
-          }
-          setPhase('stampato');
-        } else if (cc?.stato == 'CHIUSO' || cc?.stato == 'CHIUSOPOS' || cc?.stato == 'CHIUSOALTRO') {
+          await writeLog(num, gg.giornata, 'Casse', '', 'OPEN', '');
+          const refreshedLog = await getLastLog(gg.giornata, 'Casse');
+          if (refreshedLog) setLastLog(refreshedLog);
+          setPhase(cc.stato === 'APERTO' ? 'aperto' : 'stampato');
+        } else if (['CHIUSO', 'CHIUSOPOS', 'CHIUSOALTRO'].includes(cc?.stato || '')) {
           setPhase('chiuso');
-        } else if (Number(num) > 8999 && cc?.stato == undefined) {  // siamo nella condizione che c'è un conto aperto tra 8000 e 9000 quindi va bene (che è minore 9999 già verificato sopra)
+        } else if (Number(num) < 9000 && cc?.stato == undefined) {
+          // Creazione automatica solo per numeri < 9000
           setNumeroFoglietto(num.toString());
-          setSagra(gg);
-          setPhase('elaborazione');
           await apriConto(Number(num), gg.giornata, 'Casse');
-          await writeLog(Number(num), gg.giornata, 'Casse', '', 'START', ''); // Logger
+          await writeLog(Number(num), gg.giornata, 'Casse', '', 'START', '');
+          const newCc = await getConto(num, gg.giornata);
+          setConto(newCc);
           setPhase('aperto');
         } else {
+          // Numeri > 8999 che non esistono: blocca e avvisa
           setNumero(num.toString());
           setNumeroFoglietto(num.toString());
+          if (Number(num) > 8999) {
+              setSnackbarMessage("I numeri superiori a 8999 sono riservati agli asporto.");
+              setOpenSnackbar(true);
+          }
           setPhase('none');
         }
       }
     };
     fetchData();
-  }, []);
+  }, [params.foglietto]);
 
-  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setNumero(event.target.value);
+  const handleOpenSetQty = (id: number) => {
+    const p = products.find(i => i.id_piatto === id);
+    if (p) {
+      setSelectedProductId(id);
+      setSelectedProductName(p.alias || p.piatto);
+      setTempQty(p.quantita.toString());
+      setOpenDialogQty(true);
+    }
   };
 
-  async function carica(num: number) {
-    router.push(`/dashboard/casse/${num}`);
-  }
+  const handleConfirmQty = () => {
+    if (selectedProductId !== null) {
+      const newQty = parseInt(tempQty) || 0;
+      setProducts(prev => prev.map(item => 
+        item.id_piatto === selectedProductId 
+          ? { ...item, quantita: newQty, cucina: "Casse" } 
+          : item
+      ));
+      setPhase('modificato');
+    }
+    setOpenDialogQty(false);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => setNumero(e.target.value);
+  const carica = (num: number | string) => router.push(`/dashboard/casse/${num}`);
 
   const handleButtonClickCarica = async () => {
     const num = Number(numero);
-    const gg = await getGiornoSagra();
-    if (gg) {
-      setSagra(gg);
-      const cc = await getConto(num, gg.giornata);
-
-      if (isNaN(num) || num < 1 || num > 9999) {
+    if (num > 9999) {
+        setSnackbarMessage("Il foglietto non è gestibile, troppo grande.");
         setOpenSnackbar(true);
         return;
-      } else if (num > 8999 && cc?.stato == undefined) {  // siamo nella condizione che c'è un conto aperto tra 8000 e 9000 quindi va bene (che è minore 9999 già verificato sopra)
+    }
+
+    const gg = await getGiornoSagra();
+    if (gg) {
+      const cc = await getConto(num, gg.giornata);
+      // Se il numero è > 8999 e NON esiste un conto aperto/stampato, blocca
+      if (num > 8999 && (!cc || !['APERTO', 'STAMPATO'].includes(cc.stato))) {
+          setSnackbarMessage("I numeri superiori a 8999 sono riservati agli asporto.");
+          setOpenSnackbar(true);
+          return;
+      }
+
+      if (isNaN(num) || num < 1) {
+        setSnackbarMessage("Inserire un numero valido.");
         setOpenSnackbar(true);
         return;
       }
-      router.push(`/dashboard/casse/${numero}`);
-      setNumero('');//azzera inputo box
+      carica(numero);
+      setNumero('');
     }
   };
 
-  const handleButtonClickCaricaAsporto = async () => {
+const handleButtonClickCaricaAsporto = async () => {
+    // 1. Recupera il numero di conto più alto presente nel database
     const ultconto = await getContoPiuAlto();
-    var uc = Number(ultconto);
-    if (uc < 8999)
-      uc = 9000
-    await writeLog(uc + 1, sagra.giornata, 'Casse', '', 'OPEN', 'Bottone Asporto');
-    carica(uc + 1);
+    let uc = Number(ultconto);
+
+    // 2. Se non esistono conti o sono tutti < 9000, partiamo da 9000
+    // In questo modo il primo sarà 9001
+    if (isNaN(uc) || uc < 9000) {
+      uc = 9000;
+    }
+
+    const nuovoNumeroAsporto = uc + 1;
+
+    // 3. Verifica se siamo ancora nei limiti gestibili (opzionale)
+    if (nuovoNumeroAsporto > 9999) {
+      setSnackbarMessage("Raggiunto il limite massimo di conti asporto (9999).");
+      setOpenSnackbar(true);
+      return;
+    }
+
+    const gg = await getGiornoSagra();
+    if (gg) {
+      // 4. Crea effettivamente il conto nel database
+      await apriConto(nuovoNumeroAsporto, gg.giornata, 'Casse');
+      await writeLog(nuovoNumeroAsporto, gg.giornata, 'Casse', '', 'OPEN', 'Bottone Asporto');
+      
+      // 5. Carica la pagina del nuovo conto
+      carica(nuovoNumeroAsporto);
+    }
   };
 
-  const handleButtonClickCaricaConto1 = async () => {
-    carica(1);
-  };
-
-  const handleModificaQuantita = async () => {
-
-    const newProducts = products.map((item) => {
-      if (item.id_piatto == idmodificaquantitaValue) {
-        console.log(item);
-        return ({ ...item, quantita: Number(nuovaquantitaValue) });
-      }
-      else
-        return (item);
-    });
-    setProducts(newProducts);
-    // setPhase('aperto');
-    setPhase('modificato');
-  };
-
-  const handleAnnulla = async () => {
-    setPhase('aperto');
-  }
+  const handleButtonClickCaricaConto1 = () => carica(1);
 
   const handleAggiorna = async () => {
-    console.log(`Aggiornamento n. foglietto: ${numeroFoglietto}`);
-    const fetchData = async () => {
-      setPhase('caricamento');
-      var totale = 0;
+    setPhase('caricamento');
+    const totale = products.reduce((acc, i) => acc + (i.quantita * i.prezzo_unitario), 0);
+    await sendConsumazioni(products);
+    await aggiornaConto(Number(numeroFoglietto), sagra.giornata, totale);
 
-      for (let i of products) {
-        totale += i.quantita * i.prezzo_unitario;
+    for (const item of products) {
+      const orig = iniProducts.find(o => o.id_piatto == item.id_piatto);
+      if (orig && item.quantita !== orig.quantita) {
+        const msg = item.quantita > orig.quantita 
+          ? `Aggiunti: ${item.quantita - orig.quantita} ${item.piatto}`
+          : `Eliminati: ${orig.quantita - item.quantita} ${item.piatto}`;
+        await writeLog(item.id_comanda, sagra.giornata, 'Casse', '', 'UPDATE', msg);
       }
-      await sendConsumazioni(products);
-      await aggiornaConto(Number(numeroFoglietto), sagra.giornata, totale);
-
-      // Gestione log
-      const logArray = products.map((item) => {
-        const orig = iniProducts.find(o => o.id_piatto == item.id_piatto);
-        if (orig) {
-          if (item.quantita > orig.quantita) {
-            return ({ id: item.id_comanda, message: `Aggiunti: ${item.quantita - orig.quantita} ${item.piatto}` });
-          } else if (item.quantita < orig.quantita) {
-            return ({ id: item.id_comanda, message: `Eliminati: ${orig.quantita - item.quantita} ${item.piatto}` });
-          } else {
-            return ({ id: -1, message: `` });
-          }
-        }
-        return { id: -1, message: `` };
-      });
-
-      for (var index = 0; index < logArray.length; index++) {
-        if (logArray[index].id != -1) {
-          await writeLog(logArray[index].id, sagra.giornata, 'Casse', '', 'UPDATE', logArray[index].message);
-        }
-      }
-      setPhase('aperto');
-    };
-    fetchData();
+    }
+    setPhase('aperto');
   };
 
   const handleStampa = async () => {
-
-    const fetchData = async () => {
-      setPhase('elaborazione');
-      var totale = 0;
-
-      for (let i of products) {
-        totale += i.quantita * i.prezzo_unitario;
-      }
-
-      await aggiornaConto(Number(numeroFoglietto), sagra.giornata, totale);
-      await stampaConto(Number(numeroFoglietto), sagra.giornata);
-      await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'PRINT', 'Stampa conto');
-      {/* setPhase('stampato');  {/*BRUNO */ }
-      setPhase('iniziale_stampato');
-    };
-    fetchData();
+    setPhase('elaborazione');
+    const totale = products.reduce((acc, i) => acc + (i.quantita * i.prezzo_unitario), 0);
+    await aggiornaConto(Number(numeroFoglietto), sagra.giornata, totale);
+    await stampaConto(Number(numeroFoglietto), sagra.giornata);
+    await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'PRINT', 'Stampa conto');
+    setPhase('iniziale_stampato');
     print();
-
   };
 
-  const handleButtonRiapri = async () => {
-
-    if (conto?.id_comanda) {
-      setPhase('elaborazione');
-      await riapriConto(conto.id_comanda, sagra.giornata);
-      await writeLog(conto.id_comanda, sagra.giornata, 'Casse', '', 'RESTART', 'Conto riaperto');
-      setNumeroFoglietto(conto.id_comanda.toString())
-      setPhase('aperto');
-    }
-  }
-
-  const handleButtonCrea = async () => {
-    if (numeroFoglietto) {
-      setPhase('elaborazione');
-      await apriConto(Number(numeroFoglietto), sagra.giornata, 'Casse');
-      await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'START', ''); // Logger
-      setPhase('aperto');
-      setNumero('');//azzera inputo box
-    }
-  }
-
-  /*METODO VECCHIO CHE NON PRENDE GLI STILI
-    const print = () => {
-      const printArea = printRef.current;
-  
-      if (!printArea) return; // Se il riferimento non esiste, interrompe l'esecuzione.
-  
-      const newWindow = window.open("", "", "width=600,height=400");
-  
-      // Verifica se newWindow non è null prima di proseguire
-      if (newWindow) {
-        newWindow.document.write('<html><head><title>Stampa Documento</title>');
-        newWindow.document.write('</head><body >');
-        newWindow.document.write(printArea.innerHTML);
-        newWindow.document.write('</body></html>');
-        newWindow.document.close();
-        newWindow.focus();
-        newWindow.print();
-        newWindow.close();
-      } else {
-        console.error("Impossibile aprire la finestra di stampa.");
-      }
-    };*/
-  /*METODO NUOVO CHE PRENDE GLI STILI*/
   const print = () => {
     const printArea = printRef.current;
     if (!printArea) return;
-
     const newWindow = window.open("", "", "width=800,height=900");
-
     if (newWindow) {
       newWindow.document.write('<html><head><title>Stampa Conto</title>');
-
-      // --- IL TRUCCO: Copia tutti i link e gli stili della pagina attuale ---
-      const styles = document.querySelectorAll('link[rel="stylesheet"], style');
-      styles.forEach(style => {
-        newWindow.document.write(style.outerHTML);
-      });
-
-      newWindow.document.write('</head><body>');
-      // Usiamo una classe container se necessario per il font
-      newWindow.document.write('<div class="print-container">');
+      document.querySelectorAll('link[rel="stylesheet"], style').forEach(s => newWindow.document.write(s.outerHTML));
+      newWindow.document.write('</head><body><div class="print-container">');
       newWindow.document.write(printArea.innerHTML);
-      newWindow.document.write('</div>');
-      newWindow.document.write('</body></html>');
-
+      newWindow.document.write('</div></body></html>');
       newWindow.document.close();
-
-      // Diamo un piccolo delay per permettere al browser di caricare i CSS nella nuova finestra
-      setTimeout(() => {
-        newWindow.focus();
-        newWindow.print();
-        newWindow.close();
-      }, 500);
-    } else {
-      console.error("Impossibile aprire la finestra di stampa.");
+      setTimeout(() => { newWindow.focus(); newWindow.print(); newWindow.close(); }, 500);
     }
   };
-  const handleAChiudi = async () => {
 
-    const fetchData = async () => {
-      setPhase('elaborazione');
-      const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata, 1);
-      const cc = await getConto(Number(numeroFoglietto), sagra.giornata);
-      await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', 'Pagato contanti');
-      setConto(cc);
-      setPhase('chiuso');
-    };
-    fetchData();
+  const handleFinalizzaChiusura = async (tipo: number, nota = '', importo = '') => {
+    setPhase('elaborazione');
+    const logMsg = tipo === 1 ? 'Pagato contanti' : tipo === 2 ? 'Pagato POS' : 'Altro Importo';
+    await chiudiConto(Number(numeroFoglietto), sagra.giornata, tipo, nota, importo);
+    const cc = await getConto(Number(numeroFoglietto), sagra.giornata);
+    await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', logMsg);
+    await inviaStampaPass();
+    setConto(cc);
+    setPhase('chiuso');
   };
 
-  const handleAChiudiPos = async () => {
-
-    const fetchData = async () => {
-      setPhase('elaborazione');
-      const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata, 2);
-      const cc = await getConto(Number(numeroFoglietto), sagra.giornata);
-      await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', 'Pagato POS');
-      setConto(cc);
-      setPhase('chiuso');
-    };
-    fetchData();
+  const inviaStampaPass = async () => {
+    try {
+      await fetch('/api/print', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          numeroFoglietto,
+          coperti: copertipass,
+          giornata: sagra.giornata,
+          ipAddress: config.stampante_wifi,
+          isPass: true
+        }),
+      });
+    } catch (err) { console.error("Errore invio stampa:", err); }
   };
 
-  const handleCompletatoGratis = async () => {
-
-    const fetchData = async () => {
-      setPhase('elaborazione');
-      const c = await chiudiConto(Number(numeroFoglietto), sagra.giornata, 3, textValue, importValue);
-      const cc = await getConto(Number(numeroFoglietto), sagra.giornata);
-      await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', 'Altro Importo');
-      setConto(cc);
-      setPhase('chiuso');
-    };
-    fetchData();
-  };
-
-  const handleChiudiGratis = async () => {
-    setPhase('gratis');
-  }
-
-  const handleAnnullaGratis = async () => {
-    setPhase('stampato');
-  }
-
-  const handleSet = (id: number) => {
-    setIdModQuantita(Number(id));
-
-    const newProducts = products.map((item) => {
-      if (item.id_piatto == id) {
-        setPiattoModQuantita(item.piatto);
-        setQuantitaValue(item.quantita + "");
-      }
-    });
-    setPhase('modificaquantita');
-  };
-
-  const handleAdd = (id: number) => {
-    const newProducts = products.map((item) => {
-      if (item.id_piatto == id) {
-        console.log(item);
-        return ({ ...item, quantita: item.quantita + 1, cucina: "Casse" });
-      }
-      else
-        return (item);
-    });
+  const handleAdd = (id: number, qty = 1) => {
+    setProducts(prev => prev.map(item => item.id_piatto === id ? { ...item, quantita: item.quantita + qty, cucina: "Casse" } : item));
     setPhase('modificato');
-    setProducts(newProducts);
   };
-  const handleAdd10 = (id: number) => {
-    const newProducts = products.map((item) => {
-      if (item.id_piatto == id) {
-        console.log(item);
-        return ({ ...item, quantita: item.quantita + 10, cucina: "Casse" });
-      }
-      else
-        return (item);
-    });
-    setPhase('modificato');
-    setProducts(newProducts);
-  };
-
   const handleRemove = (id: number) => {
-    const newProducts = products.map((item) => {
-      if (item.id_piatto == id) {
-        console.log(item);
-        if (item.quantita > 0)
-          return ({ ...item, quantita: item.quantita - 1, cucina: "Casse" });
-        else
-          return ({ ...item });
-      }
-      else
-        return (item);
-    });
+    setProducts(prev => prev.map(item => (item.id_piatto === id && item.quantita > 0) ? { ...item, quantita: item.quantita - 1, cucina: "Casse" } : item));
     setPhase('modificato');
-    setProducts(newProducts);
   };
 
-  const handleClose = () => {
-    setOpenSnackbar(false);
-  };
-
-  const renderPhaseContent = () => {
-
-    switch (phase) {
-
-      case 'iniziale_stampato':
-        console.log('iniziale_stampato');
-        return (
-          <main>
-            <div className="container">
-              <header className="top-section">
-                <div className="sez-sx">
-                  <div
-                    className="p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full"
-                    style={{ borderRadius: '9999px' }}
-                  >
-                    <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}>
-                      {/* Sezione Titolo e Stato */}
-                      <li className="flex-1 mr-2 font-bold py-2">
-                        <a className="text-center block text-blue-700 font-extraligh text-2xl md:text-5xl">
-                          Casse
-                        </a>
-                        <div className="text-xs text-center text-blue-700">
-                          SAGRA:
-                          <span className="text-xs text-center text-blue-800 font-semibold">
-                            {` ${sagra.stato} ${sagra.stato !== 'CHIUSA' ? `(${sagra.giornata})` : ""}`}
-                          </span>
-                        </div>
-                      </li>
-
-                      {/* Input Numero Foglietto */}
-                      <li className="text-right flex-1 mr-2 text-5xl text-white font-bold py-4 rounded-full" style={{ borderRadius: '9999px' }}>
-                        <div className="text-center text-emerald-600">
-                          <TextField
-                            autoFocus
-                            className="p-2"
-                            label="Numero Foglietto"
-                            variant="outlined"
-                            value={numero}
-                            onChange={handleInputChange}
-                            style={{ borderRadius: '9999px' }}
-                            sx={{ input: { textAlign: 'right' } }}
-                            type="number"
-                          />
-                        </div>
-                      </li>
-
-                      {/* Bottone Carica (Desktop e Mobile) */}
-                      <li className="text-left flex-1 mr-2 text-5xl font-bold py-4">
-                        <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                          <Button variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>
-                            Carica Foglietto
-                          </Button>
-                        </ButtonGroup>
-                        <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                          <Button size="small" variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>
-                            Carica Foglietto
-                          </Button>
-                        </ButtonGroup>
-                      </li>
-                    </ul>
-                  </div>
-
-                  {/* Elenco Ultimi Ricercati */}
-                  <div className="text-base md:text-xl" style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
-                    <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                      <p>
-                        <span className="text-blue-800">Ultimi ricercati &nbsp;</span>
-                        {lastLog.map((row, index) => (
-                          <span key={`desktop-${row.foglietto}-${index}`}>
-                            <Button
-                              size="medium"
-                              variant="contained"
-                              onClick={() => carica(row.foglietto)}
-                              startIcon={<Filter1Icon />}
-                              style={{ borderRadius: '9999px' }}
-                            >
-                              {row.foglietto}
-                            </Button>
-                            &nbsp;
-                          </span>
-                        ))}
-                      </p>
-                    </ButtonGroup>
-
-                    <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                      <p>
-                        <span className="text-blue-800">Ultimi &nbsp;</span>
-                        {lastLog.map((row, index) => (
-                          <span key={`mobile-${row.foglietto}-${index}`}>
-                            <Button
-                              size="small"
-                              variant="contained"
-                              onClick={() => carica(row.foglietto)}
-                              startIcon={<Filter1Icon />}
-                              style={{ borderRadius: '9999px' }}
-                            >
-                              {row.foglietto}
-                            </Button>
-                            &nbsp;
-                          </span>
-                        ))}
-                      </p>
-                    </ButtonGroup>
-                  </div>
-                </div>
-
-                {/* Bottoni laterali Asporto/Camerieri */}
-                <div className="sez-dx" style={{ display: 'flex', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
-                  <div className="xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
-                    <Button size="medium" className="font-semibold" variant="outlined" onClick={handleButtonClickCaricaAsporto} style={{ borderRadius: '9999px' }}>
-                      Asporto
-                    </Button>
-                    &nbsp;&nbsp;
-                    <Button size="medium" color="secondary" className="font-semibold" variant="outlined" onClick={handleButtonClickCaricaConto1} style={{ borderRadius: '9999px' }}>
-                      Camerieri
-                    </Button>
-                  </div>
-                </div>
-              </header>
-
-              <main className="middle-section">
-                <br />
-                <p className="text-2xl md:text-5xl py-4 text-center text-blue-800">
-                  Conto:&nbsp;
-                  <span className="font-extrabold text-blue-800">
-                    <Link href={`/dashboard/casse/${numeroFoglietto}`}>{numeroFoglietto}</Link>
-                  </span> inviato in stampa.
-                  <br /><br />
-                  Caricare un nuovo foglietto!
-                </p>
-              </main>
-
-              <footer className="bottom-section">
-                <div className="sez-sx-bassa"></div>
-                <div className="sez-dx-bassa"></div>
-              </footer>
-            </div>
-          </main>
-        );
-      case 'gratis':
-        return (
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="w-[600px] p-4 border rounded-lg space-y-4">
-              <p className="text-xl py-1">
-                Conto numero: <span className="font-extrabold text-blue-800">{conto?.id_comanda}</span> con incasso previsto di: <span className="font-semibold text-blue-800">{conto?.totale} Euro</span>
-              </p>
-
-              <TextField
-                label="Nuovo importo"
-                variant="outlined"
-                value={importValue}
-                onChange={(e) => setImportValue(e.target.value)}
-                type="number"
-                fullWidth
-              />
-
-              <TextField
-                label="Note"
-                variant="outlined"
-                value={textValue}
-                onChange={(e) => setTextValue(e.target.value)}
-                fullWidth
-              />
-
-              <div className="flex justify-center space-x-4">
-                <Button
-                  size="small"
-                  variant="contained"
-                  color="primary"
-                  onClick={handleCompletatoGratis}
-                >
-                  Salva e chiudi
-                </Button>
-
-                <Button
-                  size="small"
-                  variant="contained"
-                  color="primary"
-                  onClick={handleAnnullaGratis}
-                >
-                  Annulla
-                </Button>
-              </div>
-            </div>
+  const HeaderCasse = () => (
+    <div className="p-1 mt-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
+      <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}>
+        <li className="flex-1 mr-2 font-bold py-2">
+          <a className="text-center block text-blue-700 font-extraligh text-2xl md:text-5xl">Casse</a>
+          <div className="text-xs text-center text-blue-700">
+            SAGRA: <span className="text-xs text-center text-blue-800 font-semibold">
+              {` ${sagra.stato} ${sagra.stato !== 'CHIUSA' ? `(${sagra.giornata})` : ""}`}
+            </span>
           </div>
-        )
-      case 'aperto':
-        return (
-          <main>
-            <div className="container">
-              <header className="top-section">
-                <div className="sez-sx">
-                  <div
-                    className="p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full"
-                    style={{ borderRadius: '9999px' }}
-                  >
-                    <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}>
-                      <li className="flex-1 mr-2 font-bold py-2">
-                        <a className="text-center block text-blue-700 font-extraligh text-2xl md:text-5xl">
-                          Casse
-                        </a>
-                        <div className="text-xs text-center text-blue-700">
-                          SAGRA:
-                          <span className="text-xs text-center text-blue-800 font-semibold">
-                            {` ${sagra.stato} ${sagra.stato === 'CHIUSA' ? "" : `(${sagra.giornata})`}`}
-                          </span>
-                        </div>
-                      </li>
-                      <li className="text-right flex-1 mr-2 text-5xl text-white font-bold py-4 rounded-full" style={{ borderRadius: '9999px' }}>
-                        <div className="text-center text-emerald-600">
-                          <TextField
-                            autoFocus
-                            className="p-2"
-                            label="Numero Foglietto"
-                            variant="outlined"
-                            value={numero}
-                            onChange={handleInputChange}
-                            style={{ borderRadius: '9999px' }}
-                            sx={{ input: { textAlign: 'right' } }}
-                            type="number"
-                          />
-                        </div>
-                      </li>
-                      <li className="text-left flex-1 mr-2 text-5xl font-bold py-4">
-                        <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                          <Button variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>
-                            Carica Foglietto
-                          </Button>
-                        </ButtonGroup>
-                        <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                          <Button size="small" variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>
-                            Carica Foglietto
-                          </Button>
-                        </ButtonGroup>
-                      </li>
-                    </ul>
-                  </div>
-
-                  <div className="text-base md:text-xl" style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
-                    <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                      <p>
-                        <span className="text-blue-800">Ultimi ricercati &nbsp;</span>
-                        {lastLog.map((row, idx) => (
-                          <span key={`last-log-desktop-${idx}`}>
-                            <Button
-                              size="medium"
-                              variant="contained"
-                              onClick={() => carica(row.foglietto)}
-                              startIcon={<Filter1Icon />}
-                              style={{ borderRadius: '9999px' }}
-                            >
-                              {row.foglietto}
-                            </Button>
-                            &nbsp;
-                          </span>
-                        ))}
-                      </p>
-                    </ButtonGroup>
-                    <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                      <p>
-                        <span className="text-blue-800">Ultimi &nbsp;</span>
-                        {lastLog.map((row, idx) => (
-                          <span key={`last-log-mobile-${idx}`}>
-                            <Button
-                              size="small"
-                              variant="contained"
-                              onClick={() => carica(row.foglietto)}
-                              startIcon={<Filter1Icon />}
-                              style={{ borderRadius: '9999px' }}
-                            >
-                              {row.foglietto}
-                            </Button>
-                            &nbsp;
-                          </span>
-                        ))}
-                      </p>
-                    </ButtonGroup>
-                  </div>
-                </div>
-
-                <div className="sez-dx">
-                  <div className="text-base md:text-2xl py-2 md:py-4 font-extralight text-end">
-                    <Button size="medium" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaAsporto}>
-                      Asporto
-                    </Button>
-                    &nbsp;&nbsp;
-                    <Button size="medium" color="secondary" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaConto1}>
-                      Camerieri
-                    </Button>
-
-                    <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                      <p>Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
-                      <p>Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span></p>
-                      <p>Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
-                    </ButtonGroup>
-
-                    <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                      <p>
-                        Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;</span>
-                        ({<span className="text-blue-800 font-bold">{deltanow(conto?.data_apertura)}</span>})
-                        &nbsp;Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;</span>
-                      </p>
-                    </ButtonGroup>
-                  </div>
-                </div>
-              </header>
-
-              <main className="middle-section_XS">
-                <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
-              </main>
-
-              <footer className="bottom-section">
-                <div className="sez-sx-bassa">
-                  <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa}>
-                    Stampa Conto
-                  </Button>
-                  &nbsp;
-                  <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>
-                    Aggiorna Conto
-                  </Button>
-                  <br />
-                  <p>Conto "aperto" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
-                </div>
-
-                <div className="sez-dx-bassa">
-                  <ul className="inline-block text-base md:text-2xl py-3 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 rounded-full">
-                    &nbsp;Chiudi conto&nbsp;&nbsp;
-                    <ButtonGroup size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}>
-                      <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudiPos} disabled>POS</Button>
-                      <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
-                      <Button size="medium" className="rounded-full" variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
-                    </ButtonGroup>
-                    &nbsp;&nbsp;
-                  </ul>
-                </div>
-              </footer>
-
-              <div ref={printRef} className="hidden">
-                <Summarythebill item={products} />
-              </div>
-            </div>
-          </main>
-        );
-      case 'modificato':
-        return (
-          <main>
-            <div className="container">
-              <header className="top-section">
-                <div className="sez-sx">
-                  {/* Header Badge: Casse e Stato Sagra */}
-                  <div
-                    className="p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full"
-                    style={{ borderRadius: '9999px' }}
-                  >
-                    <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}>
-                      <li className="flex-1 mr-2 font-bold py-2">
-                        <a className="text-center block text-blue-700 font-extraligh text-2xl md:text-5xl">
-                          Casse
-                        </a>
-                        <div className="text-xs text-center text-blue-700">
-                          SAGRA:
-                          <span className="text-xs text-center text-blue-800 font-semibold">
-                            {` ${sagra.stato} ${sagra.stato === 'CHIUSA' ? "" : `(${sagra.giornata})`}`}
-                          </span>
-                        </div>
-                      </li>
-
-                      {/* Input Numero Foglietto */}
-                      <li className="text-right flex-1 mr-2 text-5xl text-white font-bold py-4 rounded-full" style={{ borderRadius: '9999px' }}>
-                        <div className="text-center text-emerald-600">
-                          <TextField
-                            autoFocus
-                            className="p-2"
-                            label="Numero Foglietto"
-                            variant="outlined"
-                            value={numero}
-                            onChange={handleInputChange}
-                            style={{ borderRadius: '9999px' }}
-                            sx={{ input: { textAlign: 'right' } }}
-                            type="number"
-                          />
-                        </div>
-                      </li>
-
-                      {/* Azione Carica */}
-                      <li className="text-left flex-1 mr-2 text-5xl font-bold py-4">
-                        <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                          <Button variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>
-                            Carica Foglietto
-                          </Button>
-                        </ButtonGroup>
-                        <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                          <Button size="small" variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>
-                            Carica Foglietto
-                          </Button>
-                        </ButtonGroup>
-                      </li>
-                    </ul>
-                  </div>
-
-                  {/* Lista Ultimi Ricercati */}
-                  <div className="text-base md:text-xl" style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
-                    <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                      <p>
-                        <span className="text-blue-800">Ultimi ricercati &nbsp;</span>
-                        {lastLog.map((row, idx) => (
-                          <span key={`desktop-log-${idx}`}>
-                            <Button
-                              size="medium"
-                              variant="contained"
-                              onClick={() => carica(row.foglietto)}
-                              startIcon={<Filter1Icon />}
-                              style={{ borderRadius: '9999px' }}
-                            >
-                              {row.foglietto}
-                            </Button>
-                            &nbsp;
-                          </span>
-                        ))}
-                      </p>
-                    </ButtonGroup>
-                    <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                      <p>
-                        <span className="text-blue-800">Ultimi &nbsp;</span>
-                        {lastLog.map((row, idx) => (
-                          <span key={`mobile-log-${idx}`}>
-                            <Button
-                              size="small"
-                              variant="contained"
-                              onClick={() => carica(row.foglietto)}
-                              startIcon={<Filter1Icon />}
-                              style={{ borderRadius: '9999px' }}
-                            >
-                              {row.foglietto}
-                            </Button>
-                            &nbsp;
-                          </span>
-                        ))}
-                      </p>
-                    </ButtonGroup>
-                  </div>
-                </div>
-
-                {/* Sezione Destra: Info Conto e Tipologia */}
-                <div className="sez-dx">
-                  <div className="text-base md:text-2xl py-2 md:py-4 font-extralight text-end">
-                    <Button size="medium" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaAsporto}>
-                      Asporto
-                    </Button>
-                    &nbsp;&nbsp;
-                    <Button size="medium" color="secondary" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaConto1}>
-                      Camerieri
-                    </Button>
-
-                    {/* Info Conto Desktop */}
-                    <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                      <p>Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
-                      <p>Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span></p>
-                      <p>Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
-                    </ButtonGroup>
-
-                    {/* Info Conto Mobile */}
-                    <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                      <p>
-                        Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;</span>
-                        ({<span className="text-blue-800 font-bold">{deltanow(conto?.data_apertura)}</span>})
-                        &nbsp;Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;</span>
-                      </p>
-                    </ButtonGroup>
-                  </div>
-                </div>
-              </header>
-
-              {/* Main Table */}
-              <main className="middle-section_XS">
-                <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
-              </main>
-
-              {/* Footer: Azioni Stampa e Chiusura */}
-              <footer className="bottom-section">
-                <div className="sez-sx-bassa">
-                  <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled>
-                    Stampa Conto
-                  </Button>
-                  &nbsp;
-                  <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna}>
-                    Aggiorna Conto
-                  </Button>
-                  <br />
-                  <p>Conto "modificato" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
-                </div>
-
-                <div className="sez-dx-bassa">
-                  <ul className="inline-block text-base md:text-2xl py-3 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 rounded-full">
-                    &nbsp;Chiudi conto&nbsp;&nbsp;
-                    <ButtonGroup size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}>
-                      <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudiPos} disabled>POS</Button>
-                      <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudi} disabled>Contanti</Button>
-                      <Button size="medium" className="rounded-full" variant="contained" onClick={handleChiudiGratis} disabled>Altro Importo</Button>
-                    </ButtonGroup>
-                    &nbsp;&nbsp;
-                  </ul>
-                </div>
-              </footer>
-            </div>
-          </main>
-        );
-      case 'stampato':
-        return (
-          <main>
-            <div className="container">
-              <header className="top-section">
-                <div className="sez-sx">
-                  {/* Header Badge: Stato Sagra e Input Numero */}
-                  <div
-                    className="p-1 mb-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full"
-                    style={{ borderRadius: '9999px' }}
-                  >
-                    <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}>
-                      <li className="flex-1 mr-2 font-bold py-2">
-                        <a className="text-center block text-blue-700 font-extraligh text-2xl md:text-5xl">
-                          Casse
-                        </a>
-                        <div className="text-xs text-center text-blue-700">
-                          SAGRA:
-                          <span className="text-xs text-center text-blue-800 font-semibold">
-                            {` ${sagra.stato} ${sagra.stato === 'CHIUSA' ? "" : `(${sagra.giornata})`}`}
-                          </span>
-                        </div>
-                      </li>
-
-                      <li className="text-right flex-1 mr-2 text-5xl text-white font-bold py-4 rounded-full" style={{ borderRadius: '9999px' }}>
-                        <div className="text-center text-emerald-600">
-                          <TextField
-                            autoFocus
-                            className="p-2"
-                            label="Numero Foglietto"
-                            variant="outlined"
-                            value={numero}
-                            onChange={handleInputChange}
-                            style={{ borderRadius: '9999px' }}
-                            sx={{ input: { textAlign: 'right' } }}
-                            type="number"
-                          />
-                        </div>
-                      </li>
-
-                      <li className="text-left flex-1 mr-2 text-5xl font-bold py-4">
-                        {/* Desktop Button */}
-                        <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                          <Button variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>
-                            Carica Foglietto
-                          </Button>
-                        </ButtonGroup>
-                        {/* Mobile Button */}
-                        <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                          <Button size="small" variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }}>
-                            Carica Foglietto
-                          </Button>
-                        </ButtonGroup>
-                      </li>
-                    </ul>
-                  </div>
-
-                  {/* Sezione Ultimi Ricercati */}
-                  <div className="text-base md:text-xl" style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
-                    {/* Desktop View */}
-                    <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                      <p>
-                        <span className="text-blue-800">Ultimi ricercati &nbsp;</span>
-                        {lastLog.map((row, idx) => (
-                          <span key={`lastlog-dt-${idx}`}>
-                            <Button
-                              size="medium"
-                              variant="contained"
-                              onClick={() => carica(row.foglietto)}
-                              startIcon={<Filter1Icon />}
-                              style={{ borderRadius: '9999px' }}
-                            >
-                              {row.foglietto}
-                            </Button>
-                            &nbsp;
-                          </span>
-                        ))}
-                      </p>
-                    </ButtonGroup>
-                    {/* Mobile View */}
-                    <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                      <p>
-                        <span className="text-blue-800">Ultimi &nbsp;</span>
-                        {lastLog.map((row, idx) => (
-                          <span key={`lastlog-mb-${idx}`}>
-                            <Button
-                              size="small"
-                              variant="contained"
-                              onClick={() => carica(row.foglietto)}
-                              startIcon={<Filter1Icon />}
-                              style={{ borderRadius: '9999px' }}
-                            >
-                              {row.foglietto}
-                            </Button>
-                            &nbsp;
-                          </span>
-                        ))}
-                      </p>
-                    </ButtonGroup>
-                  </div>
-                </div>
-
-                <div className="sez-dx">
-                  <div className="text-base md:text-2xl py-2 md:py-4 font-extralight text-end">
-                    <Button size="medium" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaAsporto}>
-                      Asporto
-                    </Button>
-                    &nbsp;&nbsp;
-                    <Button size="medium" color="secondary" className="font-semibold rounded-full" style={{ borderRadius: '9999px' }} variant="outlined" onClick={handleButtonClickCaricaConto1}>
-                      Camerieri
-                    </Button>
-
-                    {/* Info Conto Desktop */}
-                    <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
-                      <p>Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>
-                      <p>Conto aperto da: <span className="font-extrabold text-blue-800">{deltanow(conto?.data_apertura)}&nbsp;&nbsp;&nbsp;</span></p>
-                      <p>Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;&nbsp;&nbsp;</span></p>
-                    </ButtonGroup>
-
-                    {/* Info Conto Mobile */}
-                    <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
-                      <p>
-                        Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;</span>
-                        ({<span className="text-blue-800 font-bold">{deltanow(conto?.data_apertura)}</span>})
-                        &nbsp;Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}&nbsp;</span>
-                      </p>
-                    </ButtonGroup>
-                  </div>
-                </div>
-              </header>
-
-              <main className="middle-section_XS">
-                <TabellaConto item={products} onAdd10={handleAdd10} onAdd={handleAdd} onRemove={handleRemove} onSet={handleSet} />
-              </main>
-
-              <footer className="bottom-section">
-                <div className="sez-sx-bassa">
-                  <div className="z-0 text-2xl font-extralight text-end"></div>
-
-                  <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled>
-                    Stampa Conto
-                  </Button>
-                  &nbsp;
-                  <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>
-                    Aggiorna Conto
-                  </Button>
-                  <br />
-
-                  <p>
-                    Conto {+numeroFoglietto < 10 ? '"non stampabile"' : '"stampato"'} numero:
-                    <span className="font-extrabold text-blue-800"> {numeroFoglietto}&nbsp;&nbsp;&nbsp;</span>
-                  </p>
-                </div>
-
-                <div className="sez-dx-bassa">
-                  <ul className="inline-block text-base md:text-2xl py-3 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 rounded-full">
-                    &nbsp;Chiudi conto&nbsp;&nbsp;
-                    <ButtonGroup size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}>
-                      <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudiPos}>POS</Button>
-                      <Button size="medium" className="rounded-full" variant="contained" onClick={handleAChiudi}>Contanti</Button>
-                      <Button size="medium" className="rounded-full" variant="contained" onClick={handleChiudiGratis}>Altro Importo</Button>
-                    </ButtonGroup>
-                    &nbsp;&nbsp;
-                  </ul>
-                </div>
-              </footer>
-            </div>
-          </main>
-
-        );
-      case 'chiuso':
-        return (
-          <>
-            <header className="top-section">
-              <div className="sez-sx">
-                {/* Container Intestazione Casse */}
-                <div className="font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
-                  <ul className="flex rounded-full">
-                    <li className="flex-1 mr-2 font-bold py-4 rounded-full">
-                      <a className="text-center block text-white font-extralight text-2xl md:text-5xl">
-                        Casse
-                      </a>
-                      <div className="text-xs text-center text-white">
-                        SAGRA: {sagra.stato} {sagra.stato !== 'CHIUSA' && `(${sagra.giornata})`}
-                      </div>
-                    </li>
-
-                    <li className="text-right flex-1 mr-2 text-5xl text-white font-bold py-4">
-                      <div className="text-center text-emerald-600">
-                        <TextField
-                          autoFocus
-                          className="p-2"
-                          label="Numero Foglietto"
-                          variant="outlined"
-                          value={numero}
-                          onChange={handleInputChange}
-                          sx={{ input: { textAlign: 'right' } }}
-                          type="number"
-                        />
-                      </div>
-                    </li>
-
-                    <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
-                      <Button className="rounded-full" variant="contained" onClick={handleButtonClickCarica}>
-                        Carica Foglietto
-                      </Button>
-                    </li>
-                  </ul>
-                </div>
-
-                {/* Sezione Ultimi Ricercati */}
-                <div className="xl:text-2xl xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
-                  Ultimi ricercati: &nbsp;
-                  {lastLog.map((row, index) => (
-                    <span key={`log-${row.foglietto}-${index}`}>
-                      <Button
-                        size="medium"
-                        className="rounded-full"
-                        variant="contained"
-                        onClick={() => carica(row.foglietto)}
-                        startIcon={<Filter1Icon />}
-                      >
-                        {row.foglietto}
-                      </Button>
-                      &nbsp;&nbsp;
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="sez-dx">
-                <div className="xl:text-2xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
-                  <Button size="medium" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaAsporto}>
-                    Asporto
-                  </Button>
-                  &nbsp;&nbsp;
-                  <Button size="medium" color="secondary" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaConto1}>
-                    Camerieri
-                  </Button>
-                </div>
-              </div>
-            </header>
-
-            <main className="middle-section">
-              {/* Alert riepilogo conto chiuso */}
-              <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50 text-center" role="alert">
-                <span className="text-xl font-semibold">Informazione:</span>
-                {` conto ${conto?.id_comanda} chiuso in data: ${milltodatestring(conto?.data_chiusura)} totale: ${conto?.totale} Euro.`}
-                <Summary item={products} />
-              </div>
-            </main>
-
-            <footer className="bottom-section">
-              <div className="sez-sx-bassa">
-                <Button size="medium" className="rounded-full" variant="contained" onClick={handleButtonRiapri}>
-                  Riapri Conto
-                </Button>
-              </div>
-              <div className="sez-dx-bassa" />
-            </footer>
-          </>
-        );
-      case 'none':
-        return (
-          <>
-            <header className="top-section">
-              <div className="sez-sx">
-                {/* Container Testata Casse */}
-                <div className="font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full">
-                  <ul className="flex rounded-full">
-                    <li className="flex-1 mr-2 font-bold py-4 rounded-full">
-                      <a className="text-center block text-white font-extralight text-2xl md:text-5xl">
-                        Casse
-                      </a>
-                      <div className="text-xs text-center text-white">
-                        SAGRA: {sagra.stato} {sagra.stato !== 'CHIUSA' && `(${sagra.giornata})`}
-                      </div>
-                    </li>
-
-                    <li className="text-right flex-1 mr-2 text-5xl text-white font-bold py-4">
-                      <div className="text-center text-emerald-600">
-                        <TextField
-                          autoFocus
-                          className="p-2"
-                          label="Numero Foglietto"
-                          variant="outlined"
-                          value={numero}
-                          onChange={handleInputChange}
-                          sx={{ input: { textAlign: 'right' } }}
-                          type="number"
-                        />
-                      </div>
-                    </li>
-
-                    <li className="text-left flex-1 mr-2 text-5xl font-bold py-4 rounded-full">
-                      <Button className="rounded-full" variant="contained" onClick={handleButtonClickCarica}>
-                        Carica Foglietto
-                      </Button>
-                    </li>
-                  </ul>
-                </div>
-
-                {/* Sezione Storico Ricerche */}
-                <div className="xl:text-2xl xl:py-4 font-extralight xl:text-end md:text-base md:py-2 md:text-center">
-                  Ultimi ricercati: &nbsp;
-                  {lastLog.map((row, index) => (
-                    <span key={`lastlog-${index}`}>
-                      <Button
-                        size="medium"
-                        className="rounded-full"
-                        variant="contained"
-                        onClick={() => carica(row.foglietto)}
-                        startIcon={<Filter1Icon />}
-                      >
-                        {row.foglietto}
-                      </Button>
-                      &nbsp;&nbsp;
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              <div className="sez-dx">
-                <div className="xl:text-2xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
-                  <Button size="medium" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaAsporto}>
-                    Asporto
-                  </Button>
-                  &nbsp;&nbsp;
-                  <Button size="medium" color="secondary" className="font-semibold rounded-full" variant="outlined" onClick={handleButtonClickCaricaConto1}>
-                    Camerieri
-                  </Button>
-                </div>
-              </div>
-            </header>
-
-            <main className="middle-section">
-              {/* Messaggio Stato Conto */}
-              <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50 text-center" role="alert">
-                <span className="text-xl font-semibold">Informazione:</span> conto non esistente.
-              </div>
-            </main>
-
-            <footer className="bottom-section">
-              <div className="sez-sx-bassa">
-                <Button size="medium" className="rounded-full" variant="contained" onClick={handleButtonCrea}>
-                  Crea Nuovo Conto
-                </Button>
-              </div>
-              <div className="sez-dx-bassa" />
-            </footer>
-          </>
-        );
-
-      default:
-        return null;
-    }
-  };
-
-  if ((session?.user?.name == "Casse") || (session?.user?.name == "SuperUser")) {
-
-    if (sagra.stato == 'CHIUSA') {
-      return (
-        <main>
-          <div className="flex flex-wrap flex-col">
-            <div className='text-center '>
-              <div className="p-4 mb-4 text-xl text-yellow-800 rounded-lg bg-yellow-50" role="alert">
-                <span className="text-xl font-semibold">Attenzione:</span> |Casse [foglietto]| la giornata non è stata ancora aperta!
-              </div>
-            </div>
+        </li>
+        <li className="text-right flex-1 mr-2 text-5xl text-white font-bold py-4 rounded-full" style={{ borderRadius: '9999px' }}>
+          <div className="text-center text-emerald-600">
+            <TextField autoFocus className="p-2" label="Numero Foglietto" variant="outlined" value={numero} onChange={handleInputChange} style={{ borderRadius: '9999px' }} sx={{ input: { textAlign: 'right' } }} type="number" />
           </div>
-        </main>
-      )
-    } else {
-      return (
-        <main>
-          {renderPhaseContent()}
-          <Snackbar
-            open={openSnackbar}
-            autoHideDuration={6001}
-            onClose={handleClose}
-            message={(+numeroFoglietto) > 9999 ?
-              "3 Inserisci un numero foglietto valido (minore di 8999)" :
-              "4 Hai inserito un numero riservato asporto (compreso tra 9000 e 9999)"
-            }
-          />
-        </main>
-      )
-    }
-  } else {
+        </li>
+        <li className="text-left flex-1 mr-2 text-5xl font-bold py-4">
+          <Button variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }} size="medium">
+            Carica Foglietto
+          </Button>
+        </li>
+      </ul>
+    </div>
+  );
+
+const UltimiRicercati = () => (
+    <div className="text-base md:text-xl" style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
+      <p>
+        <span className="text-blue-800">Ultimi ricercati &nbsp;</span>
+        {lastLog.slice(1, 3).map((row, idx) => (
+          <Button 
+            key={idx} 
+            size="small" 
+            variant="contained" 
+            onClick={() => carica(row.foglietto)} 
+            startIcon={<Filter1Icon />} 
+            style={{ borderRadius: '9999px', margin: '0 4px' }}
+          >
+            {row.foglietto}
+          </Button>
+        ))}
+      </p>
+    </div>
+  );
+
+  const BottoniServizio = () => (
+    <div className="sez-dx" style={{ display: 'flex', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
+      <div className="xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
+        <Button size="medium" className="font-semibold" variant="outlined" onClick={handleButtonClickCaricaAsporto} style={{ borderRadius: '9999px' }}>Asporto</Button>
+        &nbsp;&nbsp;
+        <Button size="medium" color="secondary" className="font-semibold" variant="outlined" onClick={handleButtonClickCaricaConto1} style={{ borderRadius: '9999px' }}>Camerieri</Button>
+      </div>
+    </div>
+  );
+
+  if (sagra.stato === 'CHIUSA' && (session?.user?.name === "Casse" || session?.user?.name === "SuperUser")) {
     return (
-      <main>
-        <div className="flex flex-wrap flex-col">
-          <div className='text-center '>
-            <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
-              <span className="text-xl font-semibold">Violazione:</span> utente non autorizzato.
-            </div>
-          </div>
-        </div>
-      </main>
-    )
+      <main><div className="p-4 mb-4 text-xl text-yellow-800 rounded-lg bg-yellow-50 text-center">
+        <span className="font-semibold">Attenzione:</span> |Casse [foglietto]| la giornata non è stata ancora aperta!
+      </div></main>
+    );
   }
+
+  if (session?.user?.name !== "Casse" && session?.user?.name !== "SuperUser") {
+    return (
+      <main><div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50 text-center">
+        <span className="font-semibold">Violazione:</span> utente non autorizzato.
+      </div></main>
+    );
+  }
+
+  return (
+    <main>
+      {(() => {
+        switch (phase) {
+          case 'iniziale_stampato':
+            return (
+              <div className="container">
+                <header className="top-section"><div className="sez-sx"><HeaderCasse /><UltimiRicercati /></div><BottoniServizio /></header>
+                <main className="middle-section"><br />
+                  <p className="text-2xl md:text-5xl py-4 text-center text-blue-800">
+                    Conto: <span className="font-extrabold"><Link href={`/dashboard/casse/${numeroFoglietto}`}>{numeroFoglietto}</Link></span> inviato in stampa.<br /><br />
+                    Caricare un nuovo foglietto!
+                  </p>
+                </main>
+              </div>
+            );
+
+          case 'gratis':
+            return (
+              <div className="flex items-center justify-center min-h-screen">
+                <div className="w-[600px] p-4 border rounded-lg space-y-4">
+                  <p className="text-xl">Conto: <b>{conto?.id_comanda}</b> - Incasso: <b>{conto?.totale} €</b></p>
+                  <TextField label="Nuovo importo" variant="outlined" value={importValue} onChange={(e) => setImportValue(e.target.value)} type="number" fullWidth />
+                  <TextField label="Note" variant="outlined" value={textValue} onChange={(e) => setTextValue(e.target.value)} fullWidth />
+                  <div className="flex justify-center space-x-4">
+                    <Button variant="contained" onClick={() => handleFinalizzaChiusura(3, textValue, importValue)}>Salva e chiudi</Button>
+                    <Button variant="contained" onClick={() => setPhase('stampato')}>Annulla</Button>
+                  </div>
+                </div>
+              </div>
+            );
+
+          case 'aperto':
+          case 'modificato':
+          case 'stampato':
+            return (
+              <div className="container">
+                <header className="top-section mb-2">
+                  <div className="sez-sx"><HeaderCasse /><UltimiRicercati /></div>
+                  <div className="sez-dx">
+                    <BottoniServizio />
+                    <div className="text-base md:text-2xl py-2 text-end">
+                      <p>Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}</span> ({deltanow(conto?.data_apertura)})</p>
+                      <p>Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}</span></p>
+                    </div>
+                  </div> 
+                </header>
+                <main className="middle-section_XS">
+                  <TabellaConto 
+                    item={products} 
+                    onAdd10={(id) => handleAdd(id, 10)} 
+                    onAdd={(id) => handleAdd(id)} 
+                    onRemove={handleRemove} 
+                    onSet={handleOpenSetQty} 
+                  />
+                </main>
+                <footer className="bottom-section">
+                  <div className="sez-sx-bassa">
+                    <Button variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled={phase !== 'aperto'}>Stampa Conto</Button>
+                    &nbsp;
+                    <Button variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled={phase !== 'modificato'}>Aggiorna Conto</Button>
+                    <p>Stato: <span className="font-extrabold text-blue-800">{phase}</span> n. {numeroFoglietto}</p>
+                  </div>
+                  <div className="sez-dx-bassa">
+                   <ul className=" inline-block p-3 border-2 border-blue-600 bg-blue-200 rounded-full" 
+    style={{ marginTop: '1px' }}>
+                      Chiudi conto &nbsp;
+                      <ButtonGroup variant="contained">
+                        <Button onClick={() => handleFinalizzaChiusura(2)} disabled={phase !== 'stampato'}>POS</Button>
+                        <Button onClick={() => handleFinalizzaChiusura(1)} disabled={phase !== 'stampato'}>Contanti</Button>
+                        <Button onClick={() => setPhase('gratis')} disabled={phase !== 'stampato'}>Altro</Button>
+                      </ButtonGroup>
+                    </ul>
+                  </div>
+                </footer>
+                <div ref={printRef} className="hidden"><Summarythebill item={products} /></div>
+              </div>
+            );
+
+          case 'chiuso':
+          case 'none':
+            return (
+              <div className="container">
+                <header className="top-section"><div className="sez-sx"><HeaderCasse /><UltimiRicercati /></div><BottoniServizio /></header>
+                <main className="middle-section">
+                  <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50 text-center">
+                    {phase === 'chiuso' ? (
+                      <>
+                        <span className="font-semibold">Informazione:</span>{` conto ${conto?.id_comanda} chiuso il ${milltodatestring(conto?.data_chiusura)} - ${conto?.totale} €.`}
+                        <Summary item={products} />
+                      </>
+                    ) : <><span className="font-semibold">Informazione:</span> conto non esistente.</>}
+                  </div>
+                </main>
+                <footer className="bottom-section">
+                   <Button variant="contained" className="rounded-full" onClick={phase === 'chiuso' ? async () => {
+                     await riapriConto(conto!.id_comanda, sagra.giornata);
+                     setPhase('aperto');
+                   } : async () => {
+                     // Impedisce la creazione manuale se > 8999
+                     if (Number(numeroFoglietto) > 8999) {
+                        setSnackbarMessage("I numeri superiori a 8999 sono riservati agli asporto.");
+                        setOpenSnackbar(true);
+                        return;
+                     }
+                     await apriConto(Number(numeroFoglietto), sagra.giornata, 'Casse');
+                     setPhase('aperto');
+                   }}>
+                     {phase === 'chiuso' ? 'Riapri Conto' : 'Crea Nuovo Conto'}
+                   </Button>
+                </footer>
+              </div>
+            );
+          default: return null;
+        }
+      })()}
+
+      <Dialog open={openDialogQty} onClose={() => setOpenDialogQty(false)}>
+        <DialogTitle>Modifica Quantità: {selectedProductName}</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Inserisci quantità"
+            type="number"
+            fullWidth
+            variant="standard"
+            value={tempQty}
+            onChange={(e) => setTempQty(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleConfirmQty();
+            }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDialogQty(false)}>Annulla</Button>
+          <Button onClick={handleConfirmQty} variant="contained">Conferma</Button>
+        </DialogActions>
+      </Dialog>
+      
+      <Snackbar 
+        open={openSnackbar} 
+        autoHideDuration={6000} 
+        onClose={() => setOpenSnackbar(false)} 
+        message={snackbarMessage} 
+      />
+    </main>
+  );
 }

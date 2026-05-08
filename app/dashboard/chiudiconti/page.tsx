@@ -3,14 +3,32 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
-import type { DbConsumazioniPrezzo, DbConti, DbFiera, DbMenu } from '@/app/lib/definitions';
+import type { DbConti, DbFiera } from '@/app/lib/definitions';
 import CircularProgress from '@mui/material/CircularProgress';
-import { getGiornoSagra, listConti, getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto } from '@/app/lib/actions';
-import { writeLog, getLastLog, listContiPerChiusra } from '@/app/lib/actions';
+import { 
+    getGiornoSagra, 
+    getConto, 
+    chiudiConto, 
+    writeLog, 
+    listContiPerChiusra 
+} from '@/app/lib/actions';
 import { deltanow } from '@/app/lib/utils';
 import { DataGrid, GridToolbar, GridColDef } from '@mui/x-data-grid';
 import { styled } from '@mui/material/styles';
-import { Button, ButtonGroup, Typography, Box, Alert, TextField, Stack } from '@mui/material';
+import { 
+    Button, 
+    ButtonGroup, 
+    Typography, 
+    Box, 
+    Alert, 
+    Stack,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    TextField
+} from '@mui/material';
+import { useConfig } from '@/context/ConfigContext';
 
 const StyledDataGrid = styled(DataGrid)({
     '& .MuiDataGrid-columnHeader': {
@@ -31,19 +49,22 @@ const StyledDataGrid = styled(DataGrid)({
 });
 
 export default function Page() {
-    const [importValue, setImportValue] = useState('');
-    const [textValue, setTextValue] = useState('');
-    const [numeroFoglietto, setNumeroFoglietto] = useState<number | string>('');
-    const [conto, setConto] = useState<DbConti>();
+    const config = useConfig();
     const [phase, setPhase] = useState('caricamento');
     const [rows, setRows] = useState<any[]>([]);
     const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
     const { data: session } = useSession();
 
+    // Stati per la Dialog "Altro Importo"
+    const [openDialog, setOpenDialog] = useState(false);
+    const [selectedRow, setSelectedRow] = useState<any>(null);
+    const [customImporto, setCustomImporto] = useState('');
+    const [customNota, setCustomNota] = useState('');
+
     const columns: GridColDef[] = [
         {
-            field: 'col1', 
-            headerName: 'N. Foglietto', 
+            field: 'col1',
+            headerName: 'N. Foglietto',
             width: 100,
             renderCell: (params) => (
                 <Link href={`/dashboard/casse/${params.value}`} passHref className="text-blue-600 underline font-bold">
@@ -56,61 +77,97 @@ export default function Page() {
         { field: 'col4', headerName: 'Coperti', type: "number", width: 80 },
         { field: 'col5', headerName: 'Totale (€)', type: "number", width: 100, valueFormatter: (params) => `${params} €` },
         {
-            field: 'col6', 
-            headerName: 'Modalità pagamento', 
-            minWidth: 320, 
-            flex: 1, 
+            field: 'col6',
+            headerName: 'Modalità pagamento',
+            minWidth: 320,
+            flex: 1,
+            headerAlign: 'center',
+            align: 'center',
             renderCell: (params) => (
-                <ButtonGroup size="small" variant="contained" color="primary" sx={{ borderRadius: '9999px', my: 1 }} >
-                    <Button onClick={() => handleAChiudiPos(params.value as number)}>POS</Button>
-                    <Button onClick={() => handleAChiudi(params.value as number)}>Contanti</Button>
-                    <Button onClick={() => handleChiudiGratis(params.value as number)}>Altro</Button>
-                </ButtonGroup>
+                <div style={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+                    <ButtonGroup
+                        size="small"
+                        variant="contained"
+                        color="primary"
+                        sx={{
+                            borderRadius: '9999px',
+                            overflow: 'hidden',
+                            '& .MuiButton-root': { borderRadius: 0 }
+                        }}
+                    >
+                        <Button onClick={() => handleFinalizzaChiusura(2, params.row)}>POS</Button>
+                        <Button onClick={() => handleFinalizzaChiusura(1, params.row)}>Contanti</Button>
+                        <Button onClick={() => handleIniziaAltroImporto(params.row)}>Altro Importo</Button>
+                    </ButtonGroup>
+                </div>
             )
         },
     ];
 
-    // --- LOGICHE (Invariate) ---
-    const handleAChiudi = async (idComanda: number) => {
-        if (idComanda) {
-            setPhase('elaborazione');
-            await chiudiConto(idComanda, sagra.giornata, 1);
-            await writeLog(idComanda, sagra.giornata, 'Casse', '', 'CLOSE', 'Pagato contanti');
+    const handleIniziaAltroImporto = (row: any) => {
+        setSelectedRow(row);
+        setCustomImporto('');
+        setCustomNota('');
+        setOpenDialog(true);
+    };
+
+    const handleFinalizzaChiusura = async (tipo: number, row: any, nota = '', importoStr = '') => {
+        setPhase('elaborazione');
+
+        const nFoglietto = row.col1;
+        const coperti = row.col4;
+
+        // Gestione formattazione importo (sostituisce virgola con punto per il DB)
+        const importoFinale = importoStr.replace(',', '.');
+
+        let logMsg = '';
+        if (tipo === 1) logMsg = 'Pagato contanti';
+        else if (tipo === 2) logMsg = 'Pagato POS';
+        else logMsg = `Altro Importo: ${importoStr}€ - Note: ${nota}`;
+
+        try {
+            // Esecuzione chiusura sul DB
+            await chiudiConto(Number(nFoglietto), sagra.giornata, tipo, nota, importoFinale);
+            
+            // Scrittura Log
+            await writeLog(Number(nFoglietto), sagra.giornata, 'Casse', session?.user?.name || '', 'CLOSE', logMsg);
+
+            // Invocazione stampa pass
+            await inviaStampaPassDiretto(nFoglietto, coperti);
+
+            // Refresh della lista
             await refreshData();
-            setPhase('chiuso');
+            setPhase('caricato');
+        } catch (error) {
+            console.error("Errore durante la chiusura:", error);
+            setPhase('caricato');
         }
     };
 
-    const handleAChiudiPos = async (idComanda: number) => {
-        if (idComanda) {
-            setPhase('elaborazione');
-            await chiudiConto(idComanda, sagra.giornata, 2);
-            await writeLog(idComanda, sagra.giornata, 'Casse', '', 'CLOSE', 'Pagato POS');
-            await refreshData();
-            setPhase('chiuso');
+    const handleConfirmCustomChiusura = async () => {
+        if (selectedRow && customImporto) {
+            setOpenDialog(false);
+            await handleFinalizzaChiusura(3, selectedRow, customNota, customImporto);
         }
     };
 
-    const handleChiudiGratis = async (idComanda: number) => {
-        const c = await getConto(idComanda, sagra.giornata);
-        if (c) {
-            setConto(c);
-            setNumeroFoglietto(idComanda);
-            setPhase("pagaaltroimporto");
+    const inviaStampaPassDiretto = async (numeroFoglietto: number, coperti: number) => {
+        try {
+            await fetch('/api/print', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    numeroFoglietto,
+                    coperti,
+                    giornata: sagra.giornata,
+                    ipAddress: config.stampante_uno,
+                    isPass: true
+                }),
+            });
+        } catch (err) {
+            console.error("Errore invio stampa:", err);
         }
     };
-
-    const handleCompletatoGratis = async () => {
-        if (numeroFoglietto) {
-            setPhase('elaborazione');
-            await chiudiConto(Number(numeroFoglietto), sagra.giornata, 3, textValue, importValue);
-            await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', 'Altro Importo');
-            await refreshData();
-            setPhase('chiuso');
-        }
-    };
-
-    const handleAnnullaGratis = () => setPhase('caricato');
 
     const refreshData = async () => {
         const conti = await listContiPerChiusra(sagra.giornata);
@@ -153,7 +210,6 @@ export default function Page() {
         }
     }
 
-    // --- RENDERING ---
     if (!((session?.user?.name == "Casse") || (session?.user?.name == "SuperUser"))) {
         return <Box sx={{ p: 4 }}><Alert severity="error">Accesso Negato</Alert></Box>;
     }
@@ -171,33 +227,16 @@ export default function Page() {
         );
     }
 
-    if (phase == 'pagaaltroimporto') {
-        return (
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', p: 2 }}>
-                <Box sx={{ width: '100%', maxWidth: 500, p: 4, bgcolor: 'background.paper', borderRadius: 2, boxShadow: 3 }}>
-                    <Typography variant="h5" sx={{ mb: 2 }}>Modifica Incasso</Typography>
-                    <TextField label="Nuovo importo" fullWidth sx={{ mb: 2 }} value={importValue} onChange={(e) => setImportValue(e.target.value)} type="number" />
-                    <TextField label="Note" fullWidth sx={{ mb: 3 }} value={textValue} onChange={(e) => setTextValue(e.target.value)} />
-                    <Stack direction="row" spacing={2} justifyContent="center">
-                        <Button variant="contained" onClick={handleCompletatoGratis}>Salva</Button>
-                        <Button variant="outlined" onClick={handleAnnullaGratis}>Annulla</Button>
-                    </Stack>
-                </Box>
-            </Box>
-        );
-    }
-
     return (
-        <Box sx={{ 
-            display: 'flex', 
-            flexDirection: 'column', 
-            height: '100%', // Usa il 100% dell'area contenitore del layout
-            width: '100%', 
-            overflow: 'hidden', // Impedisce la scrollbar esterna
+        <Box sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            width: '100%',
+            overflow: 'hidden',
             p: 1,
             boxSizing: 'border-box'
         }}>
-            {/* Titolo Nero */}
             <Box sx={{ textAlign: 'center', mb: 1, flexShrink: 0 }}>
                 <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'black' }}>
                     Incassa Conti
@@ -207,7 +246,6 @@ export default function Page() {
                 </Typography>
             </Box>
 
-            {/* Tabella con scorrimento interno */}
             <Box sx={{ flexGrow: 1, minHeight: 0, width: '100%' }}>
                 <StyledDataGrid
                     rows={rows}
@@ -220,6 +258,41 @@ export default function Page() {
                     }}
                 />
             </Box>
+
+            {/* Dialog per Altro Importo */}
+            <Dialog open={openDialog} onClose={() => setOpenDialog(false)}>
+                <DialogTitle>Chiusura con Altro Importo</DialogTitle>
+                <DialogContent>
+                    <Stack spacing={2} sx={{ mt: 1, minWidth: '300px' }}>
+                        <TextField
+                            label="Importo (€)"
+                            fullWidth
+                            variant="outlined"
+                            placeholder="es: 15,50"
+                            value={customImporto}
+                            onChange={(e) => setCustomImporto(e.target.value)}
+                        />
+                        <TextField
+                            label="Note / Motivazione"
+                            fullWidth
+                            variant="outlined"
+                            placeholder="Sconto, omaggio, etc."
+                            value={customNota}
+                            onChange={(e) => setCustomNota(e.target.value)}
+                        />
+                    </Stack>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setOpenDialog(false)}>Annulla</Button>
+                    <Button 
+                        onClick={handleConfirmCustomChiusura} 
+                        variant="contained" 
+                        disabled={!customImporto}
+                    >
+                        Conferma e Stampa
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 }

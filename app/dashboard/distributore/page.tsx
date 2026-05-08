@@ -15,6 +15,8 @@ import RemoveCircleSharpIcon from '@mui/icons-material/RemoveCircleSharp';
 import PrintIcon from '@mui/icons-material/Print';
 import HistoryIcon from '@mui/icons-material/History';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import { useConfig } from '@/context/ConfigContext';
+
 
 const defaultTheme = createTheme({
     palette: {
@@ -30,6 +32,8 @@ const defaultTheme = createTheme({
 type Mode = 'AUTO' | 'MANUALE' | 'LIBERA';
 
 export default function DistributorePage() {
+    const config = useConfig();
+
     const [loading, setLoading] = useState(true);
     const [prossimoTicket, setProssimoTicket] = useState<number | null>(null);
     const [coperti, setCoperti] = useState<number | ''>(0); 
@@ -62,37 +66,68 @@ export default function DistributorePage() {
         fetchData();
     }, [fetchData]);
 
-    const handleStampa = async () => {
-        const numeroCopertiValido = Number(coperti);
-        if (numeroCopertiValido <= 0 || prossimoTicket === null) return;
-        
-        setLoading(true);
-        try {
-            const seduto = mode === 'LIBERA' ? 1 : 0;
-            await addTickets(prossimoTicket, numeroCopertiValido, seduto);
+const handleStampa = async () => {
+    const numeroCopertiValido = Number(coperti);
+    if (numeroCopertiValido <= 0 || prossimoTicket === null) return;
+               
+    setLoading(true);
 
-            if (mode !== 'LIBERA') {
-                await fetch('/api/next-client', {
+    try {
+        const seduto = mode === 'LIBERA' ? 1 : 0;
+                     
+        // 1. Salva i dati nel database (logica esistente)
+        await addTickets(prossimoTicket, numeroCopertiValido, seduto);
+                 
+        // 2. Invia il comando fisico alla stampante (NUOVA LOGICA)
+        // Solo se non siamo in modalità LIBERA (o se vuoi stampare anche lì)
+        if (mode !== 'LIBERA') {
+            try {
+                await fetch('/api/print', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type: 'NEW_TICKET' }),
+                    body: JSON.stringify({
+                        numeroTicket: prossimoTicket,
+                        coperti: numeroCopertiValido,
+                        ipAddress: config.stampante_wifi, // <--- Inserisci qui l'IP della tua stampante
+                        titolo: config.titolo, 
+                        edizione: config.edizione,
+                        inizio: config.inizio, 
+                        fine: config.fine,
+                        mese: config.mese
+                    }),
                 });
+            } catch (err) {
+                   
+                console.error("Errore fisico stampante:", err);
+                // Non blocchiamo l'app se la stampante è offline
             }
-
-            setLastEntry({ numero: prossimoTicket, coperti: numeroCopertiValido });
-            setCoperti(0); 
-            
-            if (mode === 'MANUALE') {
-                setProssimoTicket(null);
-            } else {
-                await fetchData();
-            }
-        } catch (error) {
-            alert("Errore durante la stampa");
-        } finally {
-            setLoading(false);
         }
-    };
+ 
+        // 3. Notifica il monitor (logica esistente)
+        if (mode !== 'LIBERA') {
+            await fetch('/api/next-client', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'NEW_TICKET' }),
+            });
+           
+        }
+
+        // Aggiornamento UI
+        setLastEntry({ numero: prossimoTicket, coperti: numeroCopertiValido });
+        setCoperti(0); 
+        
+        if (mode === 'MANUALE') {
+            setProssimoTicket(null);
+        } else {
+            await fetchData();
+        }
+    } catch (error) {
+        alert("Errore durante il salvataggio");
+    } finally {
+        setLoading(false);
+    }
+};
 
     const onAdd = () => setCoperti(prev => (Number(prev) < 999 ? Number(prev) + 1 : 999));
     const onRemove = () => setCoperti(prev => (Number(prev) > 0 ? Number(prev) - 1 : 0));

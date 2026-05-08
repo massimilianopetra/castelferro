@@ -151,7 +151,7 @@ html, body {
 }
 /* Sezione Centrale: 60% dell'altezza, scorrevole verticalmente */
 .middle-section_XS {
-    height: 70%;
+    height: 69%;
      /***   background-color: #fffde7;*/
     overflow-y: auto; /* Abilita lo scorrimento verticale se il contenuto eccede */
     overflow-x: hidden; /* Disabilita lo scorrimento orizzontale */

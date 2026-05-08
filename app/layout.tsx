@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'; // FONDAMENTALE PER DOCKER
 // @ts-ignore: allow side-effect CSS import in app layout
 import './ui/global.css';
 import { inter } from './ui/fonts';
+ 
 import { ConfigProvider } from '@/context/ConfigContext'; // Importa il provider
 
 export default function RootLayout({
