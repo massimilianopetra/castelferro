@@ -122,8 +122,9 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet }: 
 
                             }
 
-                            <TableCell align="right" className="text-base font-extralight md:text-2xl">
-                                {(row.quantita * row.prezzo_unitario).toFixed(2)}
+                            <TableCell align="right" className="text-base font-extralight md:text-2xl"> 
+                                <span className="text-base font-bold md:text-2xl"> {(row.quantita * row.prezzo_unitario).toFixed(2)}</span>
+                               
                             </TableCell>
                         </TableRow>
                     ))}

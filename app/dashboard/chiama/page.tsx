@@ -46,22 +46,55 @@ export default function ChiamaPage() {
         open: false, message: '', severity: 'success',
     });
 
+    // Funzione di caricamento dati
     const fetchDati = async () => {
         try {
             const tickets = await getTickets('non-seduti');
             if (tickets) setLista(tickets);
-        } catch (error) { console.error(error); }
+        } catch (error) { 
+            console.error("Errore nel caricamento tickets:", error); 
+        }
     };
 
+    // --- LOGICA DI CONNESSIONE ROBUSTA ---
     useEffect(() => {
-        fetchDati();
-        const eventSource = new EventSource('/api/next-client');
-        eventSource.onmessage = (event) => {
-            const payload = JSON.parse(event.data);
-            if (payload.type === 'REFRESH_TABLE') fetchDati();
-            if (payload.type === 'CALL_NUMBER') setNumeroAttuale(payload.numero);
+        fetchDati(); // Caricamento iniziale
+
+        let es: EventSource | null = null;
+        let reconnectTimeout: NodeJS.Timeout;
+
+        const connect = () => {
+            console.log("ChiamaPage: Tentativo connessione SSE...");
+            es = new EventSource('/api/next-client');
+
+            es.onmessage = (event) => {
+                try {
+                    const payload = JSON.parse(event.data);
+                    
+                    // Se un altro client ha modificato la tabella, aggiorniamo
+                    if (payload.type === 'REFRESH_TABLE') fetchDati();
+                    
+                    // Se un altro client ha chiamato un numero, aggiorniamo l'header
+                    if (payload.type === 'CALL_NUMBER') setNumeroAttuale(payload.numero);
+                } catch (err) {
+                    console.error("Errore parsing SSE in ChiamaPage:", err);
+                }
+            };
+
+            es.onerror = () => {
+                console.error("ChiamaPage: Errore SSE. Riconnessione in 3s...");
+                if (es) es.close();
+                clearTimeout(reconnectTimeout);
+                reconnectTimeout = setTimeout(connect, 3000);
+            };
         };
-        return () => eventSource.close();
+
+        connect();
+
+        return () => {
+            if (es) es.close();
+            clearTimeout(reconnectTimeout);
+        };
     }, []);
 
     const handleRequestSort = (property: 'id' | 'numpersone') => {
@@ -81,79 +114,76 @@ export default function ChiamaPage() {
 
     const handleChiamaTicket = async (ticket: any) => {
         try {
+            setChiamatiMemory(prev => new Set(prev).add(ticket.id));
+            setNumeroAttuale(ticket.id);
+
             await fetch('/api/next-client', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ numero: ticket.id }),
             });
-            setChiamatiMemory(prev => new Set(prev).add(ticket.id));
-            setNumeroAttuale(ticket.id);
-            setSnackbar({ open: true, message: `Ticket ${ticket.id} chiamato!`, severity: 'success' });
-        } catch (error) {
-            setSnackbar({ open: true, message: 'Errore chiamata', severity: 'error' });
+        } catch (error) { 
+            console.error(error); 
         }
     };
 
     const handleSiediTicket = async (ticket: any) => {
         try {
+            setLista(prev => prev.filter(t => t.id !== ticket.id));
+
             await updateTickets({ ...ticket, seduto: 1 });
             await fetch('/api/next-client', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ type: 'SET_SITTING', numero: ticket.id }),
             });
-            await fetchDati();
-        } catch (error) { console.error(error); }
+        } catch (error) { 
+            console.error(error);
+            fetchDati(); 
+        }
     };
 
     const handleConfirmDelete = async () => {
         if (!selectedTicket) return;
         try {
-            await deleteTicket(selectedTicket.id);
+            const idDaRimuovere = selectedTicket.id;
+            setLista(prev => prev.filter(t => t.id !== idDaRimuovere));
+            setOpenDeleteDialog(false);
+
+            await deleteTicket(idDaRimuovere);
             await fetch('/api/next-client', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type: 'SET_SITTING', numero: selectedTicket.id }),
+                body: JSON.stringify({ type: 'SET_SITTING', numero: idDaRimuovere }),
             });
-            setOpenDeleteDialog(false);
-            await fetchDati();
-        } catch (error) { console.error(error); }
+        } catch (error) { 
+            console.error(error);
+            fetchDati();
+        }
     };
 
     return (
         <ThemeProvider theme={defaultTheme}>
             <Box sx={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                // CORREZIONE: height 100% per stare dentro i limiti del parent dashboard
-                height: '100%', 
-                maxHeight: '100%',
-                width: '100%', 
-                bgcolor: 'background.default', 
-                p: isMobile ? 1 : 2, 
-                boxSizing: 'border-box',
-                overflow: 'hidden', // Blocca categoricamente lo scroll esterno
-                position: 'relative'
+                display: 'flex', flexDirection: 'column', 
+                height: '100%', maxHeight: '100%', width: '100%', 
+                bgcolor: 'background.default', p: isMobile ? 1 : 2, 
+                boxSizing: 'border-box', overflow: 'hidden', position: 'relative'
             }}>
                 
-                {/* HEADER FISSO */}
                 <Box sx={{ textAlign: 'center', mb: isMobile ? 0.5 : 1, flexShrink: 0 }}>
                     <Typography sx={{ color: '#666', fontWeight: 900, fontSize: '0.8rem' }}>
                         ULTIMO CHIAMATO
                     </Typography>
-                 
                     <Typography sx={{ 
                         fontSize: isMobile ? '4.5rem' : '7rem', 
-                        fontWeight: 1000, 
-                        color: 'primary.main', 
-                        fontFamily: 'monospace', 
-                        lineHeight: 1 
+                        fontWeight: 1000, color: 'primary.main', 
+                        fontFamily: 'monospace', lineHeight: 1 
                     }}>
                         {numeroAttuale || '—'}
                     </Typography>
                 </Box>
 
-                {/* SWITCH FISSO */}
                 <Box sx={{ width: '100%', maxWidth: '900px', mx: 'auto', display: 'flex', justifyContent: 'flex-end', mb: 0.5, flexShrink: 0 }}>
                     <FormControlLabel
                         control={<Switch checked={showActions} onChange={(e) => setShowActions(e.target.checked)} color="primary" size="small" />}
@@ -161,16 +191,10 @@ export default function ChiamaPage() {
                     />
                 </Box>
 
-                {/* TABELLA ELASTICA */}
                 <TableContainer component={Paper} sx={{ 
-                    maxWidth: '900px', 
-                    width: '100%', 
-                    mx: 'auto',
-                    flexGrow: 1, 
-                    minHeight: 0, 
-                    borderRadius: '12px', 
-                    overflowY: 'auto', // Solo la tabella deve scorrere
-                    boxShadow: 3
+                    maxWidth: '900px', width: '100%', mx: 'auto',
+                    flexGrow: 1, minHeight: 0, borderRadius: '12px', 
+                    overflowY: 'auto', boxShadow: 3
                 }}>
                     <Table stickyHeader size="small">
                         <TableHead>
@@ -192,7 +216,7 @@ export default function ChiamaPage() {
                             {sortedLista.map((row) => {
                                 let btnColor = "#2e7d32"; let textColor = "#fff";
                                 if (chiamatiMemory.has(row.id)) { btnColor = "#ed6c02"; } 
-                                else if (row.id < numeroAttuale) { btnColor = "#ffeb3b"; textColor = "#000"; }
+                                else if (numeroAttuale > 0 && row.id < numeroAttuale) { btnColor = "#ffeb3b"; textColor = "#000"; }
 
                                 return (
                                     <TableRow key={row.id} hover>
@@ -203,19 +227,25 @@ export default function ChiamaPage() {
                                         <TableCell align="right">
                                             <Stack direction="row" spacing={1} justifyContent="flex-end">
                                                 <Button 
-                                                    variant="contained" size="small"
+                                                    variant="contained" size="medium"
                                                     onClick={() => handleChiamaTicket(row)}
                                                     sx={{ fontWeight: 'bold', bgcolor: btnColor, color: textColor, minWidth: isMobile ? '45px' : '100px', '&:hover': { bgcolor: btnColor, opacity: 0.9 } }}
                                                 >
-                                                    <CampaignIcon fontSize={isMobile ? "small" : "medium"} />
-                                                    <Typography component="span" sx={{ fontSize: isMobile ? '0.5rem' : '0.7rem' }}>chiama</Typography>
+                                                    <CampaignIcon fontSize="medium" />
+                                                    <Typography component="span" sx={{ fontSize: isMobile ? '0.9rem' : '1rem', ml: 1 }}>Chiama</Typography>
                                                 </Button>
                                                 {showActions && (
                                                     <>
-                                                        <IconButton color="primary" size="small" onClick={() => handleSiediTicket(row)} sx={{ border: '1px solid', borderRadius: '8px' }}>
-                                                            <ChairIcon fontSize="small" />
-                                                        </IconButton>
-                                                        <IconButton color="error" size="small" onClick={() => { setSelectedTicket(row); setOpenDeleteDialog(true); }} sx={{ border: '1px solid', borderRadius: '8px' }}> 
+                                                        <Button
+                                                            variant="contained" size="small" color="primary"
+                                                            onClick={() => handleSiediTicket(row)}
+                                                            sx={{ fontWeight: 'bold', minWidth: isMobile ? '45px' : '100px' }}
+                                                        >
+                                                            <ChairIcon fontSize="medium" />
+                                                            <Typography component="span" sx={{ fontSize: isMobile ? '0.9rem' : '1rem', ml: 1 }}>Entra</Typography>
+                                                        </Button>
+
+                                                        <IconButton color="error" size="large" onClick={() => { setSelectedTicket(row); setOpenDeleteDialog(true); }} sx={{ border: '1px solid', borderRadius: '8px' }}>
                                                             <DeleteIcon fontSize="small" />
                                                         </IconButton>
                                                     </>
@@ -229,9 +259,8 @@ export default function ChiamaPage() {
                     </Table>
                 </TableContainer>
 
-                {/* Snackbar e Dialog (stessa logica) */}
                 <Dialog open={openDeleteDialog} onClose={() => setOpenDeleteDialog(false)}>
-                     <DialogTitle>ELIMINA TICKET</DialogTitle>
+                    <DialogTitle>ELIMINA TICKET</DialogTitle>
                      <DialogContent><DialogContentText>Vuoi eliminare il ticket {selectedTicket?.id}?</DialogContentText></DialogContent>
                      <DialogActions>
                         <Button onClick={() => setOpenDeleteDialog(false)}>NO</Button>

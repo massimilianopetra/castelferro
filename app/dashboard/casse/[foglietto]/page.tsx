@@ -3,18 +3,18 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { 
-  Button, ButtonGroup, Link, Snackbar, TextField, 
-  Dialog, DialogTitle, DialogContent, DialogActions 
+import {
+  Button, ButtonGroup, Link, Snackbar, TextField,
+  Dialog, DialogTitle, DialogContent, DialogActions
 } from '@mui/material';
 import Filter1Icon from '@mui/icons-material/Filter1';
 import * as React from 'react';
 
 import type { DbConsumazioniPrezzo, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
-import { 
-  getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto, 
+import {
+  getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto,
   aggiornaConto, stampaConto, riapriConto, apriConto, getContoPiuAlto,
-  writeLog, getGiornoSagra, getLastLog 
+  writeLog, getGiornoSagra, getLastLog
 } from '@/app/lib/actions';
 import { deltanow, milltodatestring } from '@/app/lib/utils';
 import { useConfig } from '@/context/ConfigContext';
@@ -27,7 +27,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   const config = useConfig();
   const router = useRouter();
   const { data: session } = useSession();
-  
+
   const printRef = useRef<HTMLDivElement | null>(null);
 
   const [importValue, setImportValue] = useState('');
@@ -42,7 +42,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   const [conto, setConto] = useState<DbConti>();
   const [lastLog, setLastLog] = useState<DbLog[]>([]);
   const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
-  
+  const [isNewConto, setIsNewConto] = useState(false);
+
   const [openDialogQty, setOpenDialogQty] = useState(false);
   const [tempQty, setTempQty] = useState('');
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
@@ -60,7 +61,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
         const num = +params.foglietto;
         if (isNaN(num) || num < 1 || num > 9999) {
-          setSnackbarMessage("Il foglietto non è gestibile, troppo grande.");
+          setSnackbarMessage("Il foglietto non è gestibile.");
           setOpenSnackbar(true);
           return;
         }
@@ -71,36 +72,25 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           setIniProducts(c);
           setCopertiPass(c.find((o) => o.id_piatto === 1)?.quantita || 0);
         }
-   
+
         const cc = await getConto(num, gg.giornata);
         setConto(cc);
+        setNumeroFoglietto(num.toString());
 
         if (cc?.stato == 'APERTO' || cc?.stato == 'STAMPATO') {
-          // Se esiste (anche se > 8999), permetti la modifica
-          setNumeroFoglietto(num.toString());
+          setIsNewConto(false);
           await writeLog(num, gg.giornata, 'Casse', '', 'OPEN', '');
           const refreshedLog = await getLastLog(gg.giornata, 'Casse');
           if (refreshedLog) setLastLog(refreshedLog);
           setPhase(cc.stato === 'APERTO' ? 'aperto' : 'stampato');
         } else if (['CHIUSO', 'CHIUSOPOS', 'CHIUSOALTRO'].includes(cc?.stato || '')) {
+          setIsNewConto(false);
           setPhase('chiuso');
-        } else if (Number(num) < 9000 && cc?.stato == undefined) {
-          // Creazione automatica solo per numeri < 9000
-          setNumeroFoglietto(num.toString());
-          await apriConto(Number(num), gg.giornata, 'Casse');
-          await writeLog(Number(num), gg.giornata, 'Casse', '', 'START', '');
-          const newCc = await getConto(num, gg.giornata);
-          setConto(newCc);
-          setPhase('aperto');
         } else {
-          // Numeri > 8999 che non esistono: blocca e avvisa
-          setNumero(num.toString());
-          setNumeroFoglietto(num.toString());
-          if (Number(num) > 8999) {
-              setSnackbarMessage("I numeri superiori a 8999 sono riservati agli asporto.");
-              setOpenSnackbar(true);
-          }
-          setPhase('none');
+          // Se il conto non esiste, NON chiamiamo apriConto qui.
+          // Lo teniamo solo in memoria locale
+          setIsNewConto(true);
+          setPhase('aperto');
         }
       }
     };
@@ -120,9 +110,9 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   const handleConfirmQty = () => {
     if (selectedProductId !== null) {
       const newQty = parseInt(tempQty) || 0;
-      setProducts(prev => prev.map(item => 
-        item.id_piatto === selectedProductId 
-          ? { ...item, quantita: newQty, cucina: "Casse" } 
+      setProducts(prev => prev.map(item =>
+        item.id_piatto === selectedProductId
+          ? { ...item, quantita: newQty, cucina: "Casse" }
           : item
       ));
       setPhase('modificato');
@@ -135,66 +125,45 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
   const handleButtonClickCarica = async () => {
     const num = Number(numero);
-    if (num > 9999) {
-        setSnackbarMessage("Il foglietto non è gestibile, troppo grande.");
-        setOpenSnackbar(true);
-        return;
-    }
-
-    const gg = await getGiornoSagra();
-    if (gg) {
-      const cc = await getConto(num, gg.giornata);
-      // Se il numero è > 8999 e NON esiste un conto aperto/stampato, blocca
-      if (num > 8999 && (!cc || !['APERTO', 'STAMPATO'].includes(cc.stato))) {
-          setSnackbarMessage("I numeri superiori a 8999 sono riservati agli asporto.");
-          setOpenSnackbar(true);
-          return;
-      }
-
-      if (isNaN(num) || num < 1) {
-        setSnackbarMessage("Inserire un numero valido.");
-        setOpenSnackbar(true);
-        return;
-      }
-      carica(numero);
-      setNumero('');
-    }
-  };
-
-const handleButtonClickCaricaAsporto = async () => {
-    // 1. Recupera il numero di conto più alto presente nel database
-    const ultconto = await getContoPiuAlto();
-    let uc = Number(ultconto);
-
-    // 2. Se non esistono conti o sono tutti < 9000, partiamo da 9000
-    // In questo modo il primo sarà 9001
-    if (isNaN(uc) || uc < 9000) {
-      uc = 9000;
-    }
-
-    const nuovoNumeroAsporto = uc + 1;
-
-    // 3. Verifica se siamo ancora nei limiti gestibili (opzionale)
-    if (nuovoNumeroAsporto > 9999) {
-      setSnackbarMessage("Raggiunto il limite massimo di conti asporto (9999).");
+    if (num > 9999 || isNaN(num) || num < 1) {
+      setSnackbarMessage("Foglietto non valido.");
       setOpenSnackbar(true);
       return;
     }
+    carica(numero);
+    setNumero('');
+  };
 
-    const gg = await getGiornoSagra();
-    if (gg) {
-      // 4. Crea effettivamente il conto nel database
-      await apriConto(nuovoNumeroAsporto, gg.giornata, 'Casse');
-      await writeLog(nuovoNumeroAsporto, gg.giornata, 'Casse', '', 'OPEN', 'Bottone Asporto');
-      
-      // 5. Carica la pagina del nuovo conto
-      carica(nuovoNumeroAsporto);
-    }
+  const handleButtonClickCaricaAsporto = async () => {
+    const ultconto = await getContoPiuAlto();
+    let uc = Number(ultconto);
+    if (isNaN(uc) || uc < 9000) uc = 9000;
+    carica(uc + 1);
   };
 
   const handleButtonClickCaricaConto1 = () => carica(1);
 
+  // LOGICA DI SALVATAGGIO INTEGRATA
+  const checkAndSaveToDb = async () => {
+    const haPortate = products.some(p => p.quantita > 0);
+    if (!haPortate) {
+        setSnackbarMessage("Inserire almeno una portata prima di salvare.");
+        setOpenSnackbar(true);
+        return false;
+    }
+
+    if (isNewConto) {
+        await apriConto(Number(numeroFoglietto), sagra.giornata, 'Casse');
+        await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'START', 'Creazione differita');
+        setIsNewConto(false);
+    }
+    return true;
+  };
+
   const handleAggiorna = async () => {
+    const canProceed = await checkAndSaveToDb();
+    if (!canProceed) return;
+
     setPhase('caricamento');
     const totale = products.reduce((acc, i) => acc + (i.quantita * i.prezzo_unitario), 0);
     await sendConsumazioni(products);
@@ -203,18 +172,25 @@ const handleButtonClickCaricaAsporto = async () => {
     for (const item of products) {
       const orig = iniProducts.find(o => o.id_piatto == item.id_piatto);
       if (orig && item.quantita !== orig.quantita) {
-        const msg = item.quantita > orig.quantita 
+        const msg = item.quantita > orig.quantita
           ? `Aggiunti: ${item.quantita - orig.quantita} ${item.piatto}`
           : `Eliminati: ${orig.quantita - item.quantita} ${item.piatto}`;
-        await writeLog(item.id_comanda, sagra.giornata, 'Casse', '', 'UPDATE', msg);
+        await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'UPDATE', msg);
       }
     }
+    // Rinfresco il conto locale per avere i dati corretti (es. data apertura)
+    const newCc = await getConto(Number(numeroFoglietto), sagra.giornata);
+    setConto(newCc);
     setPhase('aperto');
   };
 
   const handleStampa = async () => {
+    const canProceed = await checkAndSaveToDb();
+    if (!canProceed) return;
+
     setPhase('elaborazione');
     const totale = products.reduce((acc, i) => acc + (i.quantita * i.prezzo_unitario), 0);
+    await sendConsumazioni(products); // Assicuriamoci che i prodotti siano salvati
     await aggiornaConto(Number(numeroFoglietto), sagra.giornata, totale);
     await stampaConto(Number(numeroFoglietto), sagra.giornata);
     await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'PRINT', 'Stampa conto');
@@ -298,17 +274,17 @@ const handleButtonClickCaricaAsporto = async () => {
     </div>
   );
 
-const UltimiRicercati = () => (
+  const UltimiRicercati = () => (
     <div className="text-base md:text-xl" style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
       <p>
         <span className="text-blue-800">Ultimi ricercati &nbsp;</span>
-        {lastLog.slice(1, 3).map((row, idx) => (
-          <Button 
-            key={idx} 
-            size="small" 
-            variant="contained" 
-            onClick={() => carica(row.foglietto)} 
-            startIcon={<Filter1Icon />} 
+        {lastLog.slice(0, 3).map((row, idx) => (
+          <Button
+            key={idx}
+            size="small"
+            variant="contained"
+            onClick={() => carica(row.foglietto)}
+            startIcon={<Filter1Icon />}
             style={{ borderRadius: '9999px', margin: '0 4px' }}
           >
             {row.foglietto}
@@ -379,6 +355,7 @@ const UltimiRicercati = () => (
           case 'aperto':
           case 'modificato':
           case 'stampato':
+          case 'caricamento':
             return (
               <div className="container">
                 <header className="top-section mb-2">
@@ -386,30 +363,30 @@ const UltimiRicercati = () => (
                   <div className="sez-dx">
                     <BottoniServizio />
                     <div className="text-base md:text-2xl py-2 text-end">
-                      <p>Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}</span> ({deltanow(conto?.data_apertura)})</p>
-                      <p>Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}</span></p>
+                      <p>Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}</span> {conto ? `(${deltanow(conto?.data_apertura)})` : "(Nuovo)"}</p>
+                      <p>Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere || 'Casse'}</span></p>
                     </div>
-                  </div> 
+                  </div>
                 </header>
                 <main className="middle-section_XS">
-                  <TabellaConto 
-                    item={products} 
-                    onAdd10={(id) => handleAdd(id, 10)} 
-                    onAdd={(id) => handleAdd(id)} 
-                    onRemove={handleRemove} 
-                    onSet={handleOpenSetQty} 
+                  <TabellaConto
+                    item={products}
+                    onAdd10={(id) => handleAdd(id, 10)}
+                    onAdd={(id) => handleAdd(id)}
+                    onRemove={handleRemove}
+                    onSet={handleOpenSetQty}
                   />
                 </main>
                 <footer className="bottom-section">
                   <div className="sez-sx-bassa">
-                    <Button variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled={phase !== 'aperto'}>Stampa Conto</Button>
+                    <Button variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled={phase === 'modificato' || phase === 'caricamento'}>Stampa Conto</Button>
                     &nbsp;
                     <Button variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled={phase !== 'modificato'}>Aggiorna Conto</Button>
-                    <p>Stato: <span className="font-extrabold text-blue-800">{phase}</span> n. {numeroFoglietto}</p>
+                    <p>Stato: <span className="font-extrabold text-blue-800">{isNewConto ? 'DA CREARE' : phase}</span> n. {numeroFoglietto}</p>
                   </div>
                   <div className="sez-dx-bassa">
-                   <ul className=" inline-block p-3 border-2 border-blue-600 bg-blue-200 rounded-full" 
-    style={{ marginTop: '1px' }}>
+                    <ul className=" inline-block p-3 border-2 border-blue-600 bg-blue-200 rounded-full"
+                      style={{ marginTop: '1px' }}>
                       Chiudi conto &nbsp;
                       <ButtonGroup variant="contained">
                         <Button onClick={() => handleFinalizzaChiusura(2)} disabled={phase !== 'stampato'}>POS</Button>
@@ -439,21 +416,14 @@ const UltimiRicercati = () => (
                   </div>
                 </main>
                 <footer className="bottom-section">
-                   <Button variant="contained" className="rounded-full" onClick={phase === 'chiuso' ? async () => {
-                     await riapriConto(conto!.id_comanda, sagra.giornata);
-                     setPhase('aperto');
-                   } : async () => {
-                     // Impedisce la creazione manuale se > 8999
-                     if (Number(numeroFoglietto) > 8999) {
-                        setSnackbarMessage("I numeri superiori a 8999 sono riservati agli asporto.");
-                        setOpenSnackbar(true);
-                        return;
-                     }
-                     await apriConto(Number(numeroFoglietto), sagra.giornata, 'Casse');
-                     setPhase('aperto');
-                   }}>
-                     {phase === 'chiuso' ? 'Riapri Conto' : 'Crea Nuovo Conto'}
-                   </Button>
+                   {phase === 'chiuso' && (
+                      <Button variant="contained" className="rounded-full" onClick={async () => {
+                        await riapriConto(conto!.id_comanda, sagra.giornata);
+                        setPhase('aperto');
+                      }}>
+                        Riapri Conto
+                      </Button>
+                   )}
                 </footer>
               </div>
             );
@@ -483,12 +453,12 @@ const UltimiRicercati = () => (
           <Button onClick={handleConfirmQty} variant="contained">Conferma</Button>
         </DialogActions>
       </Dialog>
-      
-      <Snackbar 
-        open={openSnackbar} 
-        autoHideDuration={6000} 
-        onClose={() => setOpenSnackbar(false)} 
-        message={snackbarMessage} 
+
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={6000}
+        onClose={() => setOpenSnackbar(false)}
+        message={snackbarMessage}
       />
     </main>
   );

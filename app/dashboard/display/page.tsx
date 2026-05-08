@@ -5,30 +5,57 @@ import { useConfig } from '@/context/ConfigContext';
 
 export default function DisplayPage() {
   const { anno, titolo, edizione, inizio, fine, mese } = useConfig();
-  const [numero, setNumero] = useState(null);
-  const [precedenti, setPrecedenti] = useState([]);
+  const [numero, setNumero] = useState<number | null>(null);
+  const [precedenti, setPrecedenti] = useState<number[]>([]);
 
   useEffect(() => {
-    const es = new EventSource('/api/next-client');
+    // Specifichiamo il tipo per evitare l'errore che vedi nell'immagine
+    let es: EventSource | null = null;
+    let reconnectTimeout: NodeJS.Timeout;
 
-    es.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === 'CALL_NUMBER') {
-          setNumero(data.numero);
-          if (data.history) {
-            setPrecedenti(data.history.slice(0, 5));
+    const connect = () => {
+      console.log("Tentativo di connessione SSE...");
+      es = new EventSource('/api/next-client');
+
+      es.onopen = () => {
+        console.log("Connessione stabilita con successo.");
+      };
+
+      es.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === 'CALL_NUMBER') {
+            setNumero(data.numero);
+            if (data.history) {
+              setPrecedenti(data.history.slice(0, 5));
+            }
           }
+          if (data.type === 'UPDATE_HISTORY') {
+            setPrecedenti((data.history || []).slice(0, 5));
+          }
+        } catch (error) {
+          console.error('Errore parsing SSE:', error);
         }
-        if (data.type === 'UPDATE_HISTORY') {
-          setPrecedenti((data.history || []).slice(0, 5));
+      };
+
+      es.onerror = (error) => {
+        console.error('Errore SSE rilevato. Riconnessione in 3s...', error);
+        if (es) {
+            es.close();
         }
-      } catch (error) {
-        console.error('Errore parsing SSE:', error);
-      }
+        // Tenta di riconnettersi dopo 3 secondi
+        clearTimeout(reconnectTimeout);
+        reconnectTimeout = setTimeout(connect, 3000);
+      };
     };
 
-    return () => es.close();
+    connect();
+
+    // Cleanup alla chiusura del componente
+    return () => {
+      if (es) es.close();
+      clearTimeout(reconnectTimeout);
+    };
   }, []);
 
   return (
@@ -41,13 +68,13 @@ export default function DisplayPage() {
         height: '100vh',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'space-between', // Distribuisce lo spazio tra header, numero e cubetti
+        justifyContent: 'space-between',
         alignItems: 'center',
         backgroundColor: '#000',
         userSelect: 'none',
         fontFamily: 'sans-serif',
         overflow: 'hidden',
-        padding: '1vh 0' // Un po' di margine sopra e sotto
+        padding: '1vh 0'
       }}
     >
       <style>{`
@@ -91,12 +118,12 @@ export default function DisplayPage() {
             </p>
           </div>
 
-          {/* NUMERO CENTRALE (Leggermente ridotto per far spazio sotto) */}
+          {/* NUMERO CENTRALE */}
           <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
             <p
               style={{
                 color: '#ff0000',
-                fontSize: 'clamp(8rem, 38vw, 30 rem)', 
+                fontSize: '37vw',
                 fontWeight: 900,
                 lineHeight: 1,
                 margin: 0,
@@ -132,13 +159,13 @@ export default function DisplayPage() {
                   flexDirection: 'column',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  flex: 1, // Fa sì che i cubetti occupino tutto lo spazio disponibile in larghezza
+                  flex: 1,
                   minWidth: 0
                 }}
               >
                 <span style={{ 
                   color: '#666', 
-                  fontSize: '1.5vw', // Testo dinamico che scala con la larghezza
+                  fontSize: '1.5vw', 
                   fontWeight: 800, 
                   whiteSpace: 'nowrap',
                   textTransform: 'uppercase'
@@ -147,7 +174,7 @@ export default function DisplayPage() {
                 </span>
                 <span style={{ 
                   color: '#fff', 
-                  fontSize: '5vw', // Numero grande che scala con il cubetto
+                  fontSize: '5vw', 
                   fontWeight: 900, 
                   fontFamily: 'monospace', 
                   lineHeight: 1 

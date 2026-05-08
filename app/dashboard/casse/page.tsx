@@ -54,13 +54,13 @@ export default function Page() {
 
     const handleButtonClickCaricaAsporto = async () => {
         const ultconto = await getContoPiuAlto();
-        if (ultconto) {
-            var uc = Number(ultconto);
-            if (uc < 8999)
-                uc = 9000
-            carica(uc + 1);
+        let uc = Number(ultconto);
+        if (isNaN(uc) || uc < 8999) {
+            uc = 9000;
         }
+        carica(uc + 1);
     };
+    
     const handleButtonClickCaricaConto1 = async () => {
         carica(1);
     };
@@ -135,19 +135,19 @@ export default function Page() {
                                 <ButtonGroup sx={{ display: { xs: 'none', md: 'block' } }}>
                                     <p><span className="text-blue-800 ">Ultimi ricercati &nbsp;</span>
                                         {lastLog.map((row) => (
-                                            <>
+                                            <span key={row.id}>
                                                 <Button size="medium" variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} style={{ borderRadius: '9999px' }}>{row.foglietto}</Button>
                                                 &nbsp;
-                                            </>
+                                            </span>
                                         ))}</p>
                                 </ButtonGroup>
                                 <ButtonGroup sx={{ display: { xs: 'block', md: 'none' } }}>
                                     <p><span className="text-blue-800 ">Ultimi  &nbsp;</span>
                                         {lastLog.map((row) => (
-                                            <>
+                                            <span key={row.id}>
                                                 <Button size="small"  variant="contained" onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} style={{ borderRadius: '9999px' }}>{row.foglietto}</Button>
                                                 &nbsp;
-                                            </>
+                                            </span>
                                         ))}</p>
                                 </ButtonGroup>
                             </div>
