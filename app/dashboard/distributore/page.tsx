@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { addTickets, getFirstFreeTicket, clearAllTickets } from '@/app/lib/actions'; 
+import { addTickets, getFirstFreeTicket, clearAllTickets } from '@/app/lib/actions';
 import CircularProgress from '@mui/material/CircularProgress';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { 
-    Box, Typography, Button, Stack, TextField, Paper, Dialog, 
+import {
+    Box, Typography, Button, Stack, TextField, Paper, Dialog,
     DialogActions, DialogContent, DialogTitle, useMediaQuery,
     DialogContentText
 } from '@mui/material';
@@ -35,13 +35,16 @@ export default function DistributorePage() {
     const config = useConfig();
 
     const [loading, setLoading] = useState(true);
+    const [isPrinting, setIsPrinting] = useState(false);
     const [prossimoTicket, setProssimoTicket] = useState<number | null>(null);
-    const [coperti, setCoperti] = useState<number | ''>(0); 
+    const [coperti, setCoperti] = useState<number | ''>(0);
     const [isEditing, setIsEditing] = useState(false);
-    const [mode, setMode] = useState<Mode>('AUTO'); 
+    const [mode, setMode] = useState<Mode>('AUTO');
     const [lastEntry, setLastEntry] = useState<{ numero: number, coperti: number } | null>(null);
     const [openResetDialog, setOpenResetDialog] = useState(false);
     const [confirmText, setConfirmText] = useState("");
+
+    const [openErrorTicket, setOpenErrorTicket] = useState(false);
 
 
     const fetchData = useCallback(async () => {
@@ -50,7 +53,7 @@ export default function DistributorePage() {
             setLoading(false);
             return;
         }
-        
+
         setLoading(true);
         try {
             const nextId = await getFirstFreeTicket();
@@ -66,65 +69,75 @@ export default function DistributorePage() {
         fetchData();
     }, [fetchData]);
 
+    
 const handleStampa = async () => {
     const numeroCopertiValido = Number(coperti);
     if (numeroCopertiValido <= 0 || prossimoTicket === null) return;
-                
-    setLoading(true); // <--- Blocca tutto qui
 
     try {
         const seduto = mode === 'LIBERA' ? 1 : 0;
-                     
-        // 1. Salva i dati nel database
-        await addTickets(prossimoTicket, numeroCopertiValido, seduto);
-                 
-        // 2. Invia il comando fisico alla stampante
-        if (mode !== 'LIBERA') {
-            try {
-                await fetch('/api/print', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        numeroTicket: prossimoTicket,
-                        coperti: numeroCopertiValido,
-                        ipAddress: config.stampante_wifi,
-                        titolo: config.titolo, 
-                        edizione: config.edizione,
-                        inizio: config.inizio, 
-                        fine: config.fine,
-                        mese: config.mese
-                    }),
-                });
-            } catch (err) {
-                console.error("Errore fisico stampante:", err);
-                // Non blocchiamo se fallisce la stampa, ma il loading finirà comunque dopo il timeout della fetch
-            }
+        
+        // 1. Salvataggio nel Database
+        const res = await addTickets(prossimoTicket, numeroCopertiValido, seduto);
+
+        if (res && (res as any).error) {
+            setOpenErrorTicket(true);
+            return;
         }
- 
-        // 3. Notifica il monitor
+
+        // 2. Notifica immediata via SSE
+        // Prepariamo i dati del ticket per la pagina Chiama
+        const nuovoTicket = { 
+            id: prossimoTicket, 
+            numpersone: numeroCopertiValido,
+            seduto: seduto 
+        };
+
+        await fetch('/api/next-client', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                type: 'NEW_TICKET', 
+                ticket: nuovoTicket // Passiamo l'oggetto completo
+            }),
+        });
+
+        // 3. Gestione Stampa (solo se NON è Libera)
         if (mode !== 'LIBERA') {
-            await fetch('/api/next-client', {
+            setIsPrinting(true);
+            await fetch('/api/print', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type: 'NEW_TICKET' }),
+                body: JSON.stringify({
+                    numeroTicket: prossimoTicket,
+                    coperti: numeroCopertiValido,
+                    ipAddress: config.stampante_wifi,
+                    titolo: config.titolo,
+
+                        edizione: config.edizione,
+                        inizio: config.inizio,
+                        fine: config.fine,
+                        mese: config.mese
+                }),
             });
         }
 
-        // Aggiornamento UI
+        // 4. Reset stato locale
         setLastEntry({ numero: prossimoTicket, coperti: numeroCopertiValido });
-        setCoperti(0); 
-        
+        setCoperti(0);
+
         if (mode === 'MANUALE') {
             setProssimoTicket(null);
         } else {
             await fetchData();
         }
     } catch (error) {
-        alert("Errore durante il salvataggio");
+        console.error("Errore durante il processo:", error);
     } finally {
-        setLoading(false); // <--- Sblocca solo alla fine di tutto il processo
+        setIsPrinting(false);
     }
 };
+    
 
     const onAdd = () => setCoperti(prev => (Number(prev) < 999 ? Number(prev) + 1 : 999));
     const onRemove = () => setCoperti(prev => (Number(prev) > 0 ? Number(prev) - 1 : 0));
@@ -139,6 +152,7 @@ const handleStampa = async () => {
                 setCoperti(0);
                 setOpenResetDialog(false);
                 setConfirmText("");
+                // NOTIFICA RESET TOTALE
                 await fetch('/api/next-client', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -152,6 +166,45 @@ const handleStampa = async () => {
             }
         }
     };
+
+    if (isPrinting) {
+        return (
+            <ThemeProvider theme={defaultTheme}>
+                <Box sx={{
+                    display: 'flex', flexDirection: 'column', height: '100vh',
+                    alignItems: 'center', justifyContent: 'center',
+                    position: 'fixed', top: 0, left: 0, width: '100vw',
+                    bgcolor: 'rgba(255, 255, 255, 0.9)', zIndex: 9999
+                }}>
+                    <CircularProgress size="6rem" />
+                    <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold' }}>Invio alla stampa in corso ...</Typography>
+                    <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}> Se annulli comunque il ticket risulterà regolarmente distribuito</Typography>
+
+                    <Button
+                        variant="contained"
+                        color="error"
+                        size="large"
+                        sx={{ mt: 4, borderRadius: '9999px', px: 4 }}
+                        onClick={async () => {
+                            // AGGIUNTO: Avvisa comunque la pagina Chiama prima di chiudere
+                            await fetch('/api/next-client', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ type: 'NEW_TICKET' }),
+                            });
+
+                            setIsPrinting(false);
+                            setLastEntry({ numero: prossimoTicket as number, coperti: Number(coperti) });
+                            setCoperti(0);
+                            await fetchData();
+                        }}
+                    >
+                        Annulla attesa e prosegui
+                    </Button>
+                </Box>
+            </ThemeProvider>
+        );
+    }
 
     if (loading && prossimoTicket === null && mode !== 'MANUALE') {
         return (
@@ -169,12 +222,10 @@ const handleStampa = async () => {
                 display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', 
                 height: '100%', width: '100%', bgcolor: 'background.default', p: 2, position: 'relative',
                 boxSizing: 'border-box', overflow: 'hidden',
-                // SE STA CARICANDO, BLOCCA I CLICK SU TUTTO IL CONTENITORE
                 pointerEvents: loading ? 'none' : 'auto',
                 opacity: loading ? 0.7 : 1
             }}>
 
-                {/* CONTROLLI LATERALI SINISTRA */}
                 <Box sx={{ 
                     position: 'flex', top: 16, left: 16, zIndex: 10, 
                     display: 'flex', gap: 1 
@@ -308,7 +359,6 @@ const handleStampa = async () => {
                     </Box>
                 </Box>
 
-                {/* DIALOG RESET */}
                 <Dialog 
                     open={openResetDialog} 
                     onClose={() => !loading && setOpenResetDialog(false)}
@@ -356,6 +406,30 @@ const handleStampa = async () => {
                             sx={{ fontWeight: 1000, borderRadius: '10px' }}
                         >
                             {loading ? 'AZZERAMENTO...' : 'AZZERA ORA'}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
+
+                <Dialog 
+                    open={openErrorTicket} 
+                    onClose={() => setOpenErrorTicket(false)}
+                    PaperProps={{ sx: { borderRadius: 4, p: 1, minWidth: '300px', border: '2px solid red' } }}
+                >
+                    <DialogTitle sx={{ color: 'error.main', fontWeight: 1000, textAlign: 'center' }}>
+                        TICKET ESISTENTE
+                    </DialogTitle>
+                    <DialogContent>
+                        <DialogContentText sx={{ fontWeight: 700, textAlign: 'center', color: '#333' }}>
+                            Non è possibile assegnare due volte lo stesso ticket.
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
+                        <Button 
+                            onClick={() => setOpenErrorTicket(false)} 
+                            variant="contained" color="error"
+                            sx={{ fontWeight: 'bold', borderRadius: '10px' }}
+                        >
+                            HO CAPITO
                         </Button>
                     </DialogActions>
                 </Dialog>

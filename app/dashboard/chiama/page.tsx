@@ -2,11 +2,11 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
-import { 
-    Box, Typography, Button, Snackbar, Alert, 
-    Table, TableBody, TableCell, TableContainer, 
+import {
+    Box, Typography, Button, Snackbar, Alert,
+    Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, Paper, IconButton,
-    TableSortLabel, Dialog, DialogTitle, DialogContent, 
+    TableSortLabel, Dialog, DialogTitle, DialogContent,
     DialogContentText, DialogActions,
     Stack,
     FormControlLabel,
@@ -14,9 +14,9 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import CampaignIcon from '@mui/icons-material/Campaign';
-import ChairIcon from '@mui/icons-material/Chair'; 
+import ChairIcon from '@mui/icons-material/Chair';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { getTickets, updateTickets, deleteTicket } from '@/app/lib/actions'; 
+import { getTickets, updateTickets, deleteTicket } from '@/app/lib/actions';
 
 const defaultTheme = createTheme({
     palette: {
@@ -37,7 +37,7 @@ export default function ChiamaPage() {
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
     const [selectedTicket, setSelectedTicket] = useState<any>(null);
     const [showActions, setShowActions] = useState(true);
-    
+
     const [order, setOrder] = useState<Order>('asc');
     const [orderBy, setOrderBy] = useState<'id' | 'numpersone'>('id');
     const [chiamatiMemory, setChiamatiMemory] = useState<Set<number>>(new Set());
@@ -46,19 +46,17 @@ export default function ChiamaPage() {
         open: false, message: '', severity: 'success',
     });
 
-    // Funzione di caricamento dati
     const fetchDati = async () => {
         try {
             const tickets = await getTickets('non-seduti');
             if (tickets) setLista(tickets);
-        } catch (error) { 
-            console.error("Errore nel caricamento tickets:", error); 
+        } catch (error) {
+            console.error("Errore nel caricamento tickets:", error);
         }
     };
 
-    // --- LOGICA DI CONNESSIONE ROBUSTA ---
     useEffect(() => {
-        fetchDati(); // Caricamento iniziale
+        fetchDati();
 
         let es: EventSource | null = null;
         let reconnectTimeout: NodeJS.Timeout;
@@ -70,14 +68,24 @@ export default function ChiamaPage() {
             es.onmessage = (event) => {
                 try {
                     const payload = JSON.parse(event.data);
-                    
-                    // Se un altro client ha modificato la tabella, aggiorniamo
+
+                    if (payload.type === 'NEW_TICKET') {
+                        // 1. Aggiunta immediata allo stato locale (UI istantanea)
+                        if (payload.ticket) {
+                            setLista(prev => {
+                                // Evitiamo duplicati se fetchDati e SSE si sovrappongono
+                                if (prev.find(t => t.id === payload.ticket.id)) return prev;
+                                return [...prev, payload.ticket];
+                            });
+                        }
+                        // 2. Refresh di sicurezza dal server (per sicurezza di ordinamento/dati)
+                        fetchDati();
+                    }
+
                     if (payload.type === 'REFRESH_TABLE') fetchDati();
-                    
-                    // Se un altro client ha chiamato un numero, aggiorniamo l'header
                     if (payload.type === 'CALL_NUMBER') setNumeroAttuale(payload.numero);
                 } catch (err) {
-                    console.error("Errore parsing SSE in ChiamaPage:", err);
+                    console.error("Errore parsing SSE:", err);
                 }
             };
 
@@ -117,10 +125,11 @@ export default function ChiamaPage() {
             setChiamatiMemory(prev => new Set(prev).add(ticket.id));
             setNumeroAttuale(ticket.id);
 
+            // AGGIORNATO: Invia esplicitamente il segnale 'CALL_NUMBER'
             await fetch('/api/next-client', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ numero: ticket.id }),
+                body: JSON.stringify({ type: 'CALL_NUMBER', numero: ticket.id }),
             });
         } catch (error) { 
             console.error(error); 
@@ -132,6 +141,7 @@ export default function ChiamaPage() {
             setLista(prev => prev.filter(t => t.id !== ticket.id));
 
             await updateTickets({ ...ticket, seduto: 1 });
+            // Notifica la rimozione per aggiornare la cronologia sul Display
             await fetch('/api/next-client', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

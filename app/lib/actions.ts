@@ -325,11 +325,26 @@ export async function clearAllTickets() {
 }
 
 export async function addTickets(id: number, numero_persone: number, seduto: number) {
-  console.log("Add tickets")
-  return await executeQuery(`INSERT INTO tickets (id,numpersone,seduto)
-  VALUES (${id},${numero_persone},${seduto})
-  ON CONFLICT (id) DO NOTHING;
-  `);
+  console.log("Add tickets", id);
+  
+  // 1. Eseguiamo la query senza ON CONFLICT per permettere al database di segnalare il duplicato
+  // 2. Usiamo un blocco try/catch per gestire l'errore del database
+  try {
+    const result = await executeQuery(`
+      INSERT INTO tickets (id, numpersone, seduto)
+      VALUES (${id}, ${numero_persone}, ${seduto});
+    `);
+    
+    // Se la query va a buon fine, restituiamo un successo
+    return { success: true };
+    
+  } catch (error: any) {
+    // Se l'errore è dovuto a una chiave duplicata (codice 23505 in Postgres)
+    console.error("Errore inserimento ticket:", error.message);
+    
+    // Restituiamo un oggetto errore che il frontend può leggere
+    return { error: 'DUPLICATE_ID', message: error.message };
+  }
 }
  
 

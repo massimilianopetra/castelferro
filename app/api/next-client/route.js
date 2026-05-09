@@ -8,26 +8,27 @@ let history = [];
 export async function POST(request) {
     const body = await request.json();
 
-    if (body.type === 'NEW_TICKET') {
-        // Notifica alle tabelle (pagina Chiama) che c'è un nuovo ticket da caricare
-        const message = `data: ${JSON.stringify({ type: 'REFRESH_TABLE' })}\n\n`;
-        clients.forEach(c => c.enqueue(new TextEncoder().encode(message)));
-    } 
-    else if (body.type === 'REFRESH_TABLE') {
-        // AZZERAMENTO TOTALE: Svuotiamo la cronologia e resettiamo il display
-        history = []; 
-        
+if (body.type === 'NEW_TICKET') {
+        // AGGIORNAMENTO: Inviamo anche i dati del ticket appena creato
         const message = `data: ${JSON.stringify({ 
-            type: 'UPDATE_HISTORY', 
+            type: 'NEW_TICKET', 
+            ticket: body.ticket // Il distributore dovrà passarci l'oggetto ticket
+        })}\n\n`;
+        clients.forEach(c => c.enqueue(new TextEncoder().encode(message)));
+    }
+    else if (body.type === 'REFRESH_TABLE') {
+        // Reset totale: svuota cronologia e pulisce il display
+        history = []; 
+        const message = `data: ${JSON.stringify({ 
+            type: 'REFRESH_TABLE', 
             history: [], 
-            numero: 0 
+            numero: null 
         })}\n\n`;
         clients.forEach(c => c.enqueue(new TextEncoder().encode(message)));
     }
     else if (body.type === 'SET_SITTING') {
-        // RIMUPZIONE SINGOLO: Quando un numero si siede o viene cancellato dalla lista
+        // Quando un numero si siede, aggiorniamo la cronologia sul display
         history = history.filter(n => n !== body.numero);
-        
         const message = `data: ${JSON.stringify({ 
             type: 'UPDATE_HISTORY', 
             history: history.slice(1, 6) 
@@ -35,21 +36,23 @@ export async function POST(request) {
         clients.forEach(c => c.enqueue(new TextEncoder().encode(message)));
     }
     else {
-        // LOGICA CHIAMA (body.numero contiene il numero chiamato)
-        broadcastNextClient(body.numero);
-        
-        if (history[0] !== body.numero) {
-            history = [body.numero, ...history.filter(n => n !== body.numero)];
-            history = history.slice(0, 15); 
-        }
+        // LOGICA CHIAMA: numero chiamato inviato al display
+        if (body.numero) {
+            broadcastNextClient(body.numero);
+            
+            if (history[0] !== body.numero) {
+                history = [body.numero, ...history.filter(n => n !== body.numero)];
+                history = history.slice(0, 15); 
+            }
 
-        const message = `data: ${JSON.stringify({ 
-            type: 'CALL_NUMBER', 
-            numero: body.numero,
-            history: history.slice(1, 6) 
-        })}\n\n`;
-        
-        clients.forEach(c => c.enqueue(new TextEncoder().encode(message)));
+            const message = `data: ${JSON.stringify({ 
+                type: 'CALL_NUMBER', 
+                numero: body.numero,
+                history: history 
+            })}\n\n`;
+            
+            clients.forEach(c => c.enqueue(new TextEncoder().encode(message)));
+        }
     }
 
     return Response.json({ success: true });
@@ -58,30 +61,23 @@ export async function POST(request) {
 export async function GET(request) {
     const stream = new ReadableStream({
         start(controller) {
-            // Aggiungiamo il client alla lista
             clients.push(controller);
             
-            // Invio dello stato iniziale (se c'è già un numero chiamato)
+            // Stato iniziale per chi si connette
             const initMsg = `data: ${JSON.stringify({ 
-                type: 'UPDATE_HISTORY', 
-                history: history.slice(1, 6),
-                numero: history[0] || 0
+                type: 'CALL_NUMBER', 
+                history: history,
+                numero: history[0] || null
             })}\n\n`;
             controller.enqueue(new TextEncoder().encode(initMsg));
 
-            // --- INIZIO LOGICA KEEP-ALIVE ---
-            // Invia un commento SSE (inizia con ':') ogni 15 secondi per mantenere la connessione viva
             const keepAlive = setInterval(() => {
                 try {
                     controller.enqueue(new TextEncoder().encode(': keep-alive\n\n'));
-                } catch (err) {
-                    // Se il controller è chiuso, l'intervallo verrà pulito dall'onabort
-                }
+                } catch (err) {}
             }, 15000);
-            // --- FINE LOGICA KEEP-ALIVE ---
 
             request.signal.onabort = () => {
-                // Fermiamo l'intervallo e rimuoviamo il client quando si disconnette
                 clearInterval(keepAlive);
                 clients = clients.filter(c => c !== controller);
             };

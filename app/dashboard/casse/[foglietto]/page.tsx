@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import {
   Button, ButtonGroup, Link, Snackbar, TextField,
-  Dialog, DialogTitle, DialogContent, DialogActions,CircularProgress,
+  Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress,
   Box,
   Typography
 } from '@mui/material';
@@ -45,8 +45,12 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   const [lastLog, setLastLog] = useState<DbLog[]>([]);
   const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
   const [isNewConto, setIsNewConto] = useState(false);
-const [isPrinting, setIsPrinting] = useState(false);
+  const [isPrinting, setIsPrinting] = useState(false);
   const [openDialogQty, setOpenDialogQty] = useState(false);
+  
+  // STATO PER IL DIALOG DI CONFERMA NUOVO CONTO
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+
   const [tempQty, setTempQty] = useState('');
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
   const [selectedProductName, setSelectedProductName] = useState('');
@@ -68,16 +72,17 @@ const [isPrinting, setIsPrinting] = useState(false);
           return;
         }
 
+        const cc = await getConto(num, gg.giornata);
+        setConto(cc);
+        setNumeroFoglietto(num.toString());
+
+        // Carica i prodotti (vuoti o esistenti)
         const c = await getConsumazioniCassa(num, gg.giornata);
         if (c) {
           setProducts(c);
           setIniProducts(c);
           setCopertiPass(c.find((o) => o.id_piatto === 1)?.quantita || 0);
         }
-
-        const cc = await getConto(num, gg.giornata);
-        setConto(cc);
-        setNumeroFoglietto(num.toString());
 
         if (cc?.stato == 'APERTO' || cc?.stato == 'STAMPATO') {
           setIsNewConto(false);
@@ -89,15 +94,27 @@ const [isPrinting, setIsPrinting] = useState(false);
           setIsNewConto(false);
           setPhase('chiuso');
         } else {
-          // Se il conto non esiste, NON chiamiamo apriConto qui.
-          // Lo teniamo solo in memoria locale
+          // SE IL CONTO NON ESISTE: MOSTRA IL DIALOG DI CONFERMA
           setIsNewConto(true);
-          setPhase('aperto');
+          setOpenConfirmDialog(true);
+          // Non impostiamo la phase 'aperto' finché non conferma
         }
       }
     };
     fetchData();
   }, [params.foglietto]);
+
+  // Azione se l'utente accetta di aprire il nuovo conto
+  const handleConfirmNewConto = () => {
+    setOpenConfirmDialog(false);
+    setPhase('aperto');
+  };
+
+  // Azione se l'utente annulla: torna alla home delle casse
+  const handleCancelNewConto = () => {
+    setOpenConfirmDialog(false);
+    router.push('/dashboard/casse'); // O il path della tua pagina iniziale casse
+  };
 
   const handleOpenSetQty = (id: number) => {
     const p = products.find(i => i.id_piatto === id);
@@ -145,7 +162,6 @@ const [isPrinting, setIsPrinting] = useState(false);
 
   const handleButtonClickCaricaConto1 = () => carica(1);
 
-  // LOGICA DI SALVATAGGIO INTEGRATA
   const checkAndSaveToDb = async () => {
     const haPortate = products.some(p => p.quantita > 0);
     if (!haPortate) {
@@ -180,7 +196,6 @@ const [isPrinting, setIsPrinting] = useState(false);
         await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'UPDATE', msg);
       }
     }
-    // Rinfresco il conto locale per avere i dati corretti (es. data apertura)
     const newCc = await getConto(Number(numeroFoglietto), sagra.giornata);
     setConto(newCc);
     setPhase('aperto');
@@ -192,7 +207,7 @@ const [isPrinting, setIsPrinting] = useState(false);
 
     setPhase('elaborazione');
     const totale = products.reduce((acc, i) => acc + (i.quantita * i.prezzo_unitario), 0);
-    await sendConsumazioni(products); // Assicuriamoci che i prodotti siano salvati
+    await sendConsumazioni(products); 
     await aggiornaConto(Number(numeroFoglietto), sagra.giornata, totale);
     await stampaConto(Number(numeroFoglietto), sagra.giornata);
     await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'PRINT', 'Stampa conto');
@@ -217,11 +232,10 @@ const [isPrinting, setIsPrinting] = useState(false);
 
   const handleFinalizzaChiusura = async (tipo: number, nota = '', importo = '', skipPrintWait = false) => {
     setPhase('elaborazione');
-    setIsPrinting(true); // Attiva il loader a schermo intero
+    setIsPrinting(true);
 
     const logMsg = tipo === 1 ? 'Pagato contanti' : tipo === 2 ? 'Pagato POS' : 'Altro Importo';
 
-    // Eseguiamo prima le operazioni sul DB
     await chiudiConto(Number(numeroFoglietto), sagra.giornata, tipo, nota, importo);
     await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', logMsg);
 
@@ -229,12 +243,10 @@ const [isPrinting, setIsPrinting] = useState(false);
     setConto(cc);
 
     if (skipPrintWait) {
-      // Se l'utente clicca "Annulla attesa", lanciamo la stampa "fire and forget"
       inviaStampaPass();
       setIsPrinting(false);
       setPhase('chiuso');
     } else {
-      // Altrimenti attendiamo la risposta della stampante
       await inviaStampaPass();
       setIsPrinting(false);
       setPhase('chiuso');
@@ -340,39 +352,21 @@ const [isPrinting, setIsPrinting] = useState(false);
   if (isPrinting) {
     return (
       <Box sx={{ 
-        display: 'flex', 
-        flexDirection: 'column', 
-        height: '100vh', 
-        width: '100vw', // Assicura che copra tutta la larghezza
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        bgcolor: 'rgba(255,255,255,0.9)', // Sfondo semitrasparente
-        position: 'fixed', 
-        top: 0, 
-        left: 0, 
-        zIndex: 9999 
+        display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', 
+        alignItems: 'center', justifyContent: 'center', bgcolor: 'rgba(255,255,255,0.9)', 
+        position: 'fixed', top: 0, left: 0, zIndex: 9999 
       }}>
         <CircularProgress size="6rem" />
         <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold' }}>Invio alla stampa in corso ...</Typography>
-        <Typography variant="body1" sx={{ color: 'text.secondary', mt: 1 }}> Annulla invio a stampante e vai avanti (il conto sarà regolarmente chiuso)</Typography>
-
-        <Button 
-          variant="contained" 
-          color="error" 
-          size="large"
-          sx={{ mt: 4, borderRadius: '9999px', px: 4 }}
-          onClick={() => {
-              setIsPrinting(false);
-              setPhase('chiuso');
-          }}
-        >
+        <Button variant="contained" color="error" size="large" sx={{ mt: 4, borderRadius: '9999px', px: 4 }}
+          onClick={() => { setIsPrinting(false); setPhase('chiuso'); }}>
           Annulla attesa e prosegui
         </Button>
       </Box>
     );
   }
+
   return (
-    
     <main>
       {(() => {
         switch (phase) {
@@ -479,26 +473,41 @@ const [isPrinting, setIsPrinting] = useState(false);
                 </footer>
               </div>
             );
-          default: return null;
+          default: return (
+             <div className="container">
+                <header className="top-section"><div className="sez-sx"><HeaderCasse /><UltimiRicercati /></div><BottoniServizio /></header>
+                <div className="text-center p-10"><CircularProgress /></div>
+             </div>
+          );
         }
       })()}
+
+      {/* DIALOG DI CONFERMA NUOVO CONTO */}
+      <Dialog open={openConfirmDialog} onClose={handleCancelNewConto}>
+        <DialogTitle sx={{ fontWeight: 'bold', color: '#1e3a8a' }}>Apertura Nuovo Conto</DialogTitle>
+        <DialogContent>
+          <Typography variant="h6">
+            Vuoi davvero aprire il conto <b>{numeroFoglietto}</b>?
+          </Typography>
+          <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary' }}>
+            Il foglietto non risulta registrato per la giornata odierna.
+          </Typography>
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button onClick={handleCancelNewConto} variant="outlined" color="error" sx={{ borderRadius: '9999px' }}>
+            No, annulla
+          </Button>
+          <Button onClick={handleConfirmNewConto} variant="contained" color="primary" sx={{ borderRadius: '9999px' }}>
+            Sì, apri conto
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Dialog open={openDialogQty} onClose={() => setOpenDialogQty(false)}>
         <DialogTitle>Modifica Quantità: {selectedProductName}</DialogTitle>
         <DialogContent>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Inserisci quantità"
-            type="number"
-            fullWidth
-            variant="standard"
-            value={tempQty}
-            onChange={(e) => setTempQty(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleConfirmQty();
-            }}
-          />
+          <TextField autoFocus margin="dense" label="Inserisci quantità" type="number" fullWidth variant="standard" value={tempQty}
+            onChange={(e) => setTempQty(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleConfirmQty(); }} />
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenDialogQty(false)}>Annulla</Button>
@@ -506,12 +515,7 @@ const [isPrinting, setIsPrinting] = useState(false);
         </DialogActions>
       </Dialog>
 
-      <Snackbar
-        open={openSnackbar}
-        autoHideDuration={6000}
-        onClose={() => setOpenSnackbar(false)}
-        message={snackbarMessage}
-      />
+      <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={() => setOpenSnackbar(false)} message={snackbarMessage} />
     </main>
   );
 }
