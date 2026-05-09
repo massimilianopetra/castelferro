@@ -69,17 +69,16 @@ export default function DistributorePage() {
 const handleStampa = async () => {
     const numeroCopertiValido = Number(coperti);
     if (numeroCopertiValido <= 0 || prossimoTicket === null) return;
-               
-    setLoading(true);
+                
+    setLoading(true); // <--- Blocca tutto qui
 
     try {
         const seduto = mode === 'LIBERA' ? 1 : 0;
                      
-        // 1. Salva i dati nel database (logica esistente)
+        // 1. Salva i dati nel database
         await addTickets(prossimoTicket, numeroCopertiValido, seduto);
                  
-        // 2. Invia il comando fisico alla stampante (NUOVA LOGICA)
-        // Solo se non siamo in modalità LIBERA (o se vuoi stampare anche lì)
+        // 2. Invia il comando fisico alla stampante
         if (mode !== 'LIBERA') {
             try {
                 await fetch('/api/print', {
@@ -88,7 +87,7 @@ const handleStampa = async () => {
                     body: JSON.stringify({
                         numeroTicket: prossimoTicket,
                         coperti: numeroCopertiValido,
-                        ipAddress: config.stampante_wifi, // <--- Inserisci qui l'IP della tua stampante
+                        ipAddress: config.stampante_wifi,
                         titolo: config.titolo, 
                         edizione: config.edizione,
                         inizio: config.inizio, 
@@ -97,20 +96,18 @@ const handleStampa = async () => {
                     }),
                 });
             } catch (err) {
-                   
                 console.error("Errore fisico stampante:", err);
-                // Non blocchiamo l'app se la stampante è offline
+                // Non blocchiamo se fallisce la stampa, ma il loading finirà comunque dopo il timeout della fetch
             }
         }
  
-        // 3. Notifica il monitor (logica esistente)
+        // 3. Notifica il monitor
         if (mode !== 'LIBERA') {
             await fetch('/api/next-client', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ type: 'NEW_TICKET' }),
             });
-           
         }
 
         // Aggiornamento UI
@@ -125,7 +122,7 @@ const handleStampa = async () => {
     } catch (error) {
         alert("Errore durante il salvataggio");
     } finally {
-        setLoading(false);
+        setLoading(false); // <--- Sblocca solo alla fine di tutto il processo
     }
 };
 
@@ -171,7 +168,10 @@ const handleStampa = async () => {
             <Box sx={{ 
                 display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', 
                 height: '100%', width: '100%', bgcolor: 'background.default', p: 2, position: 'relative',
-                boxSizing: 'border-box', overflow: 'hidden' 
+                boxSizing: 'border-box', overflow: 'hidden',
+                // SE STA CARICANDO, BLOCCA I CLICK SU TUTTO IL CONTENITORE
+                pointerEvents: loading ? 'none' : 'auto',
+                opacity: loading ? 0.7 : 1
             }}>
 
                 {/* CONTROLLI LATERALI SINISTRA */}
@@ -181,6 +181,7 @@ const handleStampa = async () => {
                 }}>
                     <Button 
                         variant="outlined" color="error" size="small" 
+                        disabled={loading}
                         onClick={() => setOpenResetDialog(true)} 
                         startIcon={<DeleteForeverIcon />} 
                         sx={{ fontWeight: 'bold', bgcolor: 'white', borderRadius: '10px', mb: 2 }}
@@ -191,8 +192,9 @@ const handleStampa = async () => {
                     <Button 
                         variant={mode === 'AUTO' ? "contained" : "outlined"} 
                         color="primary" size="small" 
+                        disabled={loading}
                         onClick={() => setMode('AUTO')}
-                        sx={{ fontWeight: 'bold', bgcolor: mode === 'AUTO' ? 'primary.main' : 'white', borderRadius: '10px', fontSize: '0.7rem', mb: 2  }}
+                        sx={{ fontWeight: 'bold', bgcolor: mode === 'AUTO' ? 'primary.main' : 'white', borderRadius: '10px', fontSize: '0.7rem', mb: 2 }}
                     >
                         AUTO
                     </Button>
@@ -200,8 +202,9 @@ const handleStampa = async () => {
                     <Button 
                         variant={mode === 'MANUALE' ? "contained" : "outlined"} 
                         color="warning" size="small" 
+                        disabled={loading}
                         onClick={() => setMode('MANUALE')}
-                        sx={{ fontWeight: 'bold', bgcolor: mode === 'MANUALE' ? 'warning.main' : 'white', borderRadius: '10px', fontSize: '0.7rem', mb: 2  }}
+                        sx={{ fontWeight: 'bold', bgcolor: mode === 'MANUALE' ? 'warning.main' : 'white', borderRadius: '10px', fontSize: '0.7rem', mb: 2 }}
                     >
                         MANUALE
                     </Button>
@@ -209,12 +212,12 @@ const handleStampa = async () => {
                     <Button 
                         variant={mode === 'LIBERA' ? "contained" : "outlined"} 
                         color="success" size="small" 
+                        disabled={loading}
                         onClick={() => setMode('LIBERA')}
-                        sx={{ fontWeight: 'bold', bgcolor: mode === 'LIBERA' ? 'success.main' : 'white', borderRadius: '10px', fontSize: '0.7rem', mb: 2  }}
+                        sx={{ fontWeight: 'bold', bgcolor: mode === 'LIBERA' ? 'success.main' : 'white', borderRadius: '10px', fontSize: '0.7rem', mb: 2 }}
                     >
                         LIBERA
                     </Button>
-                   
                 </Box>
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '600px', gap: { xs: 1, sm: 2 }, flexGrow: 1, justifyContent: 'center' }}>
@@ -227,6 +230,7 @@ const handleStampa = async () => {
                         {mode === 'MANUALE' ? (
                              <TextField
                                 type="number"
+                                disabled={loading}
                                 value={prossimoTicket === null ? '' : prossimoTicket}
                                 onChange={(e) => setProssimoTicket(e.target.value === '' ? null : Number(e.target.value))}
                                 variant="standard"
@@ -240,7 +244,6 @@ const handleStampa = async () => {
                                 }}
                             />
                         ) : (
-                            /* QUI RISOLTO: Se non è MANUALE, controlla solo se è LIBERA, altrimenti è AUTO (primary) */
                             <Typography sx={{ 
                                 fontWeight: 1000, 
                                 color: mode === 'LIBERA' ? 'success.main' : 'primary.main', 
@@ -251,7 +254,6 @@ const handleStampa = async () => {
                         )}
                     </Box>
 
-                    {/* RESTO DEL CODICE INVARIATO... */}
                     <Box sx={{ minHeight: '40px', display: 'flex', alignItems: 'center' }}>
                         {lastEntry && (
                             <Paper variant="outlined" sx={{ px: 2, py: 0.5, bgcolor: '#fff', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: 1.5 }}>
@@ -263,10 +265,11 @@ const handleStampa = async () => {
                         )}
                     </Box>
 
-                    <Box onClick={() => setIsEditing(true)} sx={{ textAlign: 'center', cursor: 'pointer', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    <Box onClick={() => !loading && setIsEditing(true)} sx={{ textAlign: 'center', cursor: loading ? 'default' : 'pointer', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                         {isEditing ? (
                             <TextField
                                 type="number" autoFocus variant="standard" InputProps={{ disableUnderline: true }}
+                                disabled={loading}
                                 value={coperti === 0 ? '' : coperti}
                                 onChange={(e) => setCoperti(e.target.value === '' ? 0 : Number(e.target.value))}
                                 onBlur={() => setIsEditing(false)}
@@ -279,15 +282,16 @@ const handleStampa = async () => {
                         )}
                         <Typography sx={{ color: '#555', fontWeight: 1000, fontSize: '1.4rem', mt: 1 }}>COPERTI</Typography>
                     </Box>
-                  <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 1 }}>
+
+                    <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 1 }}>
                         <Stack direction="row" spacing={2} justifyContent="center" sx={{ width: '100%', px: 2, mb: { xs: 2, sm: 3 } }}>
-                            <Button variant="contained" disabled={Number(coperti) <= 0} onClick={onRemove} sx={{ width: '30%', height: { xs: '70px', sm: '90px' }, borderRadius: '20px' }}>
+                            <Button variant="contained" disabled={loading || Number(coperti) <= 0} onClick={onRemove} sx={{ width: '30%', height: { xs: '70px', sm: '90px' }, borderRadius: '20px' }}>
                                 <RemoveCircleSharpIcon sx={{ fontSize: 40 }} />
                             </Button>
-                            <Button variant="contained" onClick={onAdd} sx={{ width: '30%', height: { xs: '70px', sm: '90px' }, borderRadius: '20px' }}>
+                            <Button variant="contained" disabled={loading} onClick={onAdd} sx={{ width: '30%', height: { xs: '70px', sm: '90px' }, borderRadius: '20px' }}>
                                 <AddCircleIcon sx={{ fontSize: 40 }} />
                             </Button>
-                            <Button variant="contained" onClick={onAdd10} sx={{ width: '30%', height: { xs: '70px', sm: '90px' }, borderRadius: '20px' }}>
+                            <Button variant="contained" disabled={loading} onClick={onAdd10} sx={{ width: '30%', height: { xs: '70px', sm: '90px' }, borderRadius: '20px' }}>
                                 <Typography sx={{ fontWeight: 1000, fontSize: '1.5rem' }}>+10</Typography>
                             </Button>
                         </Stack>
@@ -295,66 +299,67 @@ const handleStampa = async () => {
                         <Button
                             onClick={handleStampa} variant="contained" 
                             color={mode === 'LIBERA' ? "success" : "secondary"} 
-                            disabled={Number(coperti) <= 0 || prossimoTicket === null}
-                            startIcon={<PrintIcon sx={{ fontSize: { xs: 30, sm: 45 } }} />}
+                            disabled={loading || Number(coperti) <= 0 || prossimoTicket === null}
+                            startIcon={loading ? <CircularProgress size={24} color="inherit" /> : <PrintIcon sx={{ fontSize: { xs: 30, sm: 45 } }} />}
                             sx={{ width: '92%', py: 2, fontSize: { xs: '1.5rem', sm: '2.2rem' }, fontWeight: 1000, borderRadius: '40px' }}
                         >
-                            {mode === 'LIBERA' ? 'ENTRA' : 'STAMPA'}
+                            {loading ? 'STAMPA IN CORSO...' : (mode === 'LIBERA' ? 'ENTRA' : 'STAMPA')}
                         </Button>
                     </Box>
                 </Box>
 
-        {/* DIALOG RESET - (Invariato per logica, migliorato spacing) */}
-        <Dialog 
-            open={openResetDialog} 
-            onClose={() => setOpenResetDialog(false)}
-            PaperProps={{
-                sx: {
-                    borderRadius: 4,
-                    borderLeft: '10px solid #9c27b0',
-                    p: 1,
-                    minWidth: { xs: '90%', sm: '400px' },
-                }
-            }}
-        >
-            <DialogTitle sx={{ color: 'error.main', fontWeight: 1000, fontSize: '1.4rem', textAlign: 'center' }}>
-                AZZERARE TICKETS?
-            </DialogTitle>
-            <DialogContent>
-                <DialogContentText sx={{ fontWeight: 700, color: '#444', mb: 2, textAlign: 'center' }}>
-                    Operazione irreversibile. Svuota la tabella e azzera il contatore.
-                    <br /><br />
-                    Digita <span style={{ color: '#9c27b0' }}>CONFERMA</span> per continuare.
-                </DialogContentText>
-                <TextField
-                    autoFocus
-                    fullWidth
-                    variant="outlined"
-                    placeholder="CONFERMA"
-                    value={confirmText}
-                    onChange={(e) => setConfirmText(e.target.value.toUpperCase())}
-                    sx={{ 
-                        '& .MuiOutlinedInput-root': { borderRadius: '15px', bgcolor: '#f9f9f9' },
-                        input: { fontWeight: 'bold', textAlign: 'center', fontSize: '1.1rem' }
+                {/* DIALOG RESET */}
+                <Dialog 
+                    open={openResetDialog} 
+                    onClose={() => !loading && setOpenResetDialog(false)}
+                    PaperProps={{
+                        sx: {
+                            borderRadius: 4,
+                            borderLeft: '10px solid #9c27b0',
+                            p: 1,
+                            minWidth: { xs: '90%', sm: '400px' },
+                        }
                     }}
-                />
-            </DialogContent>
-            <DialogActions sx={{ justifyContent: 'center', gap: 2, pb: 2 }}>
-                <Button onClick={() => { setOpenResetDialog(false); setConfirmText(""); }}>
-                    ANNULLA
-                </Button>
-                <Button 
-                    onClick={handleResetTotale} 
-                    color="error" 
-                    variant="contained" 
-                    disabled={confirmText !== "CONFERMA"}
-                    sx={{ fontWeight: 1000, borderRadius: '10px' }}
                 >
-                    AZZERA ORA
-                </Button>
-            </DialogActions>
-        </Dialog>
+                    <DialogTitle sx={{ color: 'error.main', fontWeight: 1000, fontSize: '1.4rem', textAlign: 'center' }}>
+                        AZZERARE TICKETS?
+                    </DialogTitle>
+                    <DialogContent>
+                        <DialogContentText sx={{ fontWeight: 700, color: '#444', mb: 2, textAlign: 'center' }}>
+                            Operazione irreversibile. Svuota la tabella e azzera il contatore.
+                            <br /><br />
+                            Digita <span style={{ color: '#9c27b0' }}>CONFERMA</span> per continuare.
+                        </DialogContentText>
+                        <TextField
+                            autoFocus
+                            fullWidth
+                            disabled={loading}
+                            variant="outlined"
+                            placeholder="CONFERMA"
+                            value={confirmText}
+                            onChange={(e) => setConfirmText(e.target.value.toUpperCase())}
+                            sx={{ 
+                                '& .MuiOutlinedInput-root': { borderRadius: '15px', bgcolor: '#f9f9f9' },
+                                input: { fontWeight: 'bold', textAlign: 'center', fontSize: '1.1rem' }
+                            }}
+                        />
+                    </DialogContent>
+                    <DialogActions sx={{ justifyContent: 'center', gap: 2, pb: 2 }}>
+                        <Button disabled={loading} onClick={() => { setOpenResetDialog(false); setConfirmText(""); }}>
+                            ANNULLA
+                        </Button>
+                        <Button 
+                            onClick={handleResetTotale} 
+                            color="error" 
+                            variant="contained" 
+                            disabled={loading || confirmText !== "CONFERMA"}
+                            sx={{ fontWeight: 1000, borderRadius: '10px' }}
+                        >
+                            {loading ? 'AZZERAMENTO...' : 'AZZERA ORA'}
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </Box>
         </ThemeProvider>
     );
-} //Bruno
+}
