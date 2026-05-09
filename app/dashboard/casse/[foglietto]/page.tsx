@@ -5,7 +5,9 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import {
   Button, ButtonGroup, Link, Snackbar, TextField,
-  Dialog, DialogTitle, DialogContent, DialogActions
+  Dialog, DialogTitle, DialogContent, DialogActions,CircularProgress,
+  Box,
+  Typography
 } from '@mui/material';
 import Filter1Icon from '@mui/icons-material/Filter1';
 import * as React from 'react';
@@ -43,7 +45,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   const [lastLog, setLastLog] = useState<DbLog[]>([]);
   const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
   const [isNewConto, setIsNewConto] = useState(false);
-
+const [isPrinting, setIsPrinting] = useState(false);
   const [openDialogQty, setOpenDialogQty] = useState(false);
   const [tempQty, setTempQty] = useState('');
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
@@ -213,15 +215,30 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     }
   };
 
-  const handleFinalizzaChiusura = async (tipo: number, nota = '', importo = '') => {
+  const handleFinalizzaChiusura = async (tipo: number, nota = '', importo = '', skipPrintWait = false) => {
     setPhase('elaborazione');
+    setIsPrinting(true); // Attiva il loader a schermo intero
+
     const logMsg = tipo === 1 ? 'Pagato contanti' : tipo === 2 ? 'Pagato POS' : 'Altro Importo';
+
+    // Eseguiamo prima le operazioni sul DB
     await chiudiConto(Number(numeroFoglietto), sagra.giornata, tipo, nota, importo);
-    const cc = await getConto(Number(numeroFoglietto), sagra.giornata);
     await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', logMsg);
-    await inviaStampaPass();
+
+    const cc = await getConto(Number(numeroFoglietto), sagra.giornata);
     setConto(cc);
-    setPhase('chiuso');
+
+    if (skipPrintWait) {
+      // Se l'utente clicca "Annulla attesa", lanciamo la stampa "fire and forget"
+      inviaStampaPass();
+      setIsPrinting(false);
+      setPhase('chiuso');
+    } else {
+      // Altrimenti attendiamo la risposta della stampante
+      await inviaStampaPass();
+      setIsPrinting(false);
+      setPhase('chiuso');
+    }
   };
 
   const inviaStampaPass = async () => {
@@ -319,8 +336,43 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       </div></main>
     );
   }
+ 
+  if (isPrinting) {
+    return (
+      <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        height: '100vh', 
+        width: '100vw', // Assicura che copra tutta la larghezza
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        bgcolor: 'rgba(255,255,255,0.9)', // Sfondo semitrasparente
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        zIndex: 9999 
+      }}>
+        <CircularProgress size="6rem" />
+        <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold' }}>Invio alla stampa in corso ...</Typography>
+        <Typography variant="body1" sx={{ color: 'text.secondary', mt: 1 }}> Annulla invio a stampante e vai avanti (il conto sarà regolarmente chiuso)</Typography>
 
+        <Button 
+          variant="contained" 
+          color="error" 
+          size="large"
+          sx={{ mt: 4, borderRadius: '9999px', px: 4 }}
+          onClick={() => {
+              setIsPrinting(false);
+              setPhase('chiuso');
+          }}
+        >
+          Annulla attesa e prosegui
+        </Button>
+      </Box>
+    );
+  }
   return (
+    
     <main>
       {(() => {
         switch (phase) {

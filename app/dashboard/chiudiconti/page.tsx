@@ -55,6 +55,9 @@ export default function Page() {
     const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
     const { data: session } = useSession();
 
+    // Stati per la gestione caricamento stampa
+    const [isPrinting, setIsPrinting] = useState(false);
+
     // Stati per la Dialog "Altro Importo"
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedRow, setSelectedRow] = useState<any>(null);
@@ -112,12 +115,8 @@ export default function Page() {
     };
 
     const handleFinalizzaChiusura = async (tipo: number, row: any, nota = '', importoStr = '') => {
-        setPhase('elaborazione');
-
         const nFoglietto = row.col1;
         const coperti = row.col4;
-
-        // Gestione formattazione importo (sostituisce virgola con punto per il DB)
         const importoFinale = importoStr.replace(',', '.');
 
         let logMsg = '';
@@ -126,21 +125,23 @@ export default function Page() {
         else logMsg = `Altro Importo: ${importoStr}€ - Note: ${nota}`;
 
         try {
-            // Esecuzione chiusura sul DB
+            // 1. Operazioni DB (Eseguite subito)
             await chiudiConto(Number(nFoglietto), sagra.giornata, tipo, nota, importoFinale);
-            
-            // Scrittura Log
             await writeLog(Number(nFoglietto), sagra.giornata, 'Casse', session?.user?.name || '', 'CLOSE', logMsg);
 
-            // Invocazione stampa pass
+            // 2. Attivazione overlay caricamento
+            setIsPrinting(true);
+
+            // 3. Invocazione stampa (attendiamo la risposta della fetch)
             await inviaStampaPassDiretto(nFoglietto, coperti);
 
-            // Refresh della lista
+            // 4. Fine caricamento e refresh
+            setIsPrinting(false);
             await refreshData();
-            setPhase('caricato');
         } catch (error) {
             console.error("Errore durante la chiusura:", error);
-            setPhase('caricato');
+            setIsPrinting(false);
+            await refreshData();
         }
     };
 
@@ -153,7 +154,8 @@ export default function Page() {
 
     const inviaStampaPassDiretto = async (numeroFoglietto: number, coperti: number) => {
         try {
-            await fetch('/api/print', {
+            // Restituiamo la promessa della fetch per poterla "attendere" in handleFinalizzaChiusura
+            return await fetch('/api/print', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -210,6 +212,42 @@ export default function Page() {
         }
     }
 
+    // --- LOGICA OVERLAY STAMPA ---
+    if (isPrinting) {
+        return (
+            <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                height: '100vh', 
+                alignItems: 'center', 
+                justifyContent: 'center',
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100vw',
+                bgcolor: 'rgba(255, 255, 255, 0.9)',
+                zIndex: 9999
+            }}>
+                <CircularProgress size="6rem" />
+                <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold' }}>Invio alla stampa in corso ...</Typography>
+                <Typography variant="body1" sx={{ color: 'text.secondary', mt: 1 }}> Annulla invio a stampante e vai avanti (il conto sarà regolarmente chiuso)</Typography>
+                <Button 
+                    variant="contained" 
+                    color="error" 
+                    sx={{ mt: 4, borderRadius: '9999px', px: 4 }}
+                    onClick={() => {
+                        // Forza la chiusura del loader. 
+                        // Il DB è già stato aggiornato, quindi facciamo solo refresh della lista.
+                        setIsPrinting(false);
+                        refreshData();
+                    }}
+                >
+                    Annulla attesa e prosegui
+                </Button>
+            </Box>
+        );
+    }
+
     if (!((session?.user?.name == "Casse") || (session?.user?.name == "SuperUser"))) {
         return <Box sx={{ p: 4 }}><Alert severity="error">Accesso Negato</Alert></Box>;
     }
@@ -218,10 +256,10 @@ export default function Page() {
         return <Box sx={{ p: 4 }}><Alert severity="warning">Giornata non ancora aperta!</Alert></Box>;
     }
 
-    if (phase == 'caricamento' || phase == 'elaborazione') {
+    if (phase == 'caricamento') {
         return (
             <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', alignItems: 'center', justifyContent: 'center', minHeight: '400px' }}>
-                <Typography variant="h4" sx={{ mb: 2 }}>{phase === 'caricamento' ? 'Caricamento...' : 'Elaborazione...'}</Typography>
+                <Typography variant="h4" sx={{ mb: 2 }}>Caricamento...</Typography>
                 <CircularProgress size="5rem" />
             </Box>
         );
