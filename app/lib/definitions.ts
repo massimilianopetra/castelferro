@@ -54,6 +54,9 @@ export type DbTickets =   {
   id: number;
   numpersone: number;
   seduto: number;
+  caricato: number;
+  data_distributo: number;
+  data_chiamato: number;
 };
 
 export type DbExtendedConti =   {

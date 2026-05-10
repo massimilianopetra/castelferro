@@ -69,75 +69,94 @@ export default function DistributorePage() {
         fetchData();
     }, [fetchData]);
 
-    
-const handleStampa = async () => {
-    const numeroCopertiValido = Number(coperti);
-    if (numeroCopertiValido <= 0 || prossimoTicket === null) return;
 
-    try {
-        const seduto = mode === 'LIBERA' ? 1 : 0;
-        
-        // 1. Salvataggio nel Database
-        const res = await addTickets(prossimoTicket, numeroCopertiValido, seduto);
+    const handleStampa = async () => {
+        const numeroCopertiValido = Number(coperti);
+        if (numeroCopertiValido <= 0 || prossimoTicket === null) return;
 
-        if (res && (res as any).error) {
-            setOpenErrorTicket(true);
-            return;
-        }
+        try {
+            // 1. Logica per il campo 'caricato' basata sul modo
+            // 0: Automatico, 1: Manuale, 2: Entrata Libera (Automatico senza stampa)
+            let valoreCaricato = 0; // Default AUTO
+            if (mode === 'MANUALE') {
+                valoreCaricato = 1;
+            } else if (mode === 'LIBERA') {
+                valoreCaricato = 2;
+            }
 
-        // 2. Notifica immediata via SSE
-        // Prepariamo i dati del ticket per la pagina Chiama
-        const nuovoTicket = { 
-            id: prossimoTicket, 
-            numpersone: numeroCopertiValido,
-            seduto: seduto 
-        };
+            const seduto = mode === 'LIBERA' ? 1 : 0;
+            const timestampAdesso = Date.now(); // Data di distribuzione in millisecondi
 
-        await fetch('/api/next-client', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-                type: 'NEW_TICKET', 
-                ticket: nuovoTicket // Passiamo l'oggetto completo
-            }),
-        });
+            // 2. Salvataggio nel Database
+            // Nota: data_chiamato viene passato come null perché il ticket è appena stato creato
+            const res = await addTickets(
+                prossimoTicket,
+                numeroCopertiValido,
+                seduto,
+                valoreCaricato,
+                timestampAdesso,
+                null as any
+            );
 
-        // 3. Gestione Stampa (solo se NON è Libera)
-        if (mode !== 'LIBERA') {
-            setIsPrinting(true);
-            await fetch('/api/print', {
+            if (res && (res as any).error) {
+                setOpenErrorTicket(true);
+                return;
+            }
+
+            // 3. Notifica immediata via SSE per la pagina Chiama
+            const nuovoTicket = {
+                id: prossimoTicket,
+                numpersone: numeroCopertiValido,
+                seduto: seduto,
+                caricato: valoreCaricato,
+                data_distributo: timestampAdesso,
+                data_chiamato: null
+            };
+
+            await fetch('/api/next-client', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    numeroTicket: prossimoTicket,
-                    coperti: numeroCopertiValido,
-                    ipAddress: config.stampante_wifi,
-                    titolo: config.titolo,
+                    type: 'NEW_TICKET',
+                    ticket: nuovoTicket
+                }),
+            });
 
+            // 4. Gestione Stampa (Solo se NON è Entrata Libera)
+            if (mode !== 'LIBERA') {
+                setIsPrinting(true);
+                await fetch('/api/print', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        numeroTicket: prossimoTicket,
+                        coperti: numeroCopertiValido,
+                        ipAddress: config.stampante_wifi,
+                        titolo: config.titolo,
                         edizione: config.edizione,
                         inizio: config.inizio,
                         fine: config.fine,
                         mese: config.mese
-                }),
-            });
-        }
+                    }),
+                });
+            }
 
-        // 4. Reset stato locale
-        setLastEntry({ numero: prossimoTicket, coperti: numeroCopertiValido });
-        setCoperti(0);
+            // 5. Reset stato locale
+            setLastEntry({ numero: prossimoTicket, coperti: numeroCopertiValido });
+            setCoperti(0);
 
-        if (mode === 'MANUALE') {
-            setProssimoTicket(null);
-        } else {
-            await fetchData();
+            if (mode === 'MANUALE') {
+                setProssimoTicket(null);
+            } else {
+                await fetchData();
+            }
+        } catch (error) {
+            console.error("Errore durante il processo:", error);
+        } finally {
+            setIsPrinting(false);
         }
-    } catch (error) {
-        console.error("Errore durante il processo:", error);
-    } finally {
-        setIsPrinting(false);
-    }
-};
-    
+    };
+
 
     const onAdd = () => setCoperti(prev => (Number(prev) < 999 ? Number(prev) + 1 : 999));
     const onRemove = () => setCoperti(prev => (Number(prev) > 0 ? Number(prev) - 1 : 0));
@@ -218,31 +237,31 @@ const handleStampa = async () => {
 
     return (
         <ThemeProvider theme={defaultTheme}>
-            <Box sx={{ 
-                display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', 
+            <Box sx={{
+                display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
                 height: '100%', width: '100%', bgcolor: 'background.default', p: 2, position: 'relative',
                 boxSizing: 'border-box', overflow: 'hidden',
                 pointerEvents: loading ? 'none' : 'auto',
                 opacity: loading ? 0.7 : 1
             }}>
 
-                <Box sx={{ 
-                    position: 'flex', top: 16, left: 16, zIndex: 10, 
-                    display: 'flex', gap: 1 
+                <Box sx={{
+                    position: 'flex', top: 16, left: 16, zIndex: 10,
+                    display: 'flex', gap: 1
                 }}>
-                    <Button 
-                        variant="outlined" color="error" size="small" 
+                    <Button
+                        variant="outlined" color="error" size="small"
                         disabled={loading}
-                        onClick={() => setOpenResetDialog(true)} 
-                        startIcon={<DeleteForeverIcon />} 
+                        onClick={() => setOpenResetDialog(true)}
+                        startIcon={<DeleteForeverIcon />}
                         sx={{ fontWeight: 'bold', bgcolor: 'white', borderRadius: '10px', mb: 2 }}
                     >
                         AZZERA
                     </Button>
 
-                    <Button 
-                        variant={mode === 'AUTO' ? "contained" : "outlined"} 
-                        color="primary" size="small" 
+                    <Button
+                        variant={mode === 'AUTO' ? "contained" : "outlined"}
+                        color="primary" size="small"
                         disabled={loading}
                         onClick={() => setMode('AUTO')}
                         sx={{ fontWeight: 'bold', bgcolor: mode === 'AUTO' ? 'primary.main' : 'white', borderRadius: '10px', fontSize: '0.7rem', mb: 2 }}
@@ -250,9 +269,9 @@ const handleStampa = async () => {
                         AUTO
                     </Button>
 
-                    <Button 
-                        variant={mode === 'MANUALE' ? "contained" : "outlined"} 
-                        color="warning" size="small" 
+                    <Button
+                        variant={mode === 'MANUALE' ? "contained" : "outlined"}
+                        color="warning" size="small"
                         disabled={loading}
                         onClick={() => setMode('MANUALE')}
                         sx={{ fontWeight: 'bold', bgcolor: mode === 'MANUALE' ? 'warning.main' : 'white', borderRadius: '10px', fontSize: '0.7rem', mb: 2 }}
@@ -260,9 +279,9 @@ const handleStampa = async () => {
                         MANUALE
                     </Button>
 
-                    <Button 
-                        variant={mode === 'LIBERA' ? "contained" : "outlined"} 
-                        color="success" size="small" 
+                    <Button
+                        variant={mode === 'LIBERA' ? "contained" : "outlined"}
+                        color="success" size="small"
                         disabled={loading}
                         onClick={() => setMode('LIBERA')}
                         sx={{ fontWeight: 'bold', bgcolor: mode === 'LIBERA' ? 'success.main' : 'white', borderRadius: '10px', fontSize: '0.7rem', mb: 2 }}
@@ -272,14 +291,14 @@ const handleStampa = async () => {
                 </Box>
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '600px', gap: { xs: 1, sm: 2 }, flexGrow: 1, justifyContent: 'center' }}>
-                    
+
                     <Box sx={{ textAlign: 'center' }}>
                         <Typography sx={{ color: '#666', fontWeight: 1000, fontSize: '1.4rem', letterSpacing: 2 }}>
                             {mode === 'LIBERA' ? 'ENTRATA LIBERA' : 'PROSSIMO TICKET'}
                         </Typography>
-                        
+
                         {mode === 'MANUALE' ? (
-                             <TextField
+                            <TextField
                                 type="number"
                                 disabled={loading}
                                 value={prossimoTicket === null ? '' : prossimoTicket}
@@ -295,10 +314,10 @@ const handleStampa = async () => {
                                 }}
                             />
                         ) : (
-                            <Typography sx={{ 
-                                fontWeight: 1000, 
-                                color: mode === 'LIBERA' ? 'success.main' : 'primary.main', 
-                                fontSize: { xs: '5.5rem', sm: '6rem' }, lineHeight: 1, mt: 1 
+                            <Typography sx={{
+                                fontWeight: 1000,
+                                color: mode === 'LIBERA' ? 'success.main' : 'primary.main',
+                                fontSize: { xs: '5.5rem', sm: '6rem' }, lineHeight: 1, mt: 1
                             }}>
                                 {prossimoTicket ?? '-'}
                             </Typography>
@@ -348,8 +367,8 @@ const handleStampa = async () => {
                         </Stack>
 
                         <Button
-                            onClick={handleStampa} variant="contained" 
-                            color={mode === 'LIBERA' ? "success" : "secondary"} 
+                            onClick={handleStampa} variant="contained"
+                            color={mode === 'LIBERA' ? "success" : "secondary"}
                             disabled={loading || Number(coperti) <= 0 || prossimoTicket === null}
                             startIcon={loading ? <CircularProgress size={24} color="inherit" /> : <PrintIcon sx={{ fontSize: { xs: 30, sm: 45 } }} />}
                             sx={{ width: '92%', py: 2, fontSize: { xs: '1.5rem', sm: '2.2rem' }, fontWeight: 1000, borderRadius: '40px' }}
@@ -359,8 +378,8 @@ const handleStampa = async () => {
                     </Box>
                 </Box>
 
-                <Dialog 
-                    open={openResetDialog} 
+                <Dialog
+                    open={openResetDialog}
                     onClose={() => !loading && setOpenResetDialog(false)}
                     PaperProps={{
                         sx: {
@@ -388,7 +407,7 @@ const handleStampa = async () => {
                             placeholder="CONFERMA"
                             value={confirmText}
                             onChange={(e) => setConfirmText(e.target.value.toUpperCase())}
-                            sx={{ 
+                            sx={{
                                 '& .MuiOutlinedInput-root': { borderRadius: '15px', bgcolor: '#f9f9f9' },
                                 input: { fontWeight: 'bold', textAlign: 'center', fontSize: '1.1rem' }
                             }}
@@ -398,10 +417,10 @@ const handleStampa = async () => {
                         <Button disabled={loading} onClick={() => { setOpenResetDialog(false); setConfirmText(""); }}>
                             ANNULLA
                         </Button>
-                        <Button 
-                            onClick={handleResetTotale} 
-                            color="error" 
-                            variant="contained" 
+                        <Button
+                            onClick={handleResetTotale}
+                            color="error"
+                            variant="contained"
                             disabled={loading || confirmText !== "CONFERMA"}
                             sx={{ fontWeight: 1000, borderRadius: '10px' }}
                         >
@@ -410,8 +429,8 @@ const handleStampa = async () => {
                     </DialogActions>
                 </Dialog>
 
-                <Dialog 
-                    open={openErrorTicket} 
+                <Dialog
+                    open={openErrorTicket}
                     onClose={() => setOpenErrorTicket(false)}
                     PaperProps={{ sx: { borderRadius: 4, p: 1, minWidth: '300px', border: '2px solid red' } }}
                 >
@@ -424,8 +443,8 @@ const handleStampa = async () => {
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
-                        <Button 
-                            onClick={() => setOpenErrorTicket(false)} 
+                        <Button
+                            onClick={() => setOpenErrorTicket(false)}
                             variant="contained" color="error"
                             sx={{ fontWeight: 'bold', borderRadius: '10px' }}
                         >

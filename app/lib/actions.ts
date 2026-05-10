@@ -41,13 +41,16 @@ async function executeQuery<T>(query: string, params?: any[]): Promise<T[] | und
 
 
 /* ************************ SEED DATABASE **************************** */
-
+ /* caricato 0 automantico 1 manuale 2 entrata libera  */
 async function seedTickets() {
   await executeQuery(`
     CREATE TABLE IF NOT EXISTS tickets (
        id INTEGER PRIMARY KEY,
        numpersone  INTEGER NOT NULL,
-       seduto INTEGER NOT NULL 
+       seduto INTEGER NOT NULL, 
+       caricato INTEGER NOT NULL,    
+       data_distributo BIGINT,
+       data_chiamato BIGINT 
      );
    `);
 
@@ -284,19 +287,43 @@ export async function getUser(email: string): Promise<DbUser | undefined> {
 
 /* ************************ GESTIONE DB **************************** */
 
-export async function getTickets(modo:string): Promise<DbTickets[] | undefined> {
-  console.log("getTickets");
+export async function getTickets(modo: string): Promise<DbTickets[] | undefined> {
+ // console.log(`getTickets: modo = ${modo}`);
   try {
-    if (modo == 'all') {
-      const tickets = await executeQuery<DbTickets>(`SELECT * FROM tickets ORDER BY id`);
-      return tickets;
-    } else if (modo == 'seduti') {
-      const tickets = await executeQuery<DbTickets>(`SELECT * FROM tickets WHERE seduto = 1 ORDER BY id`); 
-      return tickets;
-    } else if (modo == 'non-seduti') {
-      const tickets = await executeQuery<DbTickets>(`SELECT * FROM tickets WHERE seduto = 0 ORDER BY id`); 
-      return tickets;
+    let query = `SELECT * FROM tickets`;
+    let conditions = "";
+
+    switch (modo) {
+      case 'all':
+        conditions = "";
+        break;
+    /* caricato in modalità: seduti 1 non-seduti 0 */
+      case 'seduti':
+        conditions = "WHERE seduto = 1";
+        break;
+      case 'non-seduti':
+        conditions = "WHERE seduto = 0";
+        break;
+    /* caricato in modalità: automatica 0 manuale 1 entrata libera 2 */
+      case 'automatico':
+        conditions = "WHERE caricato = 0";
+        break;
+      case 'manuale':
+        conditions = "WHERE caricato = 1";
+        break;
+      case 'entrata-libera':
+        conditions = "WHERE caricato = 2";
+        break;
+      case 'distribuiti':
+        conditions = "WHERE data_distributo IS NOT NULL";
+        break;
+      default:
+        conditions = ""; // Default a tutti se il modo non è riconosciuto
     }
+
+    const tickets = await executeQuery<DbTickets>(`${query} ${conditions} ORDER BY id`);
+    return tickets;
+
   } catch (error) {
     console.error('Failed to fetch tickets:', error);
     throw new Error('Failed to fetch tickets.');
@@ -304,13 +331,19 @@ export async function getTickets(modo:string): Promise<DbTickets[] | undefined> 
 }
 
 export async function updateTickets(record: DbTickets) {
-  console.log("updateTickets");
+//  console.log(`updateTickets: updating record ID ${record.id}`);
+  
   return await executeQuery(`
-         UPDATE tickets
-         SET seduto = ${record.seduto}
-         WHERE id = ${record.id};
-      `);
+    UPDATE tickets
+    SET 
+      seduto = ${record.seduto},
+      caricato = ${record.caricato},
+      data_distributo = COALESCE(data_distributo, ${record.data_distributo ?? 'NULL'}),
+      data_chiamato = COALESCE(data_chiamato, ${record.data_chiamato ?? 'NULL'})
+    WHERE id = ${record.id};
+  `);
 }
+
 export async function deleteTicket(id: number) {
   console.log("Cancellazione ticket id:", id);
 
@@ -324,25 +357,33 @@ export async function clearAllTickets() {
   return await executeQuery(`TRUNCATE TABLE tickets RESTART IDENTITY CASCADE;`);
 }
 
-export async function addTickets(id: number, numero_persone: number, seduto: number) {
+export async function addTickets(
+  id: number, 
+  numero_persone: number, 
+  seduto: number, 
+  caricato: number, 
+  data_distributo: number | null, 
+  data_chiamato: number | null
+) {
   console.log("Add tickets", id);
   
-  // 1. Eseguiamo la query senza ON CONFLICT per permettere al database di segnalare il duplicato
-  // 2. Usiamo un blocco try/catch per gestire l'errore del database
   try {
     const result = await executeQuery(`
-      INSERT INTO tickets (id, numpersone, seduto)
-      VALUES (${id}, ${numero_persone}, ${seduto});
+      INSERT INTO tickets (id, numpersone, seduto, caricato, data_distributo, data_chiamato)
+      VALUES (
+        ${id}, 
+        ${numero_persone}, 
+        ${seduto}, 
+        ${caricato}, 
+        ${data_distributo ?? 'NULL'}, 
+        ${data_chiamato ?? 'NULL'}
+      );
     `);
     
-    // Se la query va a buon fine, restituiamo un successo
     return { success: true };
     
   } catch (error: any) {
-    // Se l'errore è dovuto a una chiave duplicata (codice 23505 in Postgres)
     console.error("Errore inserimento ticket:", error.message);
-    
-    // Restituiamo un oggetto errore che il frontend può leggere
     return { error: 'DUPLICATE_ID', message: error.message };
   }
 }
@@ -380,7 +421,7 @@ export async function getCountTicketsNonSeduti(): Promise<number> {
   }
 }
 export async function getFirstFreeTicket(): Promise<number> {
-  console.log("getFirstFreeTicket");
+//  console.log("getFirstFreeTicket");
   try {
     // Questa query trova il più piccolo ID dove non esiste un ID + 1
     // In pratica trova il primo "buco" nella sequenza
@@ -404,6 +445,71 @@ export async function getFirstFreeTicket(): Promise<number> {
     return 1;
   }
 }
+
+// actions.ts
+
+export async function getStimaAttesa() {
+  console.log("Calcolo stima attesa ultimi 10 ticket");
+  try {
+    // Prendiamo gli ultimi 10 ticket (caricato = 0) che hanno entrambi i timestamp
+    const result = await executeQuery<{ media_minuti: string }>(`
+      SELECT 
+        AVG(data_chiamato - data_distributo) / 60000 AS media_minuti
+      FROM (
+        SELECT data_distributo, data_chiamato
+        FROM tickets
+        WHERE caricato = 0 
+          AND data_distributo IS NOT NULL 
+          AND data_chiamato IS NOT NULL
+        ORDER BY data_chiamato DESC
+        LIMIT 10
+      ) AS ultimi_tickets
+    `);
+
+    const media = result?.[0]?.media_minuti;
+    
+    if (!media || Number(media) === 0) {
+      return { success: false, message: "Dati insufficienti per la stima" };
+    }
+
+    return { 
+      success: true, 
+      media: Math.round(Number(media)), // Media in minuti
+    };
+  } catch (error) {
+    console.error('Errore stima attesa:', error);
+    return { success: false };
+  }
+}
+
+/**
+ * Recupera i punti per il grafico (ultimi 30 minuti, campionati ogni 5)
+ * Nota: Questa query raggruppa i ticket finiti negli ultimi 30 minuti in slot da 5m
+ */
+export async function getPuntiGraficoAttesa() {
+  try {
+    const oraAttuale = Date.now();
+    const mezzOraFa = oraAttuale - (30 * 60 * 1000);
+
+    const result = await executeQuery<{ slot: string, attesa_media: string }>(`
+      SELECT 
+        (data_chiamato / 300000) * 300000 AS slot, -- Raggruppa per 5 minuti (300.000 ms)
+        AVG(data_chiamato - data_distributo) / 60000 AS attesa_media
+      FROM tickets
+      WHERE caricato = 0 
+        AND data_chiamato >= ${mezzOraFa}
+        AND data_chiamato <= ${oraAttuale}
+      GROUP BY slot
+      ORDER BY slot ASC
+    `);
+
+    return result || [];
+  } catch (error) {
+    console.error('Errore punti grafico:', error);
+    return [];
+  }
+}
+
 
 export async function getMenu(): Promise<DbMenu[] | undefined> {
   console.log("getMenu");

@@ -26,7 +26,7 @@ export default function RootLayout({
     stampante_quattro:process.env.STAMPANTE_QUATTRO,
     wellcome_msg:process.env.WELLCOME_MSG,
   };
-  console.log("CONFIG CARICATA DA DOCKER:", config);
+ // console.log("CONFIG CARICATA DA DOCKER:", config);
   
   return (
     <html lang="en">
