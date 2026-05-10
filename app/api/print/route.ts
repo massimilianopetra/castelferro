@@ -1,23 +1,28 @@
 import { NextResponse } from 'next/server';
-const escpos = require('escpos');
-escpos.Network = require('escpos-network');
 const path = require('path');
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    // Aggiungiamo isPass e giornata ai parametri ricevuti
-    const { numeroFoglietto ,numeroTicket, coperti, ipAddress, titolo, edizione, inizio, fine, mese, giornata, isPass } = body;
+    const { numeroTicket, coperti, ipAddress, isPass, giornata, numeroFoglietto } = body;
+
+    // --- CONTROLLO AMBIENTE ---
+    // Usiamo solo VERCEL. Se sei sul cloud, usciamo subito "con successo".
+    if (process.env.VERCEL === '1') {
+      console.log("Cloud detected: skipping physical print.");
+      return NextResponse.json({ success: true, simulated: true });
+    }
+
+    // Carichiamo i moduli solo se siamo in locale
+    // Questo evita errori di "Module not found" su Vercel
+    const escpos = require('escpos');
+    escpos.Network = require('escpos-network');
 
     if (!ipAddress) {
       return NextResponse.json({ success: false, error: "IP Stampante mancante" }, { status: 400 });
     }
-    // --- AGGIUNTA: Controllo Ambiente ---
-    // Se siamo su Vercel (o in produzione web), skippiamo la stampa fisica
-    if (process.env.VERCEL === '1' || process.env.NODE_ENV === 'production') {
-      console.log("Ambiente Cloud rilevato: simulo stampa avvenuta con successo.");
-      return NextResponse.json({ success: true, simulated: true });
-    }  
+
+
     const device = new escpos.Network(ipAddress, 9100);
     const printer = new escpos.Printer(device, { encoding: 'GB18030' });
 
