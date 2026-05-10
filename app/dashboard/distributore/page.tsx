@@ -69,14 +69,17 @@ export default function DistributorePage() {
         fetchData();
     }, [fetchData]);
 
-
 const handleStampa = async () => {
         const numeroCopertiValido = Number(coperti);
-        if (numeroCopertiValido <= 0 || prossimoTicket === null) return;
+        
+        // Controllo validità prima di iniziare
+        if (numeroCopertiValido <= 0 || prossimoTicket === null) {
+            return;
+        }
 
         try {
-            // 1. Logica per il campo 'caricato'
-            let valoreCaricato = 0; // Default AUTO
+            // 1. Logica per il campo 'caricato' (0: AUTO, 1: MANUALE, 2: LIBERA)
+            let valoreCaricato = 0;
             if (mode === 'MANUALE') {
                 valoreCaricato = 1;
             } else if (mode === 'LIBERA') {
@@ -96,12 +99,13 @@ const handleStampa = async () => {
                 null as any
             );
 
+            // Se il database dà errore (es. ticket duplicato), ci fermiamo qui
             if (res && (res as any).error) {
                 setOpenErrorTicket(true);
                 return;
             }
 
-            // 3. Notifica immediata via SSE
+            // 3. Notifica immediata via SSE (Server Sent Events)
             const nuovoTicket = {
                 id: prossimoTicket,
                 numpersone: numeroCopertiValido,
@@ -111,16 +115,20 @@ const handleStampa = async () => {
                 data_chiamato: null
             };
 
-            await fetch('/api/next-client', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    type: 'NEW_TICKET',
-                    ticket: nuovoTicket
-                }),
-            });
+            try {
+                await fetch('/api/next-client', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'NEW_TICKET',
+                        ticket: nuovoTicket
+                    }),
+                });
+            } catch (sseError) {
+                console.warn("Notifica SSE fallita, ma procedo:", sseError);
+            }
 
-            // 4. Gestione Stampa (Avviene solo se NON è LIBERA)
+            // 4. Gestione Stampa (Solo se NON siamo in modalità LIBERA)
             if (mode !== 'LIBERA') {
                 setIsPrinting(true);
                 try {
@@ -129,37 +137,43 @@ const handleStampa = async () => {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             numeroTicket: prossimoTicket,
+                            numeroFoglietto: prossimoTicket, // Usiamo questo per il riferimento nel route.ts
                             coperti: numeroCopertiValido,
                             ipAddress: config.stampante_wifi,
                             titolo: config.titolo,
                             edizione: config.edizione,
                             inizio: config.inizio,
                             fine: config.fine,
-                            mese: config.mese
+                            mese: config.mese,
+                            giornata: config.giornata || "1", // Valore di fallback se manca nel config
+                            isPass: false
                         }),
                     });
                 } catch (printError) {
-                    console.warn("Stampa fallita (probabilmente sei su Vercel), procedo comunque:", printError);
+                    // Se siamo su Vercel, la stampa fallirà sempre. 
+                    // Logghiamo l'errore ma NON blocchiamo l'utente.
+                    console.warn("Stampante non raggiungibile (Cloud Mode):", printError);
                 } finally {
                     setIsPrinting(false);
                 }
             }
 
-            // 5. Reset stato locale (Eseguito SEMPRE, anche se la stampa fallisce)
+            // 5. Reset dello stato e avanzamento ticket
+            // Eseguito fuori dal blocco stampa così il numero aumenta sempre
             setLastEntry({ numero: prossimoTicket, coperti: numeroCopertiValido });
             setCoperti(0);
 
             if (mode === 'MANUALE') {
                 setProssimoTicket(null);
             } else {
-                // Questo ricarica il database e incrementa il numero del ticket
+                // Ricarica il prossimo numero libero dal database
                 await fetchData();
             }
 
         } catch (error) {
-            console.error("Errore critico durante il processo:", error);
-            // Assicuriamoci che il caricamento finisca anche in caso di errore grave
+            console.error("Errore critico durante handleStampa:", error);
             setIsPrinting(false);
+            // Non mettiamo alert qui per evitare popup fastidiosi su Vercel
         }
     };
 
