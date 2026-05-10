@@ -70,13 +70,12 @@ export default function DistributorePage() {
     }, [fetchData]);
 
 
-    const handleStampa = async () => {
+const handleStampa = async () => {
         const numeroCopertiValido = Number(coperti);
         if (numeroCopertiValido <= 0 || prossimoTicket === null) return;
 
         try {
-            // 1. Logica per il campo 'caricato' basata sul modo
-            // 0: Automatico, 1: Manuale, 2: Entrata Libera (Automatico senza stampa)
+            // 1. Logica per il campo 'caricato'
             let valoreCaricato = 0; // Default AUTO
             if (mode === 'MANUALE') {
                 valoreCaricato = 1;
@@ -85,10 +84,9 @@ export default function DistributorePage() {
             }
 
             const seduto = mode === 'LIBERA' ? 1 : 0;
-            const timestampAdesso = Date.now(); // Data di distribuzione in millisecondi
+            const timestampAdesso = Date.now();
 
             // 2. Salvataggio nel Database
-            // Nota: data_chiamato viene passato come null perché il ticket è appena stato creato
             const res = await addTickets(
                 prossimoTicket,
                 numeroCopertiValido,
@@ -103,7 +101,7 @@ export default function DistributorePage() {
                 return;
             }
 
-            // 3. Notifica immediata via SSE per la pagina Chiama
+            // 3. Notifica immediata via SSE
             const nuovoTicket = {
                 id: prossimoTicket,
                 numpersone: numeroCopertiValido,
@@ -122,37 +120,45 @@ export default function DistributorePage() {
                 }),
             });
 
-            // 4. Gestione Stampa (Solo se NON è Entrata Libera)
+            // 4. Gestione Stampa (Avviene solo se NON è LIBERA)
             if (mode !== 'LIBERA') {
                 setIsPrinting(true);
-                await fetch('/api/print', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        numeroTicket: prossimoTicket,
-                        coperti: numeroCopertiValido,
-                        ipAddress: config.stampante_wifi,
-                        titolo: config.titolo,
-                        edizione: config.edizione,
-                        inizio: config.inizio,
-                        fine: config.fine,
-                        mese: config.mese
-                    }),
-                });
+                try {
+                    await fetch('/api/print', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            numeroTicket: prossimoTicket,
+                            coperti: numeroCopertiValido,
+                            ipAddress: config.stampante_wifi,
+                            titolo: config.titolo,
+                            edizione: config.edizione,
+                            inizio: config.inizio,
+                            fine: config.fine,
+                            mese: config.mese
+                        }),
+                    });
+                } catch (printError) {
+                    console.warn("Stampa fallita (probabilmente sei su Vercel), procedo comunque:", printError);
+                } finally {
+                    setIsPrinting(false);
+                }
             }
 
-            // 5. Reset stato locale
+            // 5. Reset stato locale (Eseguito SEMPRE, anche se la stampa fallisce)
             setLastEntry({ numero: prossimoTicket, coperti: numeroCopertiValido });
             setCoperti(0);
 
             if (mode === 'MANUALE') {
                 setProssimoTicket(null);
             } else {
+                // Questo ricarica il database e incrementa il numero del ticket
                 await fetchData();
             }
+
         } catch (error) {
-            console.error("Errore durante il processo:", error);
-        } finally {
+            console.error("Errore critico durante il processo:", error);
+            // Assicuriamoci che il caricamento finisca anche in caso di errore grave
             setIsPrinting(false);
         }
     };

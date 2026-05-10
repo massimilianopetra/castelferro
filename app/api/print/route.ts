@@ -12,7 +12,12 @@ export async function POST(req: Request) {
     if (!ipAddress) {
       return NextResponse.json({ success: false, error: "IP Stampante mancante" }, { status: 400 });
     }
-
+    // --- AGGIUNTA: Controllo Ambiente ---
+    // Se siamo su Vercel (o in produzione web), skippiamo la stampa fisica
+    if (process.env.VERCEL === '1' || process.env.NODE_ENV === 'production') {
+      console.log("Ambiente Cloud rilevato: simulo stampa avvenuta con successo.");
+      return NextResponse.json({ success: true, simulated: true });
+    }  
     const device = new escpos.Network(ipAddress, 9100);
     const printer = new escpos.Printer(device, { encoding: 'GB18030' });
 
