@@ -24,6 +24,7 @@ import { useConfig } from '@/context/ConfigContext';
 import TabellaConto from '@/app/ui/dashboard/TabellaConto';
 import Summary from '@/app/ui/dashboard/summary';
 import Summarythebill from '@/app/ui/dashboard/summarythebill';
+import Thebill from '@/app/ui/dashboard/thebill';
 
 export default function Page({ params }: { params: { foglietto: string } }) {
   const config = useConfig();
@@ -211,13 +212,18 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     await aggiornaConto(Number(numeroFoglietto), sagra.giornata, totale);
     await stampaConto(Number(numeroFoglietto), sagra.giornata);
     await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'PRINT', 'Stampa conto');
-    setPhase('iniziale_stampato');
     print();
+    setPhase('iniziale_stampato');
+
   };
 
   const print = () => {
     const printArea = printRef.current;
-    if (!printArea) return;
+    if (!printArea) {
+      console.warn("ATTENZIONE: La stampa è fallita perché 'printRef.current' è NULL.");
+      console.log("Stato attuale del Ref:", printRef);
+      return; 
+    }
     const newWindow = window.open("", "", "width=800,height=900");
     if (newWindow) {
       newWindow.document.write('<html><head><title>Stampa Conto</title>');
@@ -442,7 +448,6 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                     </ul>
                   </div>
                 </footer>
-                <div ref={printRef} className="hidden"><Summarythebill item={products} /></div>
               </div>
             );
 
@@ -481,7 +486,10 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           );
         }
       })()}
-
+{/* --- SPOSTA IL REF QUI FUORI --- */}
+      {/* Usiamo stili che nascondono alla vista ma non al DOM */}
+    <div ref={printRef} className="hidden"><Summarythebill item={products} /></div>
+             
       {/* DIALOG DI CONFERMA NUOVO CONTO */}
       <Dialog open={openConfirmDialog} onClose={handleCancelNewConto}>
         <DialogTitle sx={{ fontWeight: 'bold', color: '#1e3a8a' }}>Apertura Nuovo Conto</DialogTitle>
