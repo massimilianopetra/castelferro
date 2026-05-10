@@ -72,14 +72,14 @@ export default function DistributorePage() {
 const handleStampa = async () => {
         const numeroCopertiValido = Number(coperti);
         
-        // Controllo validità prima di iniziare
+        // Verifica preliminare: se non ci sono coperti o il ticket è nullo, esci
         if (numeroCopertiValido <= 0 || prossimoTicket === null) {
             return;
         }
 
         try {
-            // 1. Logica per il campo 'caricato' (0: AUTO, 1: MANUALE, 2: LIBERA)
-            let valoreCaricato = 0;
+            // 1. Determina la logica di 'caricato' basata sulla modalità attuale
+            let valoreCaricato = 0; // Default: AUTO
             if (mode === 'MANUALE') {
                 valoreCaricato = 1;
             } else if (mode === 'LIBERA') {
@@ -89,7 +89,7 @@ const handleStampa = async () => {
             const seduto = mode === 'LIBERA' ? 1 : 0;
             const timestampAdesso = Date.now();
 
-            // 2. Salvataggio nel Database
+            // 2. Salvataggio nel Database tramite Server Action
             const res = await addTickets(
                 prossimoTicket,
                 numeroCopertiValido,
@@ -99,13 +99,13 @@ const handleStampa = async () => {
                 null as any
             );
 
-            // Se il database dà errore (es. ticket duplicato), ci fermiamo qui
+            // Gestione errore salvataggio (es. ticket già esistente)
             if (res && (res as any).error) {
                 setOpenErrorTicket(true);
                 return;
             }
 
-            // 3. Notifica immediata via SSE (Server Sent Events)
+            // 3. Notifica immediata agli altri client via SSE
             const nuovoTicket = {
                 id: prossimoTicket,
                 numpersone: numeroCopertiValido,
@@ -124,20 +124,22 @@ const handleStampa = async () => {
                         ticket: nuovoTicket
                     }),
                 });
-            } catch (sseError) {
-                console.warn("Notifica SSE fallita, ma procedo:", sseError);
+            } catch (sseErr) {
+                console.warn("Errore notifica SSE (ignorato):", sseErr);
             }
 
-            // 4. Gestione Stampa (Solo se NON siamo in modalità LIBERA)
+            // 4. GESTIONE STAMPA (Solo se non siamo in modalità LIBERA)
             if (mode !== 'LIBERA') {
-                setIsPrinting(true);
+                setIsPrinting(true); // Mostra la rotella di caricamento
+                
                 try {
-                    await fetch('/api/print', {
+                    // Eseguiamo la fetch alla nostra API di stampa
+                    const printResponse = await fetch('/api/print', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             numeroTicket: prossimoTicket,
-                            numeroFoglietto: prossimoTicket, // Usiamo questo per il riferimento nel route.ts
+                            numeroFoglietto: prossimoTicket,
                             coperti: numeroCopertiValido,
                             ipAddress: config.stampante_wifi,
                             titolo: config.titolo,
@@ -145,35 +147,39 @@ const handleStampa = async () => {
                             inizio: config.inizio,
                             fine: config.fine,
                             mese: config.mese,
-                            giornata: config.giornata || "1", // Valore di fallback se manca nel config
+                            giornata: config.giornata || "1",
                             isPass: false
                         }),
                     });
-                } catch (printError) {
-                    // Se siamo su Vercel, la stampa fallirà sempre. 
-                    // Logghiamo l'errore ma NON blocchiamo l'utente.
-                    console.warn("Stampante non raggiungibile (Cloud Mode):", printError);
+
+                    if (!printResponse.ok) {
+                        console.warn("L'API di stampa ha restituito un errore (normale su Vercel).");
+                    }
+                } catch (printErr) {
+                    // Questo catch impedisce al pop-up "Errore durante la stampa" di apparire
+                    console.error("Impossibile comunicare con il server di stampa:", printErr);
                 } finally {
-                    setIsPrinting(false);
+                    setIsPrinting(false); // Nascondi sempre la rotella
                 }
             }
 
-            // 5. Reset dello stato e avanzamento ticket
-            // Eseguito fuori dal blocco stampa così il numero aumenta sempre
+            // 5. RESET STATO LOCALE
+            // Questa parte DEVE essere fuori dal blocco di stampa per garantire 
+            // che il numero del ticket avanzi sempre.
             setLastEntry({ numero: prossimoTicket, coperti: numeroCopertiValido });
             setCoperti(0);
 
             if (mode === 'MANUALE') {
                 setProssimoTicket(null);
             } else {
-                // Ricarica il prossimo numero libero dal database
+                // Ricarica il prossimo ticket disponibile dal DB
                 await fetchData();
             }
 
-        } catch (error) {
-            console.error("Errore critico durante handleStampa:", error);
+        } catch (globalError) {
+            // Questo catch gestisce solo errori critici non legati alla stampa
+            console.error("Errore critico nella procedura handleStampa:", globalError);
             setIsPrinting(false);
-            // Non mettiamo alert qui per evitare popup fastidiosi su Vercel
         }
     };
 
