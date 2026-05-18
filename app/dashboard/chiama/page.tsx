@@ -303,78 +303,96 @@ export default function ChiamaPage() {
                     flexGrow: 1, minHeight: 0, borderRadius: '12px', 
                     overflowY: 'auto', boxShadow: 3
                 }}>
-                    <Table stickyHeader size="small">
-                        <TableHead>
-                            <TableRow>
-                                <TableCell sx={{ fontWeight: 900 }}>
-                                    <TableSortLabel active={orderBy === 'id'} direction={orderBy === 'id' ? order : 'asc'} onClick={() => handleRequestSort('id')}>
-                                        Ticket
-                                    </TableSortLabel>
-                                </TableCell>
-                              <TableCell sx={{ fontWeight: 900 }}>
-  <TableSortLabel 
-    active={orderBy === 'numpersone'} 
-    direction={orderBy === 'numpersone' ? order : 'asc'} 
-    onClick={() => handleRequestSort('numpersone')}
-  >
-    {/* Versione per Smartphone (visibile solo su xs) */}
-    <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
-      Cop
-    </Box>
+     <Table 
+    stickyHeader 
+    size="small" 
+    sx={{ 
+        tableLayout: isMobile ? 'fixed' : 'auto', // 1. Impedisce lo sforamento
+        width: '100%' 
+    }}
+>
+    <TableHead>
+        <TableRow>
+            {/* 2. Riduzione padding (px) su mobile per tutte le celle */}
+            <TableCell sx={{ fontWeight: 900, px: { xs: 1, sm: 2 }, width: { xs: '80px', sm: 'auto' } }}>
+                <TableSortLabel active={orderBy === 'id'} direction={orderBy === 'id' ? order : 'asc'} onClick={() => handleRequestSort('id')}>
+                    Ticket
+                </TableSortLabel>
+            </TableCell>
+            <TableCell sx={{ fontWeight: 900, px: { xs: 1, sm: 2 }, width: { xs: '70px', sm: 'auto' } }}>
+                <TableSortLabel 
+                    active={orderBy === 'numpersone'} 
+                    direction={orderBy === 'numpersone' ? order : 'asc'} 
+                    onClick={() => handleRequestSort('numpersone')}
+                >
+                    <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>Cop.</Box>
+                    <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Coperti</Box>
+                </TableSortLabel>
+            </TableCell>
+            <TableCell sx={{ fontWeight: 900, px: { xs: 1, sm: 2 } }} align="right">Azioni</TableCell>
+        </TableRow>
+    </TableHead>
+    <TableBody>
+        {sortedLista.map((row) => {
+            let btnColor = "#2e7d32"; let textColor = "#fff";
+            if (chiamatiMemory.has(row.id)) { btnColor = "#ed6c02"; } 
+            else if (numeroAttuale > 0 && row.id < numeroAttuale) { btnColor = "#ffeb3b"; textColor = "#000"; }
 
-    {/* Versione per Tablet e Desktop (nascosta su xs, visibile da sm in su) */}
-    <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
-      Coperti
-    </Box>
-  </TableSortLabel>
-</TableCell>
-                                <TableCell sx={{ fontWeight: 900 }} align="right">Azioni</TableCell>
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {sortedLista.map((row) => {
-                                let btnColor = "#2e7d32"; let textColor = "#fff";
-                                if (chiamatiMemory.has(row.id)) { btnColor = "#ed6c02"; } 
-                                else if (numeroAttuale > 0 && row.id < numeroAttuale) { btnColor = "#ffeb3b"; textColor = "#000"; }
-
-                                return (
-                                    <TableRow key={row.id} hover>
-                                        <TableCell sx={{ fontSize: isMobile ? '1.4rem' : '2rem', fontWeight: 1000, color: 'primary.main', fontFamily: 'monospace' }}>
-                                            {row.id}
-                                        </TableCell>
-                                        <TableCell sx={{ fontSize: isMobile ? '1.1rem' : '1.8rem' }}>{row.numpersone}</TableCell>
-                                        <TableCell align="right">
-                                            <Stack direction="row" spacing={1} justifyContent="flex-end">
-                                                <Button 
-                                                    variant="contained" size="medium"
-                                                    onClick={() => handleChiamaTicket(row)}
-                                                    sx={{ fontWeight: 'bold', bgcolor: btnColor, color: textColor, minWidth: isMobile ? '45px' : '100px', '&:hover': { bgcolor: btnColor, opacity: 0.9 } }}
-                                                >
-                                                    <CampaignIcon fontSize="medium" />
-                                                    <Typography component="span" sx={{ fontSize: isMobile ? '0.9rem' : '1rem', ml: 1 }}>Chiama</Typography>
-                                                </Button>
-                                                {showActions && (
-                                                    <>
-                                                        <Button
-                                                            variant="contained" size="small" color="primary"
-                                                            onClick={() => handleSiediTicket(row)}
-                                                            sx={{ fontWeight: 'bold', minWidth: isMobile ? '45px' : '100px' }}
-                                                        >
-                                                            <ChairIcon fontSize="medium" />
-                                                            <Typography component="span" sx={{ fontSize: isMobile ? '0.9rem' : '1rem', ml: 1 }}>Entra</Typography>
-                                                        </Button>
-                                                        <IconButton color="error" size="large" onClick={() => { setSelectedTicket(row); setOpenDeleteDialog(true); }} sx={{ border: '1px solid', borderRadius: '8px' }}>
-                                                            <DeleteIcon fontSize="small" />
-                                                        </IconButton>
-                                                    </>
-                                                )}
-                                            </Stack>
-                                        </TableCell>
-                                    </TableRow>
-                                );
-                            })}
-                        </TableBody>
-                    </Table>
+            return (
+                <TableRow key={row.id} hover>
+                    <TableCell sx={{ 
+                        fontSize: isMobile ? '1.4rem' : '2rem', 
+                        fontWeight: 1000, 
+                        color: 'primary.main', 
+                        fontFamily: 'monospace',
+                        px: { xs: 1, sm: 2 } // Padding ridotto qui
+                    }}>
+                        {row.id}
+                    </TableCell>
+                    <TableCell sx={{ 
+                        fontSize: isMobile ? '1.1rem' : '1.8rem',
+                        px: { xs: 1, sm: 2 } // Padding ridotto qui
+                    }}>
+                        {row.numpersone}
+                    </TableCell>
+                    <TableCell align="right" sx={{ px: { xs: 1, sm: 2 } }}>
+                        <Stack direction="row" spacing={isMobile ? 0.5 : 1} justifyContent="flex-end">
+                            <Button 
+                                variant="contained" size="medium"
+                                onClick={() => handleChiamaTicket(row)}
+                                sx={{ 
+                                    fontWeight: 'bold', 
+                                    bgcolor: btnColor, 
+                                    color: textColor, 
+                                    minWidth: isMobile ? '45px' : '100px', 
+                                    '&:hover': { bgcolor: btnColor, opacity: 0.9 } 
+                                }}
+                            >
+                                <CampaignIcon fontSize="medium" />
+                                <Typography component="span" sx={{ fontSize: isMobile ? '0.9rem' : '1rem', ml: 1 }}>Chiama</Typography>
+                            </Button>
+                            {showActions && (
+                                <>
+                                    <Button
+                                        variant="contained" size="small" color="primary"
+                                        onClick={() => handleSiediTicket(row)}
+                                        sx={{ fontWeight: 'bold', minWidth: isMobile ? '45px' : '100px' }}
+                                    >
+                                        <ChairIcon fontSize="medium" />
+                                        <Typography component="span" sx={{ fontSize: isMobile ? '0.9rem' : '1rem', ml: 1 }}>Entra</Typography>
+                                    </Button>
+                                    <IconButton color="error" size="large" onClick={() => { setSelectedTicket(row); setOpenDeleteDialog(true); }} sx={{ border: '1px solid', borderRadius: '8px', p: isMobile ? 1 : 'default' }}>
+                                        <DeleteIcon fontSize="small" />
+                                    </IconButton>
+                                </>
+                            )}
+                        </Stack>
+                    </TableCell>
+                </TableRow>
+            );
+        })}
+    </TableBody>
+</Table>
                 </TableContainer>
 
                 {/* --- MODALE GRAFICO (Condizionale) --- */}
