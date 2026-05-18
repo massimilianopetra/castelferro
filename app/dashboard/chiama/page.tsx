@@ -238,23 +238,30 @@ export default function ChiamaPage() {
                 bgcolor: 'background.default', p: isMobile ? 1 : 2, 
                 boxSizing: 'border-box', overflow: 'hidden', position: 'relative'
             }}>
-                
+
                 {/* --- WIDGET STIMA ATTESA --- */}
                 {!disabilitaStatistiche && (
                     <Box sx={{ position: 'absolute', top: 10, right: 10, zIndex: 10 }}>
-                        <Button 
-                            variant="outlined" 
+                        <Button
+                            variant="outlined"
                             size="small"
-                            startIcon={<InfoIcon />} 
+                            // Modifica qui: l'icona sparisce su 'xs' (mobile) e riappare da 'sm' in su
+                            startIcon={<InfoIcon sx={{ display: { xs: 'none', sm: 'inherit' } }} />}
                             onClick={() => setOpenInfo(true)}
-                            sx={{ borderRadius: '20px', fontWeight: 'bold', bgcolor: 'white' }}
+                            sx={{
+                                borderRadius: '20px',
+                                fontWeight: 'bold',
+                                bgcolor: 'white',
+                                // Opzionale: se vuoi ridurre il padding su mobile visto che non c'è l'icona
+                                minWidth: { xs: 'auto', sm: '64px' }
+                            }}
                         >
                             {stima !== null ? `Attesa: ~${stima} min` : "Stima..."}
                         </Button>
                     </Box>
                 )}
 
-                {/* --- AREA DISPLAY PRINCIPALE --- */}
+                { }
                 <Box sx={{ textAlign: 'center', mb: isMobile ? 0.5 : 1, flexShrink: 0 }}>
                     <Typography sx={{ color: '#666', fontWeight: 900, fontSize: '0.8rem' }}>
                         ULTIMO CHIAMATO
@@ -304,11 +311,23 @@ export default function ChiamaPage() {
                                         Ticket
                                     </TableSortLabel>
                                 </TableCell>
-                                <TableCell sx={{ fontWeight: 900 }}>
-                                    <TableSortLabel active={orderBy === 'numpersone'} direction={orderBy === 'numpersone' ? order : 'asc'} onClick={() => handleRequestSort('numpersone')}>
-                                        Coperti
-                                    </TableSortLabel>
-                                </TableCell>
+                              <TableCell sx={{ fontWeight: 900 }}>
+  <TableSortLabel 
+    active={orderBy === 'numpersone'} 
+    direction={orderBy === 'numpersone' ? order : 'asc'} 
+    onClick={() => handleRequestSort('numpersone')}
+  >
+    {/* Versione per Smartphone (visibile solo su xs) */}
+    <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>
+      Cop
+    </Box>
+
+    {/* Versione per Tablet e Desktop (nascosta su xs, visibile da sm in su) */}
+    <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>
+      Coperti
+    </Box>
+  </TableSortLabel>
+</TableCell>
                                 <TableCell sx={{ fontWeight: 900 }} align="right">Azioni</TableCell>
                             </TableRow>
                         </TableHead>

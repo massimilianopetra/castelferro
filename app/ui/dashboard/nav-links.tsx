@@ -14,6 +14,9 @@ import RestaurantOutlinedIcon from '@mui/icons-material/RestaurantOutlined';
 import KebabDiningOutlinedIcon from '@mui/icons-material/KebabDiningOutlined';
 import { ShoppingCartIcon } from '@heroicons/react/20/solid';
 import KitchenIcon from '@mui/icons-material/Kitchen';
+import TvIcon from '@mui/icons-material/Tv';
+import RecordVoiceOverIcon from '@mui/icons-material/RecordVoiceOver';
+import LocalActivityIcon from '@mui/icons-material/LocalActivity';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -43,11 +46,21 @@ export default function NavLinks() {
       links = [
         { name: 'Gestione', href: '/dashboard/gestione', icon: SettingsIcon },
         { name: 'Casse', href: '/dashboard/casse', icon: EuroIcon },
-        { name: 'Incassa Conti', href: '/dashboard/chiudiconti', icon: ShoppingCartIcon  },
+        { name: 'Incassa Conti', href: '/dashboard/chiudiconti', icon: ShoppingCartIcon },
         { name: 'Cucine', href: '/dashboard/bocche', icon: KitchenIcon },
         { name: 'Ingresso', href: '/dashboard/coda', icon: CampaignIcon },
       ];
       break;
+    case 'Ingresso':
+      links = [
+        { name: 'Display', href: '/dashboard/display', icon: TvIcon },
+        { name: 'Chiama', href: '/dashboard/chiama', icon: RecordVoiceOverIcon },
+        { name: 'Distributore di Ticket', href: '/dashboard/distributore', icon: LocalActivityIcon },
+
+      ];
+      break;
+
+      
     case 'Antipasti':
       links = [{ name: 'Antipasti', href: '/dashboard/antipasti', icon: KebabDiningOutlinedIcon },]
       break;

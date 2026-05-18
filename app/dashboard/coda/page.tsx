@@ -7,13 +7,13 @@ import { useSession } from 'next-auth/react';
 export default function Page() {
     const { data: session } = useSession();
     const isMobile = useMediaQuery('(max-width:600px)');
-    if ((session?.user?.name == "Casse") || (session?.user?.name == "SuperUser")) {
+    if ((session?.user?.name == "Casse")|| (session?.user?.name == "SuperUser")) {
         return (
             <main>
                 <div className="flex flex-wrap flex-col ">
                     <div className='text-center '>
                         <Typography variant={isMobile ? "h5" : "h3"} sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold', color: '#333' }}>
-                            Link Coda
+                            Link Ingresso
                         </Typography>
 
                     </div>

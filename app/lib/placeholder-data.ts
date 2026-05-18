@@ -49,7 +49,12 @@ const users = [
     email: 'superuser@castelferro.it',
     password: 'superuser$'
   },
-
+  {
+    id: 9,
+    name: 'Ingresso',
+    email: 'ingresso@castelferro.it',
+    password: 'ingresso$'
+  },
 ];
 
 
