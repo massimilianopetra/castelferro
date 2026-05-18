@@ -16,14 +16,14 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import ChairIcon from '@mui/icons-material/Chair';
-import InfoIcon from '@mui/icons-material/Info'; 
+import InfoIcon from '@mui/icons-material/Info';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { 
-    getTickets, 
-    updateTickets, 
-    deleteTicket, 
-    getStimaAttesa, 
-    getPuntiGraficoAttesa 
+import {
+    getTickets,
+    updateTickets,
+    deleteTicket,
+    getStimaAttesa,
+    getPuntiGraficoAttesa
 } from '@/app/lib/actions';
 
 const defaultTheme = createTheme({
@@ -40,7 +40,7 @@ type Order = 'asc' | 'desc';
 
 export default function ChiamaPage() {
     const isMobile = useMediaQuery('(max-width:600px)');
-    
+
     // --- STATI PRINCIPALI ---
     const [numeroAttuale, setNumeroAttuale] = useState(0);
     const [lista, setLista] = useState<any[]>([]);
@@ -101,7 +101,7 @@ export default function ChiamaPage() {
     // --- LOGICA SINCRONIZZAZIONE (SSE E INTERVAL) ---
     useEffect(() => {
         fetchDati();
-        
+
         // Eseguiamo il primo caricamento statistiche solo se attive
         if (!disabilitaStatistiche) {
             caricaStatistiche();
@@ -181,15 +181,15 @@ export default function ChiamaPage() {
             setChiamatiMemory(prev => new Set(prev).add(ticket.id));
             setNumeroAttuale(ticket.id);
             await updateTickets({ ...ticket, seduto: 0, data_chiamato: ticket.data_chiamato || Date.now() });
-           
+
             await fetch('/api/next-client', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ type: 'CALL_NUMBER', numero: ticket.id }),
             });
             if (!disabilitaStatistiche) caricaStatistiche();
-        } catch (error) { 
-            console.error(error); 
+        } catch (error) {
+            console.error(error);
         }
     };
 
@@ -197,16 +197,16 @@ export default function ChiamaPage() {
         try {
             setLista(prev => prev.filter(t => t.id !== ticket.id));
             await updateTickets({ ...ticket, seduto: 1, data_chiamato: ticket.data_chiamato || Date.now() });
-            
+
             await fetch('/api/next-client', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ type: 'SET_SITTING', numero: ticket.id }),
             });
             if (!disabilitaStatistiche) caricaStatistiche();
-        } catch (error) { 
+        } catch (error) {
             console.error(error);
-            fetchDati(); 
+            fetchDati();
         }
     };
 
@@ -224,7 +224,7 @@ export default function ChiamaPage() {
                 body: JSON.stringify({ type: 'SET_SITTING', numero: idDaRimuovere }),
             });
             if (!disabilitaStatistiche) caricaStatistiche();
-        } catch (error) { 
+        } catch (error) {
             console.error(error);
             fetchDati();
         }
@@ -232,10 +232,10 @@ export default function ChiamaPage() {
 
     return (
         <ThemeProvider theme={defaultTheme}>
-            <Box sx={{ 
-                display: 'flex', flexDirection: 'column', 
-                height: '100%', maxHeight: '100%', width: '100%', 
-                bgcolor: 'background.default', p: isMobile ? 1 : 2, 
+            <Box sx={{
+                display: 'flex', flexDirection: 'column',
+                height: '100%', maxHeight: '100%', width: '100%',
+                bgcolor: 'background.default', p: isMobile ? 1 : 2,
                 boxSizing: 'border-box', overflow: 'hidden', position: 'relative'
             }}>
 
@@ -266,10 +266,10 @@ export default function ChiamaPage() {
                     <Typography sx={{ color: '#666', fontWeight: 900, fontSize: '0.8rem' }}>
                         ULTIMO CHIAMATO
                     </Typography>
-                    <Typography sx={{ 
-                        fontSize: isMobile ? '4.5rem' : '7rem', 
-                        fontWeight: 1000, color: 'primary.main', 
-                        fontFamily: 'monospace', lineHeight: 1 
+                    <Typography sx={{
+                        fontSize: isMobile ? '4.5rem' : '7rem',
+                        fontWeight: 1000, color: 'primary.main',
+                        fontFamily: 'monospace', lineHeight: 1
                     }}>
                         {numeroAttuale || '—'}
                     </Typography>
@@ -283,14 +283,14 @@ export default function ChiamaPage() {
                     />
                     <FormControlLabel
                         control={
-                            <Switch 
-                                checked={disabilitaStatistiche} 
+                            <Switch
+                                checked={disabilitaStatistiche}
                                 onChange={(e) => {
                                     setDisabilitaStatistiche(e.target.checked);
                                     if (e.target.checked) setStima(null);
-                                }} 
-                                color="warning" 
-                                size="small" 
+                                }}
+                                color="warning"
+                                size="small"
                             />
                         }
                         label={<Typography sx={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Off Statistiche</Typography>}
@@ -298,101 +298,101 @@ export default function ChiamaPage() {
                 </Box>
 
                 {/* --- TABELLA TICKET --- */}
-                <TableContainer component={Paper} sx={{ 
+                <TableContainer component={Paper} sx={{
                     maxWidth: '900px', width: '100%', mx: 'auto',
-                    flexGrow: 1, minHeight: 0, borderRadius: '12px', 
+                    flexGrow: 1, minHeight: 0, borderRadius: '12px',
                     overflowY: 'auto', boxShadow: 3
                 }}>
-     <Table 
-    stickyHeader 
-    size="small" 
-    sx={{ 
-        tableLayout: isMobile ? 'fixed' : 'auto', // 1. Impedisce lo sforamento
-        width: '100%' 
-    }}
->
-    <TableHead>
-        <TableRow>
-            {/* 2. Riduzione padding (px) su mobile per tutte le celle */}
-            <TableCell sx={{ fontWeight: 900, px: { xs: 1, sm: 2 }, width: { xs: '80px', sm: 'auto' } }}>
-                <TableSortLabel active={orderBy === 'id'} direction={orderBy === 'id' ? order : 'asc'} onClick={() => handleRequestSort('id')}>
-                    Ticket
-                </TableSortLabel>
-            </TableCell>
-            <TableCell sx={{ fontWeight: 900, px: { xs: 1, sm: 2 }, width: { xs: '70px', sm: 'auto' } }}>
-                <TableSortLabel 
-                    active={orderBy === 'numpersone'} 
-                    direction={orderBy === 'numpersone' ? order : 'asc'} 
-                    onClick={() => handleRequestSort('numpersone')}
-                >
-                    <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>Cop.</Box>
-                    <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Coperti</Box>
-                </TableSortLabel>
-            </TableCell>
-            <TableCell sx={{ fontWeight: 900, px: { xs: 1, sm: 2 } }} align="right">Azioni</TableCell>
-        </TableRow>
-    </TableHead>
-    <TableBody>
-        {sortedLista.map((row) => {
-            let btnColor = "#2e7d32"; let textColor = "#fff";
-            if (chiamatiMemory.has(row.id)) { btnColor = "#ed6c02"; } 
-            else if (numeroAttuale > 0 && row.id < numeroAttuale) { btnColor = "#ffeb3b"; textColor = "#000"; }
-
-            return (
-                <TableRow key={row.id} hover>
-                    <TableCell sx={{ 
-                        fontSize: isMobile ? '1.4rem' : '2rem', 
-                        fontWeight: 1000, 
-                        color: 'primary.main', 
-                        fontFamily: 'monospace',
-                        px: { xs: 1, sm: 2 } // Padding ridotto qui
-                    }}>
-                        {row.id}
-                    </TableCell>
-                    <TableCell sx={{ 
-                        fontSize: isMobile ? '1.1rem' : '1.8rem',
-                        px: { xs: 1, sm: 2 } // Padding ridotto qui
-                    }}>
-                        {row.numpersone}
-                    </TableCell>
-                    <TableCell align="right" sx={{ px: { xs: 1, sm: 2 } }}>
-                        <Stack direction="row" spacing={isMobile ? 0.5 : 1} justifyContent="flex-end">
-                            <Button 
-                                variant="contained" size="medium"
-                                onClick={() => handleChiamaTicket(row)}
-                                sx={{ 
-                                    fontWeight: 'bold', 
-                                    bgcolor: btnColor, 
-                                    color: textColor, 
-                                    minWidth: isMobile ? '45px' : '100px', 
-                                    '&:hover': { bgcolor: btnColor, opacity: 0.9 } 
-                                }}
-                            >
-                                <CampaignIcon fontSize="medium" />
-                                <Typography component="span" sx={{ fontSize: isMobile ? '0.9rem' : '1rem', ml: 1 }}>Chiama</Typography>
-                            </Button>
-                            {showActions && (
-                                <>
-                                    <Button
-                                        variant="contained" size="small" color="primary"
-                                        onClick={() => handleSiediTicket(row)}
-                                        sx={{ fontWeight: 'bold', minWidth: isMobile ? '45px' : '100px' }}
+                    <Table
+                        stickyHeader
+                        size="small"
+                        sx={{
+                            tableLayout: isMobile ? 'fixed' : 'auto', // 1. Impedisce lo sforamento
+                            width: '100%'
+                        }}
+                    >
+                        <TableHead>
+                            <TableRow>
+                                {/* 2. Riduzione padding (px) su mobile per tutte le celle */}
+                                <TableCell sx={{ fontWeight: 900, px: { xs: 1, sm: 2 }, width: { xs: '80px', sm: 'auto' } }}>
+                                    <TableSortLabel active={orderBy === 'id'} direction={orderBy === 'id' ? order : 'asc'} onClick={() => handleRequestSort('id')}>
+                                        Ticket
+                                    </TableSortLabel>
+                                </TableCell>
+                                <TableCell sx={{ fontWeight: 900, px: { xs: 1, sm: 2 }, width: { xs: '70px', sm: 'auto' } }}>
+                                    <TableSortLabel
+                                        active={orderBy === 'numpersone'}
+                                        direction={orderBy === 'numpersone' ? order : 'asc'}
+                                        onClick={() => handleRequestSort('numpersone')}
                                     >
-                                        <ChairIcon fontSize="medium" />
-                                        <Typography component="span" sx={{ fontSize: isMobile ? '0.9rem' : '1rem', ml: 1 }}>Entra</Typography>
-                                    </Button>
-                                    <IconButton color="error" size="large" onClick={() => { setSelectedTicket(row); setOpenDeleteDialog(true); }} sx={{ border: '1px solid', borderRadius: '8px', p: isMobile ? 1 : 'default' }}>
-                                        <DeleteIcon fontSize="small" />
-                                    </IconButton>
-                                </>
-                            )}
-                        </Stack>
-                    </TableCell>
-                </TableRow>
-            );
-        })}
-    </TableBody>
-</Table>
+                                        <Box component="span" sx={{ display: { xs: 'inline', sm: 'none' } }}>Cop.</Box>
+                                        <Box component="span" sx={{ display: { xs: 'none', sm: 'inline' } }}>Coperti</Box>
+                                    </TableSortLabel>
+                                </TableCell>
+                                <TableCell sx={{ fontWeight: 900, px: { xs: 1, sm: 2 } }} align="right">Azioni</TableCell>
+                            </TableRow>
+                        </TableHead>
+                        <TableBody>
+                            {sortedLista.map((row) => {
+                                let btnColor = "#2e7d32"; let textColor = "#fff";
+                                if (chiamatiMemory.has(row.id)) { btnColor = "#ed6c02"; }
+                                else if (numeroAttuale > 0 && row.id < numeroAttuale) { btnColor = "#ffeb3b"; textColor = "#000"; }
+
+                                return (
+                                    <TableRow key={row.id} hover>
+                                        <TableCell sx={{
+                                            fontSize: isMobile ? '1.4rem' : '2rem',
+                                            fontWeight: 1000,
+                                            color: 'primary.main',
+                                            fontFamily: 'monospace',
+                                            px: { xs: 1, sm: 2 } // Padding ridotto qui
+                                        }}>
+                                            {row.id}
+                                        </TableCell>
+                                        <TableCell sx={{
+                                            fontSize: isMobile ? '1.1rem' : '1.8rem',
+                                            px: { xs: 1, sm: 2 } // Padding ridotto qui
+                                        }}>
+                                            {row.numpersone}
+                                        </TableCell>
+                                        <TableCell align="right" sx={{ px: { xs: 1, sm: 2 } }}>
+                                            <Stack direction="row" spacing={isMobile ? 0.5 : 1} justifyContent="flex-end">
+                                                <Button
+                                                    variant="contained" size="medium"
+                                                    onClick={() => handleChiamaTicket(row)}
+                                                    sx={{
+                                                        fontWeight: 'bold',
+                                                        bgcolor: btnColor,
+                                                        color: textColor,
+                                                        minWidth: isMobile ? '45px' : '100px',
+                                                        '&:hover': { bgcolor: btnColor, opacity: 0.9 }
+                                                    }}
+                                                >
+                                                    <CampaignIcon fontSize="medium" />
+                                                    <Typography component="span" sx={{ fontSize: isMobile ? '0.9rem' : '1rem', ml: 1 }}>Chiama</Typography>
+                                                </Button>
+                                                {showActions && (
+                                                    <>
+                                                        <Button
+                                                            variant="contained" size="small" color="primary"
+                                                            onClick={() => handleSiediTicket(row)}
+                                                            sx={{ fontWeight: 'bold', minWidth: isMobile ? '45px' : '100px' }}
+                                                        >
+                                                            <ChairIcon fontSize="medium" />
+                                                            <Typography component="span" sx={{ fontSize: isMobile ? '0.9rem' : '1rem', ml: 1 }}>Entra</Typography>
+                                                        </Button>
+                                                        <IconButton color="error" size="large" onClick={() => { setSelectedTicket(row); setOpenDeleteDialog(true); }} sx={{ border: '1px solid', borderRadius: '8px', p: isMobile ? 1 : 'default' }}>
+                                                            <DeleteIcon fontSize="small" />
+                                                        </IconButton>
+                                                    </>
+                                                )}
+                                            </Stack>
+                                        </TableCell>
+                                    </TableRow>
+                                );
+                            })}
+                        </TableBody>
+                    </Table>
                 </TableContainer>
 
                 {/* --- MODALE GRAFICO (Condizionale) --- */}
@@ -404,10 +404,10 @@ export default function ChiamaPage() {
                                 {puntiGrafico.length > 0 ? puntiGrafico.map((p, i) => (
                                     <Box key={i} sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                                         <Typography variant="caption" sx={{ fontSize: '0.6rem' }}>{p.minuti}'</Typography>
-                                        <Box sx={{ 
-                                            width: '100%', 
-                                            height: `${Math.min(p.minuti * 2, 120)}px`, 
-                                            bgcolor: 'primary.main', 
+                                        <Box sx={{
+                                            width: '100%',
+                                            height: `${Math.min(p.minuti * 2, 120)}px`,
+                                            bgcolor: 'primary.main',
                                             borderRadius: '2px 2px 0 0',
                                             transition: 'height 0.5s ease'
                                         }} />
@@ -431,7 +431,7 @@ export default function ChiamaPage() {
                         <Button onClick={handleConfirmDelete} color="error">SI, ELIMINA</Button>
                     </DialogActions>
                 </Dialog>
-                
+
                 <Snackbar open={snackbar.open} autoHideDuration={2000} onClose={() => setSnackbar(s => ({ ...s, open: false }))}>
                     <Alert severity={snackbar.severity} variant="filled">{snackbar.message}</Alert>
                 </Snackbar>
