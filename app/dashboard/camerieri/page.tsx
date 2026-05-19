@@ -58,11 +58,22 @@ interface MyToolbarProps {
     apiRef: any;
 }
 
-// --- EDITOR INTELLIGENTE ---
+// --- EDITOR INTELLIGENTE CON SUGGERIMENTI ---
 function NameEditCell(props: GridRenderEditCellParams) {
     const { id, value, field, hasFocus } = props;
     const apiRef = useGridApiContext();
+    
+    // Recuperiamo tutte le righe attuali direttamente dalla DataGrid
     const rows = apiRef.current.getAllRowIds().map(rowId => apiRef.current.getRow(rowId));
+
+    // Estraiamo i nomi unici dei camerieri già esistenti per i suggerimenti
+    const uniqueNames = Array.from(
+        new Set(
+            rows
+                .map(r => r?.col2?.trim())
+                .filter((nome): nome is string => !!nome)
+        )
+    );
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         apiRef.current.setEditCellValue({ id, field, value: event.target.value });
@@ -77,14 +88,28 @@ function NameEditCell(props: GridRenderEditCellParams) {
     else if (count === 3) bgColor = '#fff3e0';
     else if (count >= 4) bgColor = '#ffebee';
 
+    // ID univoco per collegare l'InputBase alla datalist di questa specifica riga
+    const datalistId = `suggestions-${id}`;
+
     return (
-        <InputBase
-            value={value || ''}
-            onChange={handleChange}
-            autoFocus={hasFocus}
-            fullWidth
-            sx={{ px: 1, bgcolor: bgColor, height: '100%', fontWeight: 'bold', borderRadius: '4px' }}
-        />
+        <>
+            <InputBase
+                value={value || ''}
+                onChange={handleChange}
+                autoFocus={hasFocus}
+                fullWidth
+                inputProps={{
+                    list: datalistId,
+                    autoComplete: 'off' // Evita che la cronologia vecchia del browser copra i suggerimenti
+                }}
+                sx={{ px: 1, bgcolor: bgColor, height: '100%', fontWeight: 'bold', borderRadius: '4px' }}
+            />
+            <datalist id={datalistId}>
+                {uniqueNames.map((nome, index) => (
+                    <option key={index} value={nome} />
+                ))}
+            </datalist>
+        </>
     );
 }
 
@@ -218,11 +243,11 @@ export default function CamerieriPage() {
         <Box sx={{ 
             display: 'flex', 
             flexDirection: 'column', 
-            height: '100%', // Prende l'altezza del layout
+            height: '100%', 
             width: '100%',
             p: { xs: 1, sm: 2 },
             bgcolor: '#f4f6f8',
-            overflow: 'hidden', // Blocca la scrollbar esterna
+            overflow: 'hidden', 
             boxSizing: 'border-box'
         }}>
             <Typography variant={isMobile ? "h5" : "h3"} sx={{ textAlign: 'center', mb: 2, fontWeight: 'bold', color: '#333', flexShrink: 0 }}>
@@ -233,8 +258,8 @@ export default function CamerieriPage() {
 
             {/* CONTAINER TABELLA DINAMICO */}
             <Box sx={{ 
-                flexGrow: 1, // Occupa tutto lo spazio rimasto
-                minHeight: 0, // Permette alla DataGrid di attivare lo scroll interno
+                flexGrow: 1, 
+                minHeight: 0, 
                 width: '100%',
                 bgcolor: 'white', 
                 borderRadius: 3, 

@@ -1,8 +1,4 @@
 ## Sagra di Castelerro
-Pagina del portale della sagra del Salamino d'Asino di Castelferro
-
-# Docker image build
-docker build -t maxpetra/castelferro:v5 .
 
 # bruno
 # Modificare docker-compose.yaml  inserendo la riga 
@@ -18,21 +14,26 @@ docker build -t ironcastle/castelferro:v5 .
 # Si aggiorna il Container. 
 
 # A CASTELFERRO
-#   ag8
-evo aggiornare la versione v3 v4 v5)
+#   devo aggiornare la versione v3 v4 v5)
 #   connetti ad internet il pc della sagra
 #   lanciare il bat 
 #   si aggiorna tutto da solo  
-
 # ...fare partire il container, dovrebbero andare entrambi. 
 # ...cancellare i vecchi container. 
 
-
 # Docker image export
 docker save --output castelferro.tar castelferro:v1   
-
- docker load --input CASTELFERRO.tar
-
+docker load --input CASTELFERRO.tar
 
 # Per pulire la cache di docker:
 docker builder prune -f
+
+# PER SALVARE 
+- Crtl-s SALVA 
+- Crtl-c ESCO DALL'ESECUZUIONE
+- git add. 
+- git commit -m "aggiornamento"
+- git push
+
+# MENTRE PER scariare 
+- git pull 
