@@ -17,6 +17,7 @@ import KitchenIcon from '@mui/icons-material/Kitchen';
 import TvIcon from '@mui/icons-material/Tv';
 import RecordVoiceOverIcon from '@mui/icons-material/RecordVoiceOver';
 import LocalActivityIcon from '@mui/icons-material/LocalActivity';
+import LocalPrintshopIcon from '@mui/icons-material/LocalPrintshop';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -35,10 +36,10 @@ export default function NavLinks() {
   switch (session?.user?.name) {
     case 'Casse':
       links = [
-        { name: 'Gestione', href: '/dashboard/gestione', icon: SettingsIcon },
+        { name: 'Gestione Termiche', href: '/dashboard/stampantitermiche', icon: LocalPrintshopIcon },
         { name: 'Casse', href: '/dashboard/casse', icon: EuroIcon },
-        { name: 'Incassa Conti', href: '/dashboard/chiudiconti', icon: ShoppingCartIcon  },
-        { name: 'Verifica conti (aperti e chiusi)', href: '/dashboard/listaconti', icon: CheckCircleOutlineIcon },       
+        { name: 'Incassa Conti', href: '/dashboard/chiudiconti', icon: ShoppingCartIcon },
+        { name: 'Verifica conti (aperti e chiusi)', href: '/dashboard/listaconti', icon: CheckCircleOutlineIcon },
         { name: 'Gestione Camerieri', href: '/dashboard/camerieri', icon: AccessibilityIcon },
        ];
       break;

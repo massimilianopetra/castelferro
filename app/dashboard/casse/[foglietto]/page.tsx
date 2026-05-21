@@ -220,7 +220,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   const print = () => {
     const printArea = printRef.current;
     if (!printArea) {
-      console.warn("ATTENZIONE: La stampa è fallita perché 'printRef.current' è NULL.");
+      console.warn("ATTENZIONE: La stampa è fallita perché 'printRef.current'` è NULL.");
       console.log("Stato attuale del Ref:", printRef);
       return; 
     }
@@ -260,6 +260,9 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   };
 
   const inviaStampaPass = async () => {
+    // Leggiamo l'IP salvato localmente in questo browser
+    const savedPrinterIp = localStorage.getItem('sagra_printer_ip');
+
     try {
       await fetch('/api/print', {
         method: 'POST',
@@ -268,7 +271,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           numeroFoglietto,
           coperti: copertipass,
           giornata: sagra.giornata,
-          ipAddress: config.stampante_wifi,
+          ipAddress: savedPrinterIp, // Sostituito config.stampante_xxx con savedPrinterIp
           isPass: true
         }),
       });
@@ -276,11 +279,11 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   };
 
   const handleAdd = (id: number, qty = 1) => {
-    setProducts(prev => prev.map(item => item.id_piatto === id ? { ...item, quantita: item.quantita + qty, cucina: "Casse" } : item));
+    setProducts(prev => prev.map(item => item.id_piatto === id ? { ...item, quantita: item.quantita + qty, cuisine: "Casse" } : item));
     setPhase('modificato');
   };
   const handleRemove = (id: number) => {
-    setProducts(prev => prev.map(item => (item.id_piatto === id && item.quantita > 0) ? { ...item, quantita: item.quantita - 1, cucina: "Casse" } : item));
+    setProducts(prev => prev.map(item => (item.id_piatto === id && item.quantita > 0) ? { ...item, quantita: item.quantita - 1, cuisine: "Casse" } : item));
     setPhase('modificato');
   };
 
@@ -356,6 +359,9 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   }
  
   if (isPrinting) {
+    // Recuperiamo al volo il valore attuale per mostrarlo nel popup
+    const activePrinterIp = typeof window !== 'undefined' ? localStorage.getItem('sagra_printer_ip') : null;
+
     return (
       <Box sx={{ 
         display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', 
@@ -364,6 +370,12 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       }}>
         <CircularProgress size="6rem" />
         <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold' }}>Invio alla stampa in corso ...</Typography>
+        
+        {/* Mostra l'IP o il messaggio di errore se non è configurato */}
+        <Typography variant="body1" sx={{ mt: 1, fontFamily: 'monospace', color: activePrinterIp ? 'text.secondary' : 'error.main', fontWeight: activePrinterIp ? 'normal' : 'bold' }}>
+          {activePrinterIp ? `IP Stampante: ${activePrinterIp}` : 'Nessuna stampante configurata'}
+        </Typography>
+
         <Button variant="contained" color="error" size="large" sx={{ mt: 4, borderRadius: '9999px', px: 4 }}
           onClick={() => { setIsPrinting(false); setPhase('chiuso'); }}>
           Annulla attesa e prosegui
@@ -486,9 +498,9 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           );
         }
       })()}
-{/* --- SPOSTA IL REF QUI FUORI --- */}
+
       {/* Usiamo stili che nascondono alla vista ma non al DOM */}
-    <div ref={printRef} className="hidden"><Summarythebill item={products} /></div>
+      <div ref={printRef} className="hidden"><Summarythebill item={products} /></div>
              
       {/* DIALOG DI CONFERMA NUOVO CONTO */}
       <Dialog open={openConfirmDialog} onClose={handleCancelNewConto}>

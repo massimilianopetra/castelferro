@@ -16,7 +16,8 @@ import BackupIcon from '@mui/icons-material/Backup';
 import ChecklistRtlIcon from '@mui/icons-material/ChecklistRtl';
 import WcIcon from '@mui/icons-material/Wc';
 import AssessmentIcon from '@mui/icons-material/Assessment';
- 
+import LocalPrintshopIcon from '@mui/icons-material/LocalPrintshop'; 
+
 export default function DashboardLinks() {
   const pathname = usePathname();
   const { data: session } = useSession();
@@ -28,6 +29,7 @@ export default function DashboardLinks() {
   links = [
     { name: 'Home', href: '/dashboard', icon: HomeIcon },
     { name: 'Menus', href: '/dashboard/menus', icon: MenuBookIcon },
+    { name: 'Gestione Termiche', href: '/dashboard/stampantitermiche', icon: LocalPrintshopIcon },
     { name: 'Giornata Sagra', href: '/dashboard/sagra', icon: StorefrontIcon },
     { name: 'Camerieri', href: '/dashboard/camerieri', icon: WcIcon },
     { name: 'Cruscotto Piatti', href: '/dashboard/cruscottopiatti', icon: RestaurantOutlinedIcon },
@@ -35,7 +37,7 @@ export default function DashboardLinks() {
     { name: 'Cruscotto Gratis', href: '/dashboard/cruscottogratis', icon: AssessmentIcon },
     { name: 'Verifica Conti', href: '/dashboard/listaconti', icon: ChecklistRtlIcon },
     { name: 'Logs', href: '/dashboard/logs', icon: BackupIcon },
-   
+
   ];
   } 
 

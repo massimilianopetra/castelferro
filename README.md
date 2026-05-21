@@ -31,7 +31,7 @@ docker builder prune -f
 # PER SALVARE 
 - Crtl-s SALVA 
 - Crtl-c ESCO DALL'ESECUZUIONE
-- git add. 
+- git add . 
 - git commit -m "aggiornamento"
 - git push
 

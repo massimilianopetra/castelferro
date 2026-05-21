@@ -124,6 +124,13 @@ export default function Page() {
         else if (tipo === 2) logMsg = 'Pagato POS';
         else logMsg = `Altro Importo: ${importoStr}€ - Note: ${nota}`;
 
+        // CONTROLLO PREVENTIVO: Impedisce di chiudere il conto a schermo se manca la stampante
+        const savedPrinterIp = localStorage.getItem('sagra_printer_ip');
+        if (!savedPrinterIp) {
+            alert("La stampa non viene eseguita perchè non è settata la stampante termica");
+            return;
+        }
+
         try {
             // 1. Operazioni DB (Eseguite subito)
             await chiudiConto(Number(nFoglietto), sagra.giornata, tipo, nota, importoFinale);
@@ -153,6 +160,13 @@ export default function Page() {
     };
 
     const inviaStampaPassDiretto = async (numeroFoglietto: number, coperti: number) => {
+        const savedPrinterIp = localStorage.getItem('sagra_printer_ip');
+
+        if (!savedPrinterIp) {
+            alert("La stampa non viene eseguita perchè non è settata la stampante termica");
+            return;
+        }
+
         try {
             // Restituiamo la promessa della fetch per poterla "attendere" in handleFinalizzaChiusura
             return await fetch('/api/print', {
@@ -162,7 +176,7 @@ export default function Page() {
                     numeroFoglietto,
                     coperti,
                     giornata: sagra.giornata,
-                    ipAddress: config.stampante_uno,
+                    ipAddress: savedPrinterIp, // Sostituito config.stampante_xxx con savedPrinterIp
                     isPass: true
                 }),
             });
@@ -214,6 +228,9 @@ export default function Page() {
 
     // --- LOGICA OVERLAY STAMPA ---
     if (isPrinting) {
+        // Recuperiamo al volo il valore attuale per mostrarlo nel popup
+        const activePrinterIp = typeof window !== 'undefined' ? localStorage.getItem('sagra_printer_ip') : null;
+
         return (
             <Box sx={{ 
                 display: 'flex', 
@@ -230,7 +247,13 @@ export default function Page() {
             }}>
                 <CircularProgress size="6rem" />
                 <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold' }}>Invio alla stampa in corso ...</Typography>
-                <Typography variant="body1" sx={{ color: 'text.secondary', mt: 1 }}> Annulla invio a stampante e vai avanti (il conto sarà regolarmente chiuso)</Typography>
+                
+                {/* Mostra l'IP o il messaggio di errore se non è configurato */}
+                <Typography variant="body1" sx={{ mt: 1, fontFamily: 'monospace', color: activePrinterIp ? 'text.secondary' : 'error.main', fontWeight: activePrinterIp ? 'normal' : 'bold' }}>
+                    {activePrinterIp ? `IP Stampante: ${activePrinterIp}` : 'Nessuna stampante configurata'}
+                </Typography>
+
+                <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}> Annulla invio a stampante e vai avanti (il conto sarà regolarmente chiuso)</Typography>
                 <Button 
                     variant="contained" 
                     color="error" 
