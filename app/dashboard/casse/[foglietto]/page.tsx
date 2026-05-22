@@ -287,60 +287,59 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     setPhase('modificato');
   };
 
-  const HeaderCasse = () => (
-    <div className="p-1 mt-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
-      <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}>
-        <li className="flex-1 mr-2 font-bold py-2">
-          <a className="text-center block text-blue-700 font-extraligh text-2xl md:text-5xl">Casse</a>
-          <div className="text-xs text-center text-blue-700">
-            SAGRA: <span className="text-xs text-center text-blue-800 font-semibold">
-              {` ${sagra.stato} ${sagra.stato !== 'CHIUSA' ? `(${sagra.giornata})` : ""}`}
-            </span>
-          </div>
-        </li>
-        <li className="text-right flex-1 mr-2 text-5xl text-white font-bold py-4 rounded-full" style={{ borderRadius: '9999px' }}>
-          <div className="text-center text-emerald-600">
-            <TextField autoFocus className="p-2" label="Numero Foglietto" variant="outlined" value={numero} onChange={handleInputChange} style={{ borderRadius: '9999px' }} sx={{ input: { textAlign: 'right' } }} type="number" />
-          </div>
-        </li>
-        <li className="text-left flex-1 mr-2 text-5xl font-bold py-4">
-          <Button variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }} size="medium">
-            Carica Foglietto
-          </Button>
-        </li>
-      </ul>
-    </div>
-  );
+const headerCasse = (
+  <div className="p-1 mt-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
+    <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}>
+      <li className="flex-1 mr-2 font-bold py-2">
+        <a className="text-center block text-blue-700 font-extraligh text-2xl md:text-5xl">Casse</a>
+        <div className="text-xs text-center text-blue-700">
+          SAGRA: <span className="text-xs text-center text-blue-800 font-semibold">
+            {` ${sagra.stato} ${sagra.stato !== 'CHIUSA' ? `(${sagra.giornata})` : ""}`}
+          </span>
+        </div>
+      </li>
+      <li className="text-right flex-1 mr-2 text-5xl text-white font-bold py-4 rounded-full" style={{ borderRadius: '9999px' }}>
+        <div className="text-center text-emerald-600">
+          <TextField autoFocus className="p-2" label="Numero Foglietto" variant="outlined" value={numero} onChange={handleInputChange} style={{ borderRadius: '9999px' }} sx={{ input: { textAlign: 'right' } }} type="number" />
+        </div>
+      </li>
+      <li className="text-left flex-1 mr-2 text-5xl font-bold py-4">
+        <Button variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }} size="medium">
+          Carica Foglietto
+        </Button>
+      </li>
+    </ul>
+  </div>
+);
+const ultimiRicercati = (
+  <div className="text-base md:text-xl" style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
+    <p>
+      <span className="text-blue-800">Ultimi ricercati &nbsp;</span>
+      {lastLog.slice(0, 3).map((row, idx) => (
+        <Button
+          key={idx}
+          size="small"
+          variant="contained"
+          onClick={() => carica(row.foglietto)}
+          startIcon={<Filter1Icon />}
+          style={{ borderRadius: '9999px', margin: '0 4px' }}
+        >
+          {row.foglietto}
+        </Button>
+      ))}
+    </p>
+  </div>
+);
 
-  const UltimiRicercati = () => (
-    <div className="text-base md:text-xl" style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
-      <p>
-        <span className="text-blue-800">Ultimi ricercati &nbsp;</span>
-        {lastLog.slice(0, 3).map((row, idx) => (
-          <Button
-            key={idx}
-            size="small"
-            variant="contained"
-            onClick={() => carica(row.foglietto)}
-            startIcon={<Filter1Icon />}
-            style={{ borderRadius: '9999px', margin: '0 4px' }}
-          >
-            {row.foglietto}
-          </Button>
-        ))}
-      </p>
+const bottoniServizio = (
+  <div className="sez-dx" style={{ display: 'flex', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
+    <div className="xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
+      <Button size="medium" className="font-semibold" variant="outlined" onClick={handleButtonClickCaricaAsporto} style={{ borderRadius: '9999px' }}>Asporto</Button>
+      &nbsp;&nbsp;
+      <Button size="medium" color="secondary" className="font-semibold" variant="outlined" onClick={handleButtonClickCaricaConto1} style={{ borderRadius: '9999px' }}>Camerieri</Button>
     </div>
-  );
-
-  const BottoniServizio = () => (
-    <div className="sez-dx" style={{ display: 'flex', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
-      <div className="xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
-        <Button size="medium" className="font-semibold" variant="outlined" onClick={handleButtonClickCaricaAsporto} style={{ borderRadius: '9999px' }}>Asporto</Button>
-        &nbsp;&nbsp;
-        <Button size="medium" color="secondary" className="font-semibold" variant="outlined" onClick={handleButtonClickCaricaConto1} style={{ borderRadius: '9999px' }}>Camerieri</Button>
-      </div>
-    </div>
-  );
+  </div>
+);  
 
   if (sagra.stato === 'CHIUSA' && (session?.user?.name === "Casse" || session?.user?.name === "SuperUser")) {
     return (
@@ -391,8 +390,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           case 'iniziale_stampato':
             return (
               <div className="container">
-                <header className="top-section"><div className="sez-sx"><HeaderCasse /><UltimiRicercati /></div><BottoniServizio /></header>
-                <main className="middle-section"><br />
+          <header className="top-section"><div className="sez-sx">{headerCasse}{ultimiRicercati}</div>{bottoniServizio}</header>       <main className="middle-section"><br />
                   <p className="text-2xl md:text-5xl py-4 text-center text-blue-800">
                     Conto: <span className="font-extrabold"><Link href={`/dashboard/casse/${numeroFoglietto}`}>{numeroFoglietto}</Link></span> inviato in stampa.<br /><br />
                     Caricare un nuovo foglietto!
@@ -423,9 +421,12 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             return (
               <div className="container">
                 <header className="top-section mb-2">
-                  <div className="sez-sx"><HeaderCasse /><UltimiRicercati /></div>
+                  <div className="sez-sx">
+                    {headerCasse}         {/* Raddrizzato qui */}
+                    {ultimiRicercati}     {/* Raddrizzato qui */}
+                  </div>
                   <div className="sez-dx">
-                    <BottoniServizio />
+                    {bottoniServizio}     {/* Raddrizzato qui */}
                     <div className="text-base md:text-2xl py-2 text-end">
                       <p>Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}</span> {conto ? `(${deltanow(conto?.data_apertura)})` : "(Nuovo)"}</p>
                       <p>Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere || 'Casse'}</span></p>
@@ -467,8 +468,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           case 'none':
             return (
               <div className="container">
-                <header className="top-section"><div className="sez-sx"><HeaderCasse /><UltimiRicercati /></div><BottoniServizio /></header>
-                <main className="middle-section">
+             <header className="top-section"><div className="sez-sx">{headerCasse}{ultimiRicercati}</div>{bottoniServizio}</header>   <main className="middle-section">
                   <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50 text-center">
                     {phase === 'chiuso' ? (
                       <>
@@ -492,8 +492,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             );
           default: return (
              <div className="container">
-                <header className="top-section"><div className="sez-sx"><HeaderCasse /><UltimiRicercati /></div><BottoniServizio /></header>
-                <div className="text-center p-10"><CircularProgress /></div>
+           <header className="top-section"><div className="sez-sx">{headerCasse}{ultimiRicercati}</div>{bottoniServizio}</header>     <div className="text-center p-10"><CircularProgress /></div>
              </div>
           );
         }

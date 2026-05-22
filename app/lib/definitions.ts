@@ -90,11 +90,12 @@ export type DbConti =   {
   
 };
 
-export type DbCamerieri =   {
+export type DbCamerieri = {
   id: number;
   nome: string;
   foglietto_start: number;
   foglietto_end: number;
+  numero_conti?: number; // <-- Aggiunto come opzionale
 };
 
 export type DbFiera =   {

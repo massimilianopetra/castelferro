@@ -15,8 +15,6 @@ import IconButton from '@mui/material/IconButton';
 
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
@@ -48,6 +46,7 @@ type RowsData = {
     col2: string;
     col3: number | string;
     col4: number | string;
+    col5: number; // Numero Conti
     isNew: boolean;
 };
 
@@ -62,11 +61,8 @@ interface MyToolbarProps {
 function NameEditCell(props: GridRenderEditCellParams) {
     const { id, value, field, hasFocus } = props;
     const apiRef = useGridApiContext();
-    
-    // Recuperiamo tutte le righe attuali direttamente dalla DataGrid
     const rows = apiRef.current.getAllRowIds().map(rowId => apiRef.current.getRow(rowId));
 
-    // Estraiamo i nomi unici dei camerieri già esistenti per i suggerimenti
     const uniqueNames = Array.from(
         new Set(
             rows
@@ -88,7 +84,6 @@ function NameEditCell(props: GridRenderEditCellParams) {
     else if (count === 3) bgColor = '#fff3e0';
     else if (count >= 4) bgColor = '#ffebee';
 
-    // ID univoco per collegare l'InputBase alla datalist di questa specifica riga
     const datalistId = `suggestions-${id}`;
 
     return (
@@ -100,7 +95,7 @@ function NameEditCell(props: GridRenderEditCellParams) {
                 fullWidth
                 inputProps={{
                     list: datalistId,
-                    autoComplete: 'off' // Evita che la cronologia vecchia del browser copra i suggerimenti
+                    autoComplete: 'off'
                 }}
                 sx={{ px: 1, bgcolor: bgColor, height: '100%', fontWeight: 'bold', borderRadius: '4px' }}
             />
@@ -141,11 +136,20 @@ function EditToolbar(props: MyToolbarProps) {
     const isMobile = useMediaQuery('(max-width:600px)'); 
 
     const handleClick = () => {
-        const maxN = rows.length > 0 ? Math.max(...rows.map((r: RowsData) => Number(r.col1))) : 0;
         const maxID = rows.length > 0 ? Math.max(...rows.map((r: RowsData) => Number(r.id))) : 0;
         const newId = maxID + 1;
-        setRows((old: RowsData[]) => [{ id: newId, col1: maxN + 1, col2: '', col3: '', col4: '', isNew: true }, ...old]);
-        setRowModesModel((old: GridRowModesModel) => ({ ...old, [newId]: { mode: GridRowModes.Edit, fieldToFocus: 'col2' } }));
+
+        // Inseriamo la riga nuova TASSATIVAMENTE come primo elemento dell'array di stato locale
+        setRows((old: RowsData[]) => [
+            { id: newId, col1: 1, col2: '', col3: '', col4: '', col5: 0, isNew: true }, 
+            ...old
+        ]);
+        
+        setRowModesModel((old: GridRowModesModel) => ({ 
+            ...old, 
+            [newId]: { mode: GridRowModes.Edit, fieldToFocus: 'col2' } 
+        }));
+
         setTimeout(() => apiRef.current?.scrollToIndexes({ rowIndex: 0 }), 50);
     };
 
@@ -156,6 +160,7 @@ function EditToolbar(props: MyToolbarProps) {
     );
 }
 
+// --- COMPONENTE PRINCIPALE ---
 export default function CamerieriPage() {
     const NUMFOGLI = 15;
     const isMobile = useMediaQuery('(max-width:600px)');
@@ -170,9 +175,54 @@ export default function CamerieriPage() {
         open: false, message: '', severity: 'success' 
     });
 
+    // Funzione helper centralizzata per ordinare l'array: 
+    // Mantiene le righe nuove in cima assoluto, e ordina i record salvati stabili per "Primo" (col3) decrescente.
+    const ordinaEAssegnaProgressivi = (lista: RowsData[]): RowsData[] => {
+        const nuove = lista.filter(r => r.isNew);
+        const salvate = lista.filter(r => !r.isNew).sort((a, b) => Number(b.col3) - Number(a.col3));
+        
+        const unita = [...nuove, ...salvate];
+        // Ricalcola i progressivi N. (col1) basandosi sull'ordine reale visualizzato finale
+        return unita.map((row, index) => ({
+            ...row,
+            col1: index + 1
+        }));
+    };
+
+    // Aggiornamento asincrono silenzioso del numero dei conti reali presi dal Database
+    const refreshContiSilenzioso = async () => {
+        const data = await getListaCamerieri();
+        if (data) {
+            setRows((prevRows) => {
+                const mappati = prevRows.map((row) => {
+                    const dbItem = data.find((item: any) => item.id === row.id);
+                    if (dbItem) {
+                        return {
+                            ...row,
+                            col5: dbItem.n_conti || 0 // Sincronizza il valore dei conti reali aggiornato
+                        };
+                    }
+                    return row;
+                });
+                return ordinaEAssegnaProgressivi(mappati);
+            });
+        }
+    };
+
     useEffect(() => {
         getListaCamerieri().then((data) => {
-            if (data) setRows(data.map((item, i) => ({ id: item.id, col1: i + 1, col2: item.nome, col3: item.foglietto_start, col4: item.foglietto_end, isNew: false })));
+            if (data) {
+                const mappati = data.map((item: any) => ({
+                    id: item.id,
+                    col1: 0,
+                    col2: item.nome,
+                    col3: item.foglietto_start,
+                    col4: item.foglietto_end,
+                    col5: item.n_conti || 0,
+                    isNew: false
+                }));
+                setRows(ordinaEAssegnaProgressivi(mappati));
+            }
             setLoading(false);
         });
     }, []);
@@ -191,19 +241,46 @@ export default function CamerieriPage() {
             throw new Error('Validazione Fallita');
         }
 
-        const hasOverlap = rows.some(r => r.id !== newRow.id && (start <= Number(r.col4) && end >= Number(r.col3)));
+        const hasOverlap = rows.some(r => r.id !== newRow.id && !r.isNew && (start <= Number(r.col4) && end >= Number(r.col3)));
         if (hasOverlap) { 
             setSnackbar({ open: true, message: 'ERRORE: Sovrapposizione foglietti!', severity: 'error' }); 
             throw new Error('Sovrapposizione');
         }
 
         try {
-            if (newRow.isNew) await addCamerieri(newRow.col2, start, end);
-            else await updateCamerieri([{ id: Number(newRow.id), nome: newRow.col2, foglietto_start: start, foglietto_end: end }]);
+            let finalId = Number(newRow.id);
             
-            const updatedRow = { ...newRow, col3: start, col4: end, isNew: false } as RowsData;
-            setRows(rows.map(r => r.id === newRow.id ? updatedRow : r));
+            if (newRow.isNew) {
+                const res = await addCamerieri(newRow.col2, start, end);
+                if (res && res[0]?.id) {
+                    finalId = res[0].id;
+                }
+            } else {
+                await updateCamerieri([{ id: finalId, nome: newRow.col2, foglietto_start: start, foglietto_end: end }]);
+            }
+            
+            const updatedRow = { 
+                ...newRow, 
+                id: finalId, 
+                col3: start, 
+                col4: end, 
+                col5: newRow.isNew ? 0 : (newRow.col5 || 0), 
+                isNew: false 
+            } as RowsData;
+            
+            // Applica il nuovo record ordinando tutto correttamente nello stato locale
+            setRows(prevRows => {
+                const listaModificata = prevRows.map(r => r.id === newRow.id ? updatedRow : r);
+                return ordinaEAssegnaProgressivi(listaModificata);
+            });
+
             setSnackbar({ open: true, message: 'Salvato!', severity: 'success' });
+            
+            // Rinfresca silenziosamente il conteggio reale dal DB
+            setTimeout(() => {
+                refreshContiSilenzioso();
+            }, 150);
+
             return updatedRow;
         } catch (e) { 
             setSnackbar({ open: true, message: 'Errore nel salvataggio!', severity: 'error' });
@@ -214,14 +291,26 @@ export default function CamerieriPage() {
     const handleCancelClick = (id: GridRowId) => () => {
         setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View, ignoreModifications: true } });
         const row = rows.find((r) => r.id === id);
-        if (row?.isNew) setRows(rows.filter((r) => r.id !== id));
+        if (row?.isNew) {
+            setRows(prev => ordinaEAssegnaProgressivi(prev.filter((r) => r.id !== id)));
+        }
     };
 
     const columns: GridColDef[] = [
-        { field: 'col1', headerName: 'N.', width: 50, align: 'center' },
-        { field: 'col2', headerName: 'Nome Cameriere', flex: 1, minWidth: 150, editable: true, renderEditCell: (p) => <NameEditCell {...p} /> },
-        { field: 'col3', headerName: 'Primo', type: 'number', width: 85, editable: true },
-        { field: 'col4', headerName: 'Ultimo', type: 'number', width: 85, editable: true },
+        { field: 'col1', headerName: 'N.', width: 50, align: 'center', sortable: false },
+        { field: 'col2', headerName: 'Nome Cameriere', flex: 1, minWidth: 150, editable: true, sortable: false, renderEditCell: (p) => <NameEditCell {...p} /> },
+        { field: 'col3', headerName: 'Primo', type: 'number', width: 85, editable: true, sortable: false },
+        { field: 'col4', headerName: 'Ultimo', type: 'number', width: 85, editable: true, sortable: false },
+        { 
+            field: 'col5', 
+            headerName: 'N. Conti', 
+            type: 'number', 
+            width: 95, 
+            editable: false, 
+            align: 'center',
+            headerAlign: 'center',
+            sortable: false
+        },
         {
             field: 'actions', type: 'actions', width: 100,
             getActions: ({ id }) => {
@@ -256,7 +345,6 @@ export default function CamerieriPage() {
             
             {showLegenda && <LegendaColori onClose={() => setShowLegenda(false)} />}
 
-            {/* CONTAINER TABELLA DINAMICO */}
             <Box sx={{ 
                 flexGrow: 1, 
                 minHeight: 0, 
@@ -278,7 +366,8 @@ export default function CamerieriPage() {
                     onProcessRowUpdateError={() => {}}
                     slots={{ toolbar: EditToolbar as any }}
                     slotProps={{ toolbar: { setRows, setRowModesModel, rows, apiRef } as any }}
-                    initialState={{ sorting: { sortModel: [{ field: 'col1', sort: 'desc' }] } }}
+                    
+                    // Rimuoviamo l'ordinamento interno controllato di DataGrid: viene gestito via JS!
                     sx={{ 
                         border: 'none', 
                         height: '100%',
@@ -299,7 +388,6 @@ export default function CamerieriPage() {
                 />
             </Box>
 
-            {/* DIALOG E SNACKBAR */}
             <Dialog open={deleteDialog.open} onClose={() => setDeleteDialog({ open: false, id: null })}>
                 <DialogTitle>Elimina Cameriere?</DialogTitle>
                 <DialogActions sx={{ p: 2 }}>
@@ -307,7 +395,7 @@ export default function CamerieriPage() {
                     <Button onClick={async () => {
                         if (deleteDialog.id) {
                             await delCamerieri(Number(deleteDialog.id));
-                            setRows(rows.filter(r => r.id !== deleteDialog.id));
+                            setRows(prev => ordinaEAssegnaProgressivi(prev.filter(r => r.id !== deleteDialog.id)));
                             setDeleteDialog({ open: false, id: null });
                             setSnackbar({ open: true, message: 'Eliminato!', severity: 'success' });
                         }

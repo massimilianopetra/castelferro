@@ -17,6 +17,7 @@ import ChecklistRtlIcon from '@mui/icons-material/ChecklistRtl';
 import WcIcon from '@mui/icons-material/Wc';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import LocalPrintshopIcon from '@mui/icons-material/LocalPrintshop'; 
+import MilitaryTechIcon from '@mui/icons-material/MilitaryTech';
 
 export default function DashboardLinks() {
   const pathname = usePathname();
@@ -37,7 +38,8 @@ export default function DashboardLinks() {
     { name: 'Cruscotto Gratis', href: '/dashboard/cruscottogratis', icon: AssessmentIcon },
     { name: 'Verifica Conti', href: '/dashboard/listaconti', icon: ChecklistRtlIcon },
     { name: 'Logs', href: '/dashboard/logs', icon: BackupIcon },
-
+    { name: 'Classifica Camerieri', href: '/dashboard/classifica', icon: MilitaryTechIcon },
+    
   ];
   } 
 

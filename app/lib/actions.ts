@@ -21,7 +21,6 @@ const pool = provider === 'pg' ? new Pool({
 }) : null;
 
 async function executeQuery<T>(query: string, params?: any[]): Promise<T[] | undefined> {
-  //console.log(query, params);
   if (provider === 'pg') {
     if (!pool) {
       throw new Error('Pool non configurato per pg');
@@ -41,7 +40,6 @@ async function executeQuery<T>(query: string, params?: any[]): Promise<T[] | und
 
 
 /* ************************ SEED DATABASE **************************** */
- /* caricato 0 automantico 1 manuale 2 entrata libera  */
 async function seedTickets() {
   await executeQuery(`
     CREATE TABLE IF NOT EXISTS tickets (
@@ -53,9 +51,7 @@ async function seedTickets() {
        data_chiamato BIGINT 
      );
    `);
-
   console.log(`CREATED TABLE tickets`);
-
 }
 
 async function seedUsers() {
@@ -67,13 +63,11 @@ async function seedUsers() {
        password TEXT NOT NULL
      );
    `);
-
   console.log(`CREATED TABLE users`);
 
   const insertedUsers = await Promise.all(
     users.map(async (user) => {
       const hashedPassword = await bcrypt.hash(user.password, 10);
-
       try {
         executeQuery(`
            INSERT INTO users (id, name, email, password)
@@ -87,9 +81,7 @@ async function seedUsers() {
       }
     }),
   );
-
   console.log(`INSERTED users`);
-
   return insertedUsers;
 }
 
@@ -105,26 +97,20 @@ async function seedMenu() {
        percentuale REAL
      );
    `);
-
   console.log(`CREATED TABLE menus`);
 
-const insertedMenu = await Promise.all(
-  menu.map(async (item) => {
-    // Trasforma NaN o valori nulli in 0 per evitare il crash
-    const prezzo = isNaN(item.prezzo) ? 0 : item.prezzo;
-    const percentuale = isNaN(item.percentuale) ? 0 : item.percentuale;
-
-    return executeQuery(
-      `INSERT INTO menus (id, piatto, prezzo, cucina, disponibile, alias, percentuale)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
-       ON CONFLICT (id) DO NOTHING;`,
-      [item.id, item.piatto, prezzo, item.cucina, item.disponibile, item.alias, percentuale]
-    );
-  })
-);
-
-
-
+  const insertedMenu = await Promise.all(
+    menu.map(async (item) => {
+      const prezzo = isNaN(item.prezzo) ? 0 : item.prezzo;
+      const percentuale = isNaN(item.percentuale) ? 0 : item.percentuale;
+      return executeQuery(
+        `INSERT INTO menus (id, piatto, prezzo, cuisine, disponibile, alias, percentuale)
+         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         ON CONFLICT (id) DO NOTHING;`,
+        [item.id, item.piatto, prezzo, item.cucina, item.disponibile, item.alias, percentuale]
+      );
+    })
+  );
   console.log(`INSERTED TABLE menus`);
   return insertedMenu;
 }
@@ -143,7 +129,6 @@ async function seedConsumazioni() {
        alias VARCHAR(255) NOT NULL
      );
    `);
-
   console.log(`CREATED TABLE consumazioni`);
 }
 
@@ -156,12 +141,10 @@ async function seedCamerieri() {
      foglietto_end INTEGER
    );
  `);
-
   console.log(`CREATED TABLE camerieri`);
 
   const inserted = await Promise.all(
     waiters.map(async (item) => {
-      console.log(`VALUES ${item.id}, ${item.name}, ${item.figlietto_start}, ${item.foglietto_end}`);
       return executeQuery(`
          INSERT INTO camerieri (id, nome, foglietto_start, foglietto_end)
          VALUES (${item.id}, '${item.name}', ${item.figlietto_start}, ${item.foglietto_end})
@@ -169,9 +152,7 @@ async function seedCamerieri() {
       `);
     }),
   );
-
   console.log(`INSERTED TABLE camerieri`);
-
   return inserted;
 }
 
@@ -191,7 +172,6 @@ async function seedConti() {
        data_stampa BIGINT
      );
    `);
-
   console.log(`CREATED TABLE conti`);
 }
 
@@ -203,13 +183,11 @@ async function seedFiera() {
        stato VARCHAR(32)
      );
    `);
-
   await executeQuery(`
            INSERT INTO fiera (id, giornata, stato)
            VALUES (1,1,'CHIUSA')
            ON CONFLICT (id) DO NOTHING;
     `);
-
   console.log(`CREATED TABLE fiera`);
 }
 
@@ -226,13 +204,10 @@ async function seedLog() {
        data BIGINT
      );
    `);
-
   console.log(`CREATED TABLE logger`);
 }
 
-
 export async function seedDatabase() {
-
   try {
     console.log('**** Database seeding ****');
     await seedUsers();
@@ -243,20 +218,12 @@ export async function seedDatabase() {
     await seedConti();
     await seedCamerieri();
     await seedLog();
-
     console.log('Database seed completed');
-  } catch (error) {
-
-  }
-
+  } catch (error) {}
 }
 
 /* ************************ AUTHENTICATION **************************** */
-
-export async function authenticate(
-  prevState: string | undefined,
-  formData: FormData,
-) {
+export async function authenticate(prevState: string | undefined, formData: FormData) {
   try {
     await signIn('credentials', formData);
   } catch (error) {
@@ -275,10 +242,8 @@ export async function authenticate(
 export async function getUser(email: string): Promise<DbUser | undefined> {
   try {
     const user = await executeQuery<DbUser>(`SELECT * FROM users WHERE email='${email}'`);
-    if (user)
-      return user[0];
-    else
-      return undefined;
+    if (user) return user[0];
+    else return undefined;
   } catch (error) {
     console.error('Failed to fetch user:', error);
     throw new Error('Failed to fetch user.');
@@ -286,44 +251,22 @@ export async function getUser(email: string): Promise<DbUser | undefined> {
 }
 
 /* ************************ GESTIONE DB **************************** */
-
 export async function getTickets(modo: string): Promise<DbTickets[] | undefined> {
- // console.log(`getTickets: modo = ${modo}`);
   try {
     let query = `SELECT * FROM tickets`;
     let conditions = "";
-
     switch (modo) {
-      case 'all':
-        conditions = "";
-        break;
-    /* caricato in modalità: seduti 1 non-seduti 0 */
-      case 'seduti':
-        conditions = "WHERE seduto = 1";
-        break;
-      case 'non-seduti':
-        conditions = "WHERE seduto = 0";
-        break;
-    /* caricato in modalità: automatica 0 manuale 1 entrata libera 2 */
-      case 'automatico':
-        conditions = "WHERE caricato = 0";
-        break;
-      case 'manuale':
-        conditions = "WHERE caricato = 1";
-        break;
-      case 'entrata-libera':
-        conditions = "WHERE caricato = 2";
-        break;
-      case 'distribuiti':
-        conditions = "WHERE data_distributo IS NOT NULL";
-        break;
-      default:
-        conditions = ""; // Default a tutti se il modo non è riconosciuto
+      case 'all': conditions = ""; break;
+      case 'seduti': conditions = "WHERE seduto = 1"; break;
+      case 'non-seduti': conditions = "WHERE seduto = 0"; break;
+      case 'automatico': conditions = "WHERE caricato = 0"; break;
+      case 'manuale': conditions = "WHERE caricato = 1"; break;
+      case 'entrata-libera': conditions = "WHERE caricato = 2"; break;
+      case 'distribuiti': conditions = "WHERE data_distributo IS NOT NULL"; break;
+      default: conditions = "";
     }
-
     const tickets = await executeQuery<DbTickets>(`${query} ${conditions} ORDER BY id`);
     return tickets;
-
   } catch (error) {
     console.error('Failed to fetch tickets:', error);
     throw new Error('Failed to fetch tickets.');
@@ -331,8 +274,6 @@ export async function getTickets(modo: string): Promise<DbTickets[] | undefined>
 }
 
 export async function updateTickets(record: DbTickets) {
-//  console.log(`updateTickets: updating record ID ${record.id}`);
-  
   return await executeQuery(`
     UPDATE tickets
     SET 
@@ -345,299 +286,178 @@ export async function updateTickets(record: DbTickets) {
 }
 
 export async function deleteTicket(id: number) {
-  console.log("Cancellazione ticket id:", id);
-
-  return await executeQuery(`
-      DELETE FROM tickets
-      WHERE id = ${id};
-  `);
+  return await executeQuery(`DELETE FROM tickets WHERE id = ${id};`);
 }
+
 export async function clearAllTickets() {
-  console.log("Cancellazione tutti i ticket e reset ID");
   return await executeQuery(`TRUNCATE TABLE tickets RESTART IDENTITY CASCADE;`);
 }
 
-export async function addTickets(
-  id: number, 
-  numero_persone: number, 
-  seduto: number, 
-  caricato: number, 
-  data_distributo: number | null, 
-  data_chiamato: number | null
-) {
-  console.log("Add tickets", id);
-  
+export async function addTickets(id: number, numero_persone: number, seduto: number, caricato: number, data_distributo: number | null, data_chiamato: number | null) {
   try {
-    const result = await executeQuery(`
+    await executeQuery(`
       INSERT INTO tickets (id, numpersone, seduto, caricato, data_distributo, data_chiamato)
-      VALUES (
-        ${id}, 
-        ${numero_persone}, 
-        ${seduto}, 
-        ${caricato}, 
-        ${data_distributo ?? 'NULL'}, 
-        ${data_chiamato ?? 'NULL'}
-      );
+      VALUES (${id}, ${numero_persone}, ${seduto}, ${caricato}, ${data_distributo ?? 'NULL'}, ${data_chiamato ?? 'NULL'});
     `);
-    
     return { success: true };
-    
   } catch (error: any) {
-    console.error("Errore inserimento ticket:", error.message);
     return { error: 'DUPLICATE_ID', message: error.message };
   }
 }
- 
 
 export async function getNextTickets(): Promise<number> {
-  console.log("getNextTickets");
   try {
-    // Usiamo le doppie virgolette per forzare il case "maxId"
-    const tickets = await executeQuery<{ maxId: number | null }>(
-      `SELECT MAX(id) AS "maxId" FROM tickets`
-    );
-    
-    // Accediamo in modo sicuro
+    const tickets = await executeQuery<{ maxId: number | null }>(`SELECT MAX(id) AS "maxId" FROM tickets`);
     const row = tickets?.[0];
     const lastId = row ? (row.maxId ?? 0) : 0;
-
-    return Number(lastId) + 1; // Forza a numero per sicurezza
-
+    return Number(lastId) + 1;
   } catch (error) {
-    console.error('Failed to fetch getNextTickets:', error);
     throw new Error('Failed to fetch getNextTickets.');
   }
-  
 }
+
 export async function getCountTicketsNonSeduti(): Promise<number> {
   try {
-    const result = await executeQuery<{ count: string }>(
-      `SELECT SUM(numpersone) AS count FROM tickets WHERE seduto = 0`
-    );
+    const result = await executeQuery<{ count: string }>(`SELECT SUM(numpersone) AS count FROM tickets WHERE seduto = 0`);
     return Number(result?.[0]?.count || 0);
   } catch (error) {
-    console.error('Failed to count tickets:', error);
     return 0;
   }
 }
+
 export async function getFirstFreeTicket(): Promise<number> {
-//  console.log("getFirstFreeTicket");
   try {
-    // Questa query trova il più piccolo ID dove non esiste un ID + 1
-    // In pratica trova il primo "buco" nella sequenza
     const result = await executeQuery<{ freeId: number }>(`
       SELECT MIN(t1.id + 1) AS "freeId"
       FROM tickets t1
       LEFT JOIN tickets t2 ON t1.id + 1 = t2.id
       WHERE t2.id IS NULL
     `);
-
     const firstGap = result?.[0]?.freeId;
-
-    // Se la tabella è vuota, iniziamo da 1. 
-    // Controlliamo anche se l'ID 1 è libero (il LEFT JOIN sopra parte da t1.id + 1)
     const checkOne = await executeQuery(`SELECT id FROM tickets WHERE id = 1`);
     if (!checkOne || checkOne.length === 0) return 1;
-
     return firstGap ? Number(firstGap) : 1;
   } catch (error) {
-    console.error('Failed to fetch getFirstFreeTicket:', error);
     return 1;
   }
 }
 
-// actions.ts
-
 export async function getStimaAttesa() {
-  console.log("Calcolo stima attesa ultimi 10 ticket");
   try {
-    // Prendiamo gli ultimi 10 ticket (caricato = 0) che hanno entrambi i timestamp
     const result = await executeQuery<{ media_minuti: string }>(`
-      SELECT 
-        AVG(data_chiamato - data_distributo) / 60000 AS media_minuti
+      SELECT AVG(data_chiamato - data_distributo) / 60000 AS media_minuti
       FROM (
         SELECT data_distributo, data_chiamato
         FROM tickets
-        WHERE caricato = 0 
-          AND data_distributo IS NOT NULL 
-          AND data_chiamato IS NOT NULL
+        WHERE caricato = 0 AND data_distributo IS NOT NULL AND data_chiamato IS NOT NULL
         ORDER BY data_chiamato DESC
         LIMIT 10
       ) AS ultimi_tickets
     `);
-
     const media = result?.[0]?.media_minuti;
-    
     if (!media || Number(media) === 0) {
       return { success: false, message: "Dati insufficienti per la stima" };
     }
-
-    return { 
-      success: true, 
-      media: Math.round(Number(media)), // Media in minuti
-    };
+    return { success: true, media: Math.round(Number(media)) };
   } catch (error) {
-    console.error('Errore stima attesa:', error);
     return { success: false };
   }
 }
 
-/**
- * Recupera i punti per il grafico (ultimi 30 minuti, campionati ogni 5)
- * Nota: Questa query raggruppa i ticket finiti negli ultimi 30 minuti in slot da 5m
- */
 export async function getPuntiGraficoAttesa() {
   try {
     const oraAttuale = Date.now();
     const mezzOraFa = oraAttuale - (30 * 60 * 1000);
-
     const result = await executeQuery<{ slot: string, attesa_media: string }>(`
       SELECT 
-        (data_chiamato / 300000) * 300000 AS slot, -- Raggruppa per 5 minuti (300.000 ms)
+        (data_chiamato / 300000) * 300000 AS slot,
         AVG(data_chiamato - data_distributo) / 60000 AS attesa_media
       FROM tickets
-      WHERE caricato = 0 
-        AND data_chiamato >= ${mezzOraFa}
-        AND data_chiamato <= ${oraAttuale}
+      WHERE caricato = 0 AND data_chiamato >= ${mezzOraFa} AND data_chiamato <= ${oraAttuale}
       GROUP BY slot
       ORDER BY slot ASC
     `);
-
     return result || [];
   } catch (error) {
-    console.error('Errore punti grafico:', error);
     return [];
   }
 }
 
-
 export async function getMenu(): Promise<DbMenu[] | undefined> {
-  console.log("getMenu");
   try {
-    const menus = await executeQuery<DbMenu>(`SELECT * FROM menus ORDER BY id`);
-    return menus;
+    return await executeQuery<DbMenu>(`SELECT * FROM menus ORDER BY id`);
   } catch (error) {
-    console.error('Failed to fetch menu:', error);
     throw new Error('Failed to fetch menu.');
   }
 }
 
 export async function updatetMenu(record: DbMenu) {
-  console.log("updateMenu");
-  return await executeQuery(`
-         UPDATE menus
-         SET disponibile = '${record.disponibile}'
-         WHERE id = ${record.id};
-      `);
+  return await executeQuery(`UPDATE menus SET disponibile = '${record.disponibile}' WHERE id = ${record.id};`);
 }
 
 export async function overwriteMenu(record: DbMenu[]) {
-  await executeQuery(`
-         TRUNCATE TABLE menus;
-      `);
-
+  await executeQuery(`TRUNCATE TABLE menus;`);
   record.map(async (item) => {
-    console.log(`VALUES ${item.id}, '${item.piatto}', ${item.prezzo}, '${item.cucina}','${item.disponibile}', '${item.alias}',${item.percentuale},`);
     return await executeQuery(`
-             INSERT INTO menus (id, piatto, prezzo, cucina, disponibile, alias, percentuale)
-             VALUES (${item.id}, '${item.piatto}', ${item.prezzo}, '${item.cucina}','${item.disponibile}','${item.alias}',${item.percentuale})
-             ON CONFLICT (id) DO NOTHING;
-          `);
-  })
+       INSERT INTO menus (id, piatto, prezzo, cucina, disponibile, alias, percentuale)
+       VALUES (${item.id}, '${item.piatto}', ${item.prezzo}, '${item.cucina}','${item.disponibile}','${item.alias}',${item.percentuale})
+       ON CONFLICT (id) DO NOTHING;
+    `);
+  });
 }
 
 export async function setMenuAllAvailable() {
-  console.log("updateMenu");
-  return await executeQuery(`
-         UPDATE menus
-         SET disponibile = 'Y';
-      `);
+  return await executeQuery(`UPDATE menus SET disponibile = 'Y';`);
 }
 
-
 export async function getConsumazioni(cucina: string, comanda: number = -1, giornata: number, available = 'ALWAYS'): Promise<DbConsumazioni[] | undefined> {
-  console.log("getConsumazioni");
   var menus = undefined;
-
   try {
     if (available == 'ALWAYS') {
-      menus = await executeQuery<DbMenu>(`SELECT * FROM menus  WHERE cucina = '${cucina}' OR cucina = 'All' ORDER BY id`);
+      menus = await executeQuery<DbMenu>(`SELECT * FROM menus WHERE cucina = '${cucina}' OR cucina = 'All' ORDER BY id`);
     } else {
-      menus = await executeQuery<DbMenu>(`SELECT * FROM menus  WHERE (cucina = '${cucina}' OR cucina = 'All') AND disponibile = 'Y' ORDER BY id`);
+      menus = await executeQuery<DbMenu>(`SELECT * FROM menus WHERE (cucina = '${cucina}' OR cucina = 'All') AND disponibile = 'Y' ORDER BY id`);
     }
 
     if (menus) {
       const consumazioni_menu: DbConsumazioni[] = menus.map((item) => ({
-        id: -1,
-        id_comanda: comanda,
-        id_piatto: item.id,
-        piatto: item.piatto,
-        quantita: 0,
-        cucina: item.cucina,
-        giorno: giornata,
-        data: 0,
-        alias: item.alias
+        id: -1, id_comanda: comanda, id_piatto: item.id, piatto: item.piatto, quantita: 0, cucina: item.cucina, giorno: giornata, data: 0, alias: item.alias
       }));
       if (comanda != -1) {
-        console.log(`Richiesta comanda n. ${comanda}`)
-        // Ricerca consumazioni esistenti con codice comanda
-        const cosumazioni_tavolo = await executeQuery<DbConsumazioni>(`SELECT * FROM consumazioni  WHERE (cucina = '${cucina}' OR cucina = 'All') AND id_comanda = ${comanda} AND giorno = ${giornata}`);
-        // Fonde consumazioni esistenti con lista piatti menu della cucina
+        const cosumazioni_tavolo = await executeQuery<DbConsumazioni>(`SELECT * FROM consumazioni WHERE (cucina = '${cucina}' OR cucina = 'All') AND id_comanda = ${comanda} AND giorno = ${giornata}`);
         if (cosumazioni_tavolo) {
-          const consumazioni = consumazioni_menu.map(t1 => ({ ...t1, ...cosumazioni_tavolo.find(t2 => t2.id_piatto === t1.id_piatto) }));
-          return consumazioni;
+          return consumazioni_menu.map(t1 => ({ ...t1, ...cosumazioni_tavolo.find(t2 => t2.id_piatto === t1.id_piatto) }));
         }
       }
-
       return consumazioni_menu;
     }
   } catch (error) {
-    console.error('Failed to fetch consumazioni:', error);
     throw new Error('Failed to fetch consumazioni.');
   }
 }
 
 export async function getConsumazioniCassa(comanda: number = -1, giornata: number): Promise<DbConsumazioniPrezzo[] | undefined> {
-  console.log("getConsumazioniCassa");
   try {
     const menus = await executeQuery<DbMenu>(`SELECT * FROM menus ORDER BY id`);
     if (menus) {
       const consumazioni_menu: DbConsumazioniPrezzo[] = menus.map((item) => ({
-        id: -1,
-        id_comanda: comanda,
-        id_piatto: item.id,
-        piatto: item.piatto,
-        prezzo_unitario: item.prezzo,
-        quantita: 0,
-        cucina: item.cucina,
-        giorno: giornata,
-        data: 0,
-        alias: item.alias
+        id: -1, id_comanda: comanda, id_piatto: item.id, piatto: item.piatto, prezzo_unitario: item.prezzo, quantita: 0, cucina: item.cucina, giorno: giornata, data: 0, alias: item.alias
       }));
       if (comanda != -1) {
-        console.log(`Richiesta comanda n. ${comanda}`)
-        // Ricerca consumazioni esistenti con codice comanda
-        const cosumazioni_tavolo = await executeQuery<DbConsumazioni>(`SELECT * FROM consumazioni  WHERE id_comanda = ${comanda} AND giorno = ${giornata}`);
-        // Fonde consumazioni esistenti con lista piatti menu della cucina
+        const cosumazioni_tavolo = await executeQuery<DbConsumazioni>(`SELECT * FROM consumazioni WHERE id_comanda = ${comanda} AND giorno = ${giornata}`);
         if (cosumazioni_tavolo) {
-          const consumazioni = consumazioni_menu.map(t1 => ({ ...t1, ...cosumazioni_tavolo.find(t2 => t2.id_piatto === t1.id_piatto) }));
-          return consumazioni;
+          return consumazioni_menu.map(t1 => ({ ...t1, ...cosumazioni_tavolo.find(t2 => t2.id_piatto === t1.id_piatto) }));
         }
       }
-
       return consumazioni_menu;
     }
   } catch (error) {
-    console.error('Failed to fetch consumazioni:', error);
     throw new Error('Failed to fetch consumazioni.');
   }
 }
 
 export async function sendConsumazioni(c: DbConsumazioni[]) {
-  console.log('sendConsumazioni');
   const date_format_millis = Date.now();
-  console.log(date_format_millis);
-
   c.map(async (item) => {
     if (item.id == -1) {
       return await executeQuery(`
@@ -646,24 +466,13 @@ export async function sendConsumazioni(c: DbConsumazioni[]) {
          ON CONFLICT (id) DO NOTHING;
       `);
     } else {
-      return await executeQuery(`
-         UPDATE consumazioni
-         SET quantita = ${item.quantita},
-             data = ${date_format_millis}
-         WHERE id = ${item.id};
-      `);
+      return await executeQuery(`UPDATE consumazioni SET quantita = ${item.quantita}, data = ${date_format_millis} WHERE id = ${item.id};`);
     }
   });
-
-
 }
 
 export async function updateTotaleConto(foglietto: number, giorno: number) {
-
-  // ISSUE 1: usato in fase di invio consumazioni per aggiornare il totale del conto associato
-
   const consumazioni = await getConsumazioniCassa(foglietto, giorno);
-
   var totale = 0;
   if (consumazioni) {
     for (let i of consumazioni) {
@@ -674,50 +483,35 @@ export async function updateTotaleConto(foglietto: number, giorno: number) {
 }
 
 export async function getConto(foglietto: number, giorno: number): Promise<DbConti | undefined> {
-  console.log("getConto");
   try {
-    const c = await executeQuery<DbConti>(`SELECT * FROM conti  WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`);
-    if (c)
-      return c[0];
-    else
-      return undefined;
+    const c = await executeQuery<DbConti>(`SELECT * FROM conti WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`);
+    if (c) return c[0];
+    else return undefined;
   } catch (error) {
-    return undefined
+    return undefined;
   }
 }
 
 export async function getUltimiConti(giorno: number): Promise<DbConti[] | undefined> {
-  console.log("getUltimiConti");
   try {
-    const c = await executeQuery<DbConti>(`SELECT * FROM conti  WHERE giorno = ${giorno} ORDER BY data_apertura DESC LIMIT 3`);
-    return c;
+    return await executeQuery<DbConti>(`SELECT * FROM conti WHERE giorno = ${giorno} ORDER BY data_apertura DESC LIMIT 3`);
   } catch (error) {
-    console.error('Failed to fetch conto:', error);
     throw new Error('Failed to fetch conto.');
   }
 }
 
 export async function getCamerieri(foglietto: number): Promise<string | undefined> {
   try {
-    console.log(`Get Camerieri foglietto n. ${foglietto}`)
-
-    if (foglietto < 10) {
-      return ('Gratuito');
-    }
-
-    const c = await executeQuery<DbCamerieri>(`SELECT * FROM camerieri  WHERE foglietto_end >= ${foglietto} AND foglietto_start <= ${foglietto}`);
-    if (c)
-      return (c[0].nome)
+    if (foglietto < 10) return 'Gratuito';
+    const c = await executeQuery<DbCamerieri>(`SELECT * FROM camerieri WHERE foglietto_end >= ${foglietto} AND foglietto_start <= ${foglietto}`);
+    if (c) return c[0].nome;
   } catch (error) {
-    return ('Sconosciuto');
+    return 'Sconosciuto';
   }
-
-  return (undefined);
+  return undefined;
 }
 
 export async function updateCamerieri(c: DbCamerieri[]) {
-  console.log('updateCamerieri');
-
   c.map(async (item) => {
     return await executeQuery(`
          UPDATE camerieri
@@ -729,88 +523,112 @@ export async function updateCamerieri(c: DbCamerieri[]) {
   });
 }
 
-export async function getListaCamerieri(): Promise<DbCamerieri[] | undefined> {
+export async function getClassificaCopertiCamerieri(): Promise<{ nome: string; coperti: number }[] | undefined> {
   try {
-    console.log(`Get Lista Camerieri`);
-
-
-    const c = await executeQuery<DbCamerieri>(`SELECT * FROM camerieri ORDER BY foglietto_start`);
-    if (c)
-      return (c)
+    // 1. Prendiamo l'ultimo inserimento/modifica dei coperti (id_piatto = 1) per ogni comanda
+    // 2. Colleghiamo la tabella 'conti' tramite id_comanda
+    // 3. Colleghiamo la tabella 'camerieri' confrontando i NOMI (es. 'Bruno' con 'Bruno') e non gli ID
+    const res = await executeQuery<{ nome: string; coperti: number }>(`
+      WITH ultimi_coperti AS (
+        SELECT id_comanda, quantita,
+               ROW_NUMBER() OVER(PARTITION BY id_comanda ORDER BY data DESC) as rn
+        FROM consumazioni
+        WHERE id_piatto = 1 AND quantita > 0
+      ),
+      coperti_validi AS (
+        SELECT id_comanda, quantita
+        FROM ultimi_coperti
+        WHERE rn = 1
+      )
+      -- 2. Raggruppiamo SOLO per c.nome in modo da unire i duplicati (es. i vari 'br3')
+      -- e sommiamo tutti i coperti associati ai suoi conti
+      SELECT c.nome, COALESCE(SUM(cv.quantita), 0)::int as coperti
+      FROM camerieri c
+      LEFT JOIN conti co ON TRIM(LOWER(c.nome)) = TRIM(LOWER(co.cameriere))
+      LEFT JOIN coperti_validi cv ON co.id_comanda = cv.id_comanda
+      WHERE c.nome IS NOT NULL AND c.nome != ''
+      GROUP BY LOWER(c.nome), c.nome
+      ORDER BY coperti DESC
+    `);
+    
+    return res;
   } catch (error) {
-    return (undefined);
+    console.error('Failed to fetch classifica coperti:', error);
+    throw new Error('Failed to fetch classifica coperti.');
   }
+}
+/* MODIFICATO: Include il calcolo automatico dei conti fatti nell'intervallo */
+export async function getListaCamerieri(): Promise<any[] | undefined> {
+  try {
+    console.log(`Get Lista Camerieri con Conteggio Conti Real-Time`);
 
-  return (undefined);
+    // Calcoliamo quanti record nella tabella "conti" hanno un "id_comanda" compreso nel range del cameriere
+    const query = `
+      SELECT 
+        ca.id,
+        ca.nome,
+        ca.foglietto_start,
+        ca.foglietto_end,
+        COUNT(co.id_comanda)::int AS n_conti
+      FROM camerieri ca
+      LEFT JOIN conti co ON co.id_comanda >= ca.foglietto_start AND co.id_comanda <= ca.foglietto_end
+      GROUP BY ca.id, ca.nome, ca.foglietto_start, ca.foglietto_end
+      ORDER BY ca.foglietto_start;
+    `;
+
+    const c = await executeQuery<any>(query);
+    if (c) return c;
+  } catch (error) {
+    console.error("Errore in getListaCamerieri:", error);
+    return undefined;
+  }
+  return undefined;
 }
 
+/* MODIFICATO: Aggiunto RETURNING id per sincronizzare l'ID generato in inserimento */
 export async function addCamerieri(nome: string, foglietto_start: number, foglietto_end: number) {
-  console.log("Add camerieri")
-  return await executeQuery(`INSERT INTO camerieri (nome,foglietto_start,foglietto_end)
-  VALUES ('${nome}',${foglietto_start},${foglietto_end})
-  ON CONFLICT (id) DO NOTHING;
+  console.log("Add camerieri");
+  return await executeQuery<{ id: number }>(`
+    INSERT INTO camerieri (nome, foglietto_start, foglietto_end)
+    VALUES ('${nome}', ${foglietto_start}, ${foglietto_end})
+    RETURNING id;
   `);
 }
 
 export async function listTables(): Promise<any[] | undefined> {
-  const result = await executeQuery(`SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'`);
-  return result;
+  return await executeQuery(`SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'`);
 }
 
 export async function getListaSintesiPiatti(giorno: number): Promise<DbSintesiPiatti[] | undefined> {
   try {
-    console.log(`getListaSintesiPiatti giorno ${giorno}`);
-
-
-    const c = await executeQuery<DbSintesiPiatti>(`SELECT  DISTINCT m.id,m.prezzo,m.alias
-              FROM menus m
-              JOIN consumazioni c ON m.id = c.id_piatto AND c.giorno = ${giorno} AND c.quantita > 0;`);
-    if (c)
-      console.log(c);
-    return (c)
+    return await executeQuery<DbSintesiPiatti>(`
+      SELECT DISTINCT m.id, m.prezzo, m.alias
+      FROM menus m
+      JOIN consumazioni c ON m.id = c.id_piatto AND c.giorno = ${giorno} AND c.quantita > 0;
+    `);
   } catch (error) {
-    console.log("getListaSintesiPiatti: QUQERY ERROR")
-    return (undefined);
+    return undefined;
   }
 }
 
-export async function getSintesiPiatti(id: number, giorno: number): Promise<{
-  ordinati: number,
-  stampati: number,
-  aperto: number,
-  pagatocontanti: number,
-  pagatopos: number,
-  pagatoaltro: number
-} | undefined> {
+export async function getSintesiPiatti(id: number, giorno: number): Promise<{ ordinati: number, stampati: number, aperto: number, pagatocontanti: number, pagatopos: number, pagatoaltro: number } | undefined> {
   try {
-    console.log(`getSintesiPiatti giorno ${giorno}`);
-
-    const result = await executeQuery<{
-      ordinati: string;
-      stampati: string;
-      aperti: string;
-      pagatocontanti: string;
-      pagatopos: string;
-      pagatoaltro: string;
-    }>(`
-SELECT
-    SUM(c.quantita) AS ordinati,
-    SUM(CASE WHEN s.stato = 'STAMPATO' THEN c.quantita ELSE 0 END) AS stampati,
-    SUM(CASE WHEN s.stato = 'APERTO' THEN c.quantita ELSE 0 END) AS aperti,
-    SUM(CASE WHEN s.stato = 'CHIUSO' THEN c.quantita ELSE 0 END) AS pagatocontanti,
-    SUM(CASE WHEN s.stato = 'CHIUSOPOS' THEN c.quantita ELSE 0 END) AS pagatopos,
-    SUM(CASE WHEN s.stato = 'CHIUSOALTRO' THEN c.quantita ELSE 0 END) AS pagatoaltro
-FROM consumazioni c
-LEFT JOIN (
-    SELECT id_comanda, MAX(stato) AS stato
-    FROM conti
-    GROUP BY id_comanda
-) s ON c.id_comanda = s.id_comanda
-WHERE c.id_piatto = ${id}
-  AND c.giorno = ${giorno}
-  AND c.quantita > 0;
-`);
-
+    const result = await executeQuery<{ ordinati: string; stampati: string; aperti: string; pagatocontanti: string; pagatopos: string; pagatoaltro: string; }>(`
+      SELECT
+          SUM(c.quantita) AS ordinati,
+          SUM(CASE WHEN s.stato = 'STAMPATO' THEN c.quantita ELSE 0 END) AS stampati,
+          SUM(CASE WHEN s.stato = 'APERTO' THEN c.quantita ELSE 0 END) AS aperti,
+          SUM(CASE WHEN s.stato = 'CHIUSO' THEN c.quantita ELSE 0 END) AS pagatocontanti,
+          SUM(CASE WHEN s.stato = 'CHIUSOPOS' THEN c.quantita ELSE 0 END) AS pagatopos,
+          SUM(CASE WHEN s.stato = 'CHIUSOALTRO' THEN c.quantita ELSE 0 END) AS pagatoaltro
+      FROM consumazioni c
+      LEFT JOIN (
+          SELECT id_comanda, MAX(stato) AS stato
+          FROM conti
+          GROUP BY id_comanda
+      ) s ON c.id_comanda = s.id_comanda
+      WHERE c.id_piatto = ${id} AND c.giorno = ${giorno} AND c.quantita > 0;
+    `);
     return {
       ordinati: Number(result?.[0]?.ordinati || 0),
       stampati: Number(result?.[0]?.stampati || 0),
@@ -820,34 +638,21 @@ WHERE c.id_piatto = ${id}
       pagatoaltro: Number(result?.[0]?.pagatoaltro || 0),
     };
   } catch (error) {
-    console.log("undefined");
-    return (undefined);
+    return undefined;
   }
-
 }
 
 export async function doSelect(tableName: string): Promise<any[] | undefined> {
   try {
-
-    const query = `SELECT * FROM ${tableName}`;
-    console.log(query)
-    const result = await executeQuery(query);
-    console.log(result);
-    return result;
+    return await executeQuery(`SELECT * FROM ${tableName}`);
   } catch (error) {
-    console.log(`ERROR: doSelect(SELECT * FROM ${tableName})`);
-    console.log(error);
     return [];
   }
 }
 
 export async function doTruncate(tableName: string): Promise<any[] | undefined> {
   try {
-
-    const query = `TRUNCATE TABLE ${tableName}`;
-    console.log(query)
-    const result = await executeQuery(query);
-    return result;
+    return await executeQuery(`TRUNCATE TABLE ${tableName}`);
   } catch (error) {
     return [];
   }
@@ -855,132 +660,83 @@ export async function doTruncate(tableName: string): Promise<any[] | undefined> 
 
 export async function doDrop(tableName: string): Promise<any[] | undefined> {
   try {
-
-    const query = `DROP TABLE ${tableName}`;
-    console.log(query)
-    const result = await executeQuery(query);
-    return result;
+    return await executeQuery(`DROP TABLE ${tableName}`);
   } catch (error) {
     return [];
   }
 }
 
 export async function delCamerieri(id: number) {
-  console.log(`Del camerieri ${id}`);
-  await executeQuery(`DELETE FROM camerieri
-  WHERE id=${id};`);
+  await executeQuery(`DELETE FROM camerieri WHERE id=${id};`);
 }
 
 export async function listConti(stato: string, giornata: number): Promise<DbConti[] | undefined> {
-
   if (stato == '*') {
-    const current = await executeQuery<DbConti>(`SELECT * FROM conti  WHERE giorno = ${giornata} ORDER BY data_apertura`);
-    return current;
+    return await executeQuery<DbConti>(`SELECT * FROM conti WHERE giorno = ${giornata} ORDER BY data_apertura`);
   } else {
-    const current = await executeQuery<DbConti>(`SELECT * FROM conti  WHERE stato = '${stato}' AND giorno = ${giornata} ORDER BY data_apertura`);
-    return current;
+    return await executeQuery<DbConti>(`SELECT * FROM conti WHERE stato = '${stato}' AND giorno = ${giornata} ORDER BY data_apertura`);
   }
 }
 
 export async function listContiPerChiusra(giornata: number): Promise<DbExtendedConti[] | undefined> {
-  const current = await executeQuery<DbExtendedConti>(`
-  SELECT DISTINCT ON (s.id_comanda)
-    s.*,  
-    c.quantita as coperti 
-  FROM 
-    conti s
-  LEFT JOIN consumazioni c 
-  ON c.id_comanda = s.id_comanda
-  WHERE
-    s.giorno = ${giornata}
-    AND s.id_comanda > 9
-    AND c.id_piatto = 1
-    AND s.stato IN ('STAMPATO')
-  ORDER BY s.id_comanda;`);
-  return current;
+  return await executeQuery<DbExtendedConti>(`
+    SELECT DISTINCT ON (s.id_comanda) s.*, c.quantita as coperti 
+    FROM conti s
+    LEFT JOIN consumazioni c ON c.id_comanda = s.id_comanda
+    WHERE s.giorno = ${giornata} AND s.id_comanda > 9 AND c.id_piatto = 1 AND s.stato IN ('STAMPATO')
+    ORDER BY s.id_comanda;
+  `);
 }
 
 export async function getContoPiuAlto(): Promise<Number | undefined> {
   try {
-    console.log("getContoPiuAlto");
     const cc = await executeQuery<DbConti>(`SELECT * FROM conti ORDER BY Id_comanda DESC`);
-    if (cc) {
-      var uc = Number(cc[0].id_comanda)
-      console.log(">>getContoPiuAlto>>");
-      console.log(uc);
-
-      return uc;
-    }
+    if (cc) return Number(cc[0].id_comanda);
   } catch (error) {
-    console.log(':', error);
     throw new Error('Failed getContoPiuAlto.');
   }
 }
 
-
 export async function listContiGratis(): Promise<DbConti[] | undefined> {
-
-  const current = await executeQuery<DbConti>(`SELECT * FROM conti  WHERE id_comanda < 10`);
-  return current;
+  return await executeQuery<DbConti>(`SELECT * FROM conti WHERE id_comanda < 10`);
 }
 
 export async function listContiGratisFogliettoN(stato: string, giornata: number, foglietto: number): Promise<DbConti[] | undefined> {
-
   if (stato == '*') {
-    const current = await executeQuery<DbConti>(`SELECT * FROM conti  WHERE giorno = ${giornata} AND id_comanda = ${foglietto} ORDER BY data_apertura`);
-    return current;
+    return await executeQuery<DbConti>(`SELECT * FROM conti WHERE giorno = ${giornata} AND id_comanda = ${foglietto} ORDER BY data_apertura`);
   } else {
-    const current = await executeQuery<DbConti>(`SELECT * FROM conti  WHERE stato = '${stato}' AND id_comanda = ${foglietto} AND giorno = ${giornata} ORDER BY data_apertura`);
-    return current;
+    return await executeQuery<DbConti>(`SELECT * FROM conti WHERE stato = '${stato}' AND id_comanda = ${foglietto} AND giorno = ${giornata} ORDER BY data_apertura`);
   }
 }
 
 export async function listLog(giornata: number): Promise<DbLog[] | undefined> {
-
-  const current = await executeQuery<DbLog>(`SELECT * FROM logger  WHERE giornata = ${giornata} ORDER BY data DESC`);
-  return current;
-
+  return await executeQuery<DbLog>(`SELECT * FROM logger WHERE giornata = ${giornata} ORDER BY data DESC`);
 }
 
 export async function listConsumazioni(id_piatto: number, giornata: number): Promise<DbConsumazioni[] | undefined> {
-
   if (id_piatto == -1) {
-    const current = await executeQuery<DbConsumazioni>(`SELECT * FROM consumazioni  WHERE giorno = ${giornata}`);
-    return current;
+    return await executeQuery<DbConsumazioni>(`SELECT * FROM consumazioni WHERE giorno = ${giornata}`);
   } else {
-    const current = await executeQuery<DbConsumazioni>(`SELECT * FROM consumazioni  WHERE giorno = ${giornata} AND id_piatto = ${id_piatto}`);
-    return current;
+    return await executeQuery<DbConsumazioni>(`SELECT * FROM consumazioni WHERE giorno = ${giornata} AND id_piatto = ${id_piatto}`);
   }
 }
 
 export async function listConsumazioniGratis(): Promise<DbConsumazioni[] | undefined> {
-
-  const current = await executeQuery<DbConsumazioni>(`SELECT * FROM consumazioni  WHERE id_comanda < 10`);
-  return current;
+  return await executeQuery<DbConsumazioni>(`SELECT * FROM consumazioni WHERE id_comanda < 10`);
 }
 
-export async function listConsumazioniFogliettoN(id_piatto: number, giornata: number, foglietto: number,): Promise<DbConsumazioni[] | undefined> {
-
+export async function listConsumazioniFogliettoN(id_piatto: number, giornata: number, foglietto: number): Promise<DbConsumazioni[] | undefined> {
   if (id_piatto == -1) {
-    const current = await executeQuery<DbConsumazioni>(`SELECT * FROM consumazioni  WHERE giorno = ${giornata} AND id_comanda = ${foglietto}`);
-    return current;
+    return await executeQuery<DbConsumazioni>(`SELECT * FROM consumazioni WHERE giorno = ${giornata} AND id_comanda = ${foglietto}`);
   } else {
-    const current = await executeQuery<DbConsumazioni>(`SELECT * FROM consumazioni  WHERE giorno = ${giornata} AND d_comanda = ${foglietto} AND id_piatto = ${id_piatto}`);
-    return current;
+    return await executeQuery<DbConsumazioni>(`SELECT * FROM consumazioni WHERE giorno = ${giornata} AND d_comanda = ${foglietto} AND id_piatto = ${id_piatto}`);
   }
 }
 
-
 export async function apriConto(foglietto: number, giorno: number, cameriere: string) {
-
   const date_format_millis = Date.now();
-
-  const current = await executeQuery<DbConti>(`SELECT * FROM conti  WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`);
-
-  if (current && current?.length > 0) {
-    console.log(`Il conto foglietto n. ${foglietto} giorno n. ${giorno} risulta paerto in data: ${current[0].data_apertura}`);
-  } else {
-    console.log(`Inserimento conto foglietto n. ${foglietto} giorno n. ${giorno}`);
+  const current = await executeQuery<DbConti>(`SELECT * FROM conti WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`);
+  if (!(current && current?.length > 0)) {
     return await executeQuery(`INSERT INTO conti (id_comanda, stato, totale, cameriere, giorno, data_apertura, data, data_chiusura)
     VALUES (${foglietto}, 'APERTO', 0.0,'${cameriere}',${giorno},${date_format_millis},${date_format_millis},0)
     ON CONFLICT (id) DO NOTHING;
@@ -989,164 +745,77 @@ export async function apriConto(foglietto: number, giorno: number, cameriere: st
 }
 
 export async function stampaConto(foglietto: number, giorno: number) {
-
   const date_format_millis = Date.now();
-
-  const current = await executeQuery<DbConti>(`SELECT * FROM conti  WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`);
-
+  const current = await executeQuery<DbConti>(`SELECT * FROM conti WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`);
   if (current) {
-    console.log(`Apertura conto foglietto n. ${foglietto} giorno n. ${giorno}`);
-    return await executeQuery(`
-    UPDATE conti
-    SET stato = 'STAMPATO',
-        data = ${date_format_millis},
-        data_stampa = ${date_format_millis}
-    WHERE id = ${current[0].id};
-    `);
-  } else {
-    console.log(`Il conto foglietto n. ${foglietto} giorno n. ${giorno} non risulta paerto`);
+    return await executeQuery(`UPDATE conti SET stato = 'STAMPATO', data = ${date_format_millis}, data_stampa = ${date_format_millis} WHERE id = ${current[0].id};`);
   }
 }
 
 export async function aggiornaConto(foglietto: number, giorno: number, totale: number) {
-
   const date_format_millis = Date.now();
-
-  const current = await executeQuery<DbConti>(`SELECT * FROM conti  WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`);
-
+  const current = await executeQuery<DbConti>(`SELECT * FROM conti WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`);
   if (current) {
-    console.log(`Apertura conto foglietto n. ${foglietto} giorno n. ${giorno}`);
-    return await executeQuery(`
-    UPDATE conti
-    SET totale = ${totale},
-        data = ${date_format_millis},
-        stato = 'APERTO'
-    WHERE id = ${current[0].id};
-    `);
-  } else {
-    console.log(`Il conto foglietto n. ${foglietto} giorno n. ${giorno} non risulta aperto`);
+    return await executeQuery(`UPDATE conti SET totale = ${totale}, data = ${date_format_millis}, stato = 'APERTO' WHERE id = ${current[0].id};`);
   }
 }
 
 export async function riapriConto(foglietto: number, giorno: number) {
   const date_format_millis = Date.now();
-
-  const current = await executeQuery<DbConti>(`SELECT * FROM conti  WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`);
-
+  const current = await executeQuery<DbConti>(`SELECT * FROM conti WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`);
   if (current) {
-    console.log(`Ri-Apertura conto foglietto n. ${foglietto} giorno n. ${giorno}`);
-    return await executeQuery(`
-    UPDATE conti
-    SET data = ${date_format_millis},
-        stato = 'APERTO'
-    WHERE id = ${current[0].id};
-    `);
-  } else {
-    console.log(`Il conto foglietto n. ${foglietto} giorno n. ${giorno} non risulta paerto`);
+    return await executeQuery(`UPDATE conti SET data = ${date_format_millis}, stato = 'APERTO' WHERE id = ${current[0].id};`);
   }
 }
 
 export async function chiudiConto(foglietto: number, giorno: number, mode: Number = 1, note: string = "", totale: string = "0.0") {
-
   const date_format_millis = Date.now();
-
-  const current = await executeQuery<DbConti>(`SELECT * FROM conti  WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`);
-
+  const current = await executeQuery<DbConti>(`SELECT * FROM conti WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`);
   if (current) {
-    console.log(`Chiusura conto foglietto n. ${foglietto} giorno n. ${giorno}`);
     if (mode == 2) {
-      return await executeQuery(`
-                      UPDATE conti
-                      SET stato = 'CHIUSOPOS',
-                      data_chiusura = ${date_format_millis}
-                      WHERE id = ${current[0].id};
-                      `);
+      return await executeQuery(`UPDATE conti SET stato = 'CHIUSOPOS', data_chiusura = ${date_format_millis} WHERE id = ${current[0].id};`);
     } else if (mode == 3) {
-      return await executeQuery(`
-                      UPDATE conti
-                      SET stato = 'CHIUSOALTRO',
-                      data_chiusura = ${date_format_millis},
-                      note = '${note}',
-                      totale = ${totale}
-                      WHERE id = ${current[0].id};
-                      `);
+      return await executeQuery(`UPDATE conti SET stato = 'CHIUSOALTRO', data_chiusura = ${date_format_millis}, note = '${note}', totale = ${totale} WHERE id = ${current[0].id};`);
     } else {
-      return await executeQuery(`
-                      UPDATE conti
-                      SET stato = 'CHIUSO',
-                      data_chiusura = ${date_format_millis}
-                      WHERE id = ${current[0].id};
-                      `);
+      return await executeQuery(`UPDATE conti SET stato = 'CHIUSO', data_chiusura = ${date_format_millis} WHERE id = ${current[0].id};`);
     }
-  } else {
-    console.log(`Il conto foglietto n. ${foglietto} giorno n. ${giorno} non risulta paerto`);
   }
 }
 
-
 export async function updateGiornoSagra(giornata: number, stato: string) {
-
-  console.log('updateFiera');
-
-  return await executeQuery(`
-           UPDATE fiera
-           SET giornata = ${giornata},
-               stato = '${stato}'
-           WHERE id = 1;
-        `);
+  return await executeQuery(`UPDATE fiera SET giornata = ${giornata}, stato = '${stato}' WHERE id = 1;`);
 }
 
 export async function getGiornoSagra(): Promise<DbFiera | undefined> {
-  console.log("getGiornoFiera");
   try {
     const gg = await executeQuery<DbFiera>(`SELECT * FROM fiera WHERE id = 1`);
-    if (gg)
-      return gg[0];
+    if (gg) return gg[0];
   } catch (error) {
-    console.error('Failed to fetch fiera:', error);
     throw new Error('Failed to fetch fiera.');
   }
 }
 
-export async function writeLog(foglietto: number, giorno: number, cucina: string, utente: string, azione: string, note: string) {
-
+export async function writeLog(foglietto: number, giorno: number, cuisine: string, utente: string, azione: string, note: string) {
   const date_format_millis = Date.now();
-
-  console.log(`Logging ${foglietto} giorno n. ${giorno}`);
   await executeQuery(`INSERT INTO logger (foglietto, azione, note, cucina, utente, giornata, data)
-    VALUES (${foglietto},'${azione}','${note}','${cucina}','${utente}',${giorno},${date_format_millis})
+    VALUES (${foglietto},'${azione}','${note}','${cuisine}','${utente}',${giorno},${date_format_millis})
     `);
 }
 
 export async function getLastLog(giorno: number, cucina: string): Promise<DbLog[] | undefined> {
-  console.log("getLastLog");
   try {
-    const c = await executeQuery<DbLog>(`WITH ranked_data AS (
-    SELECT *,
-           ROW_NUMBER() OVER (PARTITION BY foglietto ORDER BY data DESC) AS rn
-    FROM logger
-    WHERE cucina = '${cucina}' AND giornata = ${giorno}
-    )
-    SELECT *
-    FROM ranked_data
-    WHERE rn = 1
-    ORDER BY data DESC
-    LIMIT 3;`);
-    return c;
+    return await executeQuery<DbLog>(`
+      WITH ranked_data AS (
+        SELECT *, ROW_NUMBER() OVER (PARTITION BY foglietto ORDER BY data DESC) AS rn
+        FROM logger WHERE cucina = '${cucina}' AND giornata = ${giorno}
+      )
+      SELECT * FROM ranked_data WHERE rn = 1 ORDER BY data DESC LIMIT 3;
+    `);
   } catch (error) {
-    console.error('Failed to fetch logger:', error);
     throw new Error('Failed to fetch logger.');
   }
 }
 
-export async function clearLog() {
-  await executeQuery(`TRUNCATE TABLE logger`);
-}
-
-export async function clearConti() {
-  await executeQuery(`TRUNCATE TABLE conti`);
-}
-
-export async function clearConsumazioni() {
-  await executeQuery(`TRUNCATE TABLE consumazioni`);
-} 
+export async function clearLog() { await executeQuery(`TRUNCATE TABLE logger`); }
+export async function clearConti() { await executeQuery(`TRUNCATE TABLE conti`); }
+export async function clearConsumazioni() { await executeQuery(`TRUNCATE TABLE consumazioni`); }
