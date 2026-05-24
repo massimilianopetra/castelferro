@@ -1,4 +1,5 @@
 ## Sagra di Castelerro
+# SE DOCKER DESKTOP NON PRENDE LA LOGIN FORZARLA DA TERMINALE Docker Login
 
 # bruno
 # Modificare docker-compose.yaml  inserendo la riga 

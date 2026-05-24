@@ -16,7 +16,8 @@ import type { DbConsumazioniPrezzo, DbFiera, DbConti, DbLog } from '@/app/lib/de
 import {
   getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto,
   aggiornaConto, stampaConto, riapriConto, apriConto, getContoPiuAlto,
-  writeLog, getGiornoSagra, getLastLog
+  writeLog, getGiornoSagra, getLastLog,
+  getInizializzazioneCassa
 } from '@/app/lib/actions';
 import { deltanow, milltodatestring } from '@/app/lib/utils';
 import { useConfig } from '@/context/ConfigContext';
@@ -43,12 +44,12 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   const [numero, setNumero] = useState<number | string>('');
   const [numeroFoglietto, setNumeroFoglietto] = useState<number | string>('');
   const [conto, setConto] = useState<DbConti>();
-  const [lastLog, setLastLog] = useState<DbLog[]>([]);
+  const [lastLog, setLastLog] = useState<DbLog | null>(null);
   const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
   const [isNewConto, setIsNewConto] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
   const [openDialogQty, setOpenDialogQty] = useState(false);
-  
+
   // STATO PER IL DIALOG DI CONFERMA NUOVO CONTO
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 
@@ -60,48 +61,69 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
   useEffect(() => {
     const fetchData = async () => {
-      const gg = await getGiornoSagra();
-      if (gg) {
-        setSagra(gg);
-        const log = await getLastLog(gg.giornata, 'Casse');
-        if (log) setLastLog(log);
+      const num = +params.foglietto;
+      if (isNaN(num) || num < 1 || num > 9999) {
+        setSnackbarMessage("Il foglietto non è gestibile.");
+        setOpenSnackbar(true);
+        return;
+      }
 
-        const num = +params.foglietto;
-        if (isNaN(num) || num < 1 || num > 9999) {
-          setSnackbarMessage("Il foglietto non è gestibile.");
-          setOpenSnackbar(true);
-          return;
+      setNumeroFoglietto(num.toString());
+
+      try {
+        // 1. UNICA CHIAMATA AL SERVER: Recupera tutto in un colpo solo
+
+        const data = await getInizializzazioneCassa(num);
+
+
+
+  if (data && data.gg) {
+    // 1. Togliamo "log" da qui dentro perché il server non lo sta passando
+    const { gg, cc, c } = data;
+
+    setSagra(gg);
+    setConto(cc);
+    setLastLog(null); // <--- Lo inizializziamo a null di default
+
+    if (c) {
+      setProducts(c);
+      setIniProducts(c);
+      setCopertiPass(c.find((o) => o.id_piatto === 1)?.quantita || 0);
+    }
+
+    // 2. Il resto della logica sotto rimane identico...
+    if (cc?.stato == 'APERTO' || cc?.stato == 'STAMPATO') {
+      setIsNewConto(false);
+      
+      await writeLog(num, gg.giornata, 'Casse', '', 'OPEN', '');
+      
+      // Qui lo stato locale del log si aggiorna comunque al 100% correttamento
+      setLastLog({
+        id: 0,
+        foglietto: num,
+        azione: 'OPEN',
+        note: '',
+        cucina: '',
+        utente: '',
+        giornata: gg.giornata,
+        data: Date.now()
+      });
+      
+      setPhase(cc.stato === 'APERTO' ? 'aperto' : 'stampato');
+          } else if (['CHIUSO', 'CHIUSOPOS', 'CHIUSOALTRO'].includes(cc?.stato || '')) {
+            setIsNewConto(false);
+            setPhase('chiuso');
+          } else {
+            // SE IL CONTO NON ESISTE: MOSTRA IL DIALOG DI CONFERMA
+            setIsNewConto(true);
+            setOpenConfirmDialog(true);
+          }
         }
-
-        const cc = await getConto(num, gg.giornata);
-        setConto(cc);
-        setNumeroFoglietto(num.toString());
-
-        // Carica i prodotti (vuoti o esistenti)
-        const c = await getConsumazioniCassa(num, gg.giornata);
-        if (c) {
-          setProducts(c);
-          setIniProducts(c);
-          setCopertiPass(c.find((o) => o.id_piatto === 1)?.quantita || 0);
-        }
-
-        if (cc?.stato == 'APERTO' || cc?.stato == 'STAMPATO') {
-          setIsNewConto(false);
-          await writeLog(num, gg.giornata, 'Casse', '', 'OPEN', '');
-          const refreshedLog = await getLastLog(gg.giornata, 'Casse');
-          if (refreshedLog) setLastLog(refreshedLog);
-          setPhase(cc.stato === 'APERTO' ? 'aperto' : 'stampato');
-        } else if (['CHIUSO', 'CHIUSOPOS', 'CHIUSOALTRO'].includes(cc?.stato || '')) {
-          setIsNewConto(false);
-          setPhase('chiuso');
-        } else {
-          // SE IL CONTO NON ESISTE: MOSTRA IL DIALOG DI CONFERMA
-          setIsNewConto(true);
-          setOpenConfirmDialog(true);
-          // Non impostiamo la phase 'aperto' finché non conferma
-        }
+      } catch (error) {
+        console.error("Errore durante l'inizializzazione della cassa:", error);
       }
     };
+
     fetchData();
   }, [params.foglietto]);
 
@@ -166,15 +188,15 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   const checkAndSaveToDb = async () => {
     const haPortate = products.some(p => p.quantita > 0);
     if (!haPortate) {
-        setSnackbarMessage("Inserire almeno una portata prima di salvare.");
-        setOpenSnackbar(true);
-        return false;
+      setSnackbarMessage("Inserire almeno una portata prima di salvare.");
+      setOpenSnackbar(true);
+      return false;
     }
 
     if (isNewConto) {
-        await apriConto(Number(numeroFoglietto), sagra.giornata, 'Casse');
-        await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'START', 'Creazione differita');
-        setIsNewConto(false);
+      await apriConto(Number(numeroFoglietto), sagra.giornata, 'Casse');
+      await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'START', 'Creazione differita');
+      setIsNewConto(false);
     }
     return true;
   };
@@ -208,7 +230,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
     setPhase('elaborazione');
     const totale = products.reduce((acc, i) => acc + (i.quantita * i.prezzo_unitario), 0);
-    await sendConsumazioni(products); 
+    await sendConsumazioni(products);
     await aggiornaConto(Number(numeroFoglietto), sagra.giornata, totale);
     await stampaConto(Number(numeroFoglietto), sagra.giornata);
     await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'PRINT', 'Stampa conto');
@@ -216,23 +238,89 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     setPhase('iniziale_stampato');
 
   };
-
+  /*
+    const print = () => {
+      const printArea = printRef.current;
+      if (!printArea) {
+        console.warn("ATTENZIONE: La stampa è fallita perché 'printRef.current'` è NULL.");
+        console.log("Stato attuale del Ref:", printRef);
+        return; 
+      }
+      const newWindow = window.open("", "", "width=800,height=900");
+      if (newWindow) {
+        newWindow.document.write('<html><head><title>Stampa Conto</title>');
+        document.querySelectorAll('link[rel="stylesheet"], style').forEach(s => newWindow.document.write(s.outerHTML));
+        newWindow.document.write('</head><body><div class="print-container">');
+        newWindow.document.write(printArea.innerHTML);
+        newWindow.document.write('</div></body></html>');
+        newWindow.document.close();
+        setTimeout(() => { newWindow.focus(); newWindow.print(); newWindow.close(); }, 500);
+      }
+    };
+  */
   const print = () => {
     const printArea = printRef.current;
     if (!printArea) {
-      console.warn("ATTENZIONE: La stampa è fallita perché 'printRef.current'` è NULL.");
-      console.log("Stato attuale del Ref:", printRef);
-      return; 
+      console.warn("ATTENZIONE: La stampa è fallita perché 'printRef.current' è NULL.");
+      return;
     }
     const newWindow = window.open("", "", "width=800,height=900");
     if (newWindow) {
       newWindow.document.write('<html><head><title>Stampa Conto</title>');
-      document.querySelectorAll('link[rel="stylesheet"], style').forEach(s => newWindow.document.write(s.outerHTML));
+
+      // 1. Copia i fogli di stile assicurandoti che i percorsi siano assoluti (per evitare 404 in Docker)
+      document.querySelectorAll('link[rel="stylesheet"]').forEach(s => {
+        const href = s.getAttribute('href');
+        if (href && href.startsWith('/')) {
+          newWindow.document.write(`<link rel="stylesheet" href="${window.location.origin}${href}">`);
+        } else {
+          newWindow.document.write(s.outerHTML);
+        }
+      });
+
+      // 2. Copia i tag <style> interni
+      document.querySelectorAll('style').forEach(s => newWindow.document.write(s.outerHTML));
+
+      // 3. SOVRASCRIVI i blocchi globali distruttivi solo per la stampa
+      newWindow.document.write(`
+      <style>
+        /* Neutralizza i blocchi del global.css che bloccano l'altezza e lo scroll nel popup */
+        html, body {
+          height: auto !important;
+          overflow: visible !important;
+          background-color: #ffffff !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        /* Configurazione margini di stampa del browser */
+        @page {
+          size: auto;
+          margin: 4mm 6mm;
+        }
+        /* Assicura che i colori di sfondo e le tabelle vengano renderizzati */
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        .print-container {
+          width: 100% !important;
+          height: auto !important;
+          overflow: visible !important;
+        }
+      </style>
+    `);
+
       newWindow.document.write('</head><body><div class="print-container">');
       newWindow.document.write(printArea.innerHTML);
       newWindow.document.write('</div></body></html>');
       newWindow.document.close();
-      setTimeout(() => { newWindow.focus(); newWindow.print(); newWindow.close(); }, 500);
+
+      // Un leggero delay per permettere a Docker di servire i file statici compressi al browser
+      setTimeout(() => {
+        newWindow.focus();
+        newWindow.print();
+        newWindow.close();
+      }, 600);
     }
   };
 
@@ -287,35 +375,35 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     setPhase('modificato');
   };
 
-const headerCasse = (
-  <div className="p-1 mt-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
-    <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}>
-      <li className="flex-1 mr-2 font-bold py-2">
-        <a className="text-center block text-blue-700 font-extraligh text-2xl md:text-5xl">Casse</a>
-        <div className="text-xs text-center text-blue-700">
-          SAGRA: <span className="text-xs text-center text-blue-800 font-semibold">
-            {` ${sagra.stato} ${sagra.stato !== 'CHIUSA' ? `(${sagra.giornata})` : ""}`}
-          </span>
-        </div>
-      </li>
-      <li className="text-right flex-1 mr-2 text-5xl text-white font-bold py-4 rounded-full" style={{ borderRadius: '9999px' }}>
-        <div className="text-center text-emerald-600">
-          <TextField autoFocus className="p-2" label="Numero Foglietto" variant="outlined" value={numero} onChange={handleInputChange} style={{ borderRadius: '9999px' }} sx={{ input: { textAlign: 'right' } }} type="number" />
-        </div>
-      </li>
-      <li className="text-left flex-1 mr-2 text-5xl font-bold py-4">
-        <Button variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }} size="medium">
-          Carica Foglietto
-        </Button>
-      </li>
-    </ul>
-  </div>
-);
+  const headerCasse = (
+    <div className="p-1 mt-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
+      <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}>
+        <li className="flex-1 mr-2 font-bold py-2">
+          <a className="text-center block text-blue-700 font-extraligh text-2xl md:text-5xl">Casse</a>
+          <div className="text-xs text-center text-blue-700">
+            SAGRA: <span className="text-xs text-center text-blue-800 font-semibold">
+              {` ${sagra.stato} ${sagra.stato !== 'CHIUSA' ? `(${sagra.giornata})` : ""}`}
+            </span>
+          </div>
+        </li>
+        <li className="text-right flex-1 mr-2 text-5xl text-white font-bold py-4 rounded-full" style={{ borderRadius: '9999px' }}>
+          <div className="text-center text-emerald-600">
+            <TextField autoFocus className="p-2" label="Numero Foglietto" variant="outlined" value={numero} onChange={handleInputChange} style={{ borderRadius: '9999px' }} sx={{ input: { textAlign: 'right' } }} type="number" />
+          </div>
+        </li>
+        <li className="text-left flex-1 mr-2 text-5xl font-bold py-4">
+          <Button variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }} size="medium">
+            Carica Foglietto
+          </Button>
+        </li>
+      </ul>
+    </div>
+  );
 const ultimiRicercati = (
   <div className="text-base md:text-xl" style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
     <p>
       <span className="text-blue-800">Ultimi ricercati &nbsp;</span>
-      {lastLog.slice(0, 3).map((row, idx) => (
+      {Array.isArray(lastLog) && lastLog.slice(0, 3).map((row, idx) => (
         <Button
           key={idx}
           size="small"
@@ -331,15 +419,15 @@ const ultimiRicercati = (
   </div>
 );
 
-const bottoniServizio = (
-  <div className="sez-dx" style={{ display: 'flex', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
-    <div className="xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
-      <Button size="medium" className="font-semibold" variant="outlined" onClick={handleButtonClickCaricaAsporto} style={{ borderRadius: '9999px' }}>Asporto</Button>
-      &nbsp;&nbsp;
-      <Button size="medium" color="secondary" className="font-semibold" variant="outlined" onClick={handleButtonClickCaricaConto1} style={{ borderRadius: '9999px' }}>Camerieri</Button>
+  const bottoniServizio = (
+    <div className="sez-dx" style={{ display: 'flex', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
+      <div className="xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
+        <Button size="medium" className="font-semibold" variant="outlined" onClick={handleButtonClickCaricaAsporto} style={{ borderRadius: '9999px' }}>Asporto</Button>
+        &nbsp;&nbsp;
+        <Button size="medium" color="secondary" className="font-semibold" variant="outlined" onClick={handleButtonClickCaricaConto1} style={{ borderRadius: '9999px' }}>Camerieri</Button>
+      </div>
     </div>
-  </div>
-);  
+  );
 
   if (sagra.stato === 'CHIUSA' && (session?.user?.name === "Casse" || session?.user?.name === "SuperUser")) {
     return (
@@ -356,20 +444,20 @@ const bottoniServizio = (
       </div></main>
     );
   }
- 
+
   if (isPrinting) {
     // Recuperiamo al volo il valore attuale per mostrarlo nel popup
     const activePrinterIp = typeof window !== 'undefined' ? localStorage.getItem('sagra_printer_ip') : null;
 
     return (
-      <Box sx={{ 
-        display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', 
-        alignItems: 'center', justifyContent: 'center', bgcolor: 'rgba(255,255,255,0.9)', 
-        position: 'fixed', top: 0, left: 0, zIndex: 9999 
+      <Box sx={{
+        display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw',
+        alignItems: 'center', justifyContent: 'center', bgcolor: 'rgba(255,255,255,0.9)',
+        position: 'fixed', top: 0, left: 0, zIndex: 9999
       }}>
         <CircularProgress size="6rem" />
         <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold' }}>Invio alla stampa in corso ...</Typography>
-        
+
         {/* Mostra l'IP o il messaggio di errore se non è configurato */}
         <Typography variant="body1" sx={{ mt: 1, fontFamily: 'monospace', color: activePrinterIp ? 'text.secondary' : 'error.main', fontWeight: activePrinterIp ? 'normal' : 'bold' }}>
           {activePrinterIp ? `IP Stampante: ${activePrinterIp}` : 'Nessuna stampante configurata'}
@@ -390,7 +478,7 @@ const bottoniServizio = (
           case 'iniziale_stampato':
             return (
               <div className="container">
-          <header className="top-section"><div className="sez-sx">{headerCasse}{ultimiRicercati}</div>{bottoniServizio}</header>       <main className="middle-section"><br />
+                <header className="top-section"><div className="sez-sx">{headerCasse}{ultimiRicercati}</div>{bottoniServizio}</header>       <main className="middle-section"><br />
                   <p className="text-2xl md:text-5xl py-4 text-center text-blue-800">
                     Conto: <span className="font-extrabold"><Link href={`/dashboard/casse/${numeroFoglietto}`}>{numeroFoglietto}</Link></span> inviato in stampa.<br /><br />
                     Caricare un nuovo foglietto!
@@ -468,7 +556,7 @@ const bottoniServizio = (
           case 'none':
             return (
               <div className="container">
-             <header className="top-section"><div className="sez-sx">{headerCasse}{ultimiRicercati}</div>{bottoniServizio}</header>   <main className="middle-section">
+                <header className="top-section"><div className="sez-sx">{headerCasse}{ultimiRicercati}</div>{bottoniServizio}</header>   <main className="middle-section">
                   <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50 text-center">
                     {phase === 'chiuso' ? (
                       <>
@@ -479,28 +567,28 @@ const bottoniServizio = (
                   </div>
                 </main>
                 <footer className="bottom-section">
-                   {phase === 'chiuso' && (
-                      <Button variant="contained" className="rounded-full" onClick={async () => {
-                        await riapriConto(conto!.id_comanda, sagra.giornata);
-                        setPhase('aperto');
-                      }}>
-                        Riapri Conto
-                      </Button>
-                   )}
+                  {phase === 'chiuso' && (
+                    <Button variant="contained" className="rounded-full" onClick={async () => {
+                      await riapriConto(conto!.id_comanda, sagra.giornata);
+                      setPhase('aperto');
+                    }}>
+                      Riapri Conto
+                    </Button>
+                  )}
                 </footer>
               </div>
             );
           default: return (
-             <div className="container">
-           <header className="top-section"><div className="sez-sx">{headerCasse}{ultimiRicercati}</div>{bottoniServizio}</header>     <div className="text-center p-10"><CircularProgress /></div>
-             </div>
+            <div className="container">
+              <header className="top-section"><div className="sez-sx">{headerCasse}{ultimiRicercati}</div>{bottoniServizio}</header>     <div className="text-center p-10"><CircularProgress /></div>
+            </div>
           );
         }
       })()}
 
       {/* Usiamo stili che nascondono alla vista ma non al DOM */}
       <div ref={printRef} className="hidden"><Summarythebill item={products} /></div>
-             
+
       {/* DIALOG DI CONFERMA NUOVO CONTO */}
       <Dialog open={openConfirmDialog} onClose={handleCancelNewConto}>
         <DialogTitle sx={{ fontWeight: 'bold', color: '#1e3a8a' }}>Apertura Nuovo Conto</DialogTitle>

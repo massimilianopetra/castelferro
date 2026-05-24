@@ -819,3 +819,16 @@ export async function getLastLog(giorno: number, cucina: string): Promise<DbLog[
 export async function clearLog() { await executeQuery(`TRUNCATE TABLE logger`); }
 export async function clearConti() { await executeQuery(`TRUNCATE TABLE conti`); }
 export async function clearConsumazioni() { await executeQuery(`TRUNCATE TABLE consumazioni`); }
+
+export async function getInizializzazioneCassa(num: number) {
+  const gg = await getGiornoSagra();
+  if (!gg) return null;
+
+  const [log, cc, c] = await Promise.all([
+    getLastLog(gg.giornata, 'Casse'),
+    getConto(num, gg.giornata),
+    getConsumazioniCassa(num, gg.giornata)
+  ]);
+
+  return { gg, log, cc, c };
+}

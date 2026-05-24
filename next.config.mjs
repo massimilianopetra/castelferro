@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+
   // Mantieni le tue configurazioni esistenti per le immagini se necessarie
   images: {
     remotePatterns: [
