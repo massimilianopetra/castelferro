@@ -182,7 +182,6 @@ export default function ChiamaPage() {
 
     const handleSiediTicket = async (ticket: any) => {
         try {
-            // Rimuoviamo immediatamente dalla lista locale per far scattare l'animazione di uscita
             setLista(prev => prev.filter(t => t.id !== ticket.id));
             
             await updateTickets({ ...ticket, seduto: 1, data_chiamato: ticket.data_chiamato || Date.now() });
@@ -221,24 +220,21 @@ export default function ChiamaPage() {
 
     return (
         <Box sx={{
-        display: 'flex', 
-        flexDirection: 'column',
-        // 1. Usa 100dvh per costringere la pagina a stare dentro lo schermo REALE dello smartphone
-        height: '100dvh', 
-        maxHeight: '100dvh', 
-        width: '100%',
-        bgcolor: '#f4f6f8', 
-        pt: isMobile ? 1 : 2,
-        px: isMobile ? 1 : 2,
-        
-        // 2. SOSTITUITO: Usiamo un padding fisso per mobile + la Safe Area dello smartphone, 
-        // e usiamo '5vh' (altezza) anziché '5%' (larghezza) per il desktop
-        pb: isMobile ? 'calc(16px + env(safe-area-inset-bottom))' : '5vh', 
-        
-        boxSizing: 'border-box', 
-        overflow: 'hidden', 
-        position: 'relative'
-    }}>
+            display: 'flex', 
+            flexDirection: 'column',
+            // MODIFICA 1: Forziamo 100dvh SEMPRE (Sia Mobile che PC rimpicciolito) per bloccare la doppia sbarra
+            height: '100dvh', 
+            maxHeight: '100dvh', 
+            width: '100%',
+            bgcolor: '#f4f6f8', 
+            pt: isMobile ? 1 : 2,
+            px: isMobile ? 1 : 2,
+            // MODIFICA 2: Margine di sicurezza in fondo combinato per notch e spazio vuoto richiesto
+            pb: isMobile ? 'calc(15px + env(safe-area-inset-bottom))' : '20px', 
+            boxSizing: 'border-box', 
+            overflow: 'hidden', 
+            position: 'relative'
+        }}>
 
             {/* --- WIDGET STIMA ATTESA --- */}
             {!disabilitaStatistiche && (
@@ -299,7 +295,8 @@ export default function ChiamaPage() {
             <TableContainer component={Paper} sx={{
                 maxWidth: '900px', width: '100%', mx: 'auto',
                 flexGrow: 1, minHeight: 0, borderRadius: '12px',
-                overflowY: 'auto', boxShadow: 3
+                overflowY: 'auto', boxShadow: 3,
+                mb: isMobile ? 1 : 1.5 // Crea uno stacco controllato prima della sezione vuota finale
             }}>
                 <Table
                     stickyHeader
@@ -330,7 +327,6 @@ export default function ChiamaPage() {
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {/* AnimatePresence gestisce le righe che spariscono dal DOM */}
                         <AnimatePresence initial={false}>
                             {sortedLista.map((row) => {
                                 let btnColor = "#2e7d32"; let textColor = "#fff";
@@ -341,12 +337,12 @@ export default function ChiamaPage() {
                                     <TableRow
                                         key={row.id}
                                         hover
-                                        component={motion.tr} // Forza la riga ad essere un componente animabile
-                                        layout // Gestisce lo scorrimento verso l'alto fluido degli altri record
+                                        component={motion.tr}
+                                        layout
                                         initial={{ opacity: 1 }}
                                         exit={{
-                                            opacity: [1, 0.1, 0], // Crea l'effetto "flash" abbassando e azzerando l'opacità
-                                            backgroundColor: 'rgba(46, 125, 50, 0.15)', // Tocco visivo verde durante l'uscita
+                                            opacity: [1, 0.1, 0],
+                                            backgroundColor: 'rgba(46, 125, 50, 0.15)',
                                             height: 0,
                                             transition: {
                                                 opacity: { duration: 0.25 },
@@ -393,7 +389,7 @@ export default function ChiamaPage() {
                                                     <>
                                                         <Button
                                                             variant="contained" size="small" color="primary"
-                                                            component={motion.button} // Effetto "tattile" al click solo su ENTRA
+                                                            component={motion.button}
                                                             whileTap={{ scale: 0.92 }} 
                                                             onClick={() => handleSiediTicket(row)}
                                                             sx={{ fontWeight: 'bold', minWidth: isMobile ? '45px' : '100px' }}
@@ -420,6 +416,9 @@ export default function ChiamaPage() {
                     </TableBody>
                 </Table>
             </TableContainer>
+
+            {/* MODIFICA 3: Sezione vuota fissa e pulita in fondo che non altera la struttura Flexbox */}
+            <Box sx={{ height: isMobile ? '15px' : '20px', width: '100%', flexShrink: 0 }} />
 
             {/* --- MODALE GRAFICO --- */}
             {!disabilitaStatistiche && (
