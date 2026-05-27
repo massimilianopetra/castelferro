@@ -327,14 +327,19 @@ export async function getCountTicketsNonSeduti(): Promise<number> {
 
 export async function getFirstFreeTicket(): Promise<number> {
   try {
+    // Aggiungiamo la condizione 'AND caricato != 100' per escludere quelli terminati (100 è il valore che gli do quando li cancello da CHIAMA)
     const result = await executeQuery<{ freeId: number }>(`
       SELECT MIN(t1.id + 1) AS "freeId"
       FROM tickets t1
       LEFT JOIN tickets t2 ON t1.id + 1 = t2.id
-      WHERE t2.id IS NULL
+      WHERE t2.id IS NULL AND t1.caricato != 100
     `);
+    
     const firstGap = result?.[0]?.freeId;
-    const checkOne = await executeQuery(`SELECT id FROM tickets WHERE id = 1`);
+    
+    // Verifica se il ticket 1 esiste e non è caricato 100
+    const checkOne = await executeQuery(`SELECT id FROM tickets WHERE id = 1 AND caricato != 100`);
+    
     if (!checkOne || checkOne.length === 0) return 1;
     return firstGap ? Number(firstGap) : 1;
   } catch (error) {
@@ -382,7 +387,19 @@ export async function getPuntiGraficoAttesa() {
     return [];
   }
 }
-
+ 
+export async function updateTicket(id: number, valoreCaricato: number) {
+  try {
+    return await executeQuery(`
+      UPDATE tickets
+      SET caricato = ${valoreCaricato}
+      WHERE id = ${id};
+    `);
+  } catch (error) {
+    console.error(`Errore durante l'aggiornamento del ticket ${id} a ${valoreCaricato}:`, error);
+    throw new Error('Impossibile aggiornare lo stato del ticket.');
+  }
+}
 export async function getMenu(): Promise<DbMenu[] | undefined> {
   try {
     return await executeQuery<DbMenu>(`SELECT * FROM menus ORDER BY id`);

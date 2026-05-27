@@ -22,7 +22,7 @@ import { motion, AnimatePresence } from 'framer-motion'; // <--- Importiamo fram
 import {
     getTickets,
     updateTickets,
-    deleteTicket,
+    updateTicket,
     getStimaAttesa,
     getPuntiGraficoAttesa
 } from '@/app/lib/actions';
@@ -205,8 +205,8 @@ export default function ChiamaPage() {
             const idDaRimuovere = selectedTicket.id;
             setLista(prev => prev.filter(t => t.id !== idDaRimuovere));
             setOpenDeleteDialog(false);
-
-            await deleteTicket(idDaRimuovere);
+            await updateTicket(idDaRimuovere, 100);
+            
             await fetch('/api/next-client', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -221,14 +221,24 @@ export default function ChiamaPage() {
 
     return (
         <Box sx={{
-            display: 'flex', flexDirection: 'column',
-            height: '100%', maxHeight: '100%', width: '100%',
-            bgcolor: '#f4f6f8', 
-            pt: isMobile ? 1 : 2,
-            px: isMobile ? 1 : 2,
-            pb: '5%', // <--- Lascia esattamente il 5% di spazio vuoto sotto in modo dinamico
-            boxSizing: 'border-box', overflow: 'hidden', position: 'relative'
-        }}>
+        display: 'flex', 
+        flexDirection: 'column',
+        // 1. Usa 100dvh per costringere la pagina a stare dentro lo schermo REALE dello smartphone
+        height: '100dvh', 
+        maxHeight: '100dvh', 
+        width: '100%',
+        bgcolor: '#f4f6f8', 
+        pt: isMobile ? 1 : 2,
+        px: isMobile ? 1 : 2,
+        
+        // 2. SOSTITUITO: Usiamo un padding fisso per mobile + la Safe Area dello smartphone, 
+        // e usiamo '5vh' (altezza) anziché '5%' (larghezza) per il desktop
+        pb: isMobile ? 'calc(16px + env(safe-area-inset-bottom))' : '5vh', 
+        
+        boxSizing: 'border-box', 
+        overflow: 'hidden', 
+        position: 'relative'
+    }}>
 
             {/* --- WIDGET STIMA ATTESA --- */}
             {!disabilitaStatistiche && (
