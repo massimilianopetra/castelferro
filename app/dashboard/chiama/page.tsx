@@ -303,7 +303,7 @@ export default function ChiamaPage() {
                         <TableRow>
                             <TableCell sx={{ fontWeight: 900, px: { xs: 1, sm: 2 }, width: { xs: '80px', sm: 'auto' } }}>
                                 <TableSortLabel active={orderBy === 'id'} direction={orderBy === 'id' ? order : 'asc'} onClick={() => handleRequestSort('id')}>
-                                    Ticket
+                                 Ticket
                                 </TableSortLabel>
                             </TableCell>
                             <TableCell sx={{ fontWeight: 900, px: { xs: 1, sm: 2 }, width: { xs: '70px', sm: 'auto' } }}>
