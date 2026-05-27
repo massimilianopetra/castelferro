@@ -816,6 +816,20 @@ export async function getLastLog(giorno: number, cucina: string): Promise<DbLog[
   }
 }
 
+/*export async function getLastLog(giorno: number, cucina: string): Promise<DbLog[] | undefined> {
+  try {
+    // Questa query prende i 3 foglietti più recenti su cui hai lavorato
+    return await executeQuery<DbLog>(`
+      SELECT DISTINCT ON (foglietto) *
+      FROM logger 
+      WHERE cucina = $1 AND giornata = $2
+      ORDER BY foglietto, data DESC
+      LIMIT 3;
+    `, [cucina, giorno]); // Usa i parametri!
+  } catch (error) {
+    throw new Error('Failed to fetch logger.');
+  }
+}*/
 export async function clearLog() { await executeQuery(`TRUNCATE TABLE logger`); }
 export async function clearConti() { await executeQuery(`TRUNCATE TABLE conti`); }
 export async function clearConsumazioni() { await executeQuery(`TRUNCATE TABLE consumazioni`); }
@@ -830,5 +844,6 @@ export async function getInizializzazioneCassa(num: number) {
     getConsumazioniCassa(num, gg.giornata)
   ]);
 
-  return { gg, log, cc, c };
+  // Restituiamo un array vuoto se log è undefined
+  return { gg, log: log || [], cc, c }; 
 }

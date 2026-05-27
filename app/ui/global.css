@@ -394,3 +394,12 @@ html, body, #root {
     display: block !important;
   }
 }
+/* Aggiungi questo nel tuo file CSS globale */
+@keyframes flash-red {
+  0% { background-color: #f87171; } /* Rosso acceso per 0.1s */
+  100% { background-color: transparent; }
+}
+
+.flash-cancellazione {
+  animation: flash-red 0.3s ease-out;
+}

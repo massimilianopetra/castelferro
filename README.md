@@ -1,11 +1,10 @@
 ## Sagra di Castelerro
-# SE DOCKER DESKTOP NON PRENDE LA LOGIN FORZARLA DA TERMINALE Docker Login
 
 # bruno
 # Modificare docker-compose.yaml  inserendo la riga 
 image: ironcastle/castelferro:v5
 # Docker image build (da qui Visual Studio)
-docker build -t ironcastle/castelferro:v5 .
+git 
 # andare sul Hub repository e capire se c'e' stata caricata. 
 # Aprire: Docker Desktop loggarsi 
 # (soluzione che non sembra andare) andare su -IMAGE - HUB REPOSITORY e fare PULL dell'immagine. 
@@ -38,3 +37,4 @@ docker builder prune -f
 
 # MENTRE PER scariare 
 - git pull 
+# se hai fatto dekke modifiche per cui non puoi fare la pull il comando per non considerale è 

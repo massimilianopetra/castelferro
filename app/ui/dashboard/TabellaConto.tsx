@@ -6,6 +6,7 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { Button, ButtonGroup } from '@mui/material';
+import { motion, AnimatePresence } from 'framer-motion'; // Import aggiunto
 
 import AddCircleIcon from '@mui/icons-material/AddCircle';
 import RemoveCircleSharpIcon from '@mui/icons-material/RemoveCircleSharp';
@@ -52,14 +53,15 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet }: 
                     </TableRow>
                 </TableHead>
                 <TableBody >
+                    <AnimatePresence initial={false}>
                     {item.map((row) => (
                         <TableRow
-        key={`${row.id_comanda}-${row.id_piatto}`} // 👈 chiave unica
-        className="hover:bg-yellow-100 md:text-2xl"
-        sx={{
-            backgroundColor: row.quantita > 0 ? "rgb(174, 258, 174)" : "white",
-        }}
-    >
+                            key={`${row.id_comanda}-${row.id_piatto}`} // 👈 chiave unica
+                            className="hover:bg-yellow-100 md:text-2xl"
+                            sx={{
+                                backgroundColor: row.quantita > 0 ? "rgb(174, 258, 174)" : "white",
+                            }}
+                        >
                             <TableCell align="left">
                                 <span className="text-base font-normal md:text-2xl">{row.alias}</span>
                             </TableCell>
@@ -128,6 +130,7 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet }: 
                             </TableCell>
                         </TableRow>
                     ))}
+                    </AnimatePresence>
                 </TableBody>
             </Table>
 

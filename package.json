@@ -22,6 +22,7 @@
     "clsx": "^2.1.1",
     "escpos": "3.0.0-alpha.6",
     "escpos-network": "3.0.0-alpha.5",
+    "framer-motion": "^12.40.0",
     "get-pixels": "^3.3.3",
     "lucide-react": "^1.9.0",
     "next": "14.2.5",

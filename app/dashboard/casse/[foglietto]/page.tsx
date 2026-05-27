@@ -44,7 +44,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   const [numero, setNumero] = useState<number | string>('');
   const [numeroFoglietto, setNumeroFoglietto] = useState<number | string>('');
   const [conto, setConto] = useState<DbConti>();
-  const [lastLog, setLastLog] = useState<DbLog | null>(null);
+
+  const [lastLog, setLastLog] = useState<DbLog[]>([]);
   const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
   const [isNewConto, setIsNewConto] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
@@ -59,7 +60,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
   const [copertipass, setCopertiPass] = useState<number>(1);
 
-  useEffect(() => {
+useEffect(() => {
     const fetchData = async () => {
       const num = +params.foglietto;
       if (isNaN(num) || num < 1 || num > 9999) {
@@ -71,61 +72,51 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       setNumeroFoglietto(num.toString());
 
       try {
-        // 1. UNICA CHIAMATA AL SERVER: Recupera tutto in un colpo solo
-
         const data = await getInizializzazioneCassa(num);
+        if (!data) return;
 
-
-
-  if (data && data.gg) {
-    // 1. Togliamo "log" da qui dentro perché il server non lo sta passando
-    const { gg, cc, c } = data;
-
-    setSagra(gg);
-    setConto(cc);
-    setLastLog(null); // <--- Lo inizializziamo a null di default
-
-    if (c) {
-      setProducts(c);
-      setIniProducts(c);
-      setCopertiPass(c.find((o) => o.id_piatto === 1)?.quantita || 0);
-    }
-
-    // 2. Il resto della logica sotto rimane identico...
-    if (cc?.stato == 'APERTO' || cc?.stato == 'STAMPATO') {
-      setIsNewConto(false);
-      
-      await writeLog(num, gg.giornata, 'Casse', '', 'OPEN', '');
-      
-      // Qui lo stato locale del log si aggiorna comunque al 100% correttamento
-      setLastLog({
-        id: 0,
-        foglietto: num,
-        azione: 'OPEN',
-        note: '',
-        cucina: '',
-        utente: '',
-        giornata: gg.giornata,
-        data: Date.now()
-      });
-      
-      setPhase(cc.stato === 'APERTO' ? 'aperto' : 'stampato');
-          } else if (['CHIUSO', 'CHIUSOPOS', 'CHIUSOALTRO'].includes(cc?.stato || '')) {
-            setIsNewConto(false);
-            setPhase('chiuso');
-          } else {
-            // SE IL CONTO NON ESISTE: MOSTRA IL DIALOG DI CONFERMA
-            setIsNewConto(true);
-            setOpenConfirmDialog(true);
-          }
+        const { gg, cc, c, log } = data;
+        
+        setSagra(gg);
+        setConto(cc);
+        
+        if (log && log.length > 0) {
+          setLastLog(log);
         }
+
+        if (c) {
+          setProducts(c);
+          setIniProducts(c);
+          setCopertiPass(c.find((o) => o.id_piatto === 1)?.quantita ?? 0);
+        }
+
+        if (!cc || !cc.stato || cc.stato === 'NUOVO') {
+          setIsNewConto(true);
+          setOpenConfirmDialog(true);
+          return;
+        }
+
+        setIsNewConto(false);
+        if (['CHIUSO', 'CHIUSOPOS', 'CHIUSOALTRO'].includes(cc.stato)) {
+          setPhase('chiuso');
+          return;
+        }
+
+        setPhase(cc.stato === 'APERTO' ? 'aperto' : 'stampato');
+
+        if (cc.stato === 'APERTO') {
+          // Scrivi l'apertura SOLO se il conto è veramente nuovo o appena aperto,
+          // non ogni volta che refreshi la pagina
+          await writeLog(num, gg.giornata, 'Casse', '', 'OPEN', 'Apertura conto');
+        }
+
       } catch (error) {
-        console.error("Errore durante l'inizializzazione della cassa:", error);
+        console.error("Errore:", error);
       }
     };
 
     fetchData();
-  }, [params.foglietto]);
+  }, [params.foglietto]); 
 
   // Azione se l'utente accetta di aprire il nuovo conto
   const handleConfirmNewConto = () => {
@@ -194,50 +185,91 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     }
 
     if (isNewConto) {
-      await apriConto(Number(numeroFoglietto), sagra.giornata, 'Casse');
-      await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'START', 'Creazione differita');
+      const numFogl = Number(numeroFoglietto);
+
+      // Parallelizziamo l'apertura e la scrittura del log iniziale
+      await Promise.all([
+        apriConto(numFogl, sagra.giornata, 'Casse'),
+        writeLog(numFogl, sagra.giornata, 'Casse', '', 'START', 'Creazione differita')
+      ]);
+
       setIsNewConto(false);
     }
     return true;
   };
 
-  const handleAggiorna = async () => {
+const handleAggiorna = async () => {
     const canProceed = await checkAndSaveToDb();
     if (!canProceed) return;
 
     setPhase('caricamento');
+    const numFogl = Number(numeroFoglietto);
     const totale = products.reduce((acc, i) => acc + (i.quantita * i.prezzo_unitario), 0);
-    await sendConsumazioni(products);
-    await aggiornaConto(Number(numeroFoglietto), sagra.giornata, totale);
 
-    for (const item of products) {
-      const orig = iniProducts.find(o => o.id_piatto == item.id_piatto);
-      if (orig && item.quantita !== orig.quantita) {
-        const msg = item.quantita > orig.quantita
-          ? `Aggiunti: ${item.quantita - orig.quantita} ${item.piatto}`
-          : `Eliminati: ${orig.quantita - item.quantita} ${item.piatto}`;
-        await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'UPDATE', msg);
-      }
-    }
-    const newCc = await getConto(Number(numeroFoglietto), sagra.giornata);
+    const logPromises = products
+        .map(item => {
+            const orig = iniProducts.find(o => o.id_piatto === item.id_piatto);
+            if (orig && item.quantita !== orig.quantita) {
+                const msg = item.quantita > orig.quantita
+                    ? `Aggiunti: ${item.quantita - orig.quantita} ${item.piatto}`
+                    : `Eliminati: ${orig.quantita - item.quantita} ${item.piatto}`;
+                return writeLog(numFogl, sagra.giornata, 'Casse', '', 'UPDATE', msg);
+            }
+            return null;
+        })
+        .filter((p): p is Promise<void> => p !== null);
+
+    // 1. Eseguiamo invio dati e log in parallelo
+    await Promise.all([
+        sendConsumazioni(products),
+        aggiornaConto(numFogl, sagra.giornata, totale),
+        ...logPromises
+    ]);
+
+    // 2. RECUPERO STATO AGGIORNATO (Log e Conto)
+ 
+    const newCc = await getConto(numFogl, sagra.giornata);
+    
     setConto(newCc);
     setPhase('aperto');
-  };
+};
 
-  const handleStampa = async () => {
-    const canProceed = await checkAndSaveToDb();
-    if (!canProceed) return;
+const handleStampa = async () => {
+  const canProceed = await checkAndSaveToDb();
+  if (!canProceed) return;
 
-    setPhase('elaborazione');
-    const totale = products.reduce((acc, i) => acc + (i.quantita * i.prezzo_unitario), 0);
+  setPhase('elaborazione');
+  const numFogl = Number(numeroFoglietto);
+  const totale = products.reduce((acc, i) => acc + (i.quantita * i.prezzo_unitario), 0);
+
+  try {
     await sendConsumazioni(products);
-    await aggiornaConto(Number(numeroFoglietto), sagra.giornata, totale);
-    await stampaConto(Number(numeroFoglietto), sagra.giornata);
-    await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'PRINT', 'Stampa conto');
-    print();
-    setPhase('iniziale_stampato');
+    await aggiornaConto(numFogl, sagra.giornata, totale);
+    await stampaConto(numFogl, sagra.giornata);
 
-  };
+    // Eseguiamo il LOG e il REFRESH in parallelo
+    await Promise.all([
+      writeLog(numFogl, sagra.giornata, 'Casse', '', 'PRINT', 'Stampa conto'),
+      // Qui aggiungi la funzione di ricarica
+      (async () => {
+         const gg = await getGiornoSagra();
+         if (gg) {
+           const logs = await getLastLog(gg.giornata, 'Casse');
+           if (logs) setLastLog(logs);
+         }
+      })(),
+      new Promise<void>((resolve) => {
+        print();
+        resolve();
+      })
+    ]);
+
+    setPhase('iniziale_stampato');
+  } catch (error) {
+    console.error("Errore:", error);
+    setPhase('aperto');
+  }
+};
   /*
     const print = () => {
       const printArea = printRef.current;
@@ -324,28 +356,40 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     }
   };
 
-  const handleFinalizzaChiusura = async (tipo: number, nota = '', importo = '', skipPrintWait = false) => {
+const handleFinalizzaChiusura = async (tipo: number, nota = '', importo = '', skipPrintWait = false) => {
     setPhase('elaborazione');
     setIsPrinting(true);
 
     const logMsg = tipo === 1 ? 'Pagato contanti' : tipo === 2 ? 'Pagato POS' : 'Altro Importo';
+    const numFogl = Number(numeroFoglietto);
 
-    await chiudiConto(Number(numeroFoglietto), sagra.giornata, tipo, nota, importo);
-    await writeLog(Number(numeroFoglietto), sagra.giornata, 'Casse', '', 'CLOSE', logMsg);
+    try {
+        // 1. Parallelizziamo la chiusura del conto e il log.
+        // Entrambe queste funzioni sono in actions.ts e non hanno dipendenze tra loro.
+        await Promise.all([
+            chiudiConto(numFogl, sagra.giornata, tipo, nota, importo),
+            writeLog(numFogl, sagra.giornata, 'Casse', '', 'CLOSE', logMsg)
+        ]);
 
-    const cc = await getConto(Number(numeroFoglietto), sagra.giornata);
-    setConto(cc);
+        // 2. Recuperiamo il conto aggiornato solo dopo la chiusura
+        const cc = await getConto(numFogl, sagra.giornata);
+        setConto(cc);
 
-    if (skipPrintWait) {
-      inviaStampaPass();
-      setIsPrinting(false);
-      setPhase('chiuso');
-    } else {
-      await inviaStampaPass();
-      setIsPrinting(false);
-      setPhase('chiuso');
+        // 3. Gestione stampa (semplificata)
+        // Se skipPrintWait è true, non attendiamo l'invio della stampa.
+        // Se false, attendiamo.
+        if (skipPrintWait) {
+            inviaStampaPass(); 
+        } else {
+            await inviaStampaPass();
+        }
+    } catch (error) {
+        console.error("Errore durante la chiusura:", error);
+    } finally {
+        setIsPrinting(false);
+        setPhase('chiuso');
     }
-  };
+};
 
   const inviaStampaPass = async () => {
     // Leggiamo l'IP salvato localmente in questo browser
@@ -374,6 +418,14 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     setProducts(prev => prev.map(item => (item.id_piatto === id && item.quantita > 0) ? { ...item, quantita: item.quantita - 1, cuisine: "Casse" } : item));
     setPhase('modificato');
   };
+
+const refreshLogs = async () => {
+  const gg = await getGiornoSagra();
+  if (gg) {
+    const logs = await getLastLog(gg.giornata, 'Casse');
+    if (logs) setLastLog(logs);
+  }
+};
 
   const headerCasse = (
     <div className="p-1 mt-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
