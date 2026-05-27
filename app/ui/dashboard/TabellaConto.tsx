@@ -53,7 +53,7 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet }: 
                     </TableRow>
                 </TableHead>
                 <TableBody >
-                    <AnimatePresence initial={false}>
+ 
                     {item.map((row) => (
                         <TableRow
                             key={`${row.id_comanda}-${row.id_piatto}`} // 👈 chiave unica
@@ -130,7 +130,7 @@ export default function TabellaConto({ item, onAdd10, onAdd, onRemove, onSet }: 
                             </TableCell>
                         </TableRow>
                     ))}
-                    </AnimatePresence>
+  
                 </TableBody>
             </Table>
 
