@@ -17,7 +17,7 @@ import CampaignIcon from '@mui/icons-material/Campaign';
 import ChairIcon from '@mui/icons-material/Chair';
 import InfoIcon from '@mui/icons-material/Info';
 import useMediaQuery from '@mui/material/useMediaQuery';
-import { motion, AnimatePresence } from 'framer-motion'; // <--- Importiamo framer-motion
+import { motion, AnimatePresence } from 'framer-motion'; 
 
 import {
     getTickets,
@@ -76,9 +76,9 @@ export default function ChiamaPage() {
                 setPuntiGrafico(puntos.map(p => {
                     const data = new Date(Number(p.slot));
                     const ore = data.getHours().toString().padStart(2, '0');
-                    const minutiOra = data.getMinutes().toString().padStart(2, '0');
+                    const minutes = data.getMinutes().toString().padStart(2, '0');
                     return {
-                        ora: `${ore}:${minutiOra}`,
+                        ora: `${ore}:${minutes}`,
                         minuti: Math.round(Number(p.attesa_media))
                     };
                 }));
@@ -183,7 +183,6 @@ export default function ChiamaPage() {
     const handleSiediTicket = async (ticket: any) => {
         try {
             setLista(prev => prev.filter(t => t.id !== ticket.id));
-            
             await updateTickets({ ...ticket, seduto: 1, data_chiamato: ticket.data_chiamato || Date.now() });
 
             await fetch('/api/next-client', {
@@ -222,17 +221,16 @@ export default function ChiamaPage() {
         <Box sx={{
             display: 'flex', 
             flexDirection: 'column',
-            // MODIFICA 1: Forziamo 100dvh SEMPRE (Sia Mobile che PC rimpicciolito) per bloccare la doppia sbarra
-            height: '100dvh', 
+            // MODIFICA CRUCIALE: Blocchiamo l'altezza all'area visibile del browser SOLO su questa pagina
+            height: '100vh', 
             maxHeight: '100dvh', 
             width: '100%',
             bgcolor: '#f4f6f8', 
             pt: isMobile ? 1 : 2,
             px: isMobile ? 1 : 2,
-            // MODIFICA 2: Margine di sicurezza in fondo combinato per notch e spazio vuoto richiesto
-            pb: isMobile ? 'calc(15px + env(safe-area-inset-bottom))' : '20px', 
+            pb: isMobile ? 'calc(env(safe-area-inset-bottom) + 12px)' : 3, 
             boxSizing: 'border-box', 
-            overflow: 'hidden', 
+            overflow: 'hidden', // Impedisce categoricamente il doppio scroll di pagina esterno
             position: 'relative'
         }}>
 
@@ -293,10 +291,17 @@ export default function ChiamaPage() {
 
             {/* --- TABELLA TICKET --- */}
             <TableContainer component={Paper} sx={{
-                maxWidth: '900px', width: '100%', mx: 'auto',
-                flexGrow: 1, minHeight: 0, borderRadius: '12px',
-                overflowY: 'auto', boxShadow: 3,
-                mb: isMobile ? 1 : 1.5 // Crea uno stacco controllato prima della sezione vuota finale
+                maxWidth: '900px', 
+                width: '100%', 
+                mx: 'auto',
+                flexGrow: 1, 
+                minHeight: 0, 
+                // MODIFICA CRUCIALE: Impostiamo un'altezza massima matematica basata sullo schermo residuo
+                // Detrae lo spazio occupato dal numerone in alto e dai pulsanti (circa 240px su mobile / 300px su desktop)
+                maxHeight: isMobile ? 'calc(100dvh - 230px)' : 'calc(100vh - 310px)',
+                borderRadius: '12px',
+                overflowY: 'auto', // L'unica barra di scorrimento funzionante sarà questa interna alla tabella
+                boxShadow: 3
             }}>
                 <Table
                     stickyHeader
@@ -337,12 +342,12 @@ export default function ChiamaPage() {
                                     <TableRow
                                         key={row.id}
                                         hover
-                                        component={motion.tr}
-                                        layout
+                                        component={motion.tr} 
+                                        layout 
                                         initial={{ opacity: 1 }}
                                         exit={{
-                                            opacity: [1, 0.1, 0],
-                                            backgroundColor: 'rgba(46, 125, 50, 0.15)',
+                                            opacity: [1, 0.1, 0], 
+                                            backgroundColor: 'rgba(46, 125, 50, 0.15)', 
                                             height: 0,
                                             transition: {
                                                 opacity: { duration: 0.25 },
@@ -389,7 +394,7 @@ export default function ChiamaPage() {
                                                     <>
                                                         <Button
                                                             variant="contained" size="small" color="primary"
-                                                            component={motion.button}
+                                                            component={motion.button} 
                                                             whileTap={{ scale: 0.92 }} 
                                                             onClick={() => handleSiediTicket(row)}
                                                             sx={{ fontWeight: 'bold', minWidth: isMobile ? '45px' : '100px' }}
@@ -416,9 +421,6 @@ export default function ChiamaPage() {
                     </TableBody>
                 </Table>
             </TableContainer>
-
-            {/* MODIFICA 3: Sezione vuota fissa e pulita in fondo che non altera la struttura Flexbox */}
-            <Box sx={{ height: isMobile ? '15px' : '20px', width: '100%', flexShrink: 0 }} />
 
             {/* --- MODALE GRAFICO --- */}
             {!disabilitaStatistiche && (
