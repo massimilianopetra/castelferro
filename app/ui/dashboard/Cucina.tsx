@@ -71,8 +71,6 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
             const gg = await getGiornoSagra();
             if (gg) {
                 setSagra(gg);
-                //   const cc = await getLastLog(gg.giornata, nomeCucina);
-                //  if (cc) setLastLog(cc);
             }
         };
         fetchData();
@@ -87,71 +85,69 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     const handleButtonClickCaricaConto1 = () => carica(1);
 
     /* ------------------------------CARICAMENTO CONTO------------------------------ */
-async function carica(num: number) {
-    if (isNaN(num) || num < 1 || num > 8999) {
-        setOpenSnackbar(true);
-        return;
-    }
-    setPhase('caricamento');
-
-    // 1. Parallelizziamo il reperimento dati iniziale
-    const [c, cc] = await Promise.all([
-        getConsumazioni(nomeCucina, num, sagra.giornata, 'MUST_BE_AVAILABLE'),
-        getConto(num, sagra.giornata)
-    ]);
-
-    if (c) {
-        setProducts(c);
-        setIniProducts(c);
-    }
-    setNumeroFoglietto(num);
-
-    if (cc) {
-        setConto(cc);
-        if (['CHIUSO', 'STAMPATO', 'CHIUSOPOS', 'CHIUSOALTRO'].includes(cc.stato)) {
-            setPhase('bloccato');
+    async function carica(num: number) {
+        if (isNaN(num) || num < 1 || num > 8999) {
+            setOpenSnackbar(true);
             return;
         }
-        if (cc.cameriere === 'Sconosciuto') {
-            setPhase('sconosciuto');
-            return;
-        }
+        setPhase('caricamento');
 
-        // 2. Sequenziale: writeLog deve finire PRIMA di getLastLog
-        await writeLog(num, sagra.giornata, nomeCucina, '', 'OPEN', '');
-        const logs = await getLastLog(sagra.giornata, nomeCucina);
-        if (logs) setLastLog(logs);
-        
-        setPhase('caricato');
-    } else {
-        const cameriere = await getCamerieri(num);
-        if (!cameriere || cameriere === 'Sconosciuto') {
-            setPhase('sconosciuto');
-            return;
-        }
-        
-        await apriConto(num, sagra.giornata, cameriere);
-        
-        // 3. Sequenziale: log prima, poi lettura log e refresh conto
-        await writeLog(num, sagra.giornata, nomeCucina, '', 'START', '');
-        
-        // Qui possiamo parallelizzare il recupero del log e il refresh del conto
-        const [logs, newConto] = await Promise.all([
-            getLastLog(sagra.giornata, nomeCucina),
+        const [c, cc] = await Promise.all([
+            getConsumazioni(nomeCucina, num, sagra.giornata, 'MUST_BE_AVAILABLE'),
             getConto(num, sagra.giornata)
         ]);
-        
-        if (logs) setLastLog(logs);
-        setConto(newConto);
-        setPhase('caricato');
+
+        if (c) {
+            setProducts(c);
+            setIniProducts(c);
+        }
+        setNumeroFoglietto(num);
+
+        if (cc) {
+            setConto(cc);
+            if (['CHIUSO', 'STAMPATO', 'CHIUSOPOS', 'CHIUSOALTRO'].includes(cc.stato)) {
+                setPhase('bloccato');
+                return;
+            }
+            if (cc.cameriere === 'Sconosciuto') {
+                setPhase('sconosciuto');
+                return;
+            }
+
+            await writeLog(num, sagra.giornata, nomeCucina, '', 'OPEN', '');
+            const logs = await getLastLog(sagra.giornata, nomeCucina);
+            if (logs) setLastLog(logs);
+            
+            setPhase('caricato');
+        } else {
+            const cameriere = await getCamerieri(num);
+            if (!cameriere || cameriere === 'Sconosciuto') {
+                setPhase('sconosciuto');
+                return;
+            }
+            
+            // MODIFICA SUL CARICAMENTO: Non invochiamo "apriConto" sul DB adesso.
+            // Creiamo un oggetto temporaneo nello stato locale in modo da poter mostrare
+            // a video il cameriere e abilitare la griglia delle quantità.
+            setConto({
+                foglietto: num,
+                giornata: sagra.giornata,
+                cameriere: cameriere,
+                stato: 'APERTO'
+            } as any);
+            
+            setPhase('caricato');
+        }
     }
-}
+
     const handleButtonClickCarica = () => {
         carica(Number(numero));
         setNumero('');
     };
 
     const handleButtonClickAnnulla = () => {
+        // Se l'utente clicca annulla e il conto era virtuale (non ancora salvato nel DB),
+        // tornando alla fase iniziale non rimarrà alcuna traccia sul database.
         setPhase('iniziale');
         setProducts([]);
         setIniProducts([]);
@@ -159,7 +155,6 @@ async function carica(num: number) {
 
     const caricaStatistiche = async () => {
         try {
-            // Avvia tutte le chiamate al database in parallelo (contemporaneamente)
             const [
                 inCoda,
                 ticketSedutiRows,
@@ -172,69 +167,84 @@ async function carica(num: number) {
                 getMenu()
             ]);
 
-            // Calcolo rapido dei coperti seduti
             const seduti = ticketSedutiRows?.reduce((acc, curr) => acc + curr.numpersone, 0) || 0;
-
-            // Calcolo rapido dei coperti serviti
             const serviti = consumazioniCoperti?.reduce((acc, curr) => acc + curr.quantita, 0) || 0;
-
-            // Calcolo del totale coperti in attesa
             const totale = (seduti + inCoda) - serviti;
 
-            // Aggiorna gli stati React in un colpo solo
             setDettaglioCoperti({ seduti, inCoda, serviti });
             setCopertiInAttesa(Math.max(0, totale));
 
-            // Filtra il menu per la cucina corrente se esiste
             if (fullMenu) {
                 const filtrato = fullMenu.filter(m => m.cucina === nomeCucina);
                 setMenuPrevisionale(filtrato);
             }
 
-            // Apri il popup grafico
             setOpenPopup(true);
-
         } catch (error) {
             console.error("Errore durante il caricamento delle statistiche della cucina:", error);
-            // Opzionale: potresti mostrare uno snackbar di errore qui
         }
     };
 
     /* ------------------------------INVIO CONSUMAZIONI------------------------------ */
-
     const handleButtonClickInvia = async () => {
+        // MODIFICA SULL'INVIO: Verifichiamo se c'è almeno un piatto con quantità > 0
+        const haPortateValide = products.some(item => item.quantita > 0);
 
-        const gc = await getConto(Number(numeroFoglietto), sagra.giornata);
+        if (!haPortateValide) {
+            // Se tutte le portate sono a zero (0000000), simuliamo un annullamento 
+            // e torniamo alla fase iniziale senza creare il conto e senza salvare nulla.
+            setPhase('iniziale');
+            setProducts([]);
+            setIniProducts([]);
+            return;
+        }
+
+        // Recuperiamo lo stato del conto sul database per verificare se esiste
+        let gc = await getConto(Number(numeroFoglietto), sagra.giornata);
+        
+        if (!gc) {
+            // Se non esiste (era un conto virtuale), lo creiamo sul database SOLO ORA
+            // perché abbiamo la certezza che ci sono portate effettive (> 0) da inserire.
+            await apriConto(Number(numeroFoglietto), sagra.giornata, conto?.cameriere || 'Sconosciuto');
+            await writeLog(Number(numeroFoglietto), sagra.giornata, nomeCucina, '', 'START', '');
+            
+            // Aggiorniamo il riferimento locale del conto
+            gc = await getConto(Number(numeroFoglietto), sagra.giornata);
+        }
+
         if (gc?.stato !== "APERTO") {
             setPhase('bloccato');
             return;
         }
 
-        // 1. Prepariamo le Promise dei log
+        // Prepariamo le Promise dei log basandoci sulle quantità correnti rispetto a quelle iniziali
         const logPromises = products
             .map(item => {
                 const orig = iniProducts.find(o => o.id_piatto === item.id_piatto);
-                if (!orig || item.quantita === orig.quantita) return null;
+                const origQuantita = orig ? orig.quantita : 0;
+                if (item.quantita === origQuantita) return null;
 
-                const message = item.quantita > orig.quantita
-                    ? `Aggiunti: ${item.quantita - orig.quantita} ${item.piatto}`
-                    : `Eliminati: ${orig.quantita - item.quantita} ${item.piatto}`;
+                const message = item.quantita > origQuantita
+                    ? `Aggiunti: ${item.quantita - origQuantita} ${item.piatto}`
+                    : `Eliminati: ${origQuantita - item.quantita} ${item.piatto}`;
 
                 return writeLog(item.id_comanda, sagra.giornata, nomeCucina, '', 'UPDATE', message);
             })
             .filter((p): p is Promise<any> => p !== null);
 
-        // 2. Eseguiamo TUTTO insieme (Log, Consumazioni e Totale)
-        // 2.1 Parallelizza i Log (sono indipendenti da tutto)
-        // 2.2 Parallelizza l'invio delle consumazioni
-        // 2.3 Esegui l'aggiornamento del totale SOLO DOPO che l'invio è confermato
+        // Eseguiamo la scrittura parallela dei log e delle consumazioni
         await Promise.all([
             ...logPromises,
             sendConsumazioni(products)
         ]);
 
-        // 2.4 Ora che le consumazioni sono state scritte correttamente, aggiorna il totale
+        // Aggiorniamo il totale monetario del conto
         await updateTotaleConto(Number(numeroFoglietto), sagra.giornata);
+        
+        // Forza l'aggiornamento della barra dei log rapidi in alto della cucina
+        const logs = await getLastLog(sagra.giornata, nomeCucina);
+        if (logs) setLastLog(logs);
+
         setPhase('inviato');
         setProducts([]);
         setIniProducts([]);
@@ -248,7 +258,7 @@ async function carica(num: number) {
                 ? { ...item, quantita: Math.max(0, item.quantita + delta) }
                 : item
         ));
-    }, []); // L'array vuoto garantisce che la funzione sia creata UNA sola volta
+    }, []);
 
     const handleAdd = useCallback((id: number) => updateQuantity(id, 1), [updateQuantity]);
     const handleAdd10 = useCallback((id: number) => updateQuantity(id, 10), [updateQuantity]);
@@ -601,5 +611,4 @@ async function carica(num: number) {
             </main>
         );
     }
-
 }
