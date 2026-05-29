@@ -58,6 +58,9 @@ export default function Page() {
     // Stati per la gestione caricamento stampa
     const [isPrinting, setIsPrinting] = useState(false);
 
+    // Stato per il popup di avviso stampante mancante
+    const [openPrinterWarning, setOpenPrinterWarning] = useState(false);
+
     // Stati per la Dialog "Altro Importo"
     const [openDialog, setOpenDialog] = useState(false);
     const [selectedRow, setSelectedRow] = useState<any>(null);
@@ -126,12 +129,12 @@ export default function Page() {
 
         const savedPrinterIp = localStorage.getItem('sagra_printer_ip');
         if (!savedPrinterIp) {
-            // Nuovo messaggio richiesto: avvisa ma NON blocca l'esecuzione (rimosso il return;)
-            alert("La stampa non viene eseguita perchè non è settata la stampante termica ma il conto viene chiuso correttamente.");
+            // Sostituito l'alert con l'apertura del Dialog di Material-UI
+            setOpenPrinterWarning(true);
         }
 
         try {
-            // 1. Operazioni DB (Vengono eseguite sempre)
+            // 1. Operazioni DB (Vengono eseguite sempre, la logica non si blocca)
             await chiudiConto(Number(nFoglietto), sagra.giornata, tipo, nota, importoFinale);
             await writeLog(Number(nFoglietto), sagra.giornata, 'Casse', session?.user?.name || '', 'CLOSE', logMsg);
 
@@ -167,7 +170,6 @@ export default function Page() {
         const savedPrinterIp = localStorage.getItem('sagra_printer_ip');
 
         if (!savedPrinterIp) {
-            // Rimosso l'alert duplicato all'interno di questa funzione
             return;
         }
 
@@ -350,6 +352,24 @@ export default function Page() {
                         disabled={!customImporto}
                     >
                         Conferma e Stampa
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* DIALOG AVVISO STAMPANTE MANCANTE */}
+            <Dialog open={openPrinterWarning} onClose={() => setOpenPrinterWarning(false)}>
+                <DialogTitle sx={{ fontWeight: 'bold', color: '#d32f2f' }}>⚠️ Stampante Termica Non Configurata</DialogTitle>
+                <DialogContent>
+                    <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
+                        Attenzione: l'IP della stampante termica non è impostato nelle impostazioni locali di questo browser.
+                    </Typography>
+                    <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary' }}>
+                        La chiusura del conto procederà comunque regolarmente sul database, ma la stampa fisica dei pass non verrà inviata.
+                    </Typography>
+                </DialogContent>
+                <DialogActions sx={{ p: 2 }}>
+                    <Button onClick={() => setOpenPrinterWarning(false)} variant="contained" color="error" sx={{ borderRadius: '9999px' }}>
+                        Ho Capito, Continua
                     </Button>
                 </DialogActions>
             </Dialog>
