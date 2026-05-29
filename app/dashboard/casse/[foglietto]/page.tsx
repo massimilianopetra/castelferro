@@ -51,7 +51,6 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   const [isPrinting, setIsPrinting] = useState(false);
   const [openDialogQty, setOpenDialogQty] = useState(false);
 
-  // STATO PER IL DIALOG DI CONFERMA NUOVO CONTO
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 
   const [tempQty, setTempQty] = useState('');
@@ -68,63 +67,40 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         setOpenSnackbar(true);
         return;
       }
-
       setNumeroFoglietto(num.toString());
-
       try {
         const data = await getInizializzazioneCassa(num);
         if (!data) return;
-
         const { gg, cc, c, log } = data;
-        
         setSagra(gg);
         setConto(cc);
-        
-        if (log && log.length > 0) {
-          setLastLog(log);
-        }
-
+        if (log && log.length > 0) setLastLog(log);
         if (c) {
           setProducts(c);
           setIniProducts(c);
           setCopertiPass(c.find((o) => o.id_piatto === 1)?.quantita ?? 0);
         }
-
         if (!cc || !cc.stato || cc.stato === 'NUOVO') {
           setIsNewConto(true);
           setOpenConfirmDialog(true);
           return;
         }
-
         setIsNewConto(false);
         if (['CHIUSO', 'CHIUSOPOS', 'CHIUSOALTRO'].includes(cc.stato)) {
           setPhase('chiuso');
           return;
         }
-
         setPhase(cc.stato === 'APERTO' ? 'aperto' : 'stampato');
-
         if (cc.stato === 'APERTO') {
           await writeLog(num, gg.giornata, 'Casse', '', 'OPEN', 'Apertura conto');
         }
-
-      } catch (error) {
-        console.error("Errore:", error);
-      }
+      } catch (error) { console.error("Errore:", error); }
     };
-
     fetchData();
   }, [params.foglietto]); 
 
-  const handleConfirmNewConto = () => {
-    setOpenConfirmDialog(false);
-    setPhase('aperto');
-  };
-
-  const handleCancelNewConto = () => {
-    setOpenConfirmDialog(false);
-    router.push('/dashboard/casse'); 
-  };
+  const handleConfirmNewConto = () => { setOpenConfirmDialog(false); setPhase('aperto'); };
+  const handleCancelNewConto = () => { setOpenConfirmDialog(false); router.push('/dashboard/casse'); };
 
   const handleOpenSetQty = (id: number) => {
     const p = products.find(i => i.id_piatto === id);
@@ -140,9 +116,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     if (selectedProductId !== null) {
       const newQty = parseInt(tempQty) || 0;
       setProducts(prev => prev.map(item =>
-        item.id_piatto === selectedProductId
-          ? { ...item, quantita: newQty, cucina: "Casse" }
-          : item
+        item.id_piatto === selectedProductId ? { ...item, quantita: newQty, cucina: "Casse" } : item
       ));
       setPhase('modificato');
     }
@@ -152,35 +126,25 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => setNumero(e.target.value);
   const carica = (num: number | string) => router.push(`/dashboard/casse/${num}`);
 
-  // APPLICATA LA LOGICA DI CONTROLLO ANCHE QUI
   const handleButtonClickCarica = async () => {
     const num = Number(numero);
-
-    // SCENARIO 1: Numero superiore a 9999 (o non valido)
     if (isNaN(num) || num < 1 || num > 9999) {
-      setSnackbarMessage("5 .Inserisci un numero foglietto valido (da 1 a 9999)");
+      setSnackbarMessage("Inserisci un numero foglietto valido (da 1 a 9999)");
       setOpenSnackbar(true);
       return;
     }
-
-    // SCENARIO 2: Inserimento manuale compreso tra 9000 e 9999 (Fascia asporto protetta)
     if (num >= 9000 && num <= 9999) {
       const contoEsistente = await getConto(num, sagra.giornata);
-
       if (contoEsistente) {
-        // Se il conto ESISTE già per oggi, bypassiamo il blocco e lo apriamo
         carica(num);
         setNumero('');
         return;
       } else {
-        // Se NON ESISTE oggi, mostriamo il blocco per l'asporto manuale
-        setSnackbarMessage("6. Hai inserito un numero riservato asporto non ancora esistente (compreso tra 9000 e 9999)");
+        setSnackbarMessage("Numero riservato asporto non ancora esistente.");
         setOpenSnackbar(true);
         return;
       }
     }
-
-    // Se il numero è standard (da 1 a 8999) carica la pagina normalmente
     carica(num);
     setNumero(''); 
   };
@@ -196,13 +160,11 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
   const checkAndSaveToDb = async () => {
     const haPortate = products.some(p => p.quantita > 0);
-
     if (!haPortate && isNewConto) {
       setSnackbarMessage("Inserire almeno una portata prima di salvare.");
       setOpenSnackbar(true);
       return false;
     }
-
     if (isNewConto) {
       const numFogl = Number(numeroFoglietto);
       await Promise.all([
@@ -217,18 +179,14 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   const handleAggiorna = async () => {
     const canProceed = await checkAndSaveToDb();
     if (!canProceed) return;
-
     setPhase('caricamento');
     const numFogl = Number(numeroFoglietto);
     const totale = products.reduce((acc, i) => acc + (i.quantita * i.prezzo_unitario), 0);
-
     const logPromises = products
         .map(item => {
             const orig = iniProducts.find(o => o.id_piatto === item.id_piatto);
             if (orig && item.quantita !== orig.quantita) {
-                const msg = item.quantita > orig.quantita
-                    ? `Aggiunti: ${item.quantita - orig.quantita} ${item.piatto}`
-                    : `Eliminati: ${orig.quantita - item.quantita} ${item.piatto}`;
+                const msg = item.quantita > orig.quantita ? `Aggiunti: ${item.quantita - orig.quantita} ${item.piatto}` : `Eliminati: ${orig.quantita - item.quantita} ${item.piatto}`;
                 return writeLog(numFogl, sagra.giornata, 'Casse', '', 'UPDATE', msg);
             }
             return null;
@@ -240,9 +198,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         aggiornaConto(numFogl, sagra.giornata, totale),
         ...logPromises
     ]);
- 
     const newCc = await getConto(numFogl, sagra.giornata);
-    
     setConto(newCc);
     setPhase('aperto');
   };
@@ -250,16 +206,13 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   const handleStampa = async () => {
     const canProceed = await checkAndSaveToDb();
     if (!canProceed) return;
-
     setPhase('elaborazione');
     const numFogl = Number(numeroFoglietto);
     const totale = products.reduce((acc, i) => acc + (i.quantita * i.prezzo_unitario), 0);
-
     try {
       await sendConsumazioni(products);
       await aggiornaConto(numFogl, sagra.giornata, totale);
       await stampaConto(numFogl, sagra.giornata);
-
       await Promise.all([
         writeLog(numFogl, sagra.giornata, 'Casse', '', 'PRINT', 'Stampa conto'),
         (async () => {
@@ -269,86 +222,49 @@ export default function Page({ params }: { params: { foglietto: string } }) {
              if (logs) setLastLog(logs);
            }
         })(),
-        new Promise<void>((resolve) => {
-          print();
-          resolve();
-        })
+        new Promise<void>((resolve) => { print(); resolve(); })
       ]);
-
       setPhase('iniziale_stampato');
-    } catch (error) {
-      console.error("Errore:", error);
-      setPhase('aperto');
-    }
+    } catch (error) { console.error("Errore:", error); setPhase('aperto'); }
   };
 
   const print = () => {
     const printArea = printRef.current;
-    if (!printArea) {
-      console.warn("ATTENZIONE: La stampa è fallita perché 'printRef.current' è NULL.");
-      return;
-    }
+    if (!printArea) return;
     const newWindow = window.open("", "", "width=800,height=900");
     if (newWindow) {
       newWindow.document.write('<html><head><title>Stampa Conto</title>');
-
       document.querySelectorAll('link[rel="stylesheet"]').forEach(s => {
         const href = s.getAttribute('href');
-        if (href && href.startsWith('/')) {
-          newWindow.document.write(`<link rel="stylesheet" href="${window.location.origin}${href}">`);
-        } else {
-          newWindow.document.write(s.outerHTML);
-        }
+        if (href && href.startsWith('/')) newWindow.document.write(`<link rel="stylesheet" href="${window.location.origin}${href}">`);
+        else newWindow.document.write(s.outerHTML);
       });
-
       document.querySelectorAll('style').forEach(s => newWindow.document.write(s.outerHTML));
-
-      newWindow.document.write(`
-      <style>
-        html, body {
-          height: auto !important;
-          overflow: visible !important;
-          background-color: #ffffff !important;
-          margin: 0 !important;
-          padding: 0 !important;
-        }
-        @page {
-          size: auto;
-          margin: 4mm 6mm;
-        }
-        * {
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-        }
-        .print-container {
-          width: 100% !important;
-          height: auto !important;
-          overflow: visible !important;
-        }
-      </style>
-    `);
-
+      newWindow.document.write('<style>html, body { height: auto !important; overflow: visible !important; background-color: #ffffff !important; margin: 0 !important; padding: 0 !important; } @page { size: auto; margin: 4mm 6mm; } * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } .print-container { width: 100% !important; height: auto !important; overflow: visible !important; }</style>');
       newWindow.document.write('</head><body><div class="print-container">');
       newWindow.document.write(printArea.innerHTML);
       newWindow.document.write('</div></body></html>');
       newWindow.document.close();
-
-      setTimeout(() => {
-        newWindow.focus();
-        newWindow.print();
-        newWindow.close();
-      }, 600);
+      setTimeout(() => { newWindow.focus(); newWindow.print(); newWindow.close(); }, 600);
     }
   };
 
-  const handleFinalizzaChiusura = async (tipo: number, nota = '', importo = '', skipPrintWait = false) => {
-      setPhase('elaborazione');
-      setIsPrinting(true);
-
-      const logMsg = tipo === 1 ? 'Pagato contanti' : tipo === 2 ? 'Pagato POS' : 'Altro Importo';
+  // --- LOGICA MODIFICATA PER GESTIONE STAMPANTE ASSENTE ---[cite: 6]
+  const handleFinalizzaChiusura = async (tipo: number, nota = '', importo = '') => {
       const numFogl = Number(numeroFoglietto);
+      const logMsg = tipo === 1 ? 'Pagato contanti' : tipo === 2 ? 'Pagato POS' : `Altro Importo: ${importo}€ - Note: ${nota}`;
+      
+      const savedPrinterIp = localStorage.getItem('sagra_printer_ip');
+      
+      if (!savedPrinterIp) {
+          // Messaggio richiesto
+          alert("La stampa non viene eseguita perchè non è settata la stampante termica ma il conto viene chiuso correttamente.");
+      }
+
+      setPhase('elaborazione');
 
       try {
+          // 1. Database sempre aggiornato prima[cite: 6]
           await Promise.all([
               chiudiConto(numFogl, sagra.giornata, tipo, nota, importo),
               writeLog(numFogl, sagra.giornata, 'Casse', '', 'CLOSE', logMsg)
@@ -357,24 +273,26 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           const cc = await getConto(numFogl, sagra.giornata);
           setConto(cc);
 
-          if (skipPrintWait) {
-              inviaStampaPass(); 
-          } else {
-              await inviaStampaPass();
+          // 2. Se c'è la stampante, mostriamo il loader e inviamo il pass[cite: 6]
+          if (savedPrinterIp) {
+              setIsPrinting(true);
+              await inviaStampaPass(); 
+              setIsPrinting(false);
           }
       } catch (error) {
           console.error("Errore durante la chiusura:", error);
-      } finally {
           setIsPrinting(false);
+      } finally {
           setPhase('chiuso');
       }
   };
 
   const inviaStampaPass = async () => {
     const savedPrinterIp = localStorage.getItem('sagra_printer_ip');
+    if (!savedPrinterIp) return; // Evita fetch inutili se non configurata
 
     try {
-      await fetch('/api/print', {
+      return await fetch('/api/print', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -397,14 +315,6 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     setPhase('modificato');
   };
 
-  const refreshLogs = async () => {
-    const gg = await getGiornoSagra();
-    if (gg) {
-      const logs = await getLastLog(gg.giornata, 'Casse');
-      if (logs) setLastLog(logs);
-    }
-  };
-
   const headerCasse = (
     <div className="p-1 mt-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
       <ul className="flex rounded-full" style={{ borderRadius: '9999px' }}>
@@ -422,9 +332,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           </div>
         </li>
         <li className="text-left flex-1 mr-2 text-5xl font-bold py-4">
-          <Button variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }} size="medium">
-            Carica Foglietto
-          </Button>
+          <Button variant="contained" onClick={handleButtonClickCarica} style={{ borderRadius: '9999px' }} size="medium">Carica Foglietto</Button>
         </li>
       </ul>
     </div>
@@ -432,19 +340,9 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
   const ultimiRicercati = (
     <div className="text-base md:text-xl" style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
-      <p>
-        <span className="text-blue-800">Ultimi ricercati &nbsp;</span>
+      <p><span className="text-blue-800">Ultimi ricercati &nbsp;</span>
         {Array.isArray(lastLog) && lastLog.slice(0, 3).map((row, idx) => (
-          <Button
-            key={idx}
-            size="small"
-            variant="contained"
-            onClick={() => carica(row.foglietto)}
-            startIcon={<Filter1Icon />}
-            style={{ borderRadius: '9999px', margin: '0 4px' }}
-          >
-            {row.foglietto}
-          </Button>
+          <Button key={idx} size="small" variant="contained" onClick={() => carica(row.foglietto)} startIcon={<Filter1Icon />} style={{ borderRadius: '9999px', margin: '0 4px' }}>{row.foglietto}</Button>
         ))}
       </p>
     </div>
@@ -461,41 +359,21 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   );
 
   if (sagra.stato === 'CHIUSA' && (session?.user?.name === "Casse" || session?.user?.name === "SuperUser")) {
-    return (
-      <main><div className="p-4 mb-4 text-xl text-yellow-800 rounded-lg bg-yellow-50 text-center">
-        <span className="font-semibold">Attenzione:</span> |Casse [foglietto]| la giornata non è stata ancora aperta!
-      </div></main>
-    );
+    return <main><div className="p-4 mb-4 text-xl text-yellow-800 rounded-lg bg-yellow-50 text-center"><span className="font-semibold">Attenzione:</span> giornata non aperta!</div></main>;
   }
 
   if (session?.user?.name !== "Casse" && session?.user?.name !== "SuperUser") {
-    return (
-      <main><div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50 text-center">
-        <span className="font-semibold">Violazione:</span> utente non autorizzato.
-      </div></main>
-    );
+    return <main><div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50 text-center"><span className="font-semibold">Violazione:</span> utente non autorizzato.</div></main>;
   }
 
   if (isPrinting) {
     const activePrinterIp = typeof window !== 'undefined' ? localStorage.getItem('sagra_printer_ip') : null;
-
     return (
-      <Box sx={{
-        display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw',
-        alignItems: 'center', justifyContent: 'center', bgcolor: 'rgba(255,255,255,0.9)',
-        position: 'fixed', top: 0, left: 0, zIndex: 9999
-      }}>
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', alignItems: 'center', justifyContent: 'center', bgcolor: 'rgba(255,255,255,0.9)', position: 'fixed', top: 0, left: 0, zIndex: 9999 }}>
         <CircularProgress size="6rem" />
         <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold' }}>Invio alla stampa in corso ...</Typography>
-
-        <Typography variant="body1" sx={{ mt: 1, fontFamily: 'monospace', color: activePrinterIp ? 'text.secondary' : 'error.main', fontWeight: activePrinterIp ? 'normal' : 'bold' }}>
-          {activePrinterIp ? `IP Stampante: ${activePrinterIp}` : 'Nessuna stampante configurata'}
-        </Typography>
-
-        <Button variant="contained" color="error" size="large" sx={{ mt: 4, borderRadius: '9999px', px: 4 }}
-          onClick={() => { setIsPrinting(false); setPhase('chiuso'); }}>
-          Annulla attesa e prosegui
-        </Button>
+        <Typography variant="body1" sx={{ mt: 1, fontFamily: 'monospace', color: activePrinterIp ? 'text.secondary' : 'error.main', fontWeight: activePrinterIp ? 'normal' : 'bold' }}>{activePrinterIp ? `IP Stampante: ${activePrinterIp}` : 'Nessuna stampante configurata'}</Typography>
+        <Button variant="contained" color="error" size="large" sx={{ mt: 4, borderRadius: '9999px', px: 4 }} onClick={() => { setIsPrinting(false); setPhase('chiuso'); }}>Annulla attesa e prosegui</Button>
       </Box>
     );
   }
@@ -507,15 +385,10 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           case 'iniziale_stampato':
             return (
               <div className="container">
-                <header className="top-section"><div className="sez-sx">{headerCasse}{ultimiRicercati}</div>{bottoniServizio}</header>       <main className="middle-section"><br />
-                  <p className="text-2xl md:text-5xl py-4 text-center text-blue-800">
-                    Conto: <span className="font-extrabold"><Link href={`/dashboard/casse/${numeroFoglietto}`}>{numeroFoglietto}</Link></span> inviato in stampa.<br /><br />
-                    Caricare un nuovo foglietto!
-                  </p>
-                </main>
+                <header className="top-section"><div className="sez-sx">{headerCasse}{ultimiRicercati}</div>{bottoniServizio}</header>
+                <main className="middle-section"><br /><p className="text-2xl md:text-5xl py-4 text-center text-blue-800">Conto: <span className="font-extrabold"><Link href={`/dashboard/casse/${numeroFoglietto}`}>{numeroFoglietto}</Link></span> inviato in stampa.<br /><br />Caricare un nuovo foglietto!</p></main>
               </div>
             );
-
           case 'gratis':
             return (
               <div className="flex items-center justify-center min-h-screen">
@@ -530,126 +403,35 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 </div>
               </div>
             );
-
           case 'aperto':
           case 'modificato':
           case 'stampato':
           case 'caricamento':
             return (
               <div className="container">
-                <header className="top-section mb-2">
-                  <div className="sez-sx">
-                    {headerCasse}         
-                    {ultimiRicercati}     
-                  </div>
-                  <div className="sez-dx">
-                    {bottoniServizio}     
-                    <div className="text-base md:text-2xl py-2 text-end">
-                      <p>Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}</span> {conto ? `(${deltanow(conto?.data_apertura)})` : "(Nuovo)"}</p>
-                      <p>Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere || 'Casse'}</span></p>
-                    </div>
-                  </div>
-                </header>
-                <main className="middle-section_XS">
-                  <TabellaConto
-                    item={products}
-                    onAdd10={(id) => handleAdd(id, 10)}
-                    onAdd={(id) => handleAdd(id)}
-                    onRemove={handleRemove}
-                    onSet={handleOpenSetQty}
-                  />
-                </main>
+                <header className="top-section mb-2"><div className="sez-sx">{headerCasse}{ultimiRicercati}</div><div className="sez-dx">{bottoniServizio}<div className="text-base md:text-2xl py-2 text-end"><p>Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}</span> {conto ? `(${deltanow(conto?.data_apertura)})` : "(Nuovo)"}</p><p>Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere || 'Casse'}</span></p></div></div></header>
+                <main className="middle-section_XS"><TabellaConto item={products} onAdd10={(id) => handleAdd(id, 10)} onAdd={(id) => handleAdd(id)} onRemove={handleRemove} onSet={handleOpenSetQty} /></main>
                 <footer className="bottom-section">
-                  <div className="sez-sx-bassa">
-                    <Button variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled={phase === 'modificato' || phase === 'caricamento'}>Stampa Conto</Button>
-                    &nbsp;
-                    <Button variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled={phase !== 'modificato'}>Aggiorna Conto</Button>
-                    <p>Stato: <span className="font-extrabold text-blue-800">{isNewConto ? 'DA CREARE' : phase}</span> n. {numeroFoglietto}</p>
-                  </div>
-                  <div className="sez-dx-bassa">
-                    <ul className=" inline-block p-3 border-2 border-blue-600 bg-blue-200 rounded-full"
-                      style={{ marginTop: '1px' }}>
-                      Chiudi conto &nbsp;
-                      <ButtonGroup variant="contained">
-                        <Button onClick={() => handleFinalizzaChiusura(2)} disabled={phase !== 'stampato'}>POS</Button>
-                        <Button onClick={() => handleFinalizzaChiusura(1)} disabled={phase !== 'stampato'}>Contanti</Button>
-                        <Button onClick={() => setPhase('gratis')} disabled={phase !== 'stampato'}>Altro</Button>
-                      </ButtonGroup>
-                    </ul>
-                  </div>
+                  <div className="sez-sx-bassa"><Button variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled={phase === 'modificato' || phase === 'caricamento'}>Stampa Conto</Button>&nbsp;<Button variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled={phase !== 'modificato'}>Aggiorna Conto</Button><p>Stato: <span className="font-extrabold text-blue-800">{isNewConto ? 'DA CREARE' : phase}</span> n. {numeroFoglietto}</p></div>
+                  <div className="sez-dx-bassa"><ul className=" inline-block p-3 border-2 border-blue-600 bg-blue-200 rounded-full" style={{ marginTop: '1px' }}>Chiudi conto &nbsp;<ButtonGroup variant="contained"><Button onClick={() => handleFinalizzaChiusura(2)} disabled={phase !== 'stampato'}>POS</Button><Button onClick={() => handleFinalizzaChiusura(1)} disabled={phase !== 'stampato'}>Contanti</Button><Button onClick={() => setPhase('gratis')} disabled={phase !== 'stampato'}>Altro</Button></ButtonGroup></ul></div>
                 </footer>
               </div>
             );
-
           case 'chiuso':
           case 'none':
             return (
               <div className="container">
-                <header className="top-section"><div className="sez-sx">{headerCasse}{ultimiRicercati}</div>{bottoniServizio}</header>   <main className="middle-section">
-                  <div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50 text-center">
-                    {phase === 'chiuso' ? (
-                      <>
-                        <span className="font-semibold">Informazione:</span>{` conto ${conto?.id_comanda} chiuso il ${milltodatestring(conto?.data_chiusura)} - ${conto?.totale} €.`}
-                        <Summary item={products} />
-                      </>
-                    ) : <><span className="font-semibold">Informazione:</span> conto non esistente.</>}
-                  </div>
-                </main>
-                <footer className="bottom-section">
-                  {phase === 'chiuso' && (
-                    <Button variant="contained" className="rounded-full" onClick={async () => {
-                      await riapriConto(conto!.id_comanda, sagra.giornata);
-                      setPhase('aperto');
-                    }}>
-                      Riapri Conto
-                    </Button>
-                  )}
-                </footer>
+                <header className="top-section"><div className="sez-sx">{headerCasse}{ultimiRicercati}</div>{bottoniServizio}</header>
+                <main className="middle-section"><div className="p-4 mb-4 text-xl text-gray-800 rounded-lg bg-gray-50 text-center">{phase === 'chiuso' ? (<><span className="font-semibold">Informazione:</span>{` conto ${conto?.id_comanda} chiuso il ${milltodatestring(conto?.data_chiusura)} - ${conto?.totale} €.`}<Summary item={products} /></>) : <><span className="font-semibold">Informazione:</span> conto non esistente.</>}</div></main>
+                <footer className="bottom-section">{phase === 'chiuso' && (<Button variant="contained" className="rounded-full" onClick={async () => { await riapriConto(conto!.id_comanda, sagra.giornata); setPhase('aperto'); }}>Riapri Conto</Button>)}</footer>
               </div>
             );
-          default: return (
-            <div className="container">
-              <header className="top-section"><div className="sez-sx">{headerCasse}{ultimiRicercati}</div>{bottoniServizio}</header>     <div className="text-center p-10"><CircularProgress /></div>
-            </div>
-          );
+          default: return <div className="container"><header className="top-section"><div className="sez-sx">{headerCasse}{ultimiRicercati}</div>{bottoniServizio}</header><div className="text-center p-10"><CircularProgress /></div></div>;
         }
       })()}
-
       <div ref={printRef} className="hidden"><Summarythebill item={products} /></div>
-
-      {/* DIALOG DI CONFERMA NUOVO CONTO */}
-      <Dialog open={openConfirmDialog} onClose={handleCancelNewConto}>
-        <DialogTitle sx={{ fontWeight: 'bold', color: '#1e3a8a' }}>Apertura Nuovo Conto</DialogTitle>
-        <DialogContent>
-          <Typography variant="h6">
-            Vuoi davvero aprire il conto <b>{numeroFoglietto}</b>?
-          </Typography>
-          <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary' }}>
-            Il foglietto non risulta registrato per la giornata odierna.
-          </Typography>
-        </DialogContent>
-        <DialogActions sx={{ p: 3 }}>
-          <Button onClick={handleCancelNewConto} variant="outlined" color="error" sx={{ borderRadius: '9999px' }}>
-            No, annulla
-          </Button>
-          <Button onClick={handleConfirmNewConto} variant="contained" color="primary" sx={{ borderRadius: '9999px' }}>
-            Sì, apri conto
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      <Dialog open={openDialogQty} onClose={() => setOpenDialogQty(false)}>
-        <DialogTitle>Modifica Quantità: {selectedProductName}</DialogTitle>
-        <DialogContent>
-          <TextField autoFocus margin="dense" label="Inserisci quantità" type="number" fullWidth variant="standard" value={tempQty}
-            onChange={(e) => setTempQty(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleConfirmQty(); }} />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpenDialogQty(false)}>Annulla</Button>
-          <Button onClick={handleConfirmQty} variant="contained">Conferma</Button>
-        </DialogActions>
-      </Dialog>
-
+      <Dialog open={openConfirmDialog} onClose={handleCancelNewConto}><DialogTitle sx={{ fontWeight: 'bold', color: '#1e3a8a' }}>Apertura Nuovo Conto</DialogTitle><DialogContent><Typography variant="h6">Vuoi davvero aprire il conto <b>{numeroFoglietto}</b>?</Typography></DialogContent><DialogActions sx={{ p: 3 }}><Button onClick={handleCancelNewConto} variant="outlined" color="error" sx={{ borderRadius: '9999px' }}>No</Button><Button onClick={handleConfirmNewConto} variant="contained" color="primary" sx={{ borderRadius: '9999px' }}>Sì</Button></DialogActions></Dialog>
+      <Dialog open={openDialogQty} onClose={() => setOpenDialogQty(false)}><DialogTitle>Modifica Quantità: {selectedProductName}</DialogTitle><DialogContent><TextField autoFocus margin="dense" label="Quantità" type="number" fullWidth variant="standard" value={tempQty} onChange={(e) => setTempQty(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') handleConfirmQty(); }} /></DialogContent><DialogActions><Button onClick={() => setOpenDialogQty(false)}>Annulla</Button><Button onClick={handleConfirmQty} variant="contained">Conferma</Button></DialogActions></Dialog>
       <Snackbar open={openSnackbar} autoHideDuration={6000} onClose={() => setOpenSnackbar(false)} message={snackbarMessage} />
     </main>
   );

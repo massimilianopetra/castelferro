@@ -218,6 +218,7 @@ export default function Page() {
                 <div className="p-8 text-center text-red-800 rounded-2xl bg-red-50 border border-red-200 shadow-lg">
                     <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
                         Violazione di Accesso
+                        
                     </Typography>
                     <Typography sx={{ mt: 1 }}>Utente non autorizzato alla gestione della sagra.</Typography>
                 </div>

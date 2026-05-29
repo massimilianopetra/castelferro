@@ -124,26 +124,30 @@ export default function Page() {
         else if (tipo === 2) logMsg = 'Pagato POS';
         else logMsg = `Altro Importo: ${importoStr}€ - Note: ${nota}`;
 
-        // CONTROLLO PREVENTIVO: Impedisce di chiudere il conto a schermo se manca la stampante
         const savedPrinterIp = localStorage.getItem('sagra_printer_ip');
         if (!savedPrinterIp) {
-            alert("La stampa non viene eseguita perchè non è settata la stampante termica");
-            return;
+            // Nuovo messaggio richiesto: avvisa ma NON blocca l'esecuzione (rimosso il return;)
+            alert("La stampa non viene eseguita perchè non è settata la stampante termica ma il conto viene chiuso correttamente.");
         }
 
         try {
-            // 1. Operazioni DB (Eseguite subito)
+            // 1. Operazioni DB (Vengono eseguite sempre)
             await chiudiConto(Number(nFoglietto), sagra.giornata, tipo, nota, importoFinale);
             await writeLog(Number(nFoglietto), sagra.giornata, 'Casse', session?.user?.name || '', 'CLOSE', logMsg);
 
-            // 2. Attivazione overlay caricamento
-            setIsPrinting(true);
+            // Eseguiamo la chiamata di stampa e mostriamo il caricamento solo se la stampante è configurata
+            if (savedPrinterIp) {
+                // 2. Attivazione overlay caricamento
+                setIsPrinting(true);
 
-            // 3. Invocazione stampa (attendiamo la risposta della fetch)
-            await inviaStampaPassDiretto(nFoglietto, coperti);
+                // 3. Invocazione stampa (attendiamo la risposta della fetch)
+                await inviaStampaPassDiretto(nFoglietto, coperti);
 
-            // 4. Fine caricamento e refresh
-            setIsPrinting(false);
+                // 4. Fine caricamento
+                setIsPrinting(false);
+            }
+
+            // 5. Refresh dei dati a schermo
             await refreshData();
         } catch (error) {
             console.error("Errore durante la chiusura:", error);
@@ -163,12 +167,11 @@ export default function Page() {
         const savedPrinterIp = localStorage.getItem('sagra_printer_ip');
 
         if (!savedPrinterIp) {
-            alert("La stampa non viene eseguita perchè non è settata la stampante termica");
+            // Rimosso l'alert duplicato all'interno di questa funzione
             return;
         }
 
         try {
-            // Restituiamo la promessa della fetch per poterla "attendere" in handleFinalizzaChiusura
             return await fetch('/api/print', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -176,7 +179,7 @@ export default function Page() {
                     numeroFoglietto,
                     coperti,
                     giornata: sagra.giornata,
-                    ipAddress: savedPrinterIp, // Sostituito config.stampante_xxx con savedPrinterIp
+                    ipAddress: savedPrinterIp, 
                     isPass: true
                 }),
             });
@@ -228,7 +231,6 @@ export default function Page() {
 
     // --- LOGICA OVERLAY STAMPA ---
     if (isPrinting) {
-        // Recuperiamo al volo il valore attuale per mostrarlo nel popup
         const activePrinterIp = typeof window !== 'undefined' ? localStorage.getItem('sagra_printer_ip') : null;
 
         return (
@@ -248,7 +250,6 @@ export default function Page() {
                 <CircularProgress size="6rem" />
                 <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold' }}>Invio alla stampa in corso ...</Typography>
                 
-                {/* Mostra l'IP o il messaggio di errore se non è configurato */}
                 <Typography variant="body1" sx={{ mt: 1, fontFamily: 'monospace', color: activePrinterIp ? 'text.secondary' : 'error.main', fontWeight: activePrinterIp ? 'normal' : 'bold' }}>
                     {activePrinterIp ? `IP Stampante: ${activePrinterIp}` : 'Nessuna stampante configurata'}
                 </Typography>
@@ -259,8 +260,6 @@ export default function Page() {
                     color="error" 
                     sx={{ mt: 4, borderRadius: '9999px', px: 4 }}
                     onClick={() => {
-                        // Forza la chiusura del loader. 
-                        // Il DB è già stato aggiornato, quindi facciamo solo refresh della lista.
                         setIsPrinting(false);
                         refreshData();
                     }}
