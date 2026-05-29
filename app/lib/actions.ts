@@ -540,29 +540,29 @@ export async function updateCamerieri(c: DbCamerieri[]) {
   });
 }
 
-export async function getClassificaCopertiCamerieri(): Promise<{ nome: string; coperti: number }[] | undefined> {
+// Sostituisci la funzione esistente in actions.ts con questa:
+export async function getClassificaCopertiCamerieri(giorno?: number): Promise<{ nome: string; coperti: number }[] | undefined> {
   try {
-    // 1. Prendiamo l'ultimo inserimento/modifica dei coperti (id_piatto = 1) per ogni comanda
-    // 2. Colleghiamo la tabella 'conti' tramite id_comanda
-    // 3. Colleghiamo la tabella 'camerieri' confrontando i NOMI (es. 'Bruno' con 'Bruno') e non gli ID
+    const hasGiorno = giorno !== undefined && giorno > 0;
+    
     const res = await executeQuery<{ nome: string; coperti: number }>(`
       WITH ultimi_coperti AS (
-        SELECT id_comanda, quantita,
-               ROW_NUMBER() OVER(PARTITION BY id_comanda ORDER BY data DESC) as rn
+        SELECT id_comanda, quantita, giorno,
+               ROW_NUMBER() OVER(PARTITION BY id_comanda, giorno ORDER BY data DESC) as rn
         FROM consumazioni
-        WHERE id_piatto = 1 AND quantita > 0
+        WHERE id_piatto = 1 AND quantita > 0 ${hasGiorno ? `AND giorno = ${giorno}` : ''}
       ),
       coperti_validi AS (
-        SELECT id_comanda, quantita
+        SELECT id_comanda, quantita, giorno
         FROM ultimi_coperti
         WHERE rn = 1
       )
-      -- 2. Raggruppiamo SOLO per c.nome in modo da unire i duplicati (es. i vari 'br3')
-      -- e sommiamo tutti i coperti associati ai suoi conti
       SELECT c.nome, COALESCE(SUM(cv.quantita), 0)::int as coperti
       FROM camerieri c
-      LEFT JOIN conti co ON TRIM(LOWER(c.nome)) = TRIM(LOWER(co.cameriere))
-      LEFT JOIN coperti_validi cv ON co.id_comanda = cv.id_comanda
+      LEFT JOIN conti co ON TRIM(LOWER(c.nome)) = TRIM(LOWER(co.cameriere)) 
+        AND co.stato IN ('CHIUSO', 'CHIUSOPOS', 'CHIUSOALTRO')
+        ${hasGiorno ? `AND co.giorno = ${giorno}` : ''}
+      LEFT JOIN coperti_validi cv ON co.id_comanda = cv.id_comanda AND co.giorno = cv.giorno
       WHERE c.nome IS NOT NULL AND c.nome != ''
       GROUP BY LOWER(c.nome), c.nome
       ORDER BY coperti DESC

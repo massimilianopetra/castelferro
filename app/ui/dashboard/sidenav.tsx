@@ -6,9 +6,10 @@ import { signOut } from '@/auth';
 
 export default function SideNav() {
   return (
-    <div className="flex h-full flex-col px-3 py-3 lg:px-2 sm:px-2">
+    // Aggiunta la classe 'no-print' per nascondere l'intera barra laterale in stampa
+    <div className="flex h-full flex-col px-3 py-3 lg:px-2 sm:px-2 no-print">
       <Link
-        className="hidden lg:mb-2 lg:h-32 lg:items-end lg:justify-start lg:rounded-sm lg:bg-blue-600 lg:p-4 force-display-flex" // 
+        className="hidden lg:mb-2 lg:h-32 lg:items-end lg:justify-start lg:rounded-sm lg:bg-blue-600 lg:p-4 force-display-flex" 
         href="/"
       >
         <div className="w-32 text-white lg:w-64">

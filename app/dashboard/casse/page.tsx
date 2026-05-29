@@ -193,7 +193,7 @@ export default function Page() {
                         <p className="text-2xl md:text-5xl py-4 text-center  text-blue-800">
                             <br></br>
                             <br></br>
-                            Caricare un Audio / Nuovo foglietto!
+                            Caricare Nuovo foglietto!
                         </p>
                     </main>
 
