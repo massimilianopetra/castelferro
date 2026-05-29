@@ -1,6 +1,6 @@
 'use client';
-import { memo } from 'react'; // <-- Aggiungi in cima al file TabellaCucina.tsx
-import { useState, useEffect, useCallback } from 'react'; // <-- Assicurati di importare useCallback
+import { memo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { Button, ButtonGroup, Snackbar, TextField, Modal, Box, Typography, IconButton } from '@mui/material';
 import StarsIcon from '@mui/icons-material/Stars';
@@ -49,6 +49,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     const [loading, setLoading] = useState(false);
     const { data: session } = useSession();
     const [phase, setPhase] = useState('iniziale');
+    const [isNewConto, setIsNewConto] = useState(false); // <-- Stato per tracciare se il conto è nuovo o pre-esistente
     const [lastLog, setLastLog] = useState<DbLog[]>([]);
     const [products, setProducts] = useState<DbConsumazioni[]>([]);
     const [iniProducts, setIniProducts] = useState<DbConsumazioni[]>([]);
@@ -65,7 +66,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     const [copertiInAttesa, setCopertiInAttesa] = useState(0);
     const [menuPrevisionale, setMenuPrevisionale] = useState<any[]>([]);
     const [dettaglioCoperti, setDettaglioCoperti] = useState({ seduti: 0, inCoda: 0, serviti: 0 });
-
+    const [snackbarMessage, setSnackbarMessage] = useState('');
     useEffect(() => {
         const fetchData = async () => {
             const gg = await getGiornoSagra();
@@ -87,6 +88,12 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     /* ------------------------------CARICAMENTO CONTO------------------------------ */
     async function carica(num: number) {
         if (isNaN(num) || num < 1 || num > 8999) {
+            // Decidiamo qui il messaggio usando direttamente il parametro 'num' passato alla funzione
+            if (num > 9999) {
+                setSnackbarMessage("3. Inserisci un numero foglietto valido (minore di 8999)");
+            } else {
+                setSnackbarMessage("4 .Hai inserito un numero riservato asporto (compreso tra 9000 e 9999)");
+            }
             setOpenSnackbar(true);
             return;
         }
@@ -105,6 +112,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
 
         if (cc) {
             setConto(cc);
+            setIsNewConto(false); // Il conto esiste già sul database
             if (['CHIUSO', 'STAMPATO', 'CHIUSOPOS', 'CHIUSOALTRO'].includes(cc.stato)) {
                 setPhase('bloccato');
                 return;
@@ -117,7 +125,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
             await writeLog(num, sagra.giornata, nomeCucina, '', 'OPEN', '');
             const logs = await getLastLog(sagra.giornata, nomeCucina);
             if (logs) setLastLog(logs);
-            
+
             setPhase('caricato');
         } else {
             const cameriere = await getCamerieri(num);
@@ -125,17 +133,15 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                 setPhase('sconosciuto');
                 return;
             }
-            
-            // MODIFICA SUL CARICAMENTO: Non invochiamo "apriConto" sul DB adesso.
-            // Creiamo un oggetto temporaneo nello stato locale in modo da poter mostrare
-            // a video il cameriere e abilitare la griglia delle quantità.
+
+            setIsNewConto(true); // È un conto nuovo, non ancora registrato sul DB
             setConto({
                 foglietto: num,
                 giornata: sagra.giornata,
                 cameriere: cameriere,
                 stato: 'APERTO'
             } as any);
-            
+
             setPhase('caricato');
         }
     }
@@ -146,8 +152,6 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     };
 
     const handleButtonClickAnnulla = () => {
-        // Se l'utente clicca annulla e il conto era virtuale (non ancora salvato nel DB),
-        // tornando alla fase iniziale non rimarrà alcuna traccia sul database.
         setPhase('iniziale');
         setProducts([]);
         setIniProducts([]);
@@ -187,37 +191,35 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
 
     /* ------------------------------INVIO CONSUMAZIONI------------------------------ */
     const handleButtonClickInvia = async () => {
-        // MODIFICA SULL'INVIO: Verifichiamo se c'è almeno un piatto con quantità > 0
         const haPortateValide = products.some(item => item.quantita > 0);
 
-        if (!haPortateValide) {
-            // Se tutte le portate sono a zero (0000000), simuliamo un annullamento 
-            // e torniamo alla fase iniziale senza creare il conto e senza salvare nulla.
+        // NUOVO CONTROLLO: Se il conto è NUOVO (isNewConto === true) e non ha piatti (> 0),
+        // allora usciamo subito senza toccare il DB, pulendo solo la schermata.
+        if (!haPortateValide && isNewConto) {
             setPhase('iniziale');
             setProducts([]);
             setIniProducts([]);
             return;
         }
 
-        // Recuperiamo lo stato del conto sul database per verificare se esiste
-        let gc = await getConto(Number(numeroFoglietto), sagra.giornata);
-        
-        if (!gc) {
-            // Se non esiste (era un conto virtuale), lo creiamo sul database SOLO ORA
-            // perché abbiamo la certezza che ci sono portate effettive (> 0) da inserire.
+        // Se invece il conto è NUOVO ma ha portate valide, lo apriamo sul DB adesso.
+        if (isNewConto) {
             await apriConto(Number(numeroFoglietto), sagra.giornata, conto?.cameriere || 'Sconosciuto');
             await writeLog(Number(numeroFoglietto), sagra.giornata, nomeCucina, '', 'START', '');
-            
-            // Aggiorniamo il riferimento locale del conto
-            gc = await getConto(Number(numeroFoglietto), sagra.giornata);
+            setIsNewConto(false);
         }
+
+        // Se siamo arrivati qui, significa che:
+        // - O il conto era nuovo e aveva piatti validi (quindi l'abbiamo aperto sopra)
+        // - O il conto esisteva già (e quindi anche se lo azzeri del tutto, procediamo a salvare gli zeri sul DB)
+        let gc = await getConto(Number(numeroFoglietto), sagra.giornata);
 
         if (gc?.stato !== "APERTO") {
             setPhase('bloccato');
             return;
         }
 
-        // Prepariamo le Promise dei log basandoci sulle quantità correnti rispetto a quelle iniziali
+        // Prepariamo i log delle variazioni di quantità
         const logPromises = products
             .map(item => {
                 const orig = iniProducts.find(o => o.id_piatto === item.id_piatto);
@@ -232,16 +234,14 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
             })
             .filter((p): p is Promise<any> => p !== null);
 
-        // Eseguiamo la scrittura parallela dei log e delle consumazioni
+        // Inviamo l'aggiornamento (comprese le quantità azzerate) al database
         await Promise.all([
             ...logPromises,
             sendConsumazioni(products)
         ]);
 
-        // Aggiorniamo il totale monetario del conto
         await updateTotaleConto(Number(numeroFoglietto), sagra.giornata);
-        
-        // Forza l'aggiornamento della barra dei log rapidi in alto della cucina
+
         const logs = await getLastLog(sagra.giornata, nomeCucina);
         if (logs) setLastLog(logs);
 
@@ -590,10 +590,10 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                         open={openSnackbar}
                         autoHideDuration={6001}
                         onClose={handleClose}
-                        message={(+numero) > 9999 ?
-                            "Inserisci un numero foglietto valido (minore di 8999)" :
-                            "Hai inserito un numero riservato asporto (compreso tra 9000 e 9999)"
-                        }
+                        message={snackbarMessage} // <-- ORA LEGGE IL MESSAGGIO SALVA
+                    />
+                    <Snackbar
+
                     />
                 </main>
             );

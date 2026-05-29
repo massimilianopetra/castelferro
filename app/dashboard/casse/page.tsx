@@ -5,7 +5,8 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { Button, ButtonGroup, Snackbar, TextField } from '@mui/material';
 import type { DbFiera, DbLog } from '@/app/lib/definitions';
-import { getContoPiuAlto, getGiornoSagra, getLastLog } from '@/app/lib/actions';
+// Importazione corretta di getConto
+import { getConto, getContoPiuAlto, getGiornoSagra, getLastLog } from '@/app/lib/actions';
 import Filter1Icon from '@mui/icons-material/Filter1';
 
 
@@ -14,6 +15,7 @@ export default function Page() {
     const router = useRouter();
     const [numero, setNumero] = useState<number | string>('');
     const [openSnackbar, setOpenSnackbar] = useState(false);
+    const [snackbarMessage, setSnackbarMessage] = useState(''); 
     const [lastLog, setLastLog] = useState<DbLog[]>([]);
     const { data: session } = useSession();
     const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
@@ -41,15 +43,38 @@ export default function Page() {
         router.push(`/dashboard/casse/${num}`);
     }
 
-    const handleButtonClickCarica = () => {
+    // Gestione del click sul tasto "Carica Foglietto"
+    const handleButtonClickCarica = async () => {
         const num = Number(numero);
+
+        // SCENARIO 1: Numero superiore a 9999 (o non valido)
         if (isNaN(num) || num < 1 || num > 9999) {
+            setSnackbarMessage("1 .Inserisci un numero foglietto valido (da 1 a 9999)");
             setOpenSnackbar(true);
             return;
         }
 
-        router.push(`/dashboard/casse/${numero}`);
-        setNumero(''); //cancella numero foglietto dalla input box
+        // SCENARIO 2: Inserimento manuale compreso tra 9000 e 9999 (Fascia asporto protetta)
+        if (num >= 9000 && num <= 9999) {
+            // Controlliamo se il conto esiste già per la giornata odierna della sagra
+            const contoEsistente = await getConto(num, sagra.giornata);
+
+            if (contoEsistente) {
+                // Se ESISTE, non lo stiamo creando da zero, quindi lo apriamo normalmente
+                carica(num);
+                setNumero('');
+                return;
+            } else {
+                // Se NON ESISTE, blocchiamo l'operazione per evitare la creazione manuale errata
+                setSnackbarMessage("2 .Hai inserito un numero riservato asporto non ancora esistente (compreso tra 9000 e 9999)");
+                setOpenSnackbar(true);
+                return;
+            }
+        }
+
+        // Se il numero è standard (da 1 a 8999) carica la pagina normalmente (creazione o apertura)
+        carica(num);
+        setNumero(''); 
     };
 
     const handleButtonClickCaricaAsporto = async () => {
@@ -58,7 +83,7 @@ export default function Page() {
         if (isNaN(uc) || uc < 8999) {
             uc = 9000;
         }
-        carica(uc + 1);
+        carica(uc + 1); 
     };
     
     const handleButtonClickCaricaConto1 = async () => {
@@ -112,7 +137,7 @@ export default function Page() {
                                                 style={{ borderRadius: '9999px' }}
                                                 sx={{
                                                     input: {
-                                                        textAlign: 'right', // Allinea il testo a destra
+                                                        textAlign: 'right', 
                                                     },
                                                 }}
                                                 type="number"
@@ -165,12 +190,12 @@ export default function Page() {
                     </header>
 
                     <main className="middle-section">  
-                                    <p className="text-2xl md:text-5xl py-4 text-center  text-blue-800">
- 
-                                      <br></br>
-                                      <br></br>
-                                      Caricare un nuovo foglietto!
-                                    </p></main>
+                        <p className="text-2xl md:text-5xl py-4 text-center  text-blue-800">
+                            <br></br>
+                            <br></br>
+                            Caricare un Audio / Nuovo foglietto!
+                        </p>
+                    </main>
 
  
                 </div>
@@ -178,10 +203,7 @@ export default function Page() {
                     open={openSnackbar}
                     autoHideDuration={6001}
                     onClose={handleClose}
-                    message={(+numero) > 9999 ?
-                        "1 Inserisci un numero foglietto valido (minore di 8999)" :
-                        "2 Hai inserito un numero riservato asporto (compreso tra 9000 e 9999)"
-                    }
+                    message={snackbarMessage} 
                 />
             </main>)
 

@@ -60,7 +60,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
   const [copertipass, setCopertiPass] = useState<number>(1);
 
-useEffect(() => {
+  useEffect(() => {
     const fetchData = async () => {
       const num = +params.foglietto;
       if (isNaN(num) || num < 1 || num > 9999) {
@@ -105,8 +105,6 @@ useEffect(() => {
         setPhase(cc.stato === 'APERTO' ? 'aperto' : 'stampato');
 
         if (cc.stato === 'APERTO') {
-          // Scrivi l'apertura SOLO se il conto è veramente nuovo o appena aperto,
-          // non ogni volta che refreshi la pagina
           await writeLog(num, gg.giornata, 'Casse', '', 'OPEN', 'Apertura conto');
         }
 
@@ -118,16 +116,14 @@ useEffect(() => {
     fetchData();
   }, [params.foglietto]); 
 
-  // Azione se l'utente accetta di aprire il nuovo conto
   const handleConfirmNewConto = () => {
     setOpenConfirmDialog(false);
     setPhase('aperto');
   };
 
-  // Azione se l'utente annulla: torna alla home delle casse
   const handleCancelNewConto = () => {
     setOpenConfirmDialog(false);
-    router.push('/dashboard/casse'); // O il path della tua pagina iniziale casse
+    router.push('/dashboard/casse'); 
   };
 
   const handleOpenSetQty = (id: number) => {
@@ -156,15 +152,37 @@ useEffect(() => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => setNumero(e.target.value);
   const carica = (num: number | string) => router.push(`/dashboard/casse/${num}`);
 
+  // APPLICATA LA LOGICA DI CONTROLLO ANCHE QUI
   const handleButtonClickCarica = async () => {
     const num = Number(numero);
-    if (num > 9999 || isNaN(num) || num < 1) {
-      setSnackbarMessage("Foglietto non valido.");
+
+    // SCENARIO 1: Numero superiore a 9999 (o non valido)
+    if (isNaN(num) || num < 1 || num > 9999) {
+      setSnackbarMessage("5 .Inserisci un numero foglietto valido (da 1 a 9999)");
       setOpenSnackbar(true);
       return;
     }
-    carica(numero);
-    setNumero('');
+
+    // SCENARIO 2: Inserimento manuale compreso tra 9000 e 9999 (Fascia asporto protetta)
+    if (num >= 9000 && num <= 9999) {
+      const contoEsistente = await getConto(num, sagra.giornata);
+
+      if (contoEsistente) {
+        // Se il conto ESISTE già per oggi, bypassiamo il blocco e lo apriamo
+        carica(num);
+        setNumero('');
+        return;
+      } else {
+        // Se NON ESISTE oggi, mostriamo il blocco per l'asporto manuale
+        setSnackbarMessage("6. Hai inserito un numero riservato asporto non ancora esistente (compreso tra 9000 e 9999)");
+        setOpenSnackbar(true);
+        return;
+      }
+    }
+
+    // Se il numero è standard (da 1 a 8999) carica la pagina normalmente
+    carica(num);
+    setNumero(''); 
   };
 
   const handleButtonClickCaricaAsporto = async () => {
@@ -178,7 +196,8 @@ useEffect(() => {
 
   const checkAndSaveToDb = async () => {
     const haPortate = products.some(p => p.quantita > 0);
-    if (!haPortate) {
+
+    if (!haPortate && isNewConto) {
       setSnackbarMessage("Inserire almeno una portata prima di salvare.");
       setOpenSnackbar(true);
       return false;
@@ -186,19 +205,16 @@ useEffect(() => {
 
     if (isNewConto) {
       const numFogl = Number(numeroFoglietto);
-
-      // Parallelizziamo l'apertura e la scrittura del log iniziale
       await Promise.all([
         apriConto(numFogl, sagra.giornata, 'Casse'),
         writeLog(numFogl, sagra.giornata, 'Casse', '', 'START', 'Creazione differita')
       ]);
-
       setIsNewConto(false);
     }
     return true;
   };
 
-const handleAggiorna = async () => {
+  const handleAggiorna = async () => {
     const canProceed = await checkAndSaveToDb();
     if (!canProceed) return;
 
@@ -219,77 +235,53 @@ const handleAggiorna = async () => {
         })
         .filter((p): p is Promise<void> => p !== null);
 
-    // 1. Eseguiamo invio dati e log in parallelo
     await Promise.all([
         sendConsumazioni(products),
         aggiornaConto(numFogl, sagra.giornata, totale),
         ...logPromises
     ]);
-
-    // 2. RECUPERO STATO AGGIORNATO (Log e Conto)
  
     const newCc = await getConto(numFogl, sagra.giornata);
     
     setConto(newCc);
     setPhase('aperto');
-};
+  };
 
-const handleStampa = async () => {
-  const canProceed = await checkAndSaveToDb();
-  if (!canProceed) return;
+  const handleStampa = async () => {
+    const canProceed = await checkAndSaveToDb();
+    if (!canProceed) return;
 
-  setPhase('elaborazione');
-  const numFogl = Number(numeroFoglietto);
-  const totale = products.reduce((acc, i) => acc + (i.quantita * i.prezzo_unitario), 0);
+    setPhase('elaborazione');
+    const numFogl = Number(numeroFoglietto);
+    const totale = products.reduce((acc, i) => acc + (i.quantita * i.prezzo_unitario), 0);
 
-  try {
-    await sendConsumazioni(products);
-    await aggiornaConto(numFogl, sagra.giornata, totale);
-    await stampaConto(numFogl, sagra.giornata);
+    try {
+      await sendConsumazioni(products);
+      await aggiornaConto(numFogl, sagra.giornata, totale);
+      await stampaConto(numFogl, sagra.giornata);
 
-    // Eseguiamo il LOG e il REFRESH in parallelo
-    await Promise.all([
-      writeLog(numFogl, sagra.giornata, 'Casse', '', 'PRINT', 'Stampa conto'),
-      // Qui aggiungi la funzione di ricarica
-      (async () => {
-         const gg = await getGiornoSagra();
-         if (gg) {
-           const logs = await getLastLog(gg.giornata, 'Casse');
-           if (logs) setLastLog(logs);
-         }
-      })(),
-      new Promise<void>((resolve) => {
-        print();
-        resolve();
-      })
-    ]);
+      await Promise.all([
+        writeLog(numFogl, sagra.giornata, 'Casse', '', 'PRINT', 'Stampa conto'),
+        (async () => {
+           const gg = await getGiornoSagra();
+           if (gg) {
+             const logs = await getLastLog(gg.giornata, 'Casse');
+             if (logs) setLastLog(logs);
+           }
+        })(),
+        new Promise<void>((resolve) => {
+          print();
+          resolve();
+        })
+      ]);
 
-    setPhase('iniziale_stampato');
-  } catch (error) {
-    console.error("Errore:", error);
-    setPhase('aperto');
-  }
-};
-  /*
-    const print = () => {
-      const printArea = printRef.current;
-      if (!printArea) {
-        console.warn("ATTENZIONE: La stampa è fallita perché 'printRef.current'` è NULL.");
-        console.log("Stato attuale del Ref:", printRef);
-        return; 
-      }
-      const newWindow = window.open("", "", "width=800,height=900");
-      if (newWindow) {
-        newWindow.document.write('<html><head><title>Stampa Conto</title>');
-        document.querySelectorAll('link[rel="stylesheet"], style').forEach(s => newWindow.document.write(s.outerHTML));
-        newWindow.document.write('</head><body><div class="print-container">');
-        newWindow.document.write(printArea.innerHTML);
-        newWindow.document.write('</div></body></html>');
-        newWindow.document.close();
-        setTimeout(() => { newWindow.focus(); newWindow.print(); newWindow.close(); }, 500);
-      }
-    };
-  */
+      setPhase('iniziale_stampato');
+    } catch (error) {
+      console.error("Errore:", error);
+      setPhase('aperto');
+    }
+  };
+
   const print = () => {
     const printArea = printRef.current;
     if (!printArea) {
@@ -300,7 +292,6 @@ const handleStampa = async () => {
     if (newWindow) {
       newWindow.document.write('<html><head><title>Stampa Conto</title>');
 
-      // 1. Copia i fogli di stile assicurandoti che i percorsi siano assoluti (per evitare 404 in Docker)
       document.querySelectorAll('link[rel="stylesheet"]').forEach(s => {
         const href = s.getAttribute('href');
         if (href && href.startsWith('/')) {
@@ -310,13 +301,10 @@ const handleStampa = async () => {
         }
       });
 
-      // 2. Copia i tag <style> interni
       document.querySelectorAll('style').forEach(s => newWindow.document.write(s.outerHTML));
 
-      // 3. SOVRASCRIVI i blocchi globali distruttivi solo per la stampa
       newWindow.document.write(`
       <style>
-        /* Neutralizza i blocchi del global.css che bloccano l'altezza e lo scroll nel popup */
         html, body {
           height: auto !important;
           overflow: visible !important;
@@ -324,12 +312,10 @@ const handleStampa = async () => {
           margin: 0 !important;
           padding: 0 !important;
         }
-        /* Configurazione margini di stampa del browser */
         @page {
           size: auto;
           margin: 4mm 6mm;
         }
-        /* Assicura che i colori di sfondo e le tabelle vengano renderizzati */
         * {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
@@ -347,7 +333,6 @@ const handleStampa = async () => {
       newWindow.document.write('</div></body></html>');
       newWindow.document.close();
 
-      // Un leggero delay per permettere a Docker di servire i file statici compressi al browser
       setTimeout(() => {
         newWindow.focus();
         newWindow.print();
@@ -356,43 +341,36 @@ const handleStampa = async () => {
     }
   };
 
-const handleFinalizzaChiusura = async (tipo: number, nota = '', importo = '', skipPrintWait = false) => {
-    setPhase('elaborazione');
-    setIsPrinting(true);
+  const handleFinalizzaChiusura = async (tipo: number, nota = '', importo = '', skipPrintWait = false) => {
+      setPhase('elaborazione');
+      setIsPrinting(true);
 
-    const logMsg = tipo === 1 ? 'Pagato contanti' : tipo === 2 ? 'Pagato POS' : 'Altro Importo';
-    const numFogl = Number(numeroFoglietto);
+      const logMsg = tipo === 1 ? 'Pagato contanti' : tipo === 2 ? 'Pagato POS' : 'Altro Importo';
+      const numFogl = Number(numeroFoglietto);
 
-    try {
-        // 1. Parallelizziamo la chiusura del conto e il log.
-        // Entrambe queste funzioni sono in actions.ts e non hanno dipendenze tra loro.
-        await Promise.all([
-            chiudiConto(numFogl, sagra.giornata, tipo, nota, importo),
-            writeLog(numFogl, sagra.giornata, 'Casse', '', 'CLOSE', logMsg)
-        ]);
+      try {
+          await Promise.all([
+              chiudiConto(numFogl, sagra.giornata, tipo, nota, importo),
+              writeLog(numFogl, sagra.giornata, 'Casse', '', 'CLOSE', logMsg)
+          ]);
 
-        // 2. Recuperiamo il conto aggiornato solo dopo la chiusura
-        const cc = await getConto(numFogl, sagra.giornata);
-        setConto(cc);
+          const cc = await getConto(numFogl, sagra.giornata);
+          setConto(cc);
 
-        // 3. Gestione stampa (semplificata)
-        // Se skipPrintWait è true, non attendiamo l'invio della stampa.
-        // Se false, attendiamo.
-        if (skipPrintWait) {
-            inviaStampaPass(); 
-        } else {
-            await inviaStampaPass();
-        }
-    } catch (error) {
-        console.error("Errore durante la chiusura:", error);
-    } finally {
-        setIsPrinting(false);
-        setPhase('chiuso');
-    }
-};
+          if (skipPrintWait) {
+              inviaStampaPass(); 
+          } else {
+              await inviaStampaPass();
+          }
+      } catch (error) {
+          console.error("Errore durante la chiusura:", error);
+      } finally {
+          setIsPrinting(false);
+          setPhase('chiuso');
+      }
+  };
 
   const inviaStampaPass = async () => {
-    // Leggiamo l'IP salvato localmente in questo browser
     const savedPrinterIp = localStorage.getItem('sagra_printer_ip');
 
     try {
@@ -403,7 +381,7 @@ const handleFinalizzaChiusura = async (tipo: number, nota = '', importo = '', sk
           numeroFoglietto,
           coperti: copertipass,
           giornata: sagra.giornata,
-          ipAddress: savedPrinterIp, // Sostituito config.stampante_xxx con savedPrinterIp
+          ipAddress: savedPrinterIp, 
           isPass: true
         }),
       });
@@ -419,13 +397,13 @@ const handleFinalizzaChiusura = async (tipo: number, nota = '', importo = '', sk
     setPhase('modificato');
   };
 
-const refreshLogs = async () => {
-  const gg = await getGiornoSagra();
-  if (gg) {
-    const logs = await getLastLog(gg.giornata, 'Casse');
-    if (logs) setLastLog(logs);
-  }
-};
+  const refreshLogs = async () => {
+    const gg = await getGiornoSagra();
+    if (gg) {
+      const logs = await getLastLog(gg.giornata, 'Casse');
+      if (logs) setLastLog(logs);
+    }
+  };
 
   const headerCasse = (
     <div className="p-1 mt-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
@@ -451,25 +429,26 @@ const refreshLogs = async () => {
       </ul>
     </div>
   );
-const ultimiRicercati = (
-  <div className="text-base md:text-xl" style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
-    <p>
-      <span className="text-blue-800">Ultimi ricercati &nbsp;</span>
-      {Array.isArray(lastLog) && lastLog.slice(0, 3).map((row, idx) => (
-        <Button
-          key={idx}
-          size="small"
-          variant="contained"
-          onClick={() => carica(row.foglietto)}
-          startIcon={<Filter1Icon />}
-          style={{ borderRadius: '9999px', margin: '0 4px' }}
-        >
-          {row.foglietto}
-        </Button>
-      ))}
-    </p>
-  </div>
-);
+
+  const ultimiRicercati = (
+    <div className="text-base md:text-xl" style={{ display: 'flex', alignItems: 'center', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
+      <p>
+        <span className="text-blue-800">Ultimi ricercati &nbsp;</span>
+        {Array.isArray(lastLog) && lastLog.slice(0, 3).map((row, idx) => (
+          <Button
+            key={idx}
+            size="small"
+            variant="contained"
+            onClick={() => carica(row.foglietto)}
+            startIcon={<Filter1Icon />}
+            style={{ borderRadius: '9999px', margin: '0 4px' }}
+          >
+            {row.foglietto}
+          </Button>
+        ))}
+      </p>
+    </div>
+  );
 
   const bottoniServizio = (
     <div className="sez-dx" style={{ display: 'flex', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
@@ -498,7 +477,6 @@ const ultimiRicercati = (
   }
 
   if (isPrinting) {
-    // Recuperiamo al volo il valore attuale per mostrarlo nel popup
     const activePrinterIp = typeof window !== 'undefined' ? localStorage.getItem('sagra_printer_ip') : null;
 
     return (
@@ -510,7 +488,6 @@ const ultimiRicercati = (
         <CircularProgress size="6rem" />
         <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold' }}>Invio alla stampa in corso ...</Typography>
 
-        {/* Mostra l'IP o il messaggio di errore se non è configurato */}
         <Typography variant="body1" sx={{ mt: 1, fontFamily: 'monospace', color: activePrinterIp ? 'text.secondary' : 'error.main', fontWeight: activePrinterIp ? 'normal' : 'bold' }}>
           {activePrinterIp ? `IP Stampante: ${activePrinterIp}` : 'Nessuna stampante configurata'}
         </Typography>
@@ -562,11 +539,11 @@ const ultimiRicercati = (
               <div className="container">
                 <header className="top-section mb-2">
                   <div className="sez-sx">
-                    {headerCasse}         {/* Raddrizzato qui */}
-                    {ultimiRicercati}     {/* Raddrizzato qui */}
+                    {headerCasse}         
+                    {ultimiRicercati}     
                   </div>
                   <div className="sez-dx">
-                    {bottoniServizio}     {/* Raddrizzato qui */}
+                    {bottoniServizio}     
                     <div className="text-base md:text-2xl py-2 text-end">
                       <p>Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}</span> {conto ? `(${deltanow(conto?.data_apertura)})` : "(Nuovo)"}</p>
                       <p>Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere || 'Casse'}</span></p>
@@ -638,7 +615,6 @@ const ultimiRicercati = (
         }
       })()}
 
-      {/* Usiamo stili che nascondono alla vista ma non al DOM */}
       <div ref={printRef} className="hidden"><Summarythebill item={products} /></div>
 
       {/* DIALOG DI CONFERMA NUOVO CONTO */}

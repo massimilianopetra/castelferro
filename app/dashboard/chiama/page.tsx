@@ -291,11 +291,11 @@ export default function ChiamaPage() {
 
             {/* --- TABELLA TICKET --- */}
             <TableContainer component={Paper} sx={{
-                maxWidth: '900px', 
-                width: '100%', 
+                maxWidth: '900px',
+                width: '100%',
                 mx: 'auto',
-                flexGrow: 1, 
-                minHeight: 0, 
+                flexGrow: 1,
+                minHeight: 0,
                 // MODIFICA CRUCIALE: Impostiamo un'altezza massima matematica basata sullo schermo residuo
                 // Detrae lo spazio occupato dal numerone in alto e dai pulsanti (circa 240px su mobile / 300px su desktop)
                 maxHeight: isMobile ? 'calc(100dvh - 230px)' : 'calc(100vh - 310px)',
@@ -315,7 +315,7 @@ export default function ChiamaPage() {
                         <TableRow>
                             <TableCell sx={{ fontWeight: 900, px: { xs: 1, sm: 2 }, width: { xs: '80px', sm: 'auto' } }}>
                                 <TableSortLabel active={orderBy === 'id'} direction={orderBy === 'id' ? order : 'asc'} onClick={() => handleRequestSort('id')}>
-                                 Ticket
+                                    Ticket
                                 </TableSortLabel>
                             </TableCell>
                             <TableCell sx={{ fontWeight: 900, px: { xs: 1, sm: 2 }, width: { xs: '70px', sm: 'auto' } }}>
@@ -342,21 +342,21 @@ export default function ChiamaPage() {
                                     <TableRow
                                         key={row.id}
                                         hover
-                                        component={motion.tr} 
-                                        layout 
+                                        component={motion.tr}
+                                        layout
                                         initial={{ opacity: 1 }}
                                         exit={{
-                                            opacity: [1, 0.1, 0], 
-                                            backgroundColor: 'rgba(46, 125, 50, 0.15)', 
+                                            opacity: [1, 0.1, 0],
+                                            backgroundColor: 'rgba(46, 125, 50, 0.15)',
                                             height: 0,
                                             transition: {
-                                                opacity: { duration: 0.25 },
-                                                height: { duration: 0.25, delay: 0.05 },
-                                                backgroundColor: { duration: 0.15 }
+                                                opacity: { duration: 0.08 },
+                                                height: { duration: 0.08 },
+                                                backgroundColor: { duration: 0.05 }
                                             }
                                         }}
-                                        transition={{ 
-                                            layout: { type: 'tween', duration: 0.1, ease: 'easeOut' }
+                                        transition={{
+                                            layout: { type: 'tween', duration: 0.08, ease: 'easeOut' }
                                         }}
                                     >
                                         <TableCell sx={{
