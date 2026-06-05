@@ -251,6 +251,7 @@ export async function getUser(email: string): Promise<DbUser | undefined> {
 }
 
 /* ************************ GESTIONE DB **************************** */
+/* Commento dummy */
 export async function getTickets(modo: string): Promise<DbTickets[] | undefined> {
   try {
     let query = `SELECT * FROM tickets`;
