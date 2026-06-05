@@ -4,7 +4,7 @@
 # Modificare docker-compose.yaml  inserendo la riga 
 image: ironcastle/castelferro:v5
 # Docker image build (da qui Visual Studio)
-git 
+ docker build -t ironcastle/castelferro:v34 .      
 # andare sul Hub repository e capire se c'e' stata caricata. 
 # Aprire: Docker Desktop loggarsi 
 # (soluzione che non sembra andare) andare su -IMAGE - HUB REPOSITORY e fare PULL dell'immagine. 
@@ -20,6 +20,7 @@ git
 #   si aggiorna tutto da solo  
 # ...fare partire il container, dovrebbero andare entrambi. 
 # ...cancellare i vecchi container. 
+s
 
 # Docker image export
 docker save --output castelferro.tar castelferro:v1   
