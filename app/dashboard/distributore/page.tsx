@@ -1,13 +1,23 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { addTickets, getFirstFreeTicket, clearAllTickets } from '@/app/lib/actions';
+import { 
+    addTickets, 
+    getFirstFreeTicket, 
+    clearAllTickets, 
+    updateTicket, 
+    getTicketById, 
+    updateTicketCoperti,
+    getGiornoSagra,          // <-- NUOVO IMPORT
+    getStatoContiStats,      // <-- NUOVO IMPORT
+    getStimaAttesa,          // Aggiunto per le statistiche
+    getPuntiGraficoAttesa    // Aggiunto per le statistiche
+} from '@/app/lib/actions';
 import CircularProgress from '@mui/material/CircularProgress';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import {
     Box, Typography, Button, Stack, TextField, Paper, Dialog,
-    DialogActions, DialogContent, DialogTitle, useMediaQuery,
-    DialogContentText
+    DialogActions, DialogContent, DialogTitle, DialogContentText
 } from '@mui/material';
 
 import AddCircleIcon from '@mui/icons-material/AddCircle';
@@ -15,8 +25,12 @@ import RemoveCircleSharpIcon from '@mui/icons-material/RemoveCircleSharp';
 import PrintIcon from '@mui/icons-material/Print';
 import HistoryIcon from '@mui/icons-material/History';
 import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import EditIcon from '@mui/icons-material/Edit';
+import CallMergeIcon from '@mui/icons-material/CallMerge';
+import CancelIcon from '@mui/icons-material/Cancel';
+import InfoIcon from '@mui/icons-material/Info'; // Aggiunto per l'icona statistiche
+import AccessTimeFilledIcon from '@mui/icons-material/AccessTime';
 import { useConfig } from '@/context/ConfigContext';
-
 
 const defaultTheme = createTheme({
     palette: {
@@ -34,64 +48,144 @@ type Mode = 'AUTO' | 'MANUALE' | 'LIBERA';
 export default function DistributorePage() {
     const config = useConfig();
 
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(false);
     const [isPrinting, setIsPrinting] = useState(false);
-    const [prossimoTicket, setProssimoTicket] = useState<number | null>(null);
     const [coperti, setCoperti] = useState<number | ''>(0);
     const [isEditing, setIsEditing] = useState(false);
     const [mode, setMode] = useState<Mode>('AUTO');
     const [lastEntry, setLastEntry] = useState<{ numero: number, coperti: number } | null>(null);
+    const [manualTicketId, setManualTicketId] = useState<number | ''>(''); 
+    
+    // States per Dialogs utility
+    const [openErrorTicket, setOpenErrorTicket] = useState(false);
     const [openResetDialog, setOpenResetDialog] = useState(false);
     const [confirmText, setConfirmText] = useState("");
 
-    const [openErrorTicket, setOpenErrorTicket] = useState(false);
+    const [openModifica, setOpenModifica] = useState(false);
+    const [modTicketId, setModTicketId] = useState('');
+    const [modCoperti, setModCoperti] = useState('');
 
+    const [openElimina, setOpenElimina] = useState(false);
+    const [eliminaTicketId, setEliminaTicketId] = useState('');
 
-    const fetchData = useCallback(async () => {
-        if (mode === 'MANUALE') {
-            setProssimoTicket(null);
-            setLoading(false);
+    const [openUnisci, setOpenUnisci] = useState(false);
+    const [unisciTicket1, setUnisciTicket1] = useState('');
+    const [unisciTicket2, setUnisciTicket2] = useState('');
+
+    // === NUOVI STATES PER STATISTICHE ===
+    const [stima, setStima] = useState<number | null>(null);
+    const [openInfo, setOpenInfo] = useState(false);
+    const [puntiGrafico, setPuntiGrafico] = useState<any[]>([]);
+    const [disabilitaStatistiche, setDisabilitaStatistiche] = useState(false);
+
+// === NUOVI STATES PER STATO CONTI ===
+    const [sagra, setSagra] = useState<any>({ stato: 'CHIUSA', giornata: 1 });
+    const [openStatoConti, setOpenStatoConti] = useState(false);
+    const [statsConti, setStatsConti] = useState<{
+        totale: number, antipasti: number, primi: number, 
+        secondi: number, dolci: number, stampati: number
+    } | null>(null);
+
+    // Carica lo stato della sagra all'avvio
+    useEffect(() => {
+        const fetchSagra = async () => {
+            const gg = await getGiornoSagra();
+            if (gg) setSagra(gg);
+        };
+        fetchSagra();
+    }, []);
+
+    // Gestione apertura modale Stato Conti
+    const handleOpenStatoConti = async () => {
+        setOpenStatoConti(true);
+        if (sagra.stato !== 'CHIUSA') {
+            const dati = await getStatoContiStats(sagra.giornata);
+            if (dati) setStatsConti(dati);
+        }
+    };
+
+    // === FUNZIONI STATISTICHE ===
+    const caricaStatistiche = async () => {
+        if (disabilitaStatistiche) return;
+
+        try {
+            const resStima = await getStimaAttesa();
+            if (resStima?.success) setStima(resStima.media ?? null);
+
+            const puntos = await getPuntiGraficoAttesa();
+            if (puntos) {
+                setPuntiGrafico(puntos.map((p: any) => {
+                    const data = new Date(Number(p.slot));
+                    const ore = data.getHours().toString().padStart(2, '0');
+                    const minutes = data.getMinutes().toString().padStart(2, '0');
+                    return {
+                        ora: `${ore}:${minutes}`,
+                        minuti: Math.round(Number(p.attesa_media))
+                    };
+                }));
+            }
+        } catch (error) {
+            console.error("Errore statistiche:", error);
+        }
+    };
+
+    useEffect(() => {
+        if (!disabilitaStatistiche) caricaStatistiche();
+        
+        const intervalStats = setInterval(() => {
+            if (!disabilitaStatistiche) caricaStatistiche();
+        }, 300000); // 5 minuti
+
+        return () => clearInterval(intervalStats);
+    }, [disabilitaStatistiche]);
+
+    // Funzione helper riutilizzabile per notificare la pagina Chiama
+    const notificaCambioTabella = async () => {
+        try {
+            await fetch('/api/next-client', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: 'REFRESH_TABLE' }),
+            });
+        } catch (sseErr) {
+            console.warn("Errore notifica REFRESH_TABLE (ignorato)", sseErr);
+        }
+    };
+
+    const handleStampa = async () => {
+        const numeroCopertiValido = Number(coperti);
+        let activePrinterIp = '192.168.1.171';
+
+        if (typeof window !== 'undefined') {
+            const savedIp = localStorage.getItem('sagra_printer_ip');
+            if (savedIp) activePrinterIp = savedIp;
+            else localStorage.setItem('sagra_printer_ip', activePrinterIp);
+        }
+
+        if (numeroCopertiValido <= 0) return;
+        
+        if (mode === 'MANUALE' && (manualTicketId === '' || manualTicketId <= 0)) {
+            alert("Inserisci un numero ticket valido per la modalità manuale");
             return;
         }
 
         setLoading(true);
-        try {
-            const nextId = await getFirstFreeTicket();
-            setProssimoTicket(nextId);
-        } catch (error) {
-            console.error(error);
-        } finally {
-            setLoading(false);
-        }
-    }, [mode]);
-
-    useEffect(() => {
-        fetchData();
-    }, [fetchData]);
-
-const handleStampa = async () => {
-        const numeroCopertiValido = Number(coperti);
-        
-        // Verifica preliminare: se non ci sono coperti o il ticket è nullo, esci
-        if (numeroCopertiValido <= 0 || prossimoTicket === null) {
-            return;
-        }
 
         try {
-            // 1. Determina la logica di 'caricato' basata sulla modalità attuale
-            let valoreCaricato = 0; // Default: AUTO
-            if (mode === 'MANUALE') {
-                valoreCaricato = 1;
-            } else if (mode === 'LIBERA') {
-                valoreCaricato = 2;
+            let ticketDaAssegnare = Number(manualTicketId);
+            if (mode !== 'MANUALE') {
+                ticketDaAssegnare = await getFirstFreeTicket();
             }
+
+            let valoreCaricato = 0; 
+            if (mode === 'MANUALE') valoreCaricato = 1;
+            else if (mode === 'LIBERA') valoreCaricato = 2;
 
             const seduto = mode === 'LIBERA' ? 1 : 0;
             const timestampAdesso = Date.now();
 
-            // 2. Salvataggio nel Database tramite Server Action
             const res = await addTickets(
-                prossimoTicket,
+                ticketDaAssegnare,
                 numeroCopertiValido,
                 seduto,
                 valoreCaricato,
@@ -99,15 +193,14 @@ const handleStampa = async () => {
                 null as any
             );
 
-            // Gestione errore salvataggio (es. ticket già esistente)
             if (res && (res as any).error) {
                 setOpenErrorTicket(true);
+                setLoading(false);
                 return;
             }
 
-            // 3. Notifica immediata agli altri client via SSE
             const nuovoTicket = {
-                id: prossimoTicket,
+                id: ticketDaAssegnare,
                 numpersone: numeroCopertiValido,
                 seduto: seduto,
                 caricato: valoreCaricato,
@@ -119,29 +212,23 @@ const handleStampa = async () => {
                 await fetch('/api/next-client', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        type: 'NEW_TICKET',
-                        ticket: nuovoTicket
-                    }),
+                    body: JSON.stringify({ type: 'NEW_TICKET', ticket: nuovoTicket }),
                 });
             } catch (sseErr) {
-                console.warn("Errore notifica SSE (ignorato):", sseErr);
+                console.warn("Errore notifica SSE (ignorato)", sseErr);
             }
 
-            // 4. GESTIONE STAMPA (Solo se non siamo in modalità LIBERA)
             if (mode !== 'LIBERA') {
-                setIsPrinting(true); // Mostra la rotella di caricamento
-                
+                setIsPrinting(true);
                 try {
-                    // Eseguiamo la fetch alla nostra API di stampa
-                    const printResponse = await fetch('/api/print', {
+                    await fetch('/api/print', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            numeroTicket: prossimoTicket,
-                            numeroFoglietto: prossimoTicket,
+                            numeroTicket: ticketDaAssegnare,
+                            numeroFoglietto: ticketDaAssegnare,
                             coperti: numeroCopertiValido,
-                            ipAddress: config.stampante_wifi,
+                            ipAddress: activePrinterIp,
                             titolo: config.titolo,
                             edizione: config.edizione,
                             inizio: config.inizio,
@@ -151,43 +238,34 @@ const handleStampa = async () => {
                             isPass: false
                         }),
                     });
-
-                    if (!printResponse.ok) {
-                        console.warn("L'API di stampa ha restituito un errore (normale su Vercel).");
-                    }
                 } catch (printErr) {
-                    // Questo catch impedisce al pop-up "Errore durante la stampa" di apparire
                     console.error("Impossibile comunicare con il server di stampa:", printErr);
                 } finally {
-                    setIsPrinting(false); // Nascondi sempre la rotella
+                    setIsPrinting(false);
                 }
             }
 
-            // 5. RESET STATO LOCALE
-            // Questa parte DEVE essere fuori dal blocco di stampa per garantire 
-            // che il numero del ticket avanzi sempre.
-            setLastEntry({ numero: prossimoTicket, coperti: numeroCopertiValido });
+            setLastEntry({ numero: ticketDaAssegnare, coperti: numeroCopertiValido });
             setCoperti(0);
-
-            if (mode === 'MANUALE') {
-                setProssimoTicket(null);
-            } else {
-                // Ricarica il prossimo ticket disponibile dal DB
-                await fetchData();
-            }
+            if (mode === 'MANUALE') setManualTicketId('');
+            
+            // Aggiorna le statistiche dopo un nuovo inserimento
+            if (!disabilitaStatistiche) caricaStatistiche();
 
         } catch (globalError) {
-            // Questo catch gestisce solo errori critici non legati alla stampa
-            console.error("Errore critico nella procedura handleStampa:", globalError);
+            console.error("Errore critico:", globalError);
             setIsPrinting(false);
+        } finally {
+            setLoading(false);
         }
     };
-
 
     const onAdd = () => setCoperti(prev => (Number(prev) < 999 ? Number(prev) + 1 : 999));
     const onRemove = () => setCoperti(prev => (Number(prev) > 0 ? Number(prev) - 1 : 0));
     const onAdd10 = () => setCoperti(prev => (Number(prev) <= 989 ? Number(prev) + 10 : 999));
 
+    // ---- FUNZIONI UTILITY CON REFRESH CHIAMA ---- //
+    
     const handleResetTotale = async () => {
         if (confirmText === "CONFERMA") {
             setLoading(true);
@@ -197,19 +275,88 @@ const handleStampa = async () => {
                 setCoperti(0);
                 setOpenResetDialog(false);
                 setConfirmText("");
-                // NOTIFICA RESET TOTALE
-                await fetch('/api/next-client', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type: 'REFRESH_TABLE' }),
-                });
-                await fetchData();
+                await notificaCambioTabella();
             } catch (error) {
                 alert("Errore reset");
             } finally {
                 setLoading(false);
             }
         }
+    };
+
+    const handleModifica = async () => {
+        if(!modTicketId || !modCoperti) return;
+        setLoading(true);
+        try {
+            await updateTicketCoperti(Number(modTicketId), Number(modCoperti));
+            setOpenModifica(false);
+            setModTicketId('');
+            setModCoperti('');
+            
+            if(lastEntry?.numero === Number(modTicketId)) {
+                setLastEntry({ numero: Number(modTicketId), coperti: Number(modCoperti) });
+            }
+            // Forza il refresh sincrono su CHIAMA
+            await notificaCambioTabella();
+        } catch(e) {
+            alert("Errore durante la modifica");
+        }
+        setLoading(false);
+    };
+
+    const handleElimina = async () => {
+        if(!eliminaTicketId) return;
+        setLoading(true);
+        try {
+            // Imposta lo stato a 100 per nasconderlo e invalidarlo
+            await updateTicket(Number(eliminaTicketId), 100);
+            setOpenElimina(false);
+            setEliminaTicketId('');
+            
+            // Forza il refresh sincrono su CHIAMA
+            await notificaCambioTabella();
+        } catch(e) {
+            alert("Errore durante l'eliminazione");
+        }
+        setLoading(false);
+    };
+
+    const handleUnisci = async () => {
+        if(!unisciTicket1 || !unisciTicket2) return;
+        setLoading(true);
+        try {
+            const t1 = await getTicketById(Number(unisciTicket1));
+            const t2 = await getTicketById(Number(unisciTicket2));
+            
+            if(t1 && t2) {
+                // Escludiamo ticket già cancellati prima di unire
+                if(t1.caricato === 100 || t2.caricato === 100) {
+                    alert("Uno dei ticket inseriti risulta già eliminato.");
+                    setLoading(false);
+                    return;
+                }
+
+                const nuoviCoperti = t1.numpersone + t2.numpersone;
+                await updateTicketCoperti(t1.id, nuoviCoperti);
+                await updateTicket(t2.id, 100); // Scarto il secondo ticket
+                
+                setOpenUnisci(false);
+                setUnisciTicket1('');
+                setUnisciTicket2('');
+                
+                if(lastEntry?.numero === t1.id) {
+                    setLastEntry({ numero: t1.id, coperti: nuoviCoperti });
+                }
+
+                // Forza il refresh sincrono su CHIAMA
+                await notificaCambioTabella();
+            } else {
+                alert("Uno o entrambi i ticket non sono stati trovati.");
+            }
+        } catch(e) {
+            alert("Errore durante l'unione");
+        }
+        setLoading(false);
     };
 
     if (isPrinting) {
@@ -225,37 +372,24 @@ const handleStampa = async () => {
                     <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold' }}>Invio alla stampa in corso ...</Typography>
                     <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}> Se annulli comunque il ticket risulterà regolarmente distribuito</Typography>
 
-                    <Button
-                        variant="contained"
-                        color="error"
-                        size="large"
-                        sx={{ mt: 4, borderRadius: '9999px', px: 4 }}
-                        onClick={async () => {
-                            // AGGIUNTO: Avvisa comunque la pagina Chiama prima di chiudere
-                            await fetch('/api/next-client', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ type: 'NEW_TICKET' }),
-                            });
+<Button
+    variant="contained" color="error" size="large"
+    sx={{ mt: 4, borderRadius: '9999px', px: 4 }}
+    onClick={async () => {
+        await notificaCambioTabella();
+        
+        // === AGGIUNGI IL RESET DELLO STATO DI ELABORAZIONE QUI ===
+        // Sostituisci "setIsLoading" con il nome esatto del tuo stato (es: setIsLoading, setIsSaving, ecc.)
+        if (typeof setLoading === 'function') {
+            setLoading(false); 
+        }
 
-                            setIsPrinting(false);
-                            setLastEntry({ numero: prossimoTicket as number, coperti: Number(coperti) });
-                            setCoperti(0);
-                            await fetchData();
-                        }}
-                    >
-                        Annulla attesa e prosegui
-                    </Button>
-                </Box>
-            </ThemeProvider>
-        );
-    }
-
-    if (loading && prossimoTicket === null && mode !== 'MANUALE') {
-        return (
-            <ThemeProvider theme={defaultTheme}>
-                <Box sx={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center' }}>
-                    <CircularProgress />
+        setIsPrinting(false);
+        setCoperti(0);
+    }}
+>
+    Annulla attesa e prosegui
+</Button>
                 </Box>
             </ThemeProvider>
         );
@@ -265,103 +399,83 @@ const handleStampa = async () => {
         <ThemeProvider theme={defaultTheme}>
             <Box sx={{
                 display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-                height: '100%', width: '100%', bgcolor: 'background.default', p: 2, position: 'relative',
+                height: '87vh', width: '100%', bgcolor: 'background.default', p: 2,
                 boxSizing: 'border-box', overflow: 'hidden',
                 pointerEvents: loading ? 'none' : 'auto',
-                opacity: loading ? 0.7 : 1
+                opacity: loading ? 0.7 : 1,
+                position: 'relative' // IMPORTANTE: per far funzionare absolute sui nuovi elementi
             }}>
 
-                <Box sx={{
-                    position: 'flex', top: 16, left: 16, zIndex: 10,
-                    display: 'flex', gap: 1
-                }}>
-                    <Button
-                        variant="outlined" color="error" size="small"
-                        disabled={loading}
-                        onClick={() => setOpenResetDialog(true)}
-                        startIcon={<DeleteForeverIcon />}
-                        sx={{ fontWeight: 'bold', bgcolor: 'white', borderRadius: '10px', mb: 2 }}
+{/* --- STATO CONTI E BENVENUTO (TOP-LEFT) --- */}
+                <Box sx={{ position: 'absolute', top: 15, left: 15, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                    <Button 
+                        variant="outlined" color="secondary"
+                        startIcon={<AccessTimeFilledIcon sx={{ display: { xs: 'none', sm: 'inherit' } }} />}
+                        size="small"
+                        onClick={handleOpenStatoConti} // <-- AGGIUNTO ONCLICK
+                        sx={{ fontWeight: 'bold', borderRadius: '15px' }}
                     >
-                        AZZERA
-                    </Button>
-
-                    <Button
-                        variant={mode === 'AUTO' ? "contained" : "outlined"}
-                        color="primary" size="small"
-                        disabled={loading}
-                        onClick={() => setMode('AUTO')}
-                        sx={{ fontWeight: 'bold', bgcolor: mode === 'AUTO' ? 'primary.main' : 'white', borderRadius: '10px', fontSize: '0.7rem', mb: 2 }}
-                    >
-                        AUTO
-                    </Button>
-
-                    <Button
-                        variant={mode === 'MANUALE' ? "contained" : "outlined"}
-                        color="warning" size="small"
-                        disabled={loading}
-                        onClick={() => setMode('MANUALE')}
-                        sx={{ fontWeight: 'bold', bgcolor: mode === 'MANUALE' ? 'warning.main' : 'white', borderRadius: '10px', fontSize: '0.7rem', mb: 2 }}
-                    >
-                        MANUALE
-                    </Button>
-
-                    <Button
-                        variant={mode === 'LIBERA' ? "contained" : "outlined"}
-                        color="success" size="small"
-                        disabled={loading}
-                        onClick={() => setMode('LIBERA')}
-                        sx={{ fontWeight: 'bold', bgcolor: mode === 'LIBERA' ? 'success.main' : 'white', borderRadius: '10px', fontSize: '0.7rem', mb: 2 }}
-                    >
-                        LIBERA
+                        Stato conti
                     </Button>
                 </Box>
 
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '600px', gap: { xs: 1, sm: 2 }, flexGrow: 1, justifyContent: 'center' }}>
-
-                    <Box sx={{ textAlign: 'center' }}>
-                        <Typography sx={{ color: '#666', fontWeight: 1000, fontSize: '1.4rem', letterSpacing: 2 }}>
-                            {mode === 'LIBERA' ? 'ENTRATA LIBERA' : 'PROSSIMO TICKET'}
-                        </Typography>
-
-                        {mode === 'MANUALE' ? (
-                            <TextField
-                                type="number"
-                                disabled={loading}
-                                value={prossimoTicket === null ? '' : prossimoTicket}
-                                onChange={(e) => setProssimoTicket(e.target.value === '' ? null : Number(e.target.value))}
-                                variant="standard"
-                                placeholder="-"
-                                InputProps={{ disableUnderline: true }}
-                                sx={{
-                                    '& input': {
-                                        fontSize: { xs: '5.5rem', sm: '6rem' }, textAlign: 'center', fontWeight: 1000,
-                                        color: 'warning.main', fontFamily: 'monospace', padding: 0, width: '250px'
-                                    }
-                                }}
-                            />
-                        ) : (
-                            <Typography sx={{
-                                fontWeight: 1000,
-                                color: mode === 'LIBERA' ? 'success.main' : 'primary.main',
-                                fontSize: { xs: '5.5rem', sm: '6rem' }, lineHeight: 1, mt: 1
-                            }}>
-                                {prossimoTicket ?? '-'}
+                {/* --- WIDGET STIMA ATTESA (TOP-RIGHT) --- */}
+                {!disabilitaStatistiche && (
+                    <Box sx={{ position: 'absolute', top: 15, right: 15, zIndex: 10 }}>
+                        <Button
+                             variant="outlined" color="secondary"
+                            size="small"
+                            startIcon={<InfoIcon sx={{ display: { xs: 'none', sm: 'inherit' } }} />}
+                            onClick={() => setOpenInfo(true)}
+                            sx={{
+                                borderRadius: '20px',
+                                fontWeight: 'bold',
+                                bgcolor: 'white',
+                                minWidth: { xs: 'auto', sm: '64px' }
+                            }}
+                        >
+                            {stima !== null ? `Attesa: ~${stima} min` : "Stima attesa"}
+                        </Button>
+                    </Box>
+                )}
+<Box sx={{ 
+    flexShrink: 0, 
+    mb: 1, 
+    mt: 1, // <-- PASSA DA 4 A 1 o 2 (più compatto su mobile)
+    textAlign: 'center', 
+    minHeight: '60px'     // <-- RIDOTTO da 80px a 60px per recuperare spazio
+}}>
+                    {lastEntry ? (
+                        <Paper elevation={3} sx={{
+                            px: 6, py: 0, borderRadius: '20px',
+                            border: '4px solid #1976d2',
+                            bgcolor: '#fff'
+                        }}>
+                            <Typography sx={{ fontSize: '1.5rem', fontWeight: 900, color: '#333' }}>
+                                ULTIMO: <span style={{ color: '#1976d2', fontSize: '1.2em' }}>{lastEntry.numero}</span>
+                                <span style={{ margin: '0 15px', color: '#ccc' }}>|</span>
+                                COPERTI: <span style={{ color: '#9c27b0', fontSize: '1.2em' }}>{lastEntry.coperti}</span>
                             </Typography>
-                        )}
-                    </Box>
+                        </Paper>
+                    ) : (
+                        <Typography sx={{ color: '#aaa', fontWeight: 700, fontSize: '1.5rem' }}>Nessun ticket distribuito</Typography>
+                    )}
+                </Box>
 
-                    <Box sx={{ minHeight: '40px', display: 'flex', alignItems: 'center' }}>
-                        {lastEntry && (
-                            <Paper variant="outlined" sx={{ px: 2, py: 0.5, bgcolor: '#fff', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                <HistoryIcon sx={{ fontSize: 16, color: '#9c27b0' }} />
-                                <Typography sx={{ fontSize: '0.85rem', fontWeight: 800, color: '#666' }}>
-                                    ULTIMO: <span style={{ color: '#1976d2' }}>{lastEntry.numero}</span> | COPERTI: <span style={{ color: '#9c27b0' }}>{lastEntry.coperti}</span>
-                                </Typography>
-                            </Paper>
-                        )}
-                    </Box>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '600px', mt: -1 }}>
 
-                    <Box onClick={() => !loading && setIsEditing(true)} sx={{ textAlign: 'center', cursor: loading ? 'default' : 'pointer', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                    {mode === 'MANUALE' && (
+                        <TextField
+                            type="number"
+                            label="Inserisci Ticket N°"
+                            value={manualTicketId}
+                            onChange={(e) => setManualTicketId(e.target.value === '' ? '' : Number(e.target.value))}
+                            sx={{ mb: 2, width: '200px' }}
+                            InputProps={{ sx: { fontWeight: 'bold', fontSize: '1.5rem', textAlign: 'center' } }}
+                        />
+                    )}
+
+                    <Box onClick={() => !loading && setIsEditing(true)} sx={{ textAlign: 'center', cursor: loading ? 'default' : 'pointer', width: '100%' }}>
                         {isEditing ? (
                             <TextField
                                 type="number" autoFocus variant="standard" InputProps={{ disableUnderline: true }}
@@ -378,106 +492,240 @@ const handleStampa = async () => {
                         )}
                         <Typography sx={{ color: '#555', fontWeight: 1000, fontSize: '1.4rem', mt: 1 }}>COPERTI</Typography>
                     </Box>
+                    <Stack
+                        direction="row"
+                        spacing={1} // <--- RIDOTTO da 2 a 1 (avvicina i bottoni + e - tra loro)
+                        justifyContent="center"
+                        sx={{
+                            width: '100%',
+                            px: 2,
+                            my: 0.5 // <--- RIDOTTO (controlla lo spazio SOPRA lo stack e SOTTO lo stack)
+                        }}
+                    >
+                        <Button variant="contained" disabled={loading || Number(coperti) <= 0} onClick={onRemove} sx={{ width: '30%', height: { xs: '70px', sm: '90px' }, borderRadius: '20px' }}>
+                            <RemoveCircleSharpIcon sx={{ fontSize: 40 }} />
+                        </Button>
+                        <Button variant="contained" disabled={loading} onClick={onAdd} sx={{ width: '30%', height: { xs: '70px', sm: '90px' }, borderRadius: '20px' }}>
+                            <AddCircleIcon sx={{ fontSize: 40 }} />
+                        </Button>
+                        <Button variant="contained" disabled={loading} onClick={onAdd10} sx={{ width: '30%', height: { xs: '70px', sm: '90px' }, borderRadius: '20px' }}>
+                            <Typography sx={{ fontWeight: 1000, fontSize: '1.5rem' }}>+10</Typography>
+                        </Button>
+                    </Stack>
 
-                    <Box sx={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', mt: 1 }}>
-                        <Stack direction="row" spacing={2} justifyContent="center" sx={{ width: '100%', px: 2, mb: { xs: 2, sm: 3 } }}>
-                            <Button variant="contained" disabled={loading || Number(coperti) <= 0} onClick={onRemove} sx={{ width: '30%', height: { xs: '70px', sm: '90px' }, borderRadius: '20px' }}>
-                                <RemoveCircleSharpIcon sx={{ fontSize: 40 }} />
+                    <Button
+                        onClick={handleStampa}
+                        variant="contained"
+                        color={mode === 'LIBERA' ? "success" : "secondary"}
+                        disabled={loading || Number(coperti) <= 0 || (mode === 'MANUALE' && !manualTicketId)}
+                        startIcon={loading ? <CircularProgress size={24} color="inherit" /> : <PrintIcon sx={{ fontSize: { xs: 30, sm: 45 } }} />}
+                        sx={{
+                            width: '92%',
+                            py: 2,
+                            mt: 0.5, // <--- AGGIUNTO: questo riduce lo spazio tra lo STACK e il bottone STAMPA
+                            fontSize: { xs: '1.5rem', sm: '2.2rem' },
+                            fontWeight: 1000,
+                            borderRadius: '40px'
+                        }}
+                    >
+                        {loading ? 'ELABORAZIONE...' : (mode === 'LIBERA' ? 'ENTRA' : 'STAMPA')}
+                    </Button>
+                </Box>
+                <Box sx={{
+                    width: '100%',
+                    maxWidth: '800px',
+                    mt: 1, // <--- CAMBIATO da 'auto' a 1 (o 2) per avvicinarlo al blocco sopra
+                    pt: 1, // <--- RIDOTTO da 2 a 1
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 1 // <--- RIDOTTO da 2 a 1 (avvicina le due Paper tra loro)
+                }}>
+
+                    {/* Riga 1: Modalità */}
+                    <Paper elevation={1} sx={{ p: 1, borderRadius: '15px', bgcolor: '#fff' }}>
+                        <Typography variant="caption" sx={{ ml: 1, fontWeight: 'bold', color: 'text.secondary' }}>MODALITÀ</Typography>
+                        <Stack direction="row" spacing={1} sx={{ mt: 0 }}>
+                            <Button fullWidth variant={mode === 'AUTO' ? "contained" : "outlined"} color="primary" onClick={() => setMode('AUTO')} sx={{ fontWeight: 'bold', borderRadius: '10px' }}>
+                                AUTO
                             </Button>
-                            <Button variant="contained" disabled={loading} onClick={onAdd} sx={{ width: '30%', height: { xs: '70px', sm: '90px' }, borderRadius: '20px' }}>
-                                <AddCircleIcon sx={{ fontSize: 40 }} />
+                            <Button fullWidth variant={mode === 'MANUALE' ? "contained" : "outlined"} color="warning" onClick={() => setMode('MANUALE')} sx={{ fontWeight: 'bold', borderRadius: '10px' }}>
+                                MANUALE
                             </Button>
-                            <Button variant="contained" disabled={loading} onClick={onAdd10} sx={{ width: '30%', height: { xs: '70px', sm: '90px' }, borderRadius: '20px' }}>
-                                <Typography sx={{ fontWeight: 1000, fontSize: '1.5rem' }}>+10</Typography>
+                            <Button fullWidth variant={mode === 'LIBERA' ? "contained" : "outlined"} color="success" onClick={() => setMode('LIBERA')} sx={{ fontWeight: 'bold', borderRadius: '10px' }}>
+                                LIBERA
                             </Button>
                         </Stack>
+                    </Paper>
 
-                        <Button
-                            onClick={handleStampa} variant="contained"
-                            color={mode === 'LIBERA' ? "success" : "secondary"}
-                            disabled={loading || Number(coperti) <= 0 || prossimoTicket === null}
-                            startIcon={loading ? <CircularProgress size={24} color="inherit" /> : <PrintIcon sx={{ fontSize: { xs: 30, sm: 45 } }} />}
-                            sx={{ width: '92%', py: 2, fontSize: { xs: '1.5rem', sm: '2.2rem' }, fontWeight: 1000, borderRadius: '40px' }}
-                        >
-                            {loading ? 'STAMPA IN CORSO...' : (mode === 'LIBERA' ? 'ENTRA' : 'STAMPA')}
-                        </Button>
-                    </Box>
+                    {/* Riga 2: Utility */}
+                    <Paper elevation={1} sx={{ p: 1, borderRadius: '15px', bgcolor: '#fff' }}>
+                        <Typography variant="caption" sx={{ ml: 1, fontWeight: 'bold', color: 'text.secondary' }}>UTILITY</Typography>
+                        <Stack direction="row" spacing={1} sx={{ mt: 0}}>
+                            <Button fullWidth variant="outlined" color="primary" onClick={() => setOpenModifica(true)} startIcon={<EditIcon/>} sx={{ fontWeight: 'bold', borderRadius: '10px', fontSize: '0.75rem' }}>
+                                MODIFICA
+                            </Button>
+                            <Button fullWidth variant="outlined" color="secondary" onClick={() => setOpenUnisci(true)} startIcon={<CallMergeIcon/>} sx={{ fontWeight: 'bold', borderRadius: '10px', fontSize: '0.75rem' }}>
+                                UNISCI
+                            </Button>
+                            <Button fullWidth variant="outlined" color="error" onClick={() => setOpenElimina(true)} startIcon={<CancelIcon/>} sx={{ fontWeight: 'bold', borderRadius: '10px', fontSize: '0.75rem' }}>
+                                ELIMINA
+                            </Button>
+                            <Button fullWidth variant="contained" color="error" onClick={() => setOpenResetDialog(true)} startIcon={<DeleteForeverIcon/>} sx={{ fontWeight: 'bold', borderRadius: '10px', fontSize: '0.75rem' }}>
+                                AZZERA
+                            </Button>
+                        </Stack>
+                    </Paper>
+
                 </Box>
 
-                <Dialog
-                    open={openResetDialog}
-                    onClose={() => !loading && setOpenResetDialog(false)}
-                    PaperProps={{
-                        sx: {
-                            borderRadius: 4,
-                            borderLeft: '10px solid #9c27b0',
-                            p: 1,
-                            minWidth: { xs: '90%', sm: '400px' },
-                        }
-                    }}
-                >
-                    <DialogTitle sx={{ color: 'error.main', fontWeight: 1000, fontSize: '1.4rem', textAlign: 'center' }}>
-                        AZZERARE TICKETS?
-                    </DialogTitle>
+                {/* --- DIALOGS --- */}
+{/* MODALE STATO CONTI */}
+                <Dialog open={openStatoConti} onClose={() => setOpenStatoConti(false)} fullWidth maxWidth="sm">
+                    <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center' }}>STATO CONTI IN ELABORAZIONE</DialogTitle>
                     <DialogContent>
-                        <DialogContentText sx={{ fontWeight: 700, color: '#444', mb: 2, textAlign: 'center' }}>
-                            Operazione irreversibile. Svuota la tabella e azzera il contatore.
-                            <br /><br />
-                            Digita <span style={{ color: '#9c27b0' }}>CONFERMA</span> per continuare.
-                        </DialogContentText>
-                        <TextField
-                            autoFocus
-                            fullWidth
-                            disabled={loading}
-                            variant="outlined"
-                            placeholder="CONFERMA"
-                            value={confirmText}
-                            onChange={(e) => setConfirmText(e.target.value.toUpperCase())}
-                            sx={{
-                                '& .MuiOutlinedInput-root': { borderRadius: '15px', bgcolor: '#f9f9f9' },
-                                input: { fontWeight: 'bold', textAlign: 'center', fontSize: '1.1rem' }
-                            }}
-                        />
+                        {sagra.stato === 'CHIUSA' || !statsConti || statsConti.totale === 0 ? (
+                            <Typography variant="body2" sx={{ width: '100%', textAlign: 'center', pb: 5, mt: 4 }}>
+                                Dati non sufficienti o sagra ancora chiusa
+                            </Typography>
+                        ) : (
+                            <Box sx={{ mt: 2 }}>
+                                <Typography variant="h6" sx={{ textAlign: 'center', mb: 4, color: '#1976d2', fontWeight: 900 }}>
+                                    Totale Conti in Transito: {statsConti.totale}
+                                </Typography>
+                                <Stack direction="row" alignItems="flex-end" justifyContent="space-between" spacing={1} sx={{ height: 180, borderBottom: '2px solid #ddd', pb: 1, px: 2 }}>
+                                    {[
+                                        { label: 'Antipasti', val: statsConti.antipasti, color: '#ff9800' },
+                                        { label: 'Primi', val: statsConti.primi, color: '#f44336' },
+                                        { label: 'Secondi', val: statsConti.secondi, color: '#795548' },
+                                        { label: 'Dolci', val: statsConti.dolci, color: '#9c27b0' },
+                                        { label: 'Stampati', val: statsConti.stampati, color: '#4caf50' }
+                                    ].map((col, i) => {
+                                        const percentuale = Math.round((col.val / statsConti.totale) * 100) || 0;
+                                        return (
+                                            <Box key={i} sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                <Typography variant="caption" sx={{ fontWeight: 'bold', mb: 0.5 }}>{percentuale}%</Typography>
+                                                <Box sx={{
+                                                    width: '100%',
+                                                    maxWidth: '45px',
+                                                    height: `${Math.max(percentuale * 1.5, 2)}px`, // Moltiplicatore per alzare le barre nel limite dei 150px
+                                                    bgcolor: col.color,
+                                                    borderRadius: '4px 4px 0 0',
+                                                    transition: 'height 0.5s ease'
+                                                }} />
+                                                <Typography sx={{ fontSize: '0.65rem', mt: 1, fontWeight: 'bold' }}>{col.label}</Typography>
+                                                <Typography sx={{ fontSize: '0.6rem', color: '#666' }}>({col.val})</Typography>
+                                            </Box>
+                                        );
+                                    })}
+                                </Stack>
+                            </Box>
+                        )}
                     </DialogContent>
-                    <DialogActions sx={{ justifyContent: 'center', gap: 2, pb: 2 }}>
-                        <Button disabled={loading} onClick={() => { setOpenResetDialog(false); setConfirmText(""); }}>
-                            ANNULLA
-                        </Button>
-                        <Button
-                            onClick={handleResetTotale}
-                            color="error"
-                            variant="contained"
-                            disabled={loading || confirmText !== "CONFERMA"}
-                            sx={{ fontWeight: 1000, borderRadius: '10px' }}
-                        >
-                            {loading ? 'AZZERAMENTO...' : 'AZZERA ORA'}
+                    <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
+                        <Button variant="outlined" onClick={() => setOpenStatoConti(false)} sx={{ borderRadius: '20px', px: 4 }}>
+                            CHIUDI
                         </Button>
                     </DialogActions>
                 </Dialog>
 
-                <Dialog
-                    open={openErrorTicket}
-                    onClose={() => setOpenErrorTicket(false)}
-                    PaperProps={{ sx: { borderRadius: 4, p: 1, minWidth: '300px', border: '2px solid red' } }}
-                >
-                    <DialogTitle sx={{ color: 'error.main', fontWeight: 1000, textAlign: 'center' }}>
-                        TICKET ESISTENTE
-                    </DialogTitle>
+                {/* MODALE STATISTICHE (Preso da CHIAMA) */}
+                {!disabilitaStatistiche && (
+                    <Dialog open={openInfo} onClose={() => setOpenInfo(false)} fullWidth maxWidth="xs">
+                        <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center' }}>ANDAMENTO ATTESA</DialogTitle>
+                        <DialogContent>
+                            <Stack direction="row" alignItems="flex-end" spacing={1} sx={{ height: 150, mt: 2, borderBottom: '2px solid #ddd', pb: 1 }}>
+                                {puntiGrafico.length > 0 ? puntiGrafico.map((p, i) => (
+                                    <Box key={i} sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                        <Typography variant="caption" sx={{ fontSize: '0.6rem' }}>{p.minuti}'</Typography>
+                                        <Box sx={{
+                                            width: '100%',
+                                            height: `${Math.min(p.minuti * 2, 120)}px`,
+                                            bgcolor: '#1976d2',
+                                            borderRadius: '2px 2px 0 0',
+                                            transition: 'height 0.5s ease'
+                                        }} />
+                                        <Typography sx={{ fontSize: '0.5rem', mt: 0.5 }}>{p.ora}</Typography>
+                                    </Box>
+                                )) : (
+                                    <Typography variant="body2" sx={{ width: '100%', textAlign: 'center', pb: 5 }}>Dati non sufficienti</Typography>
+                                )}
+                            </Stack>
+                        </DialogContent>
+                        <DialogActions><Button onClick={() => setOpenInfo(false)}>CHIUDI</Button></DialogActions>
+                    </Dialog>
+                )}
+                
+                <Dialog open={openResetDialog} onClose={() => setOpenResetDialog(false)}>
+                    <DialogTitle sx={{ color: 'error.main', fontWeight: 1000, textAlign: 'center' }}>AZZERARE TICKETS?</DialogTitle>
                     <DialogContent>
-                        <DialogContentText sx={{ fontWeight: 700, textAlign: 'center', color: '#333' }}>
-                            Non è possibile assegnare due volte lo stesso ticket.
+                        <DialogContentText sx={{ textAlign: 'center', mb: 2 }}>
+                            Operazione irreversibile. Digita <b>CONFERMA</b> per continuare.
+                        </DialogContentText>
+                        <TextField fullWidth value={confirmText} onChange={(e) => setConfirmText(e.target.value.toUpperCase())} placeholder="CONFERMA" />
+                    </DialogContent>
+                    <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
+                        <Button onClick={() => setOpenResetDialog(false)}>ANNULLA</Button>
+                        <Button onClick={handleResetTotale} color="error" variant="contained" disabled={confirmText !== "CONFERMA"}>AZZERA ORA</Button>
+                    </DialogActions>
+                </Dialog>
+
+                <Dialog open={openModifica} onClose={() => setOpenModifica(false)}>
+                    <DialogTitle sx={{ color: 'primary.main', fontWeight: 1000, textAlign: 'center' }}>MODIFICA COPERTI</DialogTitle>
+                    <DialogContent>
+                        <Stack spacing={2} sx={{ mt: 1, minWidth: '250px' }}>
+                            <TextField label="Numero Ticket" type="number" fullWidth value={modTicketId} onChange={(e) => setModTicketId(e.target.value)} />
+                            <TextField label="Nuovi Coperti" type="number" fullWidth value={modCoperti} onChange={(e) => setModCoperti(e.target.value)} />
+                        </Stack>
+                    </DialogContent>
+                    <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
+                        <Button onClick={() => setOpenModifica(false)}>ANNULLA</Button>
+                        <Button onClick={handleModifica} color="primary" variant="contained" disabled={!modTicketId || !modCoperti}>SALVA</Button>
+                    </DialogActions>
+                </Dialog>
+
+                <Dialog open={openElimina} onClose={() => setOpenElimina(false)}>
+                    <DialogTitle sx={{ color: 'warning.main', fontWeight: 1000, textAlign: 'center' }}>ELIMINA TICKET</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText sx={{ mb: 2, textAlign: 'center' }}>
+                            Il ticket verrà scartato e non verrà più chiamato. Non libera il numero.
+                        </DialogContentText>
+                        <TextField label="Numero Ticket da eliminare" type="number" fullWidth value={eliminaTicketId} onChange={(e) => setEliminaTicketId(e.target.value)} />
+                    </DialogContent>
+                    <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
+                        <Button onClick={() => setOpenElimina(false)}>ANNULLA</Button>
+                        <Button onClick={handleElimina} color="warning" variant="contained" disabled={!eliminaTicketId}>ELIMINA</Button>
+                    </DialogActions>
+                </Dialog>
+
+                <Dialog open={openUnisci} onClose={() => setOpenUnisci(false)}>
+                    <DialogTitle sx={{ color: 'secondary.main', fontWeight: 1000, textAlign: 'center' }}>UNISCI TICKET</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText sx={{ mb: 2, textAlign: 'center' }}>
+                            I coperti verranno sommati nel Ticket 1. Il Ticket 2 verrà eliminato.
+                        </DialogContentText>
+                        <Stack spacing={2} sx={{ mt: 1, minWidth: '250px' }}>
+                            <TextField label="Ticket 1 (che rimane)" type="number" fullWidth value={unisciTicket1} onChange={(e) => setUnisciTicket1(e.target.value)} />
+                            <TextField label="Ticket 2 (da eliminare)" type="number" fullWidth value={unisciTicket2} onChange={(e) => setUnisciTicket2(e.target.value)} />
+                        </Stack>
+                    </DialogContent>
+                    <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
+                        <Button onClick={() => setOpenUnisci(false)}>ANNULLA</Button>
+                        <Button onClick={handleUnisci} color="secondary" variant="contained" disabled={!unisciTicket1 || !unisciTicket2}>UNISCI</Button>
+                    </DialogActions>
+                </Dialog>
+
+                <Dialog open={openErrorTicket} onClose={() => setOpenErrorTicket(false)}>
+                    <DialogTitle sx={{ color: 'error.main', fontWeight: 1000, textAlign: 'center' }}>ERRORE TICKET</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText sx={{ textAlign: 'center' }}>
+                            Ticket già esistente o errore di salvataggio. Riprova.
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
-                        <Button
-                            onClick={() => setOpenErrorTicket(false)}
-                            variant="contained" color="error"
-                            sx={{ fontWeight: 'bold', borderRadius: '10px' }}
-                        >
-                            HO CAPITO
-                        </Button>
+                        <Button onClick={() => setOpenErrorTicket(false)} variant="contained" color="error">HO CAPITO</Button>
                     </DialogActions>
                 </Dialog>
+
             </Box>
         </ThemeProvider>
     );

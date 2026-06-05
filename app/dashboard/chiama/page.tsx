@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 
 import DeleteIcon from '@mui/icons-material/Delete';
+import AccessTimeFilledIcon from '@mui/icons-material/AccessTimeFilled';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import ChairIcon from '@mui/icons-material/Chair';
 import InfoIcon from '@mui/icons-material/Info';
@@ -24,7 +25,7 @@ import {
     updateTickets,
     updateTicket,
     getStimaAttesa,
-    getPuntiGraficoAttesa
+    getPuntiGraficoAttesa, getStatoContiStats, getGiornoSagra
 } from '@/app/lib/actions';
 
 type Order = 'asc' | 'desc';
@@ -50,6 +51,14 @@ export default function ChiamaPage() {
     const [puntiGrafico, setPuntiGrafico] = useState<any[]>([]);
     const [disabilitaStatistiche, setDisabilitaStatistiche] = useState(false);
 
+// === NUOVI STATES PER STATO CONTI ===
+    const [sagra, setSagra] = useState<any>({ stato: 'CHIUSA', giornata: 1 });
+    const [openStatoConti, setOpenStatoConti] = useState(false);
+    const [statsConti, setStatsConti] = useState<{
+        totale: number, antipasti: number, primi: number, 
+        secondi: number, dolci: number, stampati: number
+    } | null>(null);
+
     const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
         open: false, message: '', severity: 'success',
     });
@@ -58,11 +67,29 @@ export default function ChiamaPage() {
     const fetchDati = async () => {
         try {
             const tickets = await getTickets('non-seduti');
-            if (tickets) setLista(tickets);
+            // MODIFICA 1: Escludo esplicitamente i ticket con caricato === 100 dalla lista iniziale
+            if (tickets) setLista(tickets.filter((t: any) => t.caricato !== 100));
         } catch (error) {
             console.error("Errore nel caricamento tickets:", error);
         }
     };
+        // Carica lo stato della sagra all'avvio
+        useEffect(() => {
+            const fetchSagra = async () => {
+                const gg = await getGiornoSagra();
+                if (gg) setSagra(gg);
+            };
+            fetchSagra();
+        }, []);
+    
+        // Gestione apertura modale Stato Conti
+        const handleOpenStatoConti = async () => {
+            setOpenStatoConti(true);
+            if (sagra.stato !== 'CHIUSA') {
+                const dati = await getStatoContiStats(sagra.giornata);
+                if (dati) setStatsConti(dati);
+            }
+        };
 
     const caricaStatistiche = async () => {
         if (disabilitaStatistiche) return;
@@ -107,7 +134,8 @@ export default function ChiamaPage() {
                     const payload = JSON.parse(event.data);
 
                     if (payload.type === 'NEW_TICKET') {
-                        if (payload.ticket) {
+                        // MODIFICA 2: Controllo che il nuovo ticket in arrivo non sia uno scartato
+                        if (payload.ticket && payload.ticket.caricato !== 100) {
                             setLista(prev => {
                                 if (prev.find(t => t.id === payload.ticket.id)) return prev;
                                 return [...prev, payload.ticket];
@@ -203,12 +231,15 @@ export default function ChiamaPage() {
             const idDaRimuovere = selectedTicket.id;
             setLista(prev => prev.filter(t => t.id !== idDaRimuovere));
             setOpenDeleteDialog(false);
+            
+            // Impostiamo lo stato 100 per invalidarlo
             await updateTicket(idDaRimuovere, 100);
             
+            // MODIFICA 3: Usiamo REFRESH_TABLE invece di SET_SITTING per aggiornare la UI degli altri client
             await fetch('/api/next-client', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type: 'SET_SITTING', numero: idDaRimuovere }),
+                body: JSON.stringify({ type: 'REFRESH_TABLE' }),
             });
             if (!disabilitaStatistiche) caricaStatistiche();
         } catch (error) {
@@ -233,23 +264,29 @@ export default function ChiamaPage() {
             overflow: 'hidden', // Impedisce categoricamente il doppio scroll di pagina esterno
             position: 'relative'
         }}>
-
+{/* --- STATO CONTI E BENVENUTO (TOP-LEFT) --- */}
+                <Box sx={{ position: 'absolute', top: 15, left: 15, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
+                    <Button 
+                        variant="outlined" color="secondary"
+                        startIcon={<AccessTimeFilledIcon sx={{ display: { xs: 'none', sm: 'inherit' } }} />}
+                        size="small"
+                        onClick={handleOpenStatoConti} // <-- AGGIUNTO ONCLICK
+                        sx={{ fontWeight: 'bold', borderRadius: '15px' }}
+                    >
+                        Stato conti
+                    </Button>
+                </Box>
             {/* --- WIDGET STIMA ATTESA --- */}
             {!disabilitaStatistiche && (
-                <Box sx={{ position: 'absolute', top: 10, right: 10, zIndex: 10 }}>
+                <Box sx={{ position: 'absolute', top: 15, right: 15, zIndex: 10 }}>
                     <Button
                         variant="outlined"
                         size="small"
                         startIcon={<InfoIcon sx={{ display: { xs: 'none', sm: 'inherit' } }} />}
                         onClick={() => setOpenInfo(true)}
-                        sx={{
-                            borderRadius: '20px',
-                            fontWeight: 'bold',
-                            bgcolor: 'white',
-                            minWidth: { xs: 'auto', sm: '64px' }
-                        }}
+sx={{ fontWeight: 'bold', borderRadius: '15px' }}
                     >
-                        {stima !== null ? `Attesa: ~${stima} min` : "Stima..."}
+                        {stima !== null ? `Attesa: ~${stima} min` : "Stima attesa"}
                     </Button>
                 </Box>
             )}
@@ -421,6 +458,54 @@ export default function ChiamaPage() {
                     </TableBody>
                 </Table>
             </TableContainer>
+                    {/* MODALE STATO CONTI */}
+                <Dialog open={openStatoConti} onClose={() => setOpenStatoConti(false)} fullWidth maxWidth="sm">
+                    <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center' }}>STATO CONTI IN ELABORAZIONE</DialogTitle>
+                    <DialogContent>
+                        {sagra.stato === 'CHIUSA' || !statsConti || statsConti.totale === 0 ? (
+                            <Typography variant="body2" sx={{ width: '100%', textAlign: 'center', pb: 5, mt: 4 }}>
+                                Dati non sufficienti o sagra ancora chiusa
+                            </Typography>
+                        ) : (
+                            <Box sx={{ mt: 2 }}>
+                                <Typography variant="h6" sx={{ textAlign: 'center', mb: 4, color: '#1976d2', fontWeight: 900 }}>
+                                    Totale Conti in Transito: {statsConti.totale}
+                                </Typography>
+                                <Stack direction="row" alignItems="flex-end" justifyContent="space-between" spacing={1} sx={{ height: 180, borderBottom: '2px solid #ddd', pb: 1, px: 2 }}>
+                                    {[
+                                        { label: 'Antipasti', val: statsConti.antipasti, color: '#ff9800' },
+                                        { label: 'Primi', val: statsConti.primi, color: '#f44336' },
+                                        { label: 'Secondi', val: statsConti.secondi, color: '#795548' },
+                                        { label: 'Dolci', val: statsConti.dolci, color: '#9c27b0' },
+                                        { label: 'Stampati', val: statsConti.stampati, color: '#4caf50' }
+                                    ].map((col, i) => {
+                                        const percentuale = Math.round((col.val / statsConti.totale) * 100) || 0;
+                                        return (
+                                            <Box key={i} sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                <Typography variant="caption" sx={{ fontWeight: 'bold', mb: 0.5 }}>{percentuale}%</Typography>
+                                                <Box sx={{
+                                                    width: '100%',
+                                                    maxWidth: '45px',
+                                                    height: `${Math.max(percentuale * 1.5, 2)}px`, // Moltiplicatore per alzare le barre nel limite dei 150px
+                                                    bgcolor: col.color,
+                                                    borderRadius: '4px 4px 0 0',
+                                                    transition: 'height 0.5s ease'
+                                                }} />
+                                                <Typography sx={{ fontSize: '0.65rem', mt: 1, fontWeight: 'bold' }}>{col.label}</Typography>
+                                                <Typography sx={{ fontSize: '0.6rem', color: '#666' }}>({col.val})</Typography>
+                                            </Box>
+                                        );
+                                    })}
+                                </Stack>
+                            </Box>
+                        )}
+                    </DialogContent>
+                    <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
+                        <Button variant="outlined" onClick={() => setOpenStatoConti(false)} sx={{ borderRadius: '20px', px: 4 }}>
+                            CHIUDI
+                        </Button>
+                    </DialogActions>
+                </Dialog>
 
             {/* --- MODALE GRAFICO --- */}
             {!disabilitaStatistiche && (

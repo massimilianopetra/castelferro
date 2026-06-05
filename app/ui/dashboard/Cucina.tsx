@@ -541,7 +541,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                     Coperti da servire: <b className="text-blue-700" style={{ fontSize: '1.3rem', marginLeft: '4px' }}>{copertiInAttesa}</b>
                                 </Typography>
                                 <Typography variant="caption" sx={{ color: '#555', display: 'block', mt: 0.5 }}>
-                                    Formula: ({dettaglioCoperti.seduti} + {dettaglioCoperti.inCoda}) - {dettaglioCoperti.serviti}
+                                    Formula: ({dettaglioCoperti.seduti} + {dettaglioCoperti.inCoda}) - {dettaglioCoperti.serviti } seduti + in coda - serviti
                                 </Typography>
                             </Box>
                             <Typography variant="caption" sx={{ mb: 0.5, textTransform: 'uppercase', fontSize: '0.65rem', color: 'gray', fontWeight: 'bold', display: 'block', flexShrink: 0 }}>

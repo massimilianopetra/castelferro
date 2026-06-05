@@ -12,9 +12,14 @@ export default function Page() {
         <main className="min-h-screen flex items-center justify-center">
             <div className="flex flex-col items-center">
                 <div className='text-center'>
-                    <p className="text-5xl py-4">
-                        Home Castelferro
-                    </p>
+                    <div className="flex items-baseline gap-2 py-4">
+                        <p className="text-5xl">
+                            Home Castelferro
+                        </p>
+                        <p className="text-xs">
+                            (V38)
+                        </p>
+                    </div>
                 </div>
                 <div className="text-center"> {/* Aggiunto text-center per estetica */}
                     {/* 4. Ora queste variabili sono dinamiche! */}

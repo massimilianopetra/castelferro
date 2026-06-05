@@ -99,12 +99,13 @@ async function seedMenu() {
    `);
   console.log(`CREATED TABLE menus`);
 
-  const insertedMenu = await Promise.all(
+ const insertedMenu = await Promise.all(
     menu.map(async (item) => {
       const prezzo = isNaN(item.prezzo) ? 0 : item.prezzo;
       const percentuale = isNaN(item.percentuale) ? 0 : item.percentuale;
       return executeQuery(
-        `INSERT INTO menus (id, piatto, prezzo, cuisine, disponibile, alias, percentuale)
+        // CORRETTO: cambiato "cuisine" in "cucina"
+        `INSERT INTO menus (id, piatto, prezzo, cucina, disponibile, alias, percentuale)
          VALUES ($1, $2, $3, $4, $5, $6, $7)
          ON CONFLICT (id) DO NOTHING;`,
         [item.id, item.piatto, prezzo, item.cucina, item.disponibile, item.alias, percentuale]
@@ -134,25 +135,51 @@ async function seedConsumazioni() {
 
 async function seedCamerieri() {
   await executeQuery(`
-  CREATE TABLE IF NOT EXISTS camerieri (
-     id SERIAL PRIMARY KEY,
-     nome VARCHAR(64),
-     foglietto_start INTEGER,
-     foglietto_end INTEGER
-   );
- `);
+    CREATE TABLE IF NOT EXISTS camerieri (
+      id SERIAL PRIMARY KEY,
+      nome VARCHAR(64),
+      foglietto_start INTEGER,
+      foglietto_end INTEGER
+    );
+  `);
+
   console.log(`CREATED TABLE camerieri`);
 
   const inserted = await Promise.all(
     waiters.map(async (item) => {
-      return executeQuery(`
-         INSERT INTO camerieri (id, nome, foglietto_start, foglietto_end)
-         VALUES (${item.id}, '${item.name}', ${item.figlietto_start}, ${item.foglietto_end})
-         ON CONFLICT (id) DO NOTHING;
-      `);
-    }),
+      return executeQuery(
+        `
+        INSERT INTO camerieri (
+          id,
+          nome,
+          foglietto_start,
+          foglietto_end
+        )
+        VALUES ($1, $2, $3, $4)
+        ON CONFLICT (id) DO NOTHING;
+        `,
+        [
+          item.id,
+          item.name,
+          item.figlietto_start,
+          item.foglietto_end,
+        ]
+      );
+    })
   );
+
+  // IMPORTANTISSIMO:
+  // riallinea la sequence del SERIAL al valore massimo presente
+  await executeQuery(`
+    SELECT setval(
+      pg_get_serial_sequence('camerieri', 'id'),
+      COALESCE((SELECT MAX(id) FROM camerieri), 1)
+    );
+  `);
+
   console.log(`INSERTED TABLE camerieri`);
+  console.log(`SEQUENCE camerieri_id_seq sincronizzata`);
+
   return inserted;
 }
 
@@ -212,14 +239,17 @@ export async function seedDatabase() {
     console.log('**** Database seeding ****');
     await seedUsers();
     await seedTickets();
-    await seedMenu();
+    await seedMenu(); // L'errore fatale avviene qui!
     await seedConsumazioni();
     await seedFiera();
     await seedConti();
     await seedCamerieri();
     await seedLog();
     console.log('Database seed completed');
-  } catch (error) {}
+  } catch (error) {
+    // Aggiungi questa riga per vedere gli errori futuri!
+    console.error('Errore fatale durante il seed del database:', error); 
+  }
 }
 
 /* ************************ AUTHENTICATION **************************** */
@@ -251,7 +281,6 @@ export async function getUser(email: string): Promise<DbUser | undefined> {
 }
 
 /* ************************ GESTIONE DB **************************** */
-/* Commento dummy */
 export async function getTickets(modo: string): Promise<DbTickets[] | undefined> {
   try {
     let query = `SELECT * FROM tickets`;
@@ -401,6 +430,63 @@ export async function updateTicket(id: number, valoreCaricato: number) {
     throw new Error('Impossibile aggiornare lo stato del ticket.');
   }
 }
+
+export async function getTicketById(id: number): Promise<DbTickets | undefined> {
+  try {
+    const res = await executeQuery<DbTickets>(`SELECT * FROM tickets WHERE id = ${id}`);
+    if (res && res.length > 0) return res[0];
+    return undefined;
+  } catch (error) {
+    console.error('Failed to fetch ticket by ID:', error);
+    return undefined;
+  }
+}
+
+export async function updateTicketCoperti(id: number, nuoviCoperti: number) {
+  try {
+    return await executeQuery(`
+      UPDATE tickets
+      SET numpersone = ${nuoviCoperti}
+      WHERE id = ${id};
+    `);
+  } catch (error) {
+    console.error(`Errore durante l'aggiornamento dei coperti del ticket ${id}:`, error);
+    throw new Error('Impossibile aggiornare i coperti del ticket.');
+  }
+}
+
+export async function getStatoContiStats(giornata: number) {
+  try {
+    const query = `
+      WITH UltimoPassaggio AS (
+        SELECT foglietto, cucina,
+               ROW_NUMBER() OVER(PARTITION BY foglietto ORDER BY data DESC) as rn
+        FROM logger
+        WHERE giornata = ${giornata} AND LOWER(cucina) IN ('antipasti', 'primi', 'secondi', 'dolci')
+      ),
+      ContiAttivi AS (
+        SELECT id_comanda, stato
+        FROM conti
+        WHERE giorno = ${giornata} AND stato IN ('APERTO', 'STAMPATO')
+      )
+      SELECT
+        COUNT(c.id_comanda)::int AS totale,
+        SUM(CASE WHEN c.stato = 'STAMPATO' THEN 1 ELSE 0 END)::int AS stampati,
+        SUM(CASE WHEN c.stato = 'APERTO' AND LOWER(u.cucina) = 'antipasti' THEN 1 ELSE 0 END)::int AS antipasti,
+        SUM(CASE WHEN c.stato = 'APERTO' AND LOWER(u.cucina) = 'primi' THEN 1 ELSE 0 END)::int AS primi,
+        SUM(CASE WHEN c.stato = 'APERTO' AND LOWER(u.cucina) = 'secondi' THEN 1 ELSE 0 END)::int AS secondi,
+        SUM(CASE WHEN c.stato = 'APERTO' AND LOWER(u.cucina) = 'dolci' THEN 1 ELSE 0 END)::int AS dolci
+      FROM ContiAttivi c
+      LEFT JOIN UltimoPassaggio u ON c.id_comanda = u.foglietto AND u.rn = 1;
+    `;
+    const result = await executeQuery<any>(query);
+    return result?.[0] || { totale: 0, stampati: 0, antipasti: 0, primi: 0, secondi: 0, dolci: 0 };
+  } catch (error) {
+    console.error("Errore in getStatoContiStats:", error);
+    return null;
+  }
+}
+
 export async function getMenu(): Promise<DbMenu[] | undefined> {
   try {
     return await executeQuery<DbMenu>(`SELECT * FROM menus ORDER BY id`);

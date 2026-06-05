@@ -279,76 +279,64 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     }
   };
 
-const print = () => {
-  const printArea = printRef.current;
-  if (!printArea) {
-    console.warn("ATTENZIONE: La stampa è fallita perché 'printRef.current' è NULL.");
-    return;
-  }
-  const newWindow = window.open("", "", "width=800,height=900");
-  if (newWindow) {
-    newWindow.document.write('<html><head><title>Stampa Conto</title>');
+  const print = () => {
+    const printArea = printRef.current;
+    if (!printArea) {
+      console.warn("ATTENZIONE: La stampa è fallita perché 'printRef.current' è NULL.");
+      return;
+    }
+    const newWindow = window.open("", "", "width=800,height=900");
+    if (newWindow) {
+      newWindow.document.write('<html><head><title>Stampa Conto</title>');
 
-    // SOLUZIONE: Estrae le regole CSS reali già pronte nel browser e le inietta inline
-    try {
-      Array.from(document.styleSheets).forEach((styleSheet) => {
-        try {
-          if (styleSheet.cssRules) {
-            const css = Array.from(styleSheet.cssRules)
-              .map((rule) => rule.cssText)
-              .join('\n');
-            newWindow.document.write(`<style>${css}</style>`);
-          }
-        } catch (e) {
-          // Fallback di sicurezza se un foglio di stile esterno (es. Google Fonts) blocca la lettura per CORS
-          if (styleSheet.ownerNode) {
-            newWindow.document.write((styleSheet.ownerNode as HTMLElement).outerHTML);
-          }
+      document.querySelectorAll('link[rel="stylesheet"]').forEach(s => {
+        const href = s.getAttribute('href');
+        if (href && href.startsWith('/')) {
+          newWindow.document.write(`<link rel="stylesheet" href="${window.location.origin}${href}">`);
+        } else {
+          newWindow.document.write(s.outerHTML);
         }
       });
-    } catch (error) {
-      console.error("Errore nel recupero degli stili della pagina:", error);
+
+      document.querySelectorAll('style').forEach(s => newWindow.document.write(s.outerHTML));
+
+      newWindow.document.write(`
+      <style>
+        html, body {
+          height: auto !important;
+          overflow: visible !important;
+          background-color: #ffffff !important;
+          margin: 0 !important;
+          padding: 0 !important;
+        }
+        @page {
+          size: auto;
+          margin: 4mm 6mm;
+        }
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+        .print-container {
+          width: 100% !important;
+          height: auto !important;
+          overflow: visible !important;
+        }
+      </style>
+    `);
+
+      newWindow.document.write('</head><body><div class="print-container">');
+      newWindow.document.write(printArea.innerHTML);
+      newWindow.document.write('</div></body></html>');
+      newWindow.document.close();
+
+      setTimeout(() => {
+        newWindow.focus();
+        newWindow.print();
+        newWindow.close();
+      }, 600);
     }
-
-    // I tuoi stili custom di override per la stampa
-    newWindow.document.write(`
-    <style>
-      html, body {
-        height: auto !important;
-        overflow: visible !important;
-        background-color: #ffffff !important;
-        margin: 0 !important;
-        padding: 0 !important;
-      }
-      @page {
-        size: auto;
-        margin: 4mm 6mm;
-      }
-      * {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-      .print-container {
-        width: 100% !important;
-        height: auto !important;
-        overflow: visible !important;
-      }
-    </style>
-  `);
-
-    newWindow.document.write('</head><body><div class="print-container">');
-    newWindow.document.write(printArea.innerHTML);
-    newWindow.document.write('</div></body></html>');
-    newWindow.document.close();
-
-    // Ora i 600ms bastano e avanzano perché gli stili sono già incorporati nel codice HTML
-    setTimeout(() => {
-      newWindow.focus();
-      newWindow.print();
-      newWindow.close();
-    }, 600);
-  }
-};
+  };
 
   const handleFinalizzaChiusura = async (tipo: number, nota = '', importo = '', skipPrintWait = false) => {
       const savedPrinterIp = typeof window !== 'undefined' ? localStorage.getItem('sagra_printer_ip') : null;
