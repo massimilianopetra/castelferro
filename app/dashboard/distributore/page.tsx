@@ -1,12 +1,12 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { 
-    addTickets, 
-    getFirstFreeTicket, 
-    clearAllTickets, 
-    updateTicket, 
-    getTicketById, 
+import {
+    addTickets,
+    getFirstFreeTicket,
+    clearAllTickets,
+    updateTicket,
+    getTicketById,
     updateTicketCoperti,
     getGiornoSagra,          // <-- NUOVO IMPORT
     getStatoContiStats,      // <-- NUOVO IMPORT
@@ -54,8 +54,8 @@ export default function DistributorePage() {
     const [isEditing, setIsEditing] = useState(false);
     const [mode, setMode] = useState<Mode>('AUTO');
     const [lastEntry, setLastEntry] = useState<{ numero: number, coperti: number } | null>(null);
-    const [manualTicketId, setManualTicketId] = useState<number | ''>(''); 
-    
+    const [manualTicketId, setManualTicketId] = useState<number | ''>('');
+
     // States per Dialogs utility
     const [openErrorTicket, setOpenErrorTicket] = useState(false);
     const [openResetDialog, setOpenResetDialog] = useState(false);
@@ -78,11 +78,11 @@ export default function DistributorePage() {
     const [puntiGrafico, setPuntiGrafico] = useState<any[]>([]);
     const [disabilitaStatistiche, setDisabilitaStatistiche] = useState(false);
 
-// === NUOVI STATES PER STATO CONTI ===
+    // === NUOVI STATES PER STATO CONTI ===
     const [sagra, setSagra] = useState<any>({ stato: 'CHIUSA', giornata: 1 });
     const [openStatoConti, setOpenStatoConti] = useState(false);
     const [statsConti, setStatsConti] = useState<{
-        totale: number, antipasti: number, primi: number, 
+        totale: number, antipasti: number, primi: number,
         secondi: number, dolci: number, stampati: number
     } | null>(null);
 
@@ -131,7 +131,7 @@ export default function DistributorePage() {
 
     useEffect(() => {
         if (!disabilitaStatistiche) caricaStatistiche();
-        
+
         const intervalStats = setInterval(() => {
             if (!disabilitaStatistiche) caricaStatistiche();
         }, 300000); // 5 minuti
@@ -163,7 +163,7 @@ export default function DistributorePage() {
         }
 
         if (numeroCopertiValido <= 0) return;
-        
+
         if (mode === 'MANUALE' && (manualTicketId === '' || manualTicketId <= 0)) {
             alert("Inserisci un numero ticket valido per la modalità manuale");
             return;
@@ -177,7 +177,7 @@ export default function DistributorePage() {
                 ticketDaAssegnare = await getFirstFreeTicket();
             }
 
-            let valoreCaricato = 0; 
+            let valoreCaricato = 0;
             if (mode === 'MANUALE') valoreCaricato = 1;
             else if (mode === 'LIBERA') valoreCaricato = 2;
 
@@ -248,7 +248,7 @@ export default function DistributorePage() {
             setLastEntry({ numero: ticketDaAssegnare, coperti: numeroCopertiValido });
             setCoperti(0);
             if (mode === 'MANUALE') setManualTicketId('');
-            
+
             // Aggiorna le statistiche dopo un nuovo inserimento
             if (!disabilitaStatistiche) caricaStatistiche();
 
@@ -265,7 +265,7 @@ export default function DistributorePage() {
     const onAdd10 = () => setCoperti(prev => (Number(prev) <= 989 ? Number(prev) + 10 : 999));
 
     // ---- FUNZIONI UTILITY CON REFRESH CHIAMA ---- //
-    
+
     const handleResetTotale = async () => {
         if (confirmText === "CONFERMA") {
             setLoading(true);
@@ -285,52 +285,52 @@ export default function DistributorePage() {
     };
 
     const handleModifica = async () => {
-        if(!modTicketId || !modCoperti) return;
+        if (!modTicketId || !modCoperti) return;
         setLoading(true);
         try {
             await updateTicketCoperti(Number(modTicketId), Number(modCoperti));
             setOpenModifica(false);
             setModTicketId('');
             setModCoperti('');
-            
-            if(lastEntry?.numero === Number(modTicketId)) {
+
+            if (lastEntry?.numero === Number(modTicketId)) {
                 setLastEntry({ numero: Number(modTicketId), coperti: Number(modCoperti) });
             }
             // Forza il refresh sincrono su CHIAMA
             await notificaCambioTabella();
-        } catch(e) {
+        } catch (e) {
             alert("Errore durante la modifica");
         }
         setLoading(false);
     };
 
     const handleElimina = async () => {
-        if(!eliminaTicketId) return;
+        if (!eliminaTicketId) return;
         setLoading(true);
         try {
             // Imposta lo stato a 100 per nasconderlo e invalidarlo
             await updateTicket(Number(eliminaTicketId), 100);
             setOpenElimina(false);
             setEliminaTicketId('');
-            
+
             // Forza il refresh sincrono su CHIAMA
             await notificaCambioTabella();
-        } catch(e) {
+        } catch (e) {
             alert("Errore durante l'eliminazione");
         }
         setLoading(false);
     };
 
     const handleUnisci = async () => {
-        if(!unisciTicket1 || !unisciTicket2) return;
+        if (!unisciTicket1 || !unisciTicket2) return;
         setLoading(true);
         try {
             const t1 = await getTicketById(Number(unisciTicket1));
             const t2 = await getTicketById(Number(unisciTicket2));
-            
-            if(t1 && t2) {
+
+            if (t1 && t2) {
                 // Escludiamo ticket già cancellati prima di unire
-                if(t1.caricato === 100 || t2.caricato === 100) {
+                if (t1.caricato === 100 || t2.caricato === 100) {
                     alert("Uno dei ticket inseriti risulta già eliminato.");
                     setLoading(false);
                     return;
@@ -339,12 +339,12 @@ export default function DistributorePage() {
                 const nuoviCoperti = t1.numpersone + t2.numpersone;
                 await updateTicketCoperti(t1.id, nuoviCoperti);
                 await updateTicket(t2.id, 100); // Scarto il secondo ticket
-                
+
                 setOpenUnisci(false);
                 setUnisciTicket1('');
                 setUnisciTicket2('');
-                
-                if(lastEntry?.numero === t1.id) {
+
+                if (lastEntry?.numero === t1.id) {
                     setLastEntry({ numero: t1.id, coperti: nuoviCoperti });
                 }
 
@@ -353,13 +353,15 @@ export default function DistributorePage() {
             } else {
                 alert("Uno o entrambi i ticket non sono stati trovati.");
             }
-        } catch(e) {
+        } catch (e) {
             alert("Errore durante l'unione");
         }
         setLoading(false);
     };
 
     if (isPrinting) {
+        const activePrinterIp = typeof window !== 'undefined' ? localStorage.getItem('sagra_printer_ip') : null;
+
         return (
             <ThemeProvider theme={defaultTheme}>
                 <Box sx={{
@@ -368,28 +370,35 @@ export default function DistributorePage() {
                     position: 'fixed', top: 0, left: 0, width: '100vw',
                     bgcolor: 'rgba(255, 255, 255, 0.9)', zIndex: 9999
                 }}>
+
+
                     <CircularProgress size="6rem" />
                     <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold' }}>Invio alla stampa in corso ...</Typography>
+
+                    <Typography variant="body1" sx={{ mt: 1, fontFamily: 'monospace', color: activePrinterIp ? 'text.secondary' : 'error.main', fontWeight: activePrinterIp ? 'normal' : 'bold' }}>
+                        {activePrinterIp ? `IP Stampante: ${activePrinterIp}` : 'Nessuna stampante configurata'}
+                    </Typography>
                     <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}> Se annulli comunque il ticket risulterà regolarmente distribuito</Typography>
 
-<Button
-    variant="contained" color="error" size="large"
-    sx={{ mt: 4, borderRadius: '9999px', px: 4 }}
-    onClick={async () => {
-        await notificaCambioTabella();
-        
-        // === AGGIUNGI IL RESET DELLO STATO DI ELABORAZIONE QUI ===
-        // Sostituisci "setIsLoading" con il nome esatto del tuo stato (es: setIsLoading, setIsSaving, ecc.)
-        if (typeof setLoading === 'function') {
-            setLoading(false); 
-        }
 
-        setIsPrinting(false);
-        setCoperti(0);
-    }}
->
-    Annulla attesa e prosegui
-</Button>
+                    <Button
+                        variant="contained" color="error" size="large"
+                        sx={{ mt: 4, borderRadius: '9999px', px: 4 }}
+                        onClick={async () => {
+                            await notificaCambioTabella();
+
+                            // === AGGIUNGI IL RESET DELLO STATO DI ELABORAZIONE QUI ===
+                            // Sostituisci "setIsLoading" con il nome esatto del tuo stato (es: setIsLoading, setIsSaving, ecc.)
+                            if (typeof setLoading === 'function') {
+                                setLoading(false);
+                            }
+
+                            setIsPrinting(false);
+                            setCoperti(0);
+                        }}
+                    >
+                        Annulla attesa e prosegui
+                    </Button>
                 </Box>
             </ThemeProvider>
         );
@@ -406,9 +415,9 @@ export default function DistributorePage() {
                 position: 'relative' // IMPORTANTE: per far funzionare absolute sui nuovi elementi
             }}>
 
-{/* --- STATO CONTI E BENVENUTO (TOP-LEFT) --- */}
+                {/* --- STATO CONTI E BENVENUTO (TOP-LEFT) --- */}
                 <Box sx={{ position: 'absolute', top: 15, left: 15, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                    <Button 
+                    <Button
                         variant="outlined" color="secondary"
                         startIcon={<AccessTimeFilledIcon sx={{ display: { xs: 'none', sm: 'inherit' } }} />}
                         size="small"
@@ -423,7 +432,7 @@ export default function DistributorePage() {
                 {!disabilitaStatistiche && (
                     <Box sx={{ position: 'absolute', top: 15, right: 15, zIndex: 10 }}>
                         <Button
-                             variant="outlined" color="secondary"
+                            variant="outlined" color="secondary"
                             size="small"
                             startIcon={<InfoIcon sx={{ display: { xs: 'none', sm: 'inherit' } }} />}
                             onClick={() => setOpenInfo(true)}
@@ -438,13 +447,13 @@ export default function DistributorePage() {
                         </Button>
                     </Box>
                 )}
-<Box sx={{ 
-    flexShrink: 0, 
-    mb: 1, 
-    mt: 1, // <-- PASSA DA 4 A 1 o 2 (più compatto su mobile)
-    textAlign: 'center', 
-    minHeight: '60px'     // <-- RIDOTTO da 80px a 60px per recuperare spazio
-}}>
+                <Box sx={{
+                    flexShrink: 0,
+                    mb: 1,
+                    mt: 1, // <-- PASSA DA 4 A 1 o 2 (più compatto su mobile)
+                    textAlign: 'center',
+                    minHeight: '60px'     // <-- RIDOTTO da 80px a 60px per recuperare spazio
+                }}>
                     {lastEntry ? (
                         <Paper elevation={3} sx={{
                             px: 6, py: 0, borderRadius: '20px',
@@ -464,72 +473,128 @@ export default function DistributorePage() {
 
                 <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '600px', mt: -1 }}>
 
-                    {mode === 'MANUALE' && (
-                        <TextField
-                            type="number"
-                            label="Inserisci Ticket N°"
-                            value={manualTicketId}
-                            onChange={(e) => setManualTicketId(e.target.value === '' ? '' : Number(e.target.value))}
-                            sx={{ mb: 2, width: '200px' }}
-                            InputProps={{ sx: { fontWeight: 'bold', fontSize: '1.5rem', textAlign: 'center' } }}
-                        />
-                    )}
-
-                    <Box onClick={() => !loading && setIsEditing(true)} sx={{ textAlign: 'center', cursor: loading ? 'default' : 'pointer', width: '100%' }}>
-                        {isEditing ? (
-                            <TextField
-                                type="number" autoFocus variant="standard" InputProps={{ disableUnderline: true }}
-                                disabled={loading}
-                                value={coperti === 0 ? '' : coperti}
-                                onChange={(e) => setCoperti(e.target.value === '' ? 0 : Number(e.target.value))}
-                                onBlur={() => setIsEditing(false)}
-                                sx={{ '& input': { fontSize: { xs: '6rem', sm: '8.5rem' }, textAlign: 'center', fontWeight: 1000, color: 'primary.main', padding: 0 } }}
-                            />
-                        ) : (
-                            <Typography sx={{ fontSize: { xs: '6rem', sm: '8.5rem' }, fontWeight: 1000, color: coperti === 0 ? '#ddd' : '#000', lineHeight: 0.9 }}>
-                                {coperti}
-                            </Typography>
-                        )}
-                        <Typography sx={{ color: '#555', fontWeight: 1000, fontSize: '1.4rem', mt: 1 }}>COPERTI</Typography>
-                    </Box>
-                    <Stack
-                        direction="row"
-                        spacing={1} // <--- RIDOTTO da 2 a 1 (avvicina i bottoni + e - tra loro)
-                        justifyContent="center"
-                        sx={{
-                            width: '100%',
-                            px: 2,
-                            my: 0.5 // <--- RIDOTTO (controlla lo spazio SOPRA lo stack e SOTTO lo stack)
+<Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '600px', mt: -1 }}>
+    
+    {/* Contenitore flessibile armonizzato */}
+    <Box sx={{ 
+        display: 'flex', 
+        flexDirection: 'row', 
+        alignItems: 'flex-start', // Allinea le colonne in alto
+        justifyContent: 'center', 
+        width: '100%', 
+        gap: mode === 'MANUALE' ? { xs: 4, sm: 6 } : 0, 
+        mb: 3
+    }}>
+        
+        {/* Sezione TICKET (solo in modalità MANUALE) */}
+        {mode === 'MANUALE' && (
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                {/* Contenitore ad altezza fissa per bloccare la geometria */}
+                <Box sx={{ height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <TextField
+                        type="number"
+                        label="Inserisci Ticket N°"
+                        value={manualTicketId}
+                        onChange={(e) => setManualTicketId(e.target.value === '' ? '' : Number(e.target.value))}
+                        sx={{ 
+                            width: { xs: '160px', sm: '200px' },
+                            '& .MuiInputBase-input': { fontSize: '1.8rem', fontWeight: 1000, textAlign: 'center' }
                         }}
-                    >
-                        <Button variant="contained" disabled={loading || Number(coperti) <= 0} onClick={onRemove} sx={{ width: '30%', height: { xs: '70px', sm: '90px' }, borderRadius: '20px' }}>
-                            <RemoveCircleSharpIcon sx={{ fontSize: 40 }} />
-                        </Button>
-                        <Button variant="contained" disabled={loading} onClick={onAdd} sx={{ width: '30%', height: { xs: '70px', sm: '90px' }, borderRadius: '20px' }}>
-                            <AddCircleIcon sx={{ fontSize: 40 }} />
-                        </Button>
-                        <Button variant="contained" disabled={loading} onClick={onAdd10} sx={{ width: '30%', height: { xs: '70px', sm: '90px' }, borderRadius: '20px' }}>
-                            <Typography sx={{ fontWeight: 1000, fontSize: '1.5rem' }}>+10</Typography>
-                        </Button>
-                    </Stack>
+                    />
+                </Box>
+                <Typography sx={{ color: '#555', fontWeight: 1000, fontSize: '1.4rem', mt: 1, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    Ticket
+                </Typography>
+            </Box>
+        )}
 
-                    <Button
-                        onClick={handleStampa}
-                        variant="contained"
-                        color={mode === 'LIBERA' ? "success" : "secondary"}
-                        disabled={loading || Number(coperti) <= 0 || (mode === 'MANUALE' && !manualTicketId)}
-                        startIcon={loading ? <CircularProgress size={24} color="inherit" /> : <PrintIcon sx={{ fontSize: { xs: 30, sm: 45 } }} />}
-                        sx={{
-                            width: '92%',
-                            py: 2,
-                            mt: 0.5, // <--- AGGIUNTO: questo riduce lo spazio tra lo STACK e il bottone STAMPA
-                            fontSize: { xs: '1.5rem', sm: '2.2rem' },
-                            fontWeight: 1000,
-                            borderRadius: '40px'
+        {/* Sezione COPERTI */}
+        <Box 
+            onClick={() => !loading && setIsEditing(true)} 
+            sx={{ 
+                flex: mode === 'MANUALE' ? 1 : 'none',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                width: mode === 'MANUALE' ? 'auto' : '100%',
+                cursor: loading ? 'default' : 'pointer'
+            }}
+        >
+            {/* Contenitore ad altezza fissa IDENTICO a quello del ticket */}
+            <Box sx={{ height: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%' }}>
+                {isEditing ? (
+                    <TextField
+                        type="number" 
+                        autoFocus 
+                        label="Inserisci Coperti" 
+                        disabled={loading}
+                        value={coperti === 0 ? '' : coperti}
+                        onChange={(e) => setCoperti(e.target.value === '' ? 0 : Number(e.target.value))}
+                        onBlur={() => setIsEditing(false)}
+                        sx={{ 
+                            width: { xs: '160px', sm: '200px' },
+                            '& .MuiInputBase-input': { fontSize: '1.8rem', fontWeight: 1000, textAlign: 'center', color: 'primary.main' }
                         }}
-                    >
-                        {loading ? 'ELABORAZIONE...' : (mode === 'LIBERA' ? 'ENTRA' : 'STAMPA')}
-                    </Button>
+                    />
+                ) : (
+                    <Typography sx={{ 
+                        fontSize: '3.5rem', // Ridotto leggermente per farlo sposare con le proporzioni del box Ticket
+                        fontWeight: 1000, 
+                        color: coperti === 0 ? '#ddd' : '#000', 
+                        lineHeight: 1,
+                        display: 'inline-block'
+                    }}>
+                        {coperti}
+                    </Typography>
+                )}
+            </Box>
+            <Typography sx={{ color: '#555', fontWeight: 1000, fontSize: '1.4rem', mt: 1, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Coperti
+            </Typography>
+        </Box>
+    </Box>
+
+    {/* Stack dei Controlli (+ / - / +10) */}
+    <Stack
+        direction="row"
+        spacing={1}
+        justifyContent="center"
+        sx={{
+            width: '100%',
+            px: 2,
+            my: 0.5
+        }}
+    >
+        <Button variant="contained" disabled={loading || Number(coperti) <= 0} onClick={onRemove} sx={{ width: '30%', height: { xs: '70px', sm: '90px' }, borderRadius: '20px' }}>
+            <RemoveCircleSharpIcon sx={{ fontSize: 40 }} />
+        </Button>
+        <Button variant="contained" disabled={loading} onClick={onAdd} sx={{ width: '30%', height: { xs: '70px', sm: '90px' }, borderRadius: '20px' }}>
+            <AddCircleIcon sx={{ fontSize: 40 }} />
+        </Button>
+        <Button variant="contained" disabled={loading} onClick={onAdd10} sx={{ width: '30%', height: { xs: '70px', sm: '90px' }, borderRadius: '20px' }}>
+            <Typography sx={{ fontWeight: 1000, fontSize: '1.5rem' }}>+10</Typography>
+        </Button>
+    </Stack>
+
+    {/* Pulsante di Azione Principale (Stampa) */}
+    <Button
+        onClick={handleStampa}
+        variant="contained"
+        color={mode === 'LIBERA' ? "success" : "secondary"}
+        disabled={loading || Number(coperti) <= 0 || (mode === 'MANUALE' && !manualTicketId)}
+        startIcon={loading ? <CircularProgress size={24} color="inherit" /> : <PrintIcon sx={{ fontSize: { xs: 30, sm: 45 } }} />}
+        sx={{
+            width: '92%',
+            py: 2,
+            mt: 0.5,
+            fontSize: { xs: '1.5rem', sm: '2.2rem' },
+            fontWeight: 1000,
+            borderRadius: '40px'
+        }}
+    >
+        {loading ? 'ELABORAZIONE...' : (mode === 'LIBERA' ? 'ENTRA' : 'STAMPA')}
+    </Button>
+</Box>
                 </Box>
                 <Box sx={{
                     width: '100%',
@@ -560,17 +625,17 @@ export default function DistributorePage() {
                     {/* Riga 2: Utility */}
                     <Paper elevation={1} sx={{ p: 1, borderRadius: '15px', bgcolor: '#fff' }}>
                         <Typography variant="caption" sx={{ ml: 1, fontWeight: 'bold', color: 'text.secondary' }}>UTILITY</Typography>
-                        <Stack direction="row" spacing={1} sx={{ mt: 0}}>
-                            <Button fullWidth variant="outlined" color="primary" onClick={() => setOpenModifica(true)} startIcon={<EditIcon/>} sx={{ fontWeight: 'bold', borderRadius: '10px', fontSize: '0.75rem' }}>
+                        <Stack direction="row" spacing={1} sx={{ mt: 0 }}>
+                            <Button fullWidth variant="outlined" color="primary" onClick={() => setOpenModifica(true)} startIcon={<EditIcon />} sx={{ fontWeight: 'bold', borderRadius: '10px', fontSize: '0.75rem' }}>
                                 MODIFICA
                             </Button>
-                            <Button fullWidth variant="outlined" color="secondary" onClick={() => setOpenUnisci(true)} startIcon={<CallMergeIcon/>} sx={{ fontWeight: 'bold', borderRadius: '10px', fontSize: '0.75rem' }}>
+                            <Button fullWidth variant="outlined" color="secondary" onClick={() => setOpenUnisci(true)} startIcon={<CallMergeIcon />} sx={{ fontWeight: 'bold', borderRadius: '10px', fontSize: '0.75rem' }}>
                                 UNISCI
                             </Button>
-                            <Button fullWidth variant="outlined" color="error" onClick={() => setOpenElimina(true)} startIcon={<CancelIcon/>} sx={{ fontWeight: 'bold', borderRadius: '10px', fontSize: '0.75rem' }}>
+                            <Button fullWidth variant="outlined" color="error" onClick={() => setOpenElimina(true)} startIcon={<CancelIcon />} sx={{ fontWeight: 'bold', borderRadius: '10px', fontSize: '0.75rem' }}>
                                 ELIMINA
                             </Button>
-                            <Button fullWidth variant="contained" color="error" onClick={() => setOpenResetDialog(true)} startIcon={<DeleteForeverIcon/>} sx={{ fontWeight: 'bold', borderRadius: '10px', fontSize: '0.75rem' }}>
+                            <Button fullWidth variant="contained" color="error" onClick={() => setOpenResetDialog(true)} startIcon={<DeleteForeverIcon />} sx={{ fontWeight: 'bold', borderRadius: '10px', fontSize: '0.75rem' }}>
                                 AZZERA
                             </Button>
                         </Stack>
@@ -579,7 +644,7 @@ export default function DistributorePage() {
                 </Box>
 
                 {/* --- DIALOGS --- */}
-{/* MODALE STATO CONTI */}
+                {/* MODALE STATO CONTI */}
                 <Dialog open={openStatoConti} onClose={() => setOpenStatoConti(false)} fullWidth maxWidth="sm">
                     <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center' }}>STATO CONTI IN ELABORAZIONE</DialogTitle>
                     <DialogContent>
@@ -654,7 +719,7 @@ export default function DistributorePage() {
                         <DialogActions><Button onClick={() => setOpenInfo(false)}>CHIUDI</Button></DialogActions>
                     </Dialog>
                 )}
-                
+
                 <Dialog open={openResetDialog} onClose={() => setOpenResetDialog(false)}>
                     <DialogTitle sx={{ color: 'error.main', fontWeight: 1000, textAlign: 'center' }}>AZZERARE TICKETS?</DialogTitle>
                     <DialogContent>

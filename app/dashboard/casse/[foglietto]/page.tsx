@@ -79,10 +79,10 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         if (!data) return;
 
         const { gg, cc, c, log } = data;
-        
+
         setSagra(gg);
         setConto(cc);
-        
+
         if (log && log.length > 0) {
           setLastLog(log);
         }
@@ -117,7 +117,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     };
 
     fetchData();
-  }, [params.foglietto]); 
+  }, [params.foglietto]);
 
   const handleConfirmNewConto = () => {
     setOpenConfirmDialog(false);
@@ -126,7 +126,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
   const handleCancelNewConto = () => {
     setOpenConfirmDialog(false);
-    router.push('/dashboard/casse'); 
+    router.push('/dashboard/casse');
   };
 
   const handleOpenSetQty = (id: number) => {
@@ -179,7 +179,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     }
 
     carica(num);
-    setNumero(''); 
+    setNumero('');
   };
 
   const handleButtonClickCaricaAsporto = async () => {
@@ -220,26 +220,26 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     const totale = products.reduce((acc, i) => acc + (i.quantita * i.prezzo_unitario), 0);
 
     const logPromises = products
-        .map(item => {
-            const orig = iniProducts.find(o => o.id_piatto === item.id_piatto);
-            if (orig && item.quantita !== orig.quantita) {
-                const msg = item.quantita > orig.quantita
-                    ? `Aggiunti: ${item.quantita - orig.quantita} ${item.piatto}`
-                    : `Eliminati: ${orig.quantita - item.quantita} ${item.piatto}`;
-                return writeLog(numFogl, sagra.giornata, 'Casse', '', 'UPDATE', msg);
-            }
-            return null;
-        })
-        .filter((p): p is Promise<void> => p !== null);
+      .map(item => {
+        const orig = iniProducts.find(o => o.id_piatto === item.id_piatto);
+        if (orig && item.quantita !== orig.quantita) {
+          const msg = item.quantita > orig.quantita
+            ? `Aggiunti: ${item.quantita - orig.quantita} ${item.piatto}`
+            : `Eliminati: ${orig.quantita - item.quantita} ${item.piatto}`;
+          return writeLog(numFogl, sagra.giornata, 'Casse', '', 'UPDATE', msg);
+        }
+        return null;
+      })
+      .filter((p): p is Promise<void> => p !== null);
 
     await Promise.all([
-        sendConsumazioni(products),
-        aggiornaConto(numFogl, sagra.giornata, totale),
-        ...logPromises
+      sendConsumazioni(products),
+      aggiornaConto(numFogl, sagra.giornata, totale),
+      ...logPromises
     ]);
- 
+
     const newCc = await getConto(numFogl, sagra.giornata);
-    
+
     setConto(newCc);
     setPhase('aperto');
   };
@@ -260,11 +260,11 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       await Promise.all([
         writeLog(numFogl, sagra.giornata, 'Casse', '', 'PRINT', 'Stampa conto'),
         (async () => {
-           const gg = await getGiornoSagra();
-           if (gg) {
-             const logs = await getLastLog(gg.giornata, 'Casse');
-             if (logs) setLastLog(logs);
-           }
+          const gg = await getGiornoSagra();
+          if (gg) {
+            const logs = await getLastLog(gg.giornata, 'Casse');
+            if (logs) setLastLog(logs);
+          }
         })(),
         new Promise<void>((resolve) => {
           print();
@@ -339,37 +339,37 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   };
 
   const handleFinalizzaChiusura = async (tipo: number, nota = '', importo = '', skipPrintWait = false) => {
-      const savedPrinterIp = typeof window !== 'undefined' ? localStorage.getItem('sagra_printer_ip') : null;
-      if (!savedPrinterIp) {
-          setOpenPrinterWarning(true);
+    const savedPrinterIp = typeof window !== 'undefined' ? localStorage.getItem('sagra_printer_ip') : null;
+    if (!savedPrinterIp) {
+      setOpenPrinterWarning(true);
+    }
+
+    setPhase('elaborazione');
+    setIsPrinting(true);
+
+    const logMsg = tipo === 1 ? 'Pagato contanti' : tipo === 2 ? 'Pagato POS' : 'Altro Importo';
+    const numFogl = Number(numeroFoglietto);
+
+    try {
+      await Promise.all([
+        chiudiConto(numFogl, sagra.giornata, tipo, nota, importo),
+        writeLog(numFogl, sagra.giornata, 'Casse', '', 'CLOSE', logMsg)
+      ]);
+
+      const cc = await getConto(numFogl, sagra.giornata);
+      setConto(cc);
+
+      if (skipPrintWait) {
+        inviaStampaPass();
+      } else {
+        await inviaStampaPass();
       }
-
-      setPhase('elaborazione');
-      setIsPrinting(true);
-
-      const logMsg = tipo === 1 ? 'Pagato contanti' : tipo === 2 ? 'Pagato POS' : 'Altro Importo';
-      const numFogl = Number(numeroFoglietto);
-
-      try {
-          await Promise.all([
-              chiudiConto(numFogl, sagra.giornata, tipo, nota, importo),
-              writeLog(numFogl, sagra.giornata, 'Casse', '', 'CLOSE', logMsg)
-          ]);
-
-          const cc = await getConto(numFogl, sagra.giornata);
-          setConto(cc);
-
-          if (skipPrintWait) {
-              inviaStampaPass(); 
-          } else {
-              await inviaStampaPass();
-          }
-      } catch (error) {
-          console.error("Errore durante la chiusura:", error);
-      } finally {
-          setIsPrinting(false);
-          setPhase('chiuso');
-      }
+    } catch (error) {
+      console.error("Errore durante la chiusura:", error);
+    } finally {
+      setIsPrinting(false);
+      setPhase('chiuso');
+    }
   };
 
   const inviaStampaPass = async () => {
@@ -383,7 +383,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           numeroFoglietto,
           coperti: copertipass,
           giornata: sagra.giornata,
-          ipAddress: savedPrinterIp, 
+          ipAddress: savedPrinterIp,
           isPass: true
         }),
       });
@@ -485,6 +485,9 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         <Typography variant="body1" sx={{ mt: 1, fontFamily: 'monospace', color: activePrinterIp ? 'text.secondary' : 'error.main', fontWeight: activePrinterIp ? 'normal' : 'bold' }}>
           {activePrinterIp ? `IP Stampante: ${activePrinterIp}` : 'Nessuna stampante configurata'}
         </Typography>
+        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}> Se annulli comunque i pass risulteranno  regolarmente distribuiti</Typography>
+
+
 
         <Button variant="contained" color="error" size="large" sx={{ mt: 4, borderRadius: '9999px', px: 4 }}
           onClick={() => { setIsPrinting(false); setPhase('chiuso'); }}>
@@ -551,11 +554,11 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               <div className="container">
                 <header className="top-section mb-2">
                   <div className="sez-sx">
-                    {headerCasse}         
-                    {ultimiRicercati}     
+                    {headerCasse}
+                    {ultimiRicercati}
                   </div>
                   <div className="sez-dx">
-                    {bottoniServizio}     
+                    {bottoniServizio}
                     <div className="text-base md:text-2xl py-2 text-end">
                       <p>Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}</span> {conto ? `(${deltanow(conto?.data_apertura)})` : "(Nuovo)"}</p>
                       <p>Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere || 'Casse'}</span></p>
@@ -620,7 +623,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                       try {
                         // 1. Riapre il conto sul Database
                         await riapriConto(conto!.id_comanda, sagra.giornata);
-                        
+
                         // 2. Sincronizza lo stato locale scaricando i dati freschi (Risolve il baco)
                         const data = await getInizializzazioneCassa(Number(numeroFoglietto));
                         if (data) {
