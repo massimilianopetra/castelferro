@@ -346,14 +346,6 @@ export async function getNextTickets(): Promise<number> {
   }
 }
 
-export async function getCountTicketsNonSeduti(): Promise<number> {
-  try {
-    const result = await executeQuery<{ count: string }>(`SELECT SUM(numpersone) AS count FROM tickets WHERE seduto = 0`);
-    return Number(result?.[0]?.count || 0);
-  } catch (error) {
-    return 0;
-  }
-}
 
 export async function getFirstFreeTicket(): Promise<number> {
   try {
@@ -458,11 +450,25 @@ export async function updateTicketCoperti(id: number, nuoviCoperti: number) {
 export async function getStatoContiStats(giornata: number) {
   try {
     const query = `
-      WITH UltimoPassaggio AS (
-        SELECT foglietto, cucina,
-               ROW_NUMBER() OVER(PARTITION BY foglietto ORDER BY data DESC) as rn
+      WITH PrioritaPassaggi AS (
+        SELECT 
+          foglietto, 
+          cucina,
+          ROW_NUMBER() OVER(
+            PARTITION BY foglietto 
+            ORDER BY 
+              -- Priorità: i piatti hanno la precedenza (valore 1), bevande/birre per ultime (valore 2)
+              CASE 
+                WHEN LOWER(cucina) IN ('casse') THEN 1
+                WHEN LOWER(cucina) IN ('antipasti', 'primi', 'secondi', 'dolci') THEN 2
+                WHEN LOWER(cucina) IN ('bevande', 'birre') THEN 3
+                ELSE 4
+              END ASC,
+              -- A parità di priorità, prendiamo il movimento più recente
+              data DESC
+          ) as rn
         FROM logger
-        WHERE giornata = ${giornata} AND LOWER(cucina) IN ('antipasti', 'primi', 'secondi', 'dolci')
+        WHERE giornata = ${giornata} AND LOWER(cucina) IN ('antipasti', 'primi', 'secondi', 'dolci', 'bevande', 'birre', 'casse')
       ),
       ContiAttivi AS (
         SELECT id_comanda, stato
@@ -475,12 +481,15 @@ export async function getStatoContiStats(giornata: number) {
         SUM(CASE WHEN c.stato = 'APERTO' AND LOWER(u.cucina) = 'antipasti' THEN 1 ELSE 0 END)::int AS antipasti,
         SUM(CASE WHEN c.stato = 'APERTO' AND LOWER(u.cucina) = 'primi' THEN 1 ELSE 0 END)::int AS primi,
         SUM(CASE WHEN c.stato = 'APERTO' AND LOWER(u.cucina) = 'secondi' THEN 1 ELSE 0 END)::int AS secondi,
-        SUM(CASE WHEN c.stato = 'APERTO' AND LOWER(u.cucina) = 'dolci' THEN 1 ELSE 0 END)::int AS dolci
+        SUM(CASE WHEN c.stato = 'APERTO' AND LOWER(u.cucina) = 'dolci' THEN 1 ELSE 0 END)::int AS dolci,
+        SUM(CASE WHEN c.stato = 'APERTO' AND LOWER(u.cucina) = 'bevande' THEN 1 ELSE 0 END)::int AS bevande,
+        SUM(CASE WHEN c.stato = 'APERTO' AND LOWER(u.cucina) = 'birre' THEN 1 ELSE 0 END)::int AS birre, 
+        SUM(CASE WHEN c.stato = 'APERTO' AND LOWER(u.cucina) = 'casse' THEN 1 ELSE 0 END)::int AS casse
       FROM ContiAttivi c
-      LEFT JOIN UltimoPassaggio u ON c.id_comanda = u.foglietto AND u.rn = 1;
+      LEFT JOIN PrioritaPassaggi u ON c.id_comanda = u.foglietto AND u.rn = 1;
     `;
     const result = await executeQuery<any>(query);
-    return result?.[0] || { totale: 0, stampati: 0, antipasti: 0, primi: 0, secondi: 0, dolci: 0 };
+    return result?.[0] || { totale: 0, stampati: 0, antipasti: 0, primi: 0, secondi: 0, dolci: 0, bevande: 0, birre: 0 };
   } catch (error) {
     console.error("Errore in getStatoContiStats:", error);
     return null;

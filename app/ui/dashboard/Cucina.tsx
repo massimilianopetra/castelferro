@@ -17,7 +17,6 @@ import {
     writeLog,
     getGiornoSagra,
     getLastLog,
-    getCountTicketsNonSeduti,
     getMenu,
     getTickets,
     listConsumazioni
@@ -65,7 +64,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     const [piattomodificaquantitaValue, setPiattoModQuantita] = useState("non definito");
     const [copertiInAttesa, setCopertiInAttesa] = useState(0);
     const [menuPrevisionale, setMenuPrevisionale] = useState<any[]>([]);
-    const [dettaglioCoperti, setDettaglioCoperti] = useState({ seduti: 0, inCoda: 0, serviti: 0 });
+    const [dettaglioCoperti, setDettaglioCoperti] = useState({ seduti: 0, nonseduti_incoda: 0, serviti: 0 });
     const [snackbarMessage, setSnackbarMessage] = useState('');
     useEffect(() => {
         const fetchData = async () => {
@@ -160,22 +159,22 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     const caricaStatistiche = async () => {
         try {
             const [
-                inCoda,
+                ticketNonSedutiRows,
                 ticketSedutiRows,
                 consumazioniCoperti,
                 fullMenu
             ] = await Promise.all([
-                getCountTicketsNonSeduti(),
+                getTickets('non-seduti'),
                 getTickets('seduti'),
                 listConsumazioni(1, sagra.giornata),
                 getMenu()
             ]);
-
+            const nonseduti_incoda = ticketNonSedutiRows?.reduce((acc, curr) => acc + curr.numpersone, 0) || 0;
             const seduti = ticketSedutiRows?.reduce((acc, curr) => acc + curr.numpersone, 0) || 0;
             const serviti = consumazioniCoperti?.reduce((acc, curr) => acc + curr.quantita, 0) || 0;
-            const totale = (seduti + inCoda) - serviti;
+            const totale = (seduti + nonseduti_incoda) - serviti;
 
-            setDettaglioCoperti({ seduti, inCoda, serviti });
+            setDettaglioCoperti({ seduti, nonseduti_incoda, serviti });
             setCopertiInAttesa(Math.max(0, totale));
 
             if (fullMenu) {
@@ -538,10 +537,10 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                             </Typography>
                             <Box sx={{ mb: 1.5, p: 1, bgcolor: '#f0f7ff', borderRadius: '8px', border: '1px solid #d0e3ff', flexShrink: 0 }}>
                                 <Typography variant="body1" sx={{ lineHeight: 1.2, fontWeight: 'medium' }}>
-                                    Coperti da servire: <b className="text-blue-700" style={{ fontSize: '1.3rem', marginLeft: '4px' }}>{copertiInAttesa}</b>
+                                    Stima coperti da servire: <b className="text-blue-700" style={{ fontSize: '1.3rem', marginLeft: '4px' }}>{copertiInAttesa}</b>
                                 </Typography>
                                 <Typography variant="caption" sx={{ color: '#555', display: 'block', mt: 0.5 }}>
-                                    Formula: ({dettaglioCoperti.seduti} + {dettaglioCoperti.inCoda}) - {dettaglioCoperti.serviti } seduti + in coda - serviti
+                                    Formula: ({dettaglioCoperti.seduti} + {dettaglioCoperti.nonseduti_incoda}) - {dettaglioCoperti.serviti } = (tot.seduti + in coda) - tot.serviti
                                 </Typography>
                             </Box>
                             <Typography variant="caption" sx={{ mb: 0.5, textTransform: 'uppercase', fontSize: '0.65rem', color: 'gray', fontWeight: 'bold', display: 'block', flexShrink: 0 }}>

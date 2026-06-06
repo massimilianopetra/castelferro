@@ -50,14 +50,16 @@ export default function ChiamaPage() {
     const [openInfo, setOpenInfo] = useState(false);
     const [puntiGrafico, setPuntiGrafico] = useState<any[]>([]);
     const [disabilitaStatistiche, setDisabilitaStatistiche] = useState(false);
+    const [showNote, setShowNote] = useState(true);
 
-// === NUOVI STATES PER STATO CONTI ===
+    // === NUOVI STATES PER STATO CONTI ===
     const [sagra, setSagra] = useState<any>({ stato: 'CHIUSA', giornata: 1 });
     const [openStatoConti, setOpenStatoConti] = useState(false);
     const [statsConti, setStatsConti] = useState<{
-        totale: number, antipasti: number, primi: number, 
-        secondi: number, dolci: number, stampati: number
+        totale: number, antipasti: number, primi: number, birre: number, bevande: number,
+        secondi: number, dolci: number, stampati: number, casse: number
     } | null>(null);
+
 
     const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
         open: false, message: '', severity: 'success',
@@ -67,29 +69,32 @@ export default function ChiamaPage() {
     const fetchDati = async () => {
         try {
             const tickets = await getTickets('non-seduti');
-            // MODIFICA 1: Escludo esplicitamente i ticket con caricato === 100 dalla lista iniziale
             if (tickets) setLista(tickets.filter((t: any) => t.caricato !== 100));
         } catch (error) {
             console.error("Errore nel caricamento tickets:", error);
         }
     };
-        // Carica lo stato della sagra all'avvio
-        useEffect(() => {
-            const fetchSagra = async () => {
-                const gg = await getGiornoSagra();
-                if (gg) setSagra(gg);
-            };
-            fetchSagra();
-        }, []);
-    
-        // Gestione apertura modale Stato Conti
-        const handleOpenStatoConti = async () => {
-            setOpenStatoConti(true);
-            if (sagra.stato !== 'CHIUSA') {
-                const dati = await getStatoContiStats(sagra.giornata);
-                if (dati) setStatsConti(dati);
-            }
+
+    // Carica lo stato della sagra all'avvio
+    useEffect(() => {
+        const fetchSagra = async () => {
+            const gg = await getGiornoSagra();
+            if (gg) setSagra(gg);
         };
+        fetchSagra();
+    }, []);
+    
+    // Gestione apertura modale Stato Conti
+    const handleOpenStatoConti = async () => {
+        // Se le statistiche sono disabilitate, blocca preventivamente l'esecuzione senza interrogare il DB
+        if (disabilitaStatistiche) return;
+
+        setOpenStatoConti(true);
+        if (sagra.stato !== 'CHIUSA') {
+            const dati = await getStatoContiStats(sagra.giornata);
+            if (dati) setStatsConti(dati);
+        }
+    };
 
     const caricaStatistiche = async () => {
         if (disabilitaStatistiche) return;
@@ -134,7 +139,6 @@ export default function ChiamaPage() {
                     const payload = JSON.parse(event.data);
 
                     if (payload.type === 'NEW_TICKET') {
-                        // MODIFICA 2: Controllo che il nuovo ticket in arrivo non sia uno scartato
                         if (payload.ticket && payload.ticket.caricato !== 100) {
                             setLista(prev => {
                                 if (prev.find(t => t.id === payload.ticket.id)) return prev;
@@ -232,10 +236,8 @@ export default function ChiamaPage() {
             setLista(prev => prev.filter(t => t.id !== idDaRimuovere));
             setOpenDeleteDialog(false);
             
-            // Impostiamo lo stato 100 per invalidarlo
             await updateTicket(idDaRimuovere, 100);
             
-            // MODIFICA 3: Usiamo REFRESH_TABLE invece di SET_SITTING per aggiornare la UI degli altri client
             await fetch('/api/next-client', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -252,7 +254,6 @@ export default function ChiamaPage() {
         <Box sx={{
             display: 'flex', 
             flexDirection: 'column',
-            // MODIFICA CRUCIALE: Blocchiamo l'altezza all'area visibile del browser SOLO su questa pagina
             height: '100vh', 
             maxHeight: '100dvh', 
             width: '100%',
@@ -261,21 +262,25 @@ export default function ChiamaPage() {
             px: isMobile ? 1 : 2,
             pb: isMobile ? 'calc(env(safe-area-inset-bottom) + 12px)' : 3, 
             boxSizing: 'border-box', 
-            overflow: 'hidden', // Impedisce categoricamente il doppio scroll di pagina esterno
+            overflow: 'hidden', 
             position: 'relative'
         }}>
-{/* --- STATO CONTI E BENVENUTO (TOP-LEFT) --- */}
+            {/* --- STATO CONTI E BENVENUTO (TOP-LEFT) --- */}
+            {/* MODIFICA: Nasconde interamente il box/pulsante Stato Conti se le statistiche sono disabilitate */}
+            {!disabilitaStatistiche && (
                 <Box sx={{ position: 'absolute', top: 15, left: 15, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                     <Button 
                         variant="outlined" color="secondary"
                         startIcon={<AccessTimeFilledIcon sx={{ display: { xs: 'none', sm: 'inherit' } }} />}
                         size="small"
-                        onClick={handleOpenStatoConti} // <-- AGGIUNTO ONCLICK
+                        onClick={handleOpenStatoConti}
                         sx={{ fontWeight: 'bold', borderRadius: '15px' }}
                     >
                         Stato conti
                     </Button>
                 </Box>
+            )}
+
             {/* --- WIDGET STIMA ATTESA --- */}
             {!disabilitaStatistiche && (
                 <Box sx={{ position: 'absolute', top: 15, right: 15, zIndex: 10 }}>
@@ -284,7 +289,7 @@ export default function ChiamaPage() {
                         size="small"
                         startIcon={<InfoIcon sx={{ display: { xs: 'none', sm: 'inherit' } }} />}
                         onClick={() => setOpenInfo(true)}
-sx={{ fontWeight: 'bold', borderRadius: '15px' }}
+                        sx={{ fontWeight: 'bold', borderRadius: '15px' }}
                     >
                         {stima !== null ? `Attesa: ~${stima} min` : "Stima attesa"}
                     </Button>
@@ -316,7 +321,10 @@ sx={{ fontWeight: 'bold', borderRadius: '15px' }}
                             checked={disabilitaStatistiche}
                             onChange={(e) => {
                                 setDisabilitaStatistiche(e.target.checked);
-                                if (e.target.checked) setStima(null);
+                                if (e.target.checked) {
+                                    setStima(null);
+                                    setStatsConti(null); // Svuota lo stato locale per pulizia quando si spegne
+                                }
                             }}
                             color="warning"
                             size="small"
@@ -333,11 +341,9 @@ sx={{ fontWeight: 'bold', borderRadius: '15px' }}
                 mx: 'auto',
                 flexGrow: 1,
                 minHeight: 0,
-                // MODIFICA CRUCIALE: Impostiamo un'altezza massima matematica basata sullo schermo residuo
-                // Detrae lo spazio occupato dal numerone in alto e dai pulsanti (circa 240px su mobile / 300px su desktop)
                 maxHeight: isMobile ? 'calc(100dvh - 230px)' : 'calc(100vh - 310px)',
                 borderRadius: '12px',
-                overflowY: 'auto', // L'unica barra di scorrimento funzionante sarà questa interna alla tabella
+                overflowY: 'auto', 
                 boxShadow: 3
             }}>
                 <Table
@@ -458,54 +464,110 @@ sx={{ fontWeight: 'bold', borderRadius: '15px' }}
                     </TableBody>
                 </Table>
             </TableContainer>
-                    {/* MODALE STATO CONTI */}
-                <Dialog open={openStatoConti} onClose={() => setOpenStatoConti(false)} fullWidth maxWidth="sm">
-                    <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center' }}>STATO CONTI IN ELABORAZIONE</DialogTitle>
-                    <DialogContent>
-                        {sagra.stato === 'CHIUSA' || !statsConti || statsConti.totale === 0 ? (
-                            <Typography variant="body2" sx={{ width: '100%', textAlign: 'center', pb: 5, mt: 4 }}>
-                                Dati non sufficienti o sagra ancora chiusa
+
+            {/* MODALE STATO CONTI */}
+            <Dialog open={openStatoConti} onClose={() => setOpenStatoConti(false)} fullWidth maxWidth="sm">
+                <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center' }}>STATO CONTI IN ELABORAZIONE</DialogTitle>
+                <DialogContent>
+                    {sagra.stato === 'CHIUSA' || !statsConti || statsConti.totale === 0 ? (
+                        <Typography variant="body2" sx={{ width: '100%', textAlign: 'center', pb: 5, mt: 4 }}>Dati non sufficienti o sagra ancora chiusa</Typography>
+                    ) : (
+                        <Box sx={{ mt: 2 }}>
+                            {showNote && (
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'flex-start',
+                                        bgcolor: '#e3f2fd',        
+                                        color: '#0d47a1',          
+                                        p: 1.5,                    
+                                        mb: 3,                     
+                                        borderRadius: '6px',       
+                                        border: '1px solid #bbdefb', 
+                                        fontSize: '0.72rem',       
+                                        lineHeight: '1.4'
+                                    }}
+                                >
+                                    <Box>
+                                        Un conto è considerato "birre" o "bevande": solo se il conto non ha nient'altro di attivo nei reparti principali (antipasti, primi, secondi, dolci).
+                                        <br />
+                                        Un conto è considerato "casse": sia se è stato fatto in cassa  oppure se è stato modificato in cassa. In entrambi i casi sta per essere stampato.
+                                    </Box>
+                                    <Box
+                                        onClick={() => setShowNote(false)}
+                                        sx={{
+                                            cursor: 'pointer',
+                                            fontWeight: 'bold',
+                                            pl: 2,
+                                            fontSize: '0.85rem',
+                                            color: '#1565c0',
+                                            '&:hover': { color: '#0d47a1' }, 
+                                            userSelect: 'none'
+                                        }}
+                                    >
+                                        ✕
+                                    </Box>
+                                </Box>
+                            )}
+
+                            <Typography variant="h6" sx={{ textAlign: 'center', mb: 4, color: '#1976d2', fontWeight: 900 }}>
+                                Totale Conti in Transito: {statsConti.totale}
                             </Typography>
-                        ) : (
-                            <Box sx={{ mt: 2 }}>
-                                <Typography variant="h6" sx={{ textAlign: 'center', mb: 4, color: '#1976d2', fontWeight: 900 }}>
-                                    Totale Conti in Transito: {statsConti.totale}
-                                </Typography>
-                                <Stack direction="row" alignItems="flex-end" justifyContent="space-between" spacing={1} sx={{ height: 180, borderBottom: '2px solid #ddd', pb: 1, px: 2 }}>
-                                    {[
-                                        { label: 'Antipasti', val: statsConti.antipasti, color: '#ff9800' },
-                                        { label: 'Primi', val: statsConti.primi, color: '#f44336' },
-                                        { label: 'Secondi', val: statsConti.secondi, color: '#795548' },
-                                        { label: 'Dolci', val: statsConti.dolci, color: '#9c27b0' },
-                                        { label: 'Stampati', val: statsConti.stampati, color: '#4caf50' }
-                                    ].map((col, i) => {
-                                        const percentuale = Math.round((col.val / statsConti.totale) * 100) || 0;
-                                        return (
-                                            <Box key={i} sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                                <Typography variant="caption" sx={{ fontWeight: 'bold', mb: 0.5 }}>{percentuale}%</Typography>
-                                                <Box sx={{
-                                                    width: '100%',
-                                                    maxWidth: '45px',
-                                                    height: `${Math.max(percentuale * 1.5, 2)}px`, // Moltiplicatore per alzare le barre nel limite dei 150px
-                                                    bgcolor: col.color,
-                                                    borderRadius: '4px 4px 0 0',
-                                                    transition: 'height 0.5s ease'
-                                                }} />
-                                                <Typography sx={{ fontSize: '0.65rem', mt: 1, fontWeight: 'bold' }}>{col.label}</Typography>
-                                                <Typography sx={{ fontSize: '0.6rem', color: '#666' }}>({col.val})</Typography>
-                                            </Box>
-                                        );
-                                    })}
-                                </Stack>
-                            </Box>
-                        )}
-                    </DialogContent>
-                    <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
-                        <Button variant="outlined" onClick={() => setOpenStatoConti(false)} sx={{ borderRadius: '20px', px: 4 }}>
-                            CHIUDI
-                        </Button>
-                    </DialogActions>
-                </Dialog>
+
+                            <Stack direction="row" spacing={2} alignItems="stretch" sx={{ height: 230, px: 0.5 }}>
+                                <Box sx={{ flex: 5, bgcolor: 'rgba(25, 118, 210, 0.04)', borderRadius: '8px', p: 1.5, border: '1px dashed #1976d2', display: 'flex', flexDirection: 'column' }}>
+                                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#1976d2', textAlign: 'center', mb: 1, letterSpacing: 1 }}>
+                                        CONTI APERTI: {(statsConti.casse || 0) + (statsConti.bevande || 0) + (statsConti.birre || 0) + (statsConti.antipasti || 0) + (statsConti.primi || 0) + (statsConti.secondi || 0) + (statsConti.dolci || 0)}
+                                    </Typography>
+                                    <Stack direction="row" alignItems="flex-end" justifyContent="space-between" spacing={1} sx={{ flex: 1, borderBottom: '2px solid #ddd', pb: 1 }}>
+                                        {[
+                                            { label: 'Bevande', val: (statsConti.bevande || 0), color: '#9e9e9e' },
+                                            { label: 'Birre', val: (statsConti.birre || 0), color: '#9e9e9e' },
+                                            { label: 'Antipasti', val: statsConti.antipasti || 0, color: '#ff9800' },
+                                            { label: 'Primi', val: statsConti.primi || 0, color: '#f44336' },
+                                            { label: 'Secondi', val: statsConti.secondi || 0, color: '#795548' },
+                                            { label: 'Dolci', val: statsConti.dolci || 0, color: '#9c27b0' },
+                                            { label: 'Casse', val: statsConti.casse || 0, color: '#003153' },
+                                        ].map((col, i) => {
+                                            const percentuale = Math.round((col.val / statsConti.totale) * 100) || 0;
+                                            return (
+                                                <Box key={i} sx={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                    <Typography variant="caption" sx={{ fontWeight: 'bold', mb: 0.5, fontSize: '0.62rem' }}>{percentuale}%</Typography>
+                                                    <Box sx={{ width: '100%', maxWidth: '38px', height: `${Math.max(percentuale * 1.2, 2)}px`, bgcolor: col.color, borderRadius: '4px 4px 0 0', transition: 'height 0.5s ease' }} />
+                                                    <Typography noWrap sx={{ fontSize: '0.62rem', mt: 1, fontWeight: 'bold', color: col.label === 'Bevande' ? '#757575' : 'inherit' }}>{col.label}</Typography>
+                                                    <Typography sx={{ fontSize: '0.6rem', color: '#666' }}>({col.val})</Typography>
+                                                </Box>
+                                            );
+                                        })}
+                                    </Stack>
+                                </Box>
+
+                                <Box sx={{ flex: 1.3, bgcolor: 'rgba(76, 175, 80, 0.04)', borderRadius: '8px', p: 1.5, border: '1px dashed #4caf50', display: 'flex', flexDirection: 'column' }}>
+                                    <Typography sx={{ fontSize: '0.75rem', fontWeight: 'bold', color: '#4caf50', textAlign: 'center', mb: 1, letterSpacing: 1 }}>STAMPATI</Typography>
+                                    <Stack direction="row" alignItems="flex-end" justifyContent="center" sx={{ flex: 1, borderBottom: '2px solid #ddd', pb: 1 }}>
+                                        {(() => {
+                                            const percentuale = Math.round(((statsConti.stampati || 0) / statsConti.totale) * 100) || 0;
+                                            return (
+                                                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%' }}>
+                                                    <Typography variant="caption" sx={{ fontWeight: 'bold', mb: 0.5, fontSize: '0.65rem' }}>{percentuale}%</Typography>
+                                                    <Box sx={{ width: '100%', maxWidth: '45px', height: `${Math.max(percentuale * 1.2, 2)}px`, bgcolor: '#4caf50', borderRadius: '4px 4px 0 0', transition: 'height 0.5s ease' }} />
+                                                    <Typography sx={{ fontSize: '0.62rem', mt: 1, fontWeight: 'bold' }}>Stampati</Typography>
+                                                    <Typography sx={{ fontSize: '0.6rem', color: '#666' }}>({statsConti.stampati || 0})</Typography>
+                                                </Box>
+                                            );
+                                        })()}
+                                    </Stack>
+                                </Box>
+                            </Stack>
+                        </Box>
+                    )}
+                </DialogContent>
+                <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
+                    <Button variant="outlined" onClick={() => setOpenStatoConti(false)} sx={{ borderRadius: '20px', px: 4 }}>CHIUDI</Button>
+                </DialogActions>
+            </Dialog>
+
 
             {/* --- MODALE GRAFICO --- */}
             {!disabilitaStatistiche && (
