@@ -17,7 +17,7 @@ export default function Page() {
                             Home Castelferro
                         </p>
                         <p className="text-xs">
-                            (V40)
+                            (V40.bis)
                         </p>
                     </div>
                 </div>
