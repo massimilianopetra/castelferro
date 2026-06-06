@@ -6,6 +6,7 @@ import { Button, ButtonGroup, Snackbar, TextField, Modal, Box, Typography, IconB
 import StarsIcon from '@mui/icons-material/Stars';
 import CircularProgress from '@mui/material/CircularProgress';
 import Filter1Icon from '@mui/icons-material/Filter1';
+import { useConfig } from '@/context/ConfigContext'; // <-- Importazione del Context globale
 import type { DbConsumazioni, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
 import {
     getConsumazioni,
@@ -44,7 +45,7 @@ const styleModal = {
 };
 
 export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
-
+    const { disabilitaStatisticheCucina } = useConfig(); // <-- Estrazione del flag dello switch
     const [loading, setLoading] = useState(false);
     const { data: session } = useSession();
     const [phase, setPhase] = useState('iniziale');
@@ -66,6 +67,11 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     const [menuPrevisionale, setMenuPrevisionale] = useState<any[]>([]);
     const [dettaglioCoperti, setDettaglioCoperti] = useState({ seduti: 0, nonseduti_incoda: 0, serviti: 0 });
     const [snackbarMessage, setSnackbarMessage] = useState('');
+
+// 3. Logica autorizzazione
+    const isAuthorizedUser = session?.user?.name === "Casse" || session?.user?.name === "SuperUser";
+    const disabilitaStatisticheEffettivo = disabilitaStatisticheCucina && !isAuthorizedUser;
+
     useEffect(() => {
         const fetchData = async () => {
             const gg = await getGiornoSagra();
@@ -157,6 +163,13 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
     };
 
     const caricaStatistiche = async () => {
+        // Se le statistiche sono disabilitate globalmente, blocca l'esecuzione e le query sul database
+        if (disabilitaStatisticheEffettivo) {
+            setSnackbarMessage("Statistiche disattivate temporaneamente per alleggerire il carico del server.");
+            setOpenSnackbar(true);
+            return;
+        }
+        
         try {
             const [
                 ticketNonSedutiRows,
@@ -209,7 +222,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
         }
 
         // Se siamo arrivati qui, significa che:
-        // - O il conto era nuovo e aveva piatti validi (quindi l'abbiamo aperto sopra)
+        // - O il conto era nuovo e aveva piatti validi (quindic l'abbiamo aperto sopra)
         // - O il conto esisteva già (e quindi anche se lo azzeri del tutto, procediamo a salvare gli zeri sul DB)
         let gc = await getConto(Number(numeroFoglietto), sagra.giornata);
 
@@ -458,9 +471,15 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                     {showAlternateView ? (
                                         <p className="flex items-center justify-center">
                                             <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
-                                            <IconButton onClick={caricaStatistiche} color="primary" sx={{ ml: 1, border: '1px solid', padding: '10px' }}>
+                                            <IconButton 
+                                                onClick={caricaStatistiche} 
+                                                color={disabilitaStatisticheEffettivo ? "default" : "primary"}
+                                                disabled={disabilitaStatisticheEffettivo}
+                                                sx={{ ml: 1, border: '1px solid', padding: '10px', opacity: disabilitaStatisticheEffettivo ? 0.4 : 1 }}
+                                            >
                                                 <StarsIcon fontSize="large" />
                                             </IconButton>
+
                                         </p>
                                     ) : (
                                         <div className="flex items-center justify-end">
@@ -473,10 +492,15 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                                                 ))}
                                                 <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
                                             </ButtonGroup>
-                                            <IconButton onClick={caricaStatistiche} color="primary" sx={{ ml: 2, border: '2px solid', bgcolor: 'white' }}>
+                                            <IconButton 
+                                                onClick={caricaStatistiche} 
+                                                color={disabilitaStatisticheEffettivo ? "default" : "primary"}
+                                                disabled={disabilitaStatisticheEffettivo}
+                                                sx={{ ml: 2, border: '2px solid', bgcolor: 'white', opacity: disabilitaStatisticheEffettivo ? 0.4 : 1 }}
+                                            >
                                                 <StarsIcon fontSize="large" />
                                             </IconButton>
-                                            <ButtonGroup sx={{ display: { xs: 'block', sm: 'none' } }}>
+                                             <ButtonGroup sx={{ display: { xs: 'block', sm: 'none' } }}>
                                                 {lastLog.map((row) => (
                                                     <span key={row.foglietto}>
                                                         <Button size="small" className="rounded-full text-xl" variant="contained" style={{ borderRadius: '9999px' }} onClick={() => { carica(row.foglietto) }} startIcon={<Filter1Icon />} >{row.foglietto}</Button>

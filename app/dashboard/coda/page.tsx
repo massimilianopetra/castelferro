@@ -7,7 +7,7 @@ import { useSession } from 'next-auth/react';
 export default function Page() {
     const { data: session } = useSession();
     const isMobile = useMediaQuery('(max-width:600px)');
-    if ((session?.user?.name == "Casse")|| (session?.user?.name == "SuperUser")) {
+    if ((session?.user?.name == "Ingresso")|| (session?.user?.name == "SuperUser")) {
         return (
             <main>
                 <div className="flex flex-wrap flex-col ">

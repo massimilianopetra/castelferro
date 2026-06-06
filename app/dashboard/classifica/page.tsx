@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getClassificaCopertiCamerieri, getGiornoSagra } from '@/app/lib/actions';
+import { useSession } from 'next-auth/react';
 
 import CircularProgress from '@mui/material/CircularProgress';
 import Box from '@mui/material/Box';
@@ -32,6 +33,7 @@ type ClassificaData = {
 };
 
 export default function ClassificaCamerieriPage() {
+    const { data: session } = useSession();
     const isMobile = useMediaQuery('(max-width:600px)');
     const [loading, setLoading] = useState(true);
     const [camerieri, setCamerieri] = useState<ClassificaData[]>([]);
@@ -79,6 +81,21 @@ export default function ClassificaCamerieriPage() {
 
     const datiVisualizzati = soloPrimiDieci ? camerieri.slice(0, 10) : camerieri;
     const maxCoperti = datiVisualizzati.length > 0 ? Math.max(...datiVisualizzati.map(c => c.coperti)) : 1;
+
+   if ((session?.user?.name !== "SuperUser")) {
+
+    return (
+      <main>
+        <div className="flex flex-wrap flex-col">
+          <div className='text-center '>
+            <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
+              <span className="text-xl font-semibold">Accesso Negato</span>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  } else {
 
     return (
         <Box className="pagina-classifica-root" sx={{ 

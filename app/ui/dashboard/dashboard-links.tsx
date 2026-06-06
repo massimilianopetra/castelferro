@@ -18,6 +18,7 @@ import WcIcon from '@mui/icons-material/Wc';
 import AssessmentIcon from '@mui/icons-material/Assessment';
 import LocalPrintshopIcon from '@mui/icons-material/LocalPrintshop'; 
 import MilitaryTechIcon from '@mui/icons-material/MilitaryTech';
+import PermDataSettingIcon from '@mui/icons-material/PermDataSetting';
 
 export default function DashboardLinks() {
   const pathname = usePathname();
@@ -31,6 +32,7 @@ export default function DashboardLinks() {
     { name: 'Home', href: '/dashboard', icon: HomeIcon },
     { name: 'Menus', href: '/dashboard/menus', icon: MenuBookIcon },
     { name: 'Gestione Termiche', href: '/dashboard/stampantitermiche', icon: LocalPrintshopIcon },
+    { name: 'Setting', href: '/dashboard/impostazioni', icon: PermDataSettingIcon },
     { name: 'Giornata Sagra', href: '/dashboard/sagra', icon: StorefrontIcon },
     { name: 'Camerieri', href: '/dashboard/camerieri', icon: WcIcon },
     { name: 'Cruscotto Piatti', href: '/dashboard/cruscottopiatti', icon: RestaurantOutlinedIcon },
