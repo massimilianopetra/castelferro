@@ -49,7 +49,7 @@ export default function Page() {
                 <div className="flex flex-col items-center justify-center min-h-[50vh]">
                     <div className='text-center w-full max-w-md'>
                         <div className="p-6 mb-4 text-red-800 rounded-2xl bg-red-50 border border-red-100 shadow-sm" role="alert">
-                            <span className="text-xl font-bold block mb-1">Accesso Negato</span>
+                            <span className="text-xl font-bold block mb-1">Accesso Negato 5</span>
                             <p className="text-lg">Utente non autorizzato alla gestione.</p>
                         </div>
                     </div>

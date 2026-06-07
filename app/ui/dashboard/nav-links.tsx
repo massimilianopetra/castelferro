@@ -41,7 +41,7 @@ export default function NavLinks() {
         { name: 'Incassa Conti', href: '/dashboard/chiudiconti', icon: ShoppingCartIcon },
         { name: 'Verifica conti (aperti e chiusi)', href: '/dashboard/listaconti', icon: CheckCircleOutlineIcon },
         { name: 'Gestione Camerieri', href: '/dashboard/camerieri', icon: AccessibilityIcon },
-       ];
+      ];
       break;
     case 'SuperUser':
       links = [
@@ -53,33 +53,37 @@ export default function NavLinks() {
       ];
       break;
     case 'Ingresso':
+    case 'IngressoE':
       links = [
         { name: 'Display', href: '/dashboard/display', icon: TvIcon },
         { name: 'Chiama', href: '/dashboard/chiama', icon: RecordVoiceOverIcon },
         { name: 'Distributore di Ticket', href: '/dashboard/distributore', icon: LocalActivityIcon },
       ];
       break;
-
-      
     case 'Antipasti':
+    case 'AntipastiE':
       links = [{ name: 'Antipasti', href: '/dashboard/antipasti', icon: KebabDiningOutlinedIcon },]
       break;
     case 'Primi':
+    case 'PrimiE':
       links = [{ name: 'Primi', href: '/dashboard/primi', icon: DinnerDiningIcon },]
       break;
     case 'Secondi':
+    case 'SecondiE':
       links = [{ name: 'Secondi', href: '/dashboard/secondi', icon: RestaurantOutlinedIcon },]
       break;
     case 'Dolci':
+    case 'DolciE':
       links = [{ name: 'Dolci', href: '/dashboard/dolci', icon: CakeIcon },]
       break;
     case 'Bevande':
+    case 'BevandeE':
       links = [{ name: 'Bevande', href: '/dashboard/bevande', icon: LocalDrinkIcon },]
       break;
     case 'Birre':
+    case 'BirreE':
       links = [{ name: 'Birre', href: '/dashboard/birre', icon: SportsBarIcon },]
       break;
-
     default:
       links = [{ name: 'Home', href: '/dashboard', icon: HomeIcon },]
   }

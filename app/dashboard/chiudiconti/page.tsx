@@ -273,7 +273,7 @@ export default function Page() {
     }
 
     if (!((session?.user?.name == "Casse") || (session?.user?.name == "SuperUser"))) {
-        return <Box sx={{ p: 4 }}><Alert severity="error">Accesso Negato</Alert></Box>;
+        return <Box sx={{ p: 4 }}><Alert severity="error">Accesso Negato 2</Alert></Box>;
     }
 
     if (sagra.stato == 'CHIUSA') {

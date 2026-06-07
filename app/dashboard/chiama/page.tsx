@@ -35,11 +35,10 @@ type Order = 'asc' | 'desc';
 export default function ChiamaPage() {
     const { data: session } = useSession(); // 2. Recupera sessione
     const isMobile = useMediaQuery('(max-width:600px)');
-    const { disabilitaStatisticheChiama } = useConfig(); // <-- Legge lo stato unificato centralmente
-
+ 
     // 3. Logica per identificare SuperUser
     const isAuthorizedUser = session?.user?.name === "SuperUser";
-    const disabilitaStatisticheEffettivo = disabilitaStatisticheChiama && !isAuthorizedUser;
+    const disabilitaStatisticheEffettivo =  !isAuthorizedUser;
 
     // --- STATI PRINCIPALI ---
     const [numeroAttuale, setNumeroAttuale] = useState(0);
@@ -615,7 +614,7 @@ export default function ChiamaPage() {
                 <div className="flex flex-wrap flex-col">
                     <div className='text-center '>
                         <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
-                            <span className="text-xl font-semibold">Accesso Negato</span>
+                            <span className="text-xl font-semibold">Accesso Negato 1</span>
                         </div>
                     </div>
                 </div>

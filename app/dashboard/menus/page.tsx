@@ -142,7 +142,7 @@ if ((session?.user?.name == "Casse") || (session?.user?.name == "SuperUser")) {
     return (
         <main className="flex items-center justify-center h-screen bg-gray-50">
             <div className="p-8 text-center bg-white shadow-xl rounded-2xl border border-red-100">
-                <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#b91c1c' }}>Accesso Negato</Typography>
+                <Typography variant="h5" sx={{ fontWeight: 'bold', color: '#b91c1c' }}>Accesso Negato 7</Typography>
             </div>
         </main>
     );

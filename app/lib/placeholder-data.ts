@@ -55,6 +55,48 @@ const users = [
     email: 'ingresso@castelferro.it',
     password: 'ingresso$'
   },
+    {
+    id: 10,
+    name: 'IngressoE',
+    email: 'ingressoe@castelferro.it',
+    password: 'ingresso$'
+  },
+    {
+    id: 11,
+    name: 'AntipastiE',
+    email: 'antipastie@castelferro.it',
+    password: 'antipasti$'
+  },
+  {
+    id: 12,
+    name: 'BevandeE',
+    email: 'bevandee@castelferro.it',
+    password: 'bevande$'
+  },    
+  {
+    id: 13,
+    name: 'DolciE',
+    email: 'dolcie@castelferro.it',
+    password: 'dolci$'
+  },
+  {
+    id: 14,
+    name: 'PrimiE',
+    email: 'primie@castelferro.it',
+    password: 'primi$'
+  },
+  {
+    id: 15,
+    name: 'SecondiE',
+    email: 'secondie@castelferro.it',
+    password: 'secondi$'
+  },
+  {
+    id: 16,
+    name: 'BirreE',
+    email: 'birree@castelferro.it',
+    password: 'birre$'
+  },
 ];
 
 

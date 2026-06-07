@@ -1,6 +1,10 @@
-import { lusitana } from '@/app/ui/fonts';
+"use client";
 
+import { lusitana } from '@/app/ui/fonts';
+import { useSession } from 'next-auth/react';
 export default function AcmeLogo() {
+  const { data: session } = useSession();
+
   return (
     <div className={`${lusitana.className} flex flex-row items-center leading-none !text-black`}>
       {/* SVG: Nascosto su mobile (hidden), visibile solo su desktop (lg:block) */}
@@ -30,6 +34,12 @@ export default function AcmeLogo() {
         <p className="text-[7px] font-bold !text-black lg:mt-1 lg:text-[11px] lg:uppercase">
           2026
         </p>
+        {/* Aggiunta del nome utente */}
+        {session?.user?.name && (
+          <p className="text-[7px] !text-black lg:mt-1 lg:text-[11px] font-bold italic">
+            Utente:{session?.user?.name}
+          </p>
+        )}
       </div>
     </div>
   );

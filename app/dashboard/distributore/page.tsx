@@ -50,15 +50,14 @@ type Mode = 'AUTO' | 'MANUALE' | 'LIBERA';
 export default function DistributorePage() {
 
     const config = useConfig();
-    const { disabilitaStatisticheDistributore } = config; // Variabile globale
-    const { data: session } = useSession();
+   const { data: session } = useSession();
 
 
     // --- LOGICA CORRETTA PER SUPERUSER/CASSE ---
     const isAuthorizedUser = session?.user?.name === "SuperUser";
 
     // Le statistiche sono disabilitate SOLO se il flag è attivo E l'utente non è autorizzato
-    const disabilitaStatisticheEffettivo = disabilitaStatisticheDistributore && !isAuthorizedUser;
+    const disabilitaStatisticheEffettivo = !isAuthorizedUser;
 
     const [loading, setLoading] = useState(false);
     const [isPrinting, setIsPrinting] = useState(false);
@@ -866,7 +865,7 @@ export default function DistributorePage() {
                 <div className="flex flex-wrap flex-col">
                     <div className='text-center '>
                         <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
-                            <span className="text-xl font-semibold">Accesso Negato</span>
+                            <span className="text-xl font-semibold">Accesso Negato 4</span>
                         </div>
                     </div>
                 </div>

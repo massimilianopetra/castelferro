@@ -44,9 +44,13 @@ const styleModal = {
     justifyContent: 'space-between'
 };
 
-export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
-    const { disabilitaStatisticheCucina } = useConfig(); // <-- Estrazione del flag dello switch
-    const [loading, setLoading] = useState(false);
+export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: string }) {
+  // Trasformiamo la prop in una variabile locale "pulita" (secondo me non serve, ma lo lascio per sicurezza)
+  const nomeCucina = nomeOriginale.trim().endsWith('E') 
+    ? nomeOriginale.trim().slice(0, -1) 
+    : nomeOriginale;
+
+
     const { data: session } = useSession();
     const [phase, setPhase] = useState('iniziale');
     const [isNewConto, setIsNewConto] = useState(false); // <-- Stato per tracciare se il conto è nuovo o pre-esistente
@@ -70,7 +74,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
 
 // 3. Logica autorizzazione
     const isAuthorizedUser = session?.user?.name === "Casse" || session?.user?.name === "SuperUser";
-    const disabilitaStatisticheEffettivo = disabilitaStatisticheCucina && !isAuthorizedUser;
+    const disabilitaStatisticheEffettivo =  !isAuthorizedUser;
 
     useEffect(() => {
         const fetchData = async () => {
@@ -299,6 +303,10 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
 
     const handleAnnulla = () => setPhase('caricato');
 
+    const user = session?.user?.name?.trim().endsWith('E') 
+  ? session.user.name.trim().slice(0, -1) 
+  : session?.user?.name?.trim() || "";
+
     const renderPhaseContent = () => {
         if (phase === 'iniziale')
             return (
@@ -409,7 +417,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
         return null;
     };
 
-    if ((session?.user?.name == nomeCucina) || (session?.user?.name == "SuperUser")) {
+    if ((user || "" == nomeCucina) || (user == "SuperUser")) {
         if (sagra.stato == 'CHIUSA') {
             return (
                 <main>
@@ -627,7 +635,7 @@ export default function Cucina({ nomeCucina }: { nomeCucina: string }) {
                 <div className="flex flex-wrap flex-col">
                     <div className='text-center '>
                         <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
-                            <span className="text-xl font-semibold">Accesso Negato</span>
+                            <span className="text-xl font-semibold">Accesso Negato (session?.user?.name): {session?.user?.name}</span>
                         </div>
                     </div>
                 </div>
