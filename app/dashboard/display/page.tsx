@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useConfig } from '@/context/ConfigContext';
 
 export default function DisplayPage() {
-  const { anno, titolo, edizione, inizio, fine, mese } = useConfig();
   const [numero, setNumero] = useState<number | null>(null);
   const [precedenti, setPrecedenti] = useState<number[]>([]);
 

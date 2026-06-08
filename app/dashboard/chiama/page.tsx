@@ -32,13 +32,10 @@ import { useConfig } from '@/context/ConfigContext'; // <-- Importazione del Con
 
 type Order = 'asc' | 'desc';
 
-export default function ChiamaPage() {
+export default function Chiama() {
     const { data: session } = useSession(); // 2. Recupera sessione
     const isMobile = useMediaQuery('(max-width:600px)');
- 
-    // 3. Logica per identificare SuperUser
-    const isAuthorizedUser = session?.user?.name === "SuperUser";
-    const disabilitaStatisticheEffettivo =  !isAuthorizedUser;
+
 
     // --- STATI PRINCIPALI ---
     const [numeroAttuale, setNumeroAttuale] = useState(0);
@@ -70,13 +67,20 @@ export default function ChiamaPage() {
         open: false, message: '', severity: 'success',
     });
 
+    const authorizedNames = [
+        "IngressoE",
+        "SuperUser"
+    ];
+
+    const isAuthorizedUser = authorizedNames.includes(session?.user?.name ?? "");
+
     // Svuota i dati temporanei locali se la configurazione centrale disabilita le statistiche
     useEffect(() => {
-        if (disabilitaStatisticheEffettivo) {
+        if (!isAuthorizedUser) {
             setStima(null);
             setStatsConti(null);
         }
-    }, [disabilitaStatisticheEffettivo]);
+    }, [isAuthorizedUser]);
 
     // --- FUNZIONI DI CARICAMENTO DATI ---
     const fetchDati = async () => {
@@ -99,7 +103,7 @@ export default function ChiamaPage() {
 
     // Gestione apertura modale Stato Conti
     const handleOpenStatoConti = async () => {
-        if (disabilitaStatisticheEffettivo) return;
+        if (!isAuthorizedUser) return;
 
         setOpenStatoConti(true);
         if (sagra.stato !== 'CHIUSA') {
@@ -109,7 +113,7 @@ export default function ChiamaPage() {
     };
 
     const caricaStatistiche = async () => {
-        if (disabilitaStatisticheEffettivo) return;
+        if (!isAuthorizedUser) return;
 
         try {
             const resStima = await getStimaAttesa();
@@ -136,7 +140,7 @@ export default function ChiamaPage() {
     useEffect(() => {
         fetchDati();
 
-        if (!disabilitaStatisticheEffettivo) {
+        if (isAuthorizedUser) {
             caricaStatistiche();
         }
 
@@ -157,12 +161,12 @@ export default function ChiamaPage() {
                                 return [...prev, payload.ticket];
                             });
                         }
-                        if (!disabilitaStatisticheEffettivo) caricaStatistiche();
+                        if (isAuthorizedUser) caricaStatistiche();
                     }
 
                     if (payload.type === 'REFRESH_TABLE') {
                         fetchDati();
-                        if (!disabilitaStatisticheEffettivo) caricaStatistiche();
+                        if (isAuthorizedUser) caricaStatistiche();
                     }
                     if (payload.type === 'CALL_NUMBER') setNumeroAttuale(payload.numero);
                 } catch (err) {
@@ -180,7 +184,7 @@ export default function ChiamaPage() {
         connect();
 
         const intervalStats = setInterval(() => {
-            if (!disabilitaStatisticheEffettivo) caricaStatistiche();
+            if (isAuthorizedUser) caricaStatistiche();
         }, 300000);
 
         return () => {
@@ -188,7 +192,7 @@ export default function ChiamaPage() {
             clearTimeout(reconnectTimeout);
             clearInterval(intervalStats);
         };
-    }, [disabilitaStatisticheEffettivo]);
+    }, [isAuthorizedUser]);
 
     // --- LOGICA DI ORDINAMENTO ---
     const handleRequestSort = (property: 'id' | 'numpersone') => {
@@ -218,7 +222,7 @@ export default function ChiamaPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ type: 'CALL_NUMBER', numero: ticket.id }),
             });
-            if (!disabilitaStatisticheEffettivo) caricaStatistiche();
+            if (isAuthorizedUser) caricaStatistiche();
         } catch (error) {
             console.error(error);
         }
@@ -234,7 +238,7 @@ export default function ChiamaPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ type: 'SET_SITTING', numero: ticket.id }),
             });
-            if (!disabilitaStatisticheEffettivo) caricaStatistiche();
+            if (isAuthorizedUser) caricaStatistiche();
         } catch (error) {
             console.error(error);
             fetchDati();
@@ -255,14 +259,14 @@ export default function ChiamaPage() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ type: 'REFRESH_TABLE' }),
             });
-            if (!disabilitaStatisticheEffettivo) caricaStatistiche();
+            if (isAuthorizedUser) caricaStatistiche();
         } catch (error) {
             console.error(error);
             fetchDati();
         }
     };
 
-    if ((session?.user?.name === "Ingresso") || (session?.user?.name === "SuperUser")) {
+    if ((session?.user?.name === "IngressoE") || (session?.user?.name === "Ingresso") || (session?.user?.name === "SuperUser")) {
 
         return (
             <Box sx={{
@@ -280,7 +284,7 @@ export default function ChiamaPage() {
                 position: 'relative'
             }}>
                 {/* --- STATO CONTI E BENVENUTO (TOP-LEFT) --- */}
-                {!disabilitaStatisticheEffettivo && (
+                {isAuthorizedUser && (
                     <Box sx={{ position: 'absolute', top: 15, left: 15, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                         <Button
                             variant="outlined" color="secondary"
@@ -295,7 +299,7 @@ export default function ChiamaPage() {
                 )}
 
                 {/* --- WIDGET STIMA ATTESA --- */}
-                {!disabilitaStatisticheEffettivo && (
+                {isAuthorizedUser && (
                     <Box sx={{ position: 'absolute', top: 15, right: 15, zIndex: 10 }}>
                         <Button
                             variant="outlined"
@@ -566,7 +570,7 @@ export default function ChiamaPage() {
 
 
                 {/* --- MODALE GRAFICO --- */}
-                {!disabilitaStatisticheEffettivo && (
+                {isAuthorizedUser && (
                     <Dialog open={openInfo} onClose={() => setOpenInfo(false)} fullWidth maxWidth="xs">
                         <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center' }}>ANDAMENTO ATTESA</DialogTitle>
                         <DialogContent>

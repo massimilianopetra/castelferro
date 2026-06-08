@@ -73,8 +73,17 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
     const [snackbarMessage, setSnackbarMessage] = useState('');
 
 // 3. Logica autorizzazione
-    const isAuthorizedUser = session?.user?.name === "Casse" || session?.user?.name === "SuperUser";
-    const disabilitaStatisticheEffettivo =  !isAuthorizedUser;
+    const authorizedNames = [
+    "BevandeE", 
+    "AntipastiE", 
+    "PrimiE", 
+    "SecondiE", 
+    "DolciE", 
+    "BirreE", // Qui hai "birree"
+    "SuperUser"
+    ];
+    const isAuthorizedUser = authorizedNames.includes(session?.user?.name ?? "");
+
 
     useEffect(() => {
         const fetchData = async () => {
@@ -168,7 +177,7 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
 
     const caricaStatistiche = async () => {
         // Se le statistiche sono disabilitate globalmente, blocca l'esecuzione e le query sul database
-        if (disabilitaStatisticheEffettivo) {
+        if (!isAuthorizedUser) {
             setSnackbarMessage("Statistiche disattivate temporaneamente per alleggerire il carico del server.");
             setOpenSnackbar(true);
             return;
@@ -481,9 +490,9 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
                                             <Button size="large" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
                                             <IconButton 
                                                 onClick={caricaStatistiche} 
-                                                color={disabilitaStatisticheEffettivo ? "default" : "primary"}
-                                                disabled={disabilitaStatisticheEffettivo}
-                                                sx={{ ml: 1, border: '1px solid', padding: '10px', opacity: disabilitaStatisticheEffettivo ? 0.4 : 1 }}
+                                                color={!isAuthorizedUser ? "default" : "primary"}
+                                                disabled={!isAuthorizedUser}
+                                                sx={{ ml: 1, border: '1px solid', padding: '10px', opacity: !isAuthorizedUser ? 0.4 : 1 }}
                                             >
                                                 <StarsIcon fontSize="large" />
                                             </IconButton>
@@ -502,9 +511,9 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
                                             </ButtonGroup>
                                             <IconButton 
                                                 onClick={caricaStatistiche} 
-                                                color={disabilitaStatisticheEffettivo ? "default" : "primary"}
-                                                disabled={disabilitaStatisticheEffettivo}
-                                                sx={{ ml: 2, border: '2px solid', bgcolor: 'white', opacity: disabilitaStatisticheEffettivo ? 0.4 : 1 }}
+                                                color={!isAuthorizedUser ? "default" : "primary"}
+                                                disabled={!isAuthorizedUser}
+                                                sx={{ ml: 2, border: '2px solid', bgcolor: 'white', opacity: !isAuthorizedUser ? 0.4 : 1 }}
                                             >
                                                 <StarsIcon fontSize="large" />
                                             </IconButton>

@@ -36,6 +36,7 @@ export default function NavLinks() {
   switch (session?.user?.name) {
     case 'Casse':
       links = [
+        { name: 'Home', href: '/dashboard', icon: HomeIcon },
         { name: 'Gestione Termiche', href: '/dashboard/stampantitermiche', icon: LocalPrintshopIcon },
         { name: 'Casse', href: '/dashboard/casse', icon: EuroIcon },
         { name: 'Incassa Conti', href: '/dashboard/chiudiconti', icon: ShoppingCartIcon },
@@ -45,6 +46,7 @@ export default function NavLinks() {
       break;
     case 'SuperUser':
       links = [
+        { name: 'Home', href: '/dashboard', icon: HomeIcon },
         { name: 'Gestione', href: '/dashboard/gestione', icon: SettingsIcon },
         { name: 'Casse', href: '/dashboard/casse', icon: EuroIcon },
         { name: 'Incassa Conti', href: '/dashboard/chiudiconti', icon: ShoppingCartIcon },
@@ -55,6 +57,7 @@ export default function NavLinks() {
     case 'Ingresso':
     case 'IngressoE':
       links = [
+        { name: 'Home', href: '/dashboard', icon: HomeIcon },
         { name: 'Display', href: '/dashboard/display', icon: TvIcon },
         { name: 'Chiama', href: '/dashboard/chiama', icon: RecordVoiceOverIcon },
         { name: 'Distributore di Ticket', href: '/dashboard/distributore', icon: LocalActivityIcon },
@@ -62,27 +65,42 @@ export default function NavLinks() {
       break;
     case 'Antipasti':
     case 'AntipastiE':
-      links = [{ name: 'Antipasti', href: '/dashboard/antipasti', icon: KebabDiningOutlinedIcon },]
+      
+      links = [
+        { name: 'Home', href: '/dashboard', icon: HomeIcon },
+        { name: 'Antipasti', href: '/dashboard/antipasti', icon: KebabDiningOutlinedIcon },]
       break;
     case 'Primi':
     case 'PrimiE':
-      links = [{ name: 'Primi', href: '/dashboard/primi', icon: DinnerDiningIcon },]
+      links = [
+        { name: 'Home', href: '/dashboard', icon: HomeIcon },
+        { name: 'Primi', href: '/dashboard/primi', icon: DinnerDiningIcon },]
       break;
     case 'Secondi':
     case 'SecondiE':
-      links = [{ name: 'Secondi', href: '/dashboard/secondi', icon: RestaurantOutlinedIcon },]
+      links = [
+        { name: 'Home', href: '/dashboard', icon: HomeIcon },
+        { name: 'Secondi', href: '/dashboard/secondi', icon: RestaurantOutlinedIcon },]
       break;
     case 'Dolci':
     case 'DolciE':
-      links = [{ name: 'Dolci', href: '/dashboard/dolci', icon: CakeIcon },]
+      links = [
+        { name: 'Home', href: '/dashboard', icon: HomeIcon },
+        { name: 'Dolci', href: '/dashboard/dolci', icon: CakeIcon },]
       break;
     case 'Bevande':
     case 'BevandeE':
-      links = [{ name: 'Bevande', href: '/dashboard/bevande', icon: LocalDrinkIcon },]
+      links = [
+        { name: 'Home', href: '/dashboard', icon: HomeIcon },
+        { name: 'Bevande', href: '/dashboard/bevande', icon: LocalDrinkIcon },]
       break;
     case 'Birre':
     case 'BirreE':
-      links = [{ name: 'Birre', href: '/dashboard/birre', icon: SportsBarIcon },]
+      links = [
+         { name: 'Home', href: '/dashboard', icon: HomeIcon },
+         { name: 'Birre', href: '/dashboard/birre', icon: SportsBarIcon },
+      
+      ]
       break;
     default:
       links = [{ name: 'Home', href: '/dashboard', icon: HomeIcon },]

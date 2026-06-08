@@ -50,14 +50,7 @@ type Mode = 'AUTO' | 'MANUALE' | 'LIBERA';
 export default function DistributorePage() {
 
     const config = useConfig();
-   const { data: session } = useSession();
-
-
-    // --- LOGICA CORRETTA PER SUPERUSER/CASSE ---
-    const isAuthorizedUser = session?.user?.name === "SuperUser";
-
-    // Le statistiche sono disabilitate SOLO se il flag è attivo E l'utente non è autorizzato
-    const disabilitaStatisticheEffettivo = !isAuthorizedUser;
+    const { data: session } = useSession();
 
     const [loading, setLoading] = useState(false);
     const [isPrinting, setIsPrinting] = useState(false);
@@ -101,6 +94,13 @@ export default function DistributorePage() {
         secondi: number, dolci: number, stampati: number, casse: number
     } | null>(null);
 
+    const authorizedNames = [
+        "IngressoE",
+        "SuperUser"
+    ];
+
+    const isAuthorizedUser = authorizedNames.includes(session?.user?.name ?? "");
+
     useEffect(() => {
         const fetchSagra = async () => {
             const gg = await getGiornoSagra();
@@ -111,15 +111,15 @@ export default function DistributorePage() {
 
     // Pulizia locale se la statistica viene spenta
     useEffect(() => {
-        if (disabilitaStatisticheEffettivo) {
+        if (!isAuthorizedUser) {
             setStima(null);
             setStatsConti(null);
         }
-    }, [disabilitaStatisticheEffettivo]);
+    }, [isAuthorizedUser]);
 
     const handleOpenStatoConti = async () => {
         // Blocco preventivo delle interrogazioni al DB se spento
-        if (disabilitaStatisticheEffettivo) return;
+        if (!isAuthorizedUser) return;
 
         setOpenStatoConti(true);
         if (sagra.stato !== 'CHIUSA') {
@@ -130,7 +130,7 @@ export default function DistributorePage() {
 
     const caricaStatistiche = async () => {
         // Blocco preventivo delle interrogazioni al DB se spento
-        if (disabilitaStatisticheEffettivo) return;
+        if (!isAuthorizedUser) return;
 
         try {
             const resStima = await getStimaAttesa();
@@ -154,12 +154,12 @@ export default function DistributorePage() {
     };
 
     useEffect(() => {
-        if (!disabilitaStatisticheEffettivo) caricaStatistiche();
+        if (isAuthorizedUser) caricaStatistiche();
         const intervalStats = setInterval(() => {
-            if (!disabilitaStatisticheEffettivo) caricaStatistiche();
+            if (isAuthorizedUser) caricaStatistiche();
         }, 300000);
         return () => clearInterval(intervalStats);
-    }, [disabilitaStatisticheEffettivo]);
+    }, [isAuthorizedUser]);
 
     const notificaCambioTabella = async () => {
         try {
@@ -280,7 +280,7 @@ export default function DistributorePage() {
             setCoperti(0);
             if (mode === 'MANUALE') setManualTicketId('');
 
-            if (!disabilitaStatisticheEffettivo) caricaStatistiche();
+            if (isAuthorizedUser) caricaStatistiche();
 
         } catch (globalError) {
             console.error("Errore critico:", globalError);
@@ -482,7 +482,7 @@ export default function DistributorePage() {
             </ThemeProvider>
         );
     }
-    if ((session?.user?.name === "Ingresso") || (session?.user?.name === "SuperUser")) {
+    if ((session?.user?.name === "IngressoE") || (session?.user?.name === "Ingresso") || (session?.user?.name === "SuperUser")) {
 
         return (
             <ThemeProvider theme={defaultTheme}>
@@ -496,7 +496,7 @@ export default function DistributorePage() {
                 }}>
 
                     {/* MODIFICA: Nasconde il pulsante Stato conti se le statistiche sono disabilitate centralmente */}
-                    {!disabilitaStatisticheEffettivo && (
+                    {isAuthorizedUser && (
                         <Box sx={{ position: 'absolute', top: 15, left: 15, zIndex: 10, display: 'flex', flexDirection: 'column', gap: 0.5 }}>
                             <Button
                                 variant="outlined" color="secondary"
@@ -511,7 +511,7 @@ export default function DistributorePage() {
                     )}
 
                     {/* MODIFICA: Il pulsante Stima attesa nascosto se le statistiche sono disabilitate centralmente */}
-                    {!disabilitaStatisticheEffettivo && (
+                    {isAuthorizedUser && (
                         <Box sx={{ position: 'absolute', top: 15, right: 15, zIndex: 10 }}>
                             <Button
                                 variant="outlined" color="secondary"
@@ -767,7 +767,7 @@ export default function DistributorePage() {
                     </Dialog>
 
                     {/* MODALE STATISTICHE */}
-                    {!disabilitaStatisticheEffettivo && (
+                    {isAuthorizedUser && (
                         <Dialog open={openInfo} onClose={() => setOpenInfo(false)} fullWidth maxWidth="xs">
                             <DialogTitle sx={{ fontWeight: 'bold', textAlign: 'center' }}>ANDAMENTO ATTESA</DialogTitle>
                             <DialogContent>
