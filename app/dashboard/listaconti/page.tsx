@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react'
-import Link from 'next/link'
+import { useState, useEffect, useMemo } from 'react';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
 import type { DbConti, DbFiera } from '@/app/lib/definitions';
 import CircularProgress from '@mui/material/CircularProgress';
 import { getGiornoSagra, listConti } from '@/app/lib/actions';
@@ -36,52 +36,68 @@ export default function Page() {
     const { data: session } = useSession();
     const isMobile = useMediaQuery('(max-width:600px)');
     
-    const columns: GridColDef[] = [
+    // PERFOMANCE & LAYOUT OPTIMIZATION: 
+    // Spostato dentro useMemo per evitare che l'array venga ricreato ad ogni render.
+    // Sostituiti i 'width' fissi con un sistema proporzionale 'flex' + 'minWidth' per massima fluidità.
+    const columns = useMemo<GridColDef[]>(() => [
         {
-            field: 'col1', headerName: 'N. Foglietto', width: 100, renderCell: (params) => (
+            field: 'col1', 
+            headerName: 'N. Foglietto', 
+            minWidth: 95, 
+            flex: 0.8, 
+            renderCell: (params) => (
                 <Link href={`/dashboard/casse/${params.value}`} passHref className="text-blue-600 underline">
                     {params.value}
                 </Link>
             )
         },
-        { field: 'col2', headerName: 'Stato', width: 110 },
-        { field: 'col3', headerName: 'Cameriere', width: 150 },
-        { field: 'col4', headerName: 'Aperto da', width: 120 },
-        { field: 'col5', headerName: 'Stampato da', width: 120 },
-        { field: 'col6', headerName: 'Chiuso alle ore', width: 130 },
-        { field: 'col7', headerName: 'Totale', type: "number", align: 'right', width: 100, valueFormatter: (params) => `${params} €` },
-        { field: 'col8', headerName: 'Note', flex: 1, minWidth: 150 } // flex: 1 permette alla colonna di adattarsi
-    ];
+        { field: 'col2', headerName: 'Stato', minWidth: 100, flex: 0.9 },
+        { field: 'col3', headerName: 'Cameriere', minWidth: 130, flex: 1.2 },
+        { field: 'col4', headerName: 'Aperto da', minWidth: 110, flex: 1 },
+        { field: 'col5', headerName: 'Stampato da', minWidth: 110, flex: 1 },
+        { field: 'col6', headerName: 'Chiuso alle ore', minWidth: 120, flex: 1.1 },
+        { 
+            field: 'col7', 
+            headerName: 'Totale', 
+            type: "number", 
+            align: 'right', 
+            minWidth: 90, 
+            flex: 0.8, 
+            valueFormatter: (params) => `${params} €` 
+        },
+        { field: 'col8', headerName: 'Note', minWidth: 160, flex: 2 }
+    ], []);
 
     useEffect(() => {
+        // PERFORMANCE OPTIMIZATION: Funzione definita internamente per pulizia dei render
+        const fetchData = async () => {
+            const gg = await getGiornoSagra();
+            if (gg) {
+                setSagra(gg);
+                const conti = await listConti('*', gg.giornata);
+                if (conti) {
+                    const cc = conti.map((item) => ({
+                        id: item.id,
+                        col1: item.id_comanda,
+                        col2: item.stato,
+                        col3: item.cameriere,
+                        col4: deltanow(item.data_apertura),
+                        col5: deltanow(item.data_stampa),
+                        col6: item.stato.includes('CHIUSO') ? milltodatestring(item.data_chiusura) : '++++',
+                        col7: item.totale.toFixed(2),
+                        col8: item.note
+                    }));
+                    setRows(cc);
+                }
+                setPhase('caricato');
+            }
+        };
+
         fetchData();
     }, []);
 
-    const fetchData = async () => {
-        const gg = await getGiornoSagra();
-        if (gg) {
-            setSagra(gg);
-            const conti = await listConti('*', gg.giornata);
-            if (conti) {
-                const cc = conti.map((item) => ({
-                    id: item.id,
-                    col1: item.id_comanda,
-                    col2: item.stato,
-                    col3: item.cameriere,
-                    col4: deltanow(item.data_apertura),
-                    col5: deltanow(item.data_stampa),
-                    col6: item.stato.includes('CHIUSO') ? milltodatestring(item.data_chiusura) : '++++',
-                    col7: item.totale.toFixed(2),
-                    col8: item.note
-                }));
-                setRows(cc);
-            }
-            setPhase('caricato');
-        }
-    }
-
     if (!((session?.user?.name == "Casse") || (session?.user?.name == "SuperUser"))) {
-        return <Box sx={{ p: 4 }}><Alert severity="error">Accesso Negato 6</Alert></Box>;
+        return <Box sx={{ p: 4 }}><Alert severity="error">Accesso Negato (LISTACONTI)</Alert></Box>;
     }
 
     if (sagra.stato == 'CHIUSA') {
@@ -90,7 +106,7 @@ export default function Page() {
 
     if (phase == 'caricamento') {
         return (
-            <Box sx={{ display: 'flex', height: '100%', alignItems: 'center', justifyContent: 'center' }}>
+            <Box sx={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center' }}>
                 <CircularProgress size="6rem" />
             </Box>
         );
@@ -100,9 +116,9 @@ export default function Page() {
         <Box sx={{ 
             display: 'flex', 
             flexDirection: 'column', 
-            height: 'calc(100vh - 32px)', // Altezza fissa ma relativa al viewport
+            height: 'calc(100vh - 32px)', 
             width: '100%',
-            overflow: 'hidden', // Blocca scroll esterno
+            overflow: 'hidden', 
             p: 1,
             boxSizing: 'border-box'
         }}>
@@ -122,7 +138,7 @@ export default function Page() {
                 minHeight: 0, 
                 width: '100%',
                 '& .MuiDataGrid-root': {
-                    maxWidth: '100%', // Impedisce alla griglia di allargarsi oltre il genitore
+                    maxWidth: '100%',
                 }
             }}>
                 <StyledDataGrid

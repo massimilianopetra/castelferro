@@ -528,13 +528,39 @@ export default function DistributorePage() {
                     <Box sx={{ flexShrink: 0, mb: 1, mt: 1, textAlign: 'center', minHeight: '60px' }}>
                         {lastEntry ? (
                             lastEntry.type === 'TICKET' ? (
-                                <Paper elevation={3} sx={{ px: 6, py: 0, borderRadius: '20px', border: '4px solid #1976d2', bgcolor: '#fff' }}>
-                                    <Typography sx={{ fontSize: '1.5rem', fontWeight: 900, color: '#333' }}>
-                                        ULTIMO: <span style={{ color: '#1976d2', fontSize: '1.2em' }}>{lastEntry.numero}</span>
-                                        <span style={{ margin: '0 6px', color: '#ccc' }}>|</span>
-                                        COPERTI: <span style={{ color: '#9c27b0', fontSize: '1.2em' }}>{lastEntry.coperti}</span>
-                                    </Typography>
-                                </Paper>
+                                (() => {
+                                    // Calcoliamo quante cifre ha il ticket attuale
+                                    const numDigits = lastEntry.numero?.toString().length || 0;
+
+                                    return (
+                                        <Paper
+                                            elevation={3}
+                                            sx={{
+                                                px: { xs: 1.5, sm: 3, md: 6 }, // Più spazio ai lati su mobile, scala fino a 6 su desktop
+                                                py: 0.5,
+                                                borderRadius: '20px',
+                                                border: '4px solid #1976d2',
+                                                bgcolor: '#fff'
+                                            }}
+                                        >
+                                            <Typography sx={{
+                                                fontSize: {
+                                                    // Riduzione dinamica del font in base alle cifre su schermi piccoli (xs) e medi (sm)
+                                                    xs: numDigits >= 4 ? '0.85rem' : numDigits === 3 ? '1.05rem' : numDigits === 2 ? '1.2rem' : '1.35rem',
+                                                    sm: numDigits >= 4 ? '1.2rem' : '1.4rem',
+                                                    md: '1.5rem'
+                                                },
+                                                fontWeight: 900,
+                                                color: '#333',
+                                                whiteSpace: 'nowrap' // Evita categoricamente l'andata a capo
+                                            }}>
+                                                ULTIMO: <span style={{ color: '#1976d2', fontSize: '1.2em' }}>{lastEntry.numero}</span>
+                                                <span style={{ margin: '0 6px', color: '#ccc' }}>|</span>
+                                                COPERTI: <span style={{ color: '#9c27b0', fontSize: '1.2em' }}>{lastEntry.coperti}</span>
+                                            </Typography>
+                                        </Paper>
+                                    );
+                                })()
                             ) : lastEntry.type === 'ELIMINATO' ? (
                                 <Paper elevation={3} sx={{ px: 6, py: 0, borderRadius: '20px', border: '4px solid #d32f2f', bgcolor: '#fdf2f2' }}>
                                     <Typography sx={{ fontSize: '1.5rem', fontWeight: 900, color: '#d32f2f' }}>
@@ -552,7 +578,6 @@ export default function DistributorePage() {
                             <Typography sx={{ color: '#aaa', fontWeight: 700, fontSize: '1.5rem' }}>Nessun ticket distribuito</Typography>
                         )}
                     </Box>
-
                     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: '600px', mt: -1 }}>
                         <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', width: '100%', gap: mode === 'MANUALE' ? { xs: 4, sm: 6 } : 0, mb: 3 }}>
                             {mode === 'MANUALE' && (
@@ -865,7 +890,7 @@ export default function DistributorePage() {
                 <div className="flex flex-wrap flex-col">
                     <div className='text-center '>
                         <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
-                            <span className="text-xl font-semibold">Accesso Negato 4</span>
+                            <span className="text-xl font-semibold">Accesso Negato (DISTRIBUTORE)</span>
                         </div>
                     </div>
                 </div>

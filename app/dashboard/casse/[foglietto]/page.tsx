@@ -567,7 +567,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 </header>
                 <main className="middle-section_XS">
                   {phase === 'caricamento' || phase === 'elaborazione' ? (
-                    <Box sx={{ display: 'flex', justifyConten: 'center', alignItems: 'center', height: '300px', width: '100%' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px', width: '100%' }}>
                       <CircularProgress size="4rem" />
                     </Box>
                   ) : (

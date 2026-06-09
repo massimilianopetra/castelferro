@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react'
+import { useState, useEffect, useMemo } from 'react';
+import { useSession } from 'next-auth/react';
 import CircularProgress from '@mui/material/CircularProgress';
 import { listConti, listConsumazioni } from '@/app/lib/actions';
 import * as React from 'react';
@@ -14,146 +14,132 @@ import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
 import { BarChart } from '@mui/x-charts/BarChart';
-import { ChartsText } from '@mui/x-charts'; 
 import { Alert, Box, Typography, useMediaQuery } from '@mui/material';
 
-export default function Page() {
+// 1. Spostati i tipi e le costanti statiche fuori dal componente
+type RecordCruscotto = {
+    giornata: string;
+    incasso: number;
+    incassopos: number;
+    conti: number;
+    coperti: number;
+    spesamediaperconti: number;
+    spesamediacoperto: number;
+    mediacopertiperconto: number;
+};
 
+const GIORNATE = [
+    'Giovedi - 1gg', 'Venerdì - 2gg', 'Sabato - 3gg', 'Domenica - 4gg',
+    'Lunedì - 5gg', 'Martedì - 6gg', 'Mercoledì - 7gg', 'Giovedì - 8gg'
+];
+
+// 2. Spostati gli styled-components fuori per evitare re-rendering e unmount continui
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+    [`&.${tableCellClasses.head}`]: {
+        backgroundColor: theme.palette.common.black,
+        color: theme.palette.common.white,
+    },
+    [`&.${tableCellClasses.body}`]: {
+        fontSize: 14,
+    },
+}));
+
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+    '&:nth-of-type(odd)': {
+        backgroundColor: theme.palette.action.hover,
+    },
+    '&:last-child td, &:last-child th': {
+        border: 0,
+    },
+}));
+
+export default function Page() {
     const [phase, setPhase] = useState('caricamento');
     const [record, setRecord] = useState<RecordCruscotto[]>([]);
     const { data: session } = useSession();
-
-    const StyledTableCell = styled(TableCell)(({ theme }) => ({
-        [`&.${tableCellClasses.head}`]: {
-            backgroundColor: theme.palette.common.black,
-            color: theme.palette.common.white,
-        },
-        [`&.${tableCellClasses.body}`]: {
-            fontSize: 14,
-        },
-    }));
-
-    const StyledTableRow = styled(TableRow)(({ theme }) => ({
-        '&:nth-of-type(odd)': {
-            backgroundColor: theme.palette.action.hover,
-        },
-        '&:last-child td, &:last-child th': {
-            border: 0,
-        },
-    }));
-
-    type RecordCruscotto = {
-        giornata: string;
-        incasso: number; 
-        incassopos: number; 
-        conti: number;
-        coperti: number;
-        spesamediaperconti: number;
-        spesamediacoperto: number;
-        mediacopertiperconto: number;
-    };
-
-    function createData(
-        giornata: string,
-        incasso: number,
-        incassopos: number,
-        conti: number,
-        coperti: number,
-        spesamediaperconti: number,
-        spesamediacoperto: number,
-        mediacopertiperconto: number,
-    ) {
-        return { giornata, incasso, incassopos, conti, coperti, spesamediaperconti, spesamediacoperto, mediacopertiperconto };
-    }
-
-    var initialRows = [
-        createData('Giovedi - 1gg', 0, 0, 0, 0, 0, 0, 0),
-        createData('Venerdì - 2gg', 0, 0, 0, 0, 0, 0, 0),
-        createData('Sabato - 3gg', 0, 0, 0, 0, 0, 0, 0),
-        createData('Domenica - 4gg', 0, 0, 0, 0, 0, 0, 0),
-        createData('Lunedì - 5gg', 0, 0, 0, 0, 0, 0, 0),
-        createData('Martedì - 6gg', 0, 0, 0, 0, 0, 0, 0),
-        createData('Mercoledì - 7gg', 0, 0, 0, 0, 0, 0, 0),
-        createData('Giovedì - 8gg', 0, 0, 0, 0, 0, 0, 0),
-    ];
+    const isMobile = useMediaQuery('(max-width:600px)');
 
     useEffect(() => {
         fetchData();
     }, []);
 
     const fetchData = async () => {
-        const tempRows = [...initialRows];
+        // 3. Creiamo un array di indici [1, 2, 3, 4, 5, 6, 7, 8]
+        const days = Array.from({ length: 8 }, (_, i) => i + 1);
 
-        for (let i = 0; i < 8; i++) {
-            const conti = await listConti('CHIUSO', i + 1);
-            const contiPos = await listConti('CHIUSOPOS', i + 1);
-            const contiAltriImporti = await listConti('CHIUSOALTRO', i + 1);
+        // 4. Eseguiamo i giorni IN PARALLELO, non in sequenza
+        const results = await Promise.all(
+            days.map(async (day, index) => {
+                // Eseguiamo le 4 query per ogni giorno IN PARALLELO
+                const [conti, contiPos, contiAltriImporti, consumazioni] = await Promise.all([
+                    listConti('CHIUSO', day),
+                    listConti('CHIUSOPOS', day),
+                    listConti('CHIUSOALTRO', day),
+                    listConsumazioni(1, day)
+                ]);
 
-            let sumContanti = conti?.reduce((accumulator, currentValue) => accumulator + currentValue.totale, 0) || 0;
-            let sumAltriImporti = contiAltriImporti?.reduce((accumulator, currentValue) => accumulator + currentValue.totale, 0) || 0;
-            let sumPos = contiPos?.reduce((accumulator, currentValue) => accumulator + currentValue.totale, 0) || 0;
+                // Calcoli (logica invariata)
+                const sumContanti = conti?.reduce((acc, curr) => acc + curr.totale, 0) || 0;
+                const sumAltriImporti = contiAltriImporti?.reduce((acc, curr) => acc + curr.totale, 0) || 0;
+                const sumPos = contiPos?.reduce((acc, curr) => acc + curr.totale, 0) || 0;
 
-            let numCoperti = 0;
-            const consumazioni = await listConsumazioni(1, i + 1);
-            if (consumazioni) {
-                numCoperti = consumazioni.reduce((accumulator, cons) => {
-                    if (cons.id_piatto == 1)
-                        return accumulator + cons.quantita
-                    else
-                        return accumulator
-                }, 0);
-            }
+                const numCoperti = consumazioni?.reduce((acc, cons) => {
+                    return cons.id_piatto === 1 ? acc + cons.quantita : acc;
+                }, 0) || 0;
 
-            let numConti = 0;
-            if (conti) numConti += conti.length;
-            if (contiPos) numConti += contiPos.length;
-            if (contiAltriImporti) numConti += contiAltriImporti.length;
+                const numConti = (conti?.length || 0) + (contiPos?.length || 0) + (contiAltriImporti?.length || 0);
+                const totalIncassoGiorno = sumContanti + sumPos + sumAltriImporti;
 
-            const totalIncassoGiorno = sumContanti + sumPos + sumAltriImporti;
+                const mediaperconti = numConti > 0 ? totalIncassoGiorno / numConti : 0;
+                const mediacopertiperconto = numConti > 0 ? numCoperti / numConti : 0;
+                const mediapercoperto = numCoperti > 0 ? totalIncassoGiorno / numCoperti : 0;
 
-            let mediaperconti = 0;
-            let mediacopertiperconto = 0;
-            if (numConti > 0) {
-                mediaperconti = totalIncassoGiorno / numConti;
-                mediacopertiperconto = numCoperti / numConti;
-            }
+                return {
+                    giornata: GIORNATE[index],
+                    incasso: totalIncassoGiorno,
+                    incassopos: sumPos,
+                    conti: numConti,
+                    coperti: numCoperti,
+                    spesamediaperconti: mediaperconti,
+                    spesamediacoperto: mediapercoperto,
+                    mediacopertiperconto: mediacopertiperconto
+                };
+            })
+        );
 
-            let mediapercoperto = 0;
-            if (numCoperti > 0)
-                mediapercoperto = totalIncassoGiorno / numCoperti;
-
-            tempRows[i] = {
-                ...tempRows[i],
-                incasso: totalIncassoGiorno,
-                incassopos: sumPos,
-                conti: numConti,
-                coperti: numCoperti,
-                spesamediaperconti: mediaperconti,
-                spesamediacoperto: mediapercoperto,
-                mediacopertiperconto: mediacopertiperconto
-            };
-        }
-        setRecord(tempRows);
+        setRecord(results);
         setPhase('caricato');
     };
 
-    const incassiConPercentuali = record.map(item => {
-        const incassoContantiEffettivo = item.incasso - item.incassopos;
-        const totaleGiornalieroPerPercentuale = item.incasso;
+    // 5. Utilizzo di useMemo per evitare calcoli inutili ad ogni re-render
+    const incassiConPercentuali = useMemo(() => {
+        return record.map(item => {
+            const incassoContantiEffettivo = item.incasso - item.incassopos;
+            const totale = item.incasso;
 
-        return {
-            giornata: item.giornata,
-            incasso: incassoContantiEffettivo,
-            incassopos: item.incassopos,
-            percentualeIncasso: totaleGiornalieroPerPercentuale > 0 ? parseFloat(((incassoContantiEffettivo / totaleGiornalieroPerPercentuale) * 100).toFixed(2)) : 0,
-            percentualeIncassoPos: totaleGiornalieroPerPercentuale > 0 ? parseFloat(((item.incassopos / totaleGiornalieroPerPercentuale) * 100).toFixed(2)) : 0,
-        };
-    });
+            return {
+                giornata: item.giornata,
+                incasso: incassoContantiEffettivo,
+                incassopos: item.incassopos,
+                percentualeIncasso: totale > 0 ? parseFloat(((incassoContantiEffettivo / totale) * 100).toFixed(2)) : 0,
+                percentualeIncassoPos: totale > 0 ? parseFloat(((item.incassopos / totale) * 100).toFixed(2)) : 0,
+            };
+        });
+    }, [record]);
 
-    const isMobile = useMediaQuery('(max-width:600px)');
-    
-    if ((session?.user?.name == "SuperUser")) {
-        if (phase == 'caricamento') {
+    const { totaleIncassi, totalePos, totaleCoperti } = useMemo(() => {
+        return record.reduce(
+            (acc, curr) => ({
+                totaleIncassi: acc.totaleIncassi + curr.incasso,
+                totalePos: acc.totalePos + curr.incassopos,
+                totaleCoperti: acc.totaleCoperti + curr.coperti,
+            }),
+            { totaleIncassi: 0, totalePos: 0, totaleCoperti: 0 }
+        );
+    }, [record]);
+
+    if (session?.user?.name === "SuperUser") {
+        if (phase === 'caricamento') {
             return (
                 <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', alignItems: 'center', justifyContent: 'center', p: 3 }}>
                     <Typography variant="h4" sx={{ mb: 4 }}>Cruscotto di Sintesi</Typography>
@@ -161,14 +147,14 @@ export default function Page() {
                     <Typography variant="h5" sx={{ mt: 4 }}>Caricamento in corso ...</Typography>
                 </Box>
             );
-        } else if (phase == 'caricato') {
+        } else if (phase === 'caricato') {
             return (
                 <Box sx={{ 
                     display: 'flex', 
                     flexDirection: 'column', 
                     height: '100%', 
                     width: '100%', 
-                    overflowY: 'auto', // Permette lo scroll se il contenuto (tabella + grafico) eccede
+                    overflowY: 'auto',
                     p: { xs: 1, sm: 2 },
                     boxSizing: 'border-box'
                 }}>
@@ -215,25 +201,25 @@ export default function Page() {
                                         <TableCell rowSpan={3} />
                                         <TableCell colSpan={2} sx={{ fontWeight: 'bold' }}>Incasso totale</TableCell>
                                         <TableCell align="right" sx={{ fontWeight: 'bold', fontSize: '1.1rem' }}>
-                                            {record.reduce((a, c) => a + c.incasso, 0).toFixed(2)}&nbsp;&euro;
+                                            {totaleIncassi.toFixed(2)}&nbsp;&euro;
                                             <Typography variant="caption" display="block" sx={{ color: '#2589FE' }}>
-                                                POS: {record.reduce((a, c) => a + c.incassopos, 0).toFixed(2)}&nbsp;&euro;
+                                                POS: {totalePos.toFixed(2)}&nbsp;&euro;
                                             </Typography>
                                         </TableCell>
                                     </TableRow>
                                     <TableRow>
                                         <TableCell colSpan={2}>Coperti totali</TableCell>
                                         <TableCell align="right" sx={{ fontWeight: 'bold' }}>
-                                            {record.reduce((a, c) => a + c.coperti, 0)}
+                                            {totaleCoperti}
                                             <Typography variant="caption" display="block" sx={{ color: '#2589FE' }}>
-                                                Media: {(record.reduce((a, c) => a + c.coperti, 0) / record.length).toFixed(2)}
+                                                Media: {record.length > 0 ? (totaleCoperti / record.length).toFixed(2) : '0.00'}
                                             </Typography>
                                         </TableCell>
                                     </TableRow>
                                     <TableRow>
                                         <TableCell colSpan={2}>Spesa media a persona</TableCell>
                                         <TableCell align="right" sx={{ fontWeight: 'bold' }}>
-                                            {(record.reduce((a, c) => a + c.incasso, 0) / record.reduce((a, c) => a + c.coperti, 0)).toFixed(2)}&nbsp;&euro;
+                                            {totaleCoperti > 0 ? (totaleIncassi / totaleCoperti).toFixed(2) : '0.00'}&nbsp;&euro;
                                         </TableCell>
                                     </TableRow>
                                 </TableBody>

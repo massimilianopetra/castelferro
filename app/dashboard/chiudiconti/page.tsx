@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import type { DbConti, DbFiera } from '@/app/lib/definitions';
@@ -67,26 +67,29 @@ export default function Page() {
     const [customImporto, setCustomImporto] = useState('');
     const [customNota, setCustomNota] = useState('');
 
+    // --- ADATTAMENTO COLONNE RESPONSIVE ---
+    // Sostituito 'width' fisso con 'flex' e 'minWidth' per distribuire lo spazio in base allo schermo
     const columns: GridColDef[] = [
         {
             field: 'col1',
             headerName: 'N. Foglietto',
-            width: 100,
+            minWidth: 100,
+            flex: 1,
             renderCell: (params) => (
                 <Link href={`/dashboard/casse/${params.value}`} passHref className="text-blue-600 underline font-bold">
                     {params.value}
                 </Link>
             )
         },
-        { field: 'col2', headerName: 'Cameriere', width: 150 },
-        { field: 'col3', headerName: 'Stampato da', width: 130 },
-        { field: 'col4', headerName: 'Coperti', type: "number", width: 80 },
-        { field: 'col5', headerName: 'Totale (€)', type: "number", width: 100, valueFormatter: (params) => `${params} €` },
+        { field: 'col2', headerName: 'Cameriere', minWidth: 140, flex: 1.5 },
+        { field: 'col3', headerName: 'Stampato da', minWidth: 120, flex: 1.2 },
+        { field: 'col4', headerName: 'Coperti', type: "number", minWidth: 80, flex: 0.8 },
+        { field: 'col5', headerName: 'Totale (€)', type: "number", minWidth: 100, flex: 1, valueFormatter: (params) => `${params} €` },
         {
             field: 'col6',
             headerName: 'Modalità pagamento',
             minWidth: 320,
-            flex: 1,
+            flex: 3,
             headerAlign: 'center',
             align: 'center',
             renderCell: (params) => (
@@ -110,6 +113,26 @@ export default function Page() {
         },
     ];
 
+    // Funzione unica per formattare i dati dei conti (Evita duplicazione di logica)
+    const formatContiRows = useCallback((conti: any[]) => {
+        return conti.map((item) => ({
+            id: item.id,
+            col1: item.id_comanda,
+            col2: item.cameriere,
+            col3: deltanow(item.data_stampa),
+            col4: item.coperti,
+            col5: item.totale.toFixed(2),
+            col6: item.id_comanda,
+        }));
+    }, []);
+
+    const refreshData = useCallback(async (giornataCorrente: number) => {
+        const conti = await listContiPerChiusra(giornataCorrente);
+        if (conti) {
+            setRows(formatContiRows(conti));
+        }
+    }, [formatContiRows]);
+
     const handleIniziaAltroImporto = (row: any) => {
         setSelectedRow(row);
         setCustomImporto('');
@@ -129,33 +152,28 @@ export default function Page() {
 
         const savedPrinterIp = localStorage.getItem('sagra_printer_ip');
         if (!savedPrinterIp) {
-            // Sostituito l'alert con l'apertura del Dialog di Material-UI
             setOpenPrinterWarning(true);
         }
 
         try {
-            // 1. Operazioni DB (Vengono eseguite sempre, la logica non si blocca)
-            await chiudiConto(Number(nFoglietto), sagra.giornata, tipo, nota, importoFinale);
-            await writeLog(Number(nFoglietto), sagra.giornata, 'Casse', session?.user?.name || '', 'CLOSE', logMsg);
+            // OPTIMIZATION: Eseguiamo chiusura conto e scrittura log in parallelo (Promise.all)
+            // Invece di attendere due round-trip sequenziali sul DB, dimezziamo il tempo di attesa.
+            await Promise.all([
+                chiudiConto(Number(nFoglietto), sagra.giornata, tipo, nota, importoFinale),
+                writeLog(Number(nFoglietto), sagra.giornata, 'Casse', session?.user?.name || '', 'CLOSE', logMsg)
+            ]);
 
-            // Eseguiamo la chiamata di stampa e mostriamo il caricamento solo se la stampante è configurata
             if (savedPrinterIp) {
-                // 2. Attivazione overlay caricamento
                 setIsPrinting(true);
-
-                // 3. Invocazione stampa (attendiamo la risposta della fetch)
                 await inviaStampaPassDiretto(nFoglietto, coperti);
-
-                // 4. Fine caricamento
                 setIsPrinting(false);
             }
 
-            // 5. Refresh dei dati a schermo
-            await refreshData();
+            await refreshData(sagra.giornata);
         } catch (error) {
             console.error("Errore durante la chiusura:", error);
             setIsPrinting(false);
-            await refreshData();
+            await refreshData(sagra.giornata);
         }
     };
 
@@ -168,10 +186,7 @@ export default function Page() {
 
     const inviaStampaPassDiretto = async (numeroFoglietto: number, coperti: number) => {
         const savedPrinterIp = localStorage.getItem('sagra_printer_ip');
-
-        if (!savedPrinterIp) {
-            return;
-        }
+        if (!savedPrinterIp) return;
 
         try {
             return await fetch('/api/print', {
@@ -190,46 +205,20 @@ export default function Page() {
         }
     };
 
-    const refreshData = async () => {
-        const conti = await listContiPerChiusra(sagra.giornata);
-        if (conti) {
-            const cc = conti.map((item) => ({
-                id: item.id,
-                col1: item.id_comanda,
-                col2: item.cameriere,
-                col3: deltanow(item.data_stampa),
-                col4: item.coperti,
-                col5: item.totale.toFixed(2),
-                col6: item.id_comanda,
-            }));
-            setRows(cc);
-        }
-    };
-
     useEffect(() => {
-        fetchData();
-    }, []);
-
-    const fetchData = async () => {
-        const gg = await getGiornoSagra();
-        if (gg) {
-            setSagra(gg);
-            const conti = await listContiPerChiusra(gg.giornata);
-            if (conti) {
-                const cc = conti.map((item) => ({
-                    id: item.id,
-                    col1: item.id_comanda,
-                    col2: item.cameriere,
-                    col3: deltanow(item.data_stampa),
-                    col4: item.coperti,
-                    col5: item.totale.toFixed(2),
-                    col6: item.id_comanda,
-                }));
-                setRows(cc);
+        const fetchData = async () => {
+            const gg = await getGiornoSagra();
+            if (gg) {
+                setSagra(gg);
+                const conti = await listContiPerChiusra(gg.giornata);
+                if (conti) {
+                    setRows(formatContiRows(conti));
+                }
+                setPhase('caricato');
             }
-            setPhase('caricato');
-        }
-    }
+        };
+        fetchData();
+    }, [formatContiRows]);
 
     // --- LOGICA OVERLAY STAMPA ---
     if (isPrinting) {
@@ -263,7 +252,7 @@ export default function Page() {
                     sx={{ mt: 4, borderRadius: '9999px', px: 4 }}
                     onClick={() => {
                         setIsPrinting(false);
-                        refreshData();
+                        refreshData(sagra.giornata);
                     }}
                 >
                     Annulla attesa e prosegui
@@ -273,7 +262,7 @@ export default function Page() {
     }
 
     if (!((session?.user?.name == "Casse") || (session?.user?.name == "SuperUser"))) {
-        return <Box sx={{ p: 4 }}><Alert severity="error">Accesso Negato 2</Alert></Box>;
+        return <Box sx={{ p: 4 }}><Alert severity="error">Accesso Negato (CHIUDICONTI)</Alert></Box>;
     }
 
     if (sagra.stato == 'CHIUSA') {

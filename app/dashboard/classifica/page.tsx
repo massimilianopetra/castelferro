@@ -89,7 +89,7 @@ export default function ClassificaCamerieriPage() {
                 <div className="flex flex-wrap flex-col">
                     <div className='text-center '>
                         <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
-                            <span className="text-xl font-semibold">Accesso Negato 3</span>
+                            <span className="text-xl font-semibold">Accesso Negato (CLASSIFICA)</span>
                         </div>
                     </div>
                 </div>
