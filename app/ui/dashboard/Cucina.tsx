@@ -581,7 +581,7 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
                                     Stima coperti da servire: <b className="text-blue-700" style={{ fontSize: '1.3rem', marginLeft: '4px' }}>{copertiInAttesa}</b>
                                 </Typography>
                                 <Typography variant="caption" sx={{ color: '#555', display: 'block', mt: 0.5 }}>
-                                    Formula: ({dettaglioCoperti.seduti} + {dettaglioCoperti.nonseduti_incoda}) - {dettaglioCoperti.serviti } = (tot.seduti + in coda) - tot.serviti
+                                ({dettaglioCoperti.seduti} + {dettaglioCoperti.nonseduti_incoda}) - {dettaglioCoperti.serviti } = (tot.seduti + in coda) - tot.serviti
                                 </Typography>
                             </Box>
                             <Typography variant="caption" sx={{ mb: 0.5, textTransform: 'uppercase', fontSize: '0.65rem', color: 'gray', fontWeight: 'bold', display: 'block', flexShrink: 0 }}>
