@@ -60,7 +60,8 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
     const [numero, setNumero] = useState<number | string>('');
     const [numeroFoglietto, setNumeroFoglietto] = useState<number | string>('');
     const [sagra, setSagra] = useState<DbFiera>({ id: 1, giornata: 1, stato: 'CHIUSA' });
-    const [conto, setConto] = useState<DbConti>();
+    const [conto, setConto] = useState<DbConti>(); // <-- RIPRISTINATO QUI!
+    const [isSagraLoading, setIsSagraLoading] = useState(true); // <-- STATO AGGIUNTO PER EVITARE IL LAMPO INIZIALE
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [openPopup, setOpenPopup] = useState(false);
     const [showAlternateView, setShowAlternateView] = useState(false);
@@ -87,9 +88,15 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
 
     useEffect(() => {
         const fetchData = async () => {
-            const gg = await getGiornoSagra();
-            if (gg) {
-                setSagra(gg);
+            try {
+                const gg = await getGiornoSagra();
+                if (gg) {
+                    setSagra(gg);
+                }
+            } catch (error) {
+                console.error("Errore nel recupero dello stato della sagra:", error);
+            } finally {
+                setIsSagraLoading(false); // <-- STOP AL CARICAMENTO DELLA GIORNATA
             }
         };
         fetchData();
@@ -425,6 +432,26 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
             );
         return null;
     };
+
+    // --- SCHERMATA DI CARICAMENTO INIZIALE STATO SAGRA ---
+    if (isSagraLoading) {
+        return (
+            <main>
+                <Box sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: '80vh',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                }}>
+                    <CircularProgress size="6rem" />
+                    <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold', color: 'text.secondary' }}>
+                        Verifica stato apertura giornata sagra
+                    </Typography>
+                </Box>
+            </main>
+        );
+    }
 
     if ((user || "" == nomeCucina) || (user == "SuperUser")) {
         if (sagra.stato == 'CHIUSA') {

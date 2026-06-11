@@ -51,6 +51,9 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   const [isPrinting, setIsPrinting] = useState(false);
   const [openDialogQty, setOpenDialogQty] = useState(false);
 
+  // NUOVO STATO PER IL CARICAMENTO INIZIALE
+  const [isSagraLoading, setIsSagraLoading] = useState(true);
+
   // STATO PER IL DIALOG DI CONFERMA NUOVO CONTO
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 
@@ -69,6 +72,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       if (isNaN(num) || num < 1 || num > 9999) {
         setSnackbarMessage("Il foglietto non è gestibile.");
         setOpenSnackbar(true);
+        setIsSagraLoading(false);
         return;
       }
 
@@ -76,7 +80,10 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
       try {
         const data = await getInizializzazioneCassa(num);
-        if (!data) return;
+        if (!data) {
+          setIsSagraLoading(false);
+          return;
+        }
 
         const { gg, cc, c, log } = data;
 
@@ -96,16 +103,21 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         if (!cc || !cc.stato || cc.stato === 'NUOVO') {
           setIsNewConto(true);
           setOpenConfirmDialog(true);
+          setIsSagraLoading(false);
           return;
         }
 
         setIsNewConto(false);
         if (['CHIUSO', 'CHIUSOPOS', 'CHIUSOALTRO'].includes(cc.stato)) {
           setPhase('chiuso');
+          setIsSagraLoading(false);
           return;
         }
 
         setPhase(cc.stato === 'APERTO' ? 'aperto' : 'stampato');
+        
+        // Spegniamo il loader prima di attendere la scrittura del log per accorciare i tempi della UI
+        setIsSagraLoading(false);
 
         if (cc.stato === 'APERTO') {
           await writeLog(num, gg.giornata, 'Casse', '', 'OPEN', 'Apertura conto');
@@ -113,6 +125,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
       } catch (error) {
         console.error("Errore:", error);
+        setIsSagraLoading(false);
       }
     };
 
@@ -454,6 +467,17 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     </div>
   );
 
+  // 1. ROTELLA DI CARICAMENTO DURANTE L'INIZIALIZZAZIONE DELLA PAGINA
+  if (isSagraLoading) {
+    return (
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', alignItems: 'center', justifyContent: 'center' }}>
+        <CircularProgress size="4rem" />
+        <Typography variant="h6" sx={{ mt: 2, color: 'text.secondary' }}>Caricamento in corso...</Typography>
+      </Box>
+    );
+  }
+
+  // 2. ERRORE MOSTRATO SOLO SE DOPO IL CARICAMENTO LA GIORNATA È EFFETTIVAMENTE CHIUSA
   if (sagra.stato === 'CHIUSA' && (session?.user?.name === "Casse" || session?.user?.name === "SuperUser")) {
     return (
       <main><div className="p-4 mb-4 text-xl text-yellow-800 rounded-lg bg-yellow-50 text-center">
@@ -486,8 +510,6 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           {activePrinterIp ? `IP Stampante: ${activePrinterIp}` : 'Nessuna stampante configurata'}
         </Typography>
         <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}> Se annulli comunque i pass risulteranno  regolarmente distribuiti</Typography>
-
-
 
         <Button variant="contained" color="error" size="large" sx={{ mt: 4, borderRadius: '9999px', px: 4 }}
           onClick={() => { setIsPrinting(false); setPhase('chiuso'); }}>
@@ -619,12 +641,9 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 <footer className="bottom-section">
                   {phase === 'chiuso' && (
                     <Button variant="contained" className="rounded-full" onClick={async () => {
-                      setPhase('elaborazione'); // Impedisce click multipli e mostra loader
+                      setPhase('elaborazione');
                       try {
-                        // 1. Riapre il conto sul Database
                         await riapriConto(conto!.id_comanda, sagra.giornata);
-
-                        // 2. Sincronizza lo stato locale scaricando i dati freschi (Risolve il baco)
                         const data = await getInizializzazioneCassa(Number(numeroFoglietto));
                         if (data) {
                           setConto(data.cc);
