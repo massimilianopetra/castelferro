@@ -364,7 +364,7 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
             return (
                 <div className='text-center'>
                     <p className="text-5xl py-4">Cucina</p>
-                    <CircularProgress size="9rem" color="success" />
+                    <CircularProgress size="9rem" />
                     <p className="text-5xl py-4">Invio dati in corso ...</p>
                 </div>
             );

@@ -468,12 +468,16 @@ export async function getStatoContiStats(giornata: number) {
               data DESC
           ) as rn
         FROM logger
-        WHERE giornata = ${giornata} AND LOWER(cucina) IN ('antipasti', 'primi', 'secondi', 'dolci', 'bevande', 'birre', 'casse')
+        WHERE giornata = ${giornata} 
+          AND foglietto >= 10 -- <-- ESCLUDE I FOGLIETTI DA 1 A 9
+          AND LOWER(cucina) IN ('antipasti', 'primi', 'secondi', 'dolci', 'bevande', 'birre', 'casse')
       ),
       ContiAttivi AS (
         SELECT id_comanda, stato
         FROM conti
-        WHERE giorno = ${giornata} AND stato IN ('APERTO', 'STAMPATO')
+        WHERE giorno = ${giornata} 
+          AND id_comanda >= 10 -- <-- ESCLUDE I FOGLIETTI DA 1 A 9
+          AND stato IN ('APERTO', 'STAMPATO')
       )
       SELECT
         COUNT(c.id_comanda)::int AS totale,
@@ -489,7 +493,7 @@ export async function getStatoContiStats(giornata: number) {
       LEFT JOIN PrioritaPassaggi u ON c.id_comanda = u.foglietto AND u.rn = 1;
     `;
     const result = await executeQuery<any>(query);
-    return result?.[0] || { totale: 0, stampati: 0, antipasti: 0, primi: 0, secondi: 0, dolci: 0, bevande: 0, birre: 0 };
+    return result?.[0] || { totale: 0, stampati: 0, antipasti: 0, primi: 0, secondi: 0, dolci: 0, bevande: 0, birre: 0, casse: 0 };
   } catch (error) {
     console.error("Errore in getStatoContiStats:", error);
     return null;
