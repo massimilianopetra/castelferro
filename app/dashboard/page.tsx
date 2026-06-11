@@ -15,6 +15,9 @@ export default function Page() {
           <div className="text-center">
             <div className="flex items-baseline gap-2 py-4">
               <p className="text-5xl">Home Castelferro</p>
+              <p className="text-[9px] text-[#22222] lg:mt-1 lg:text-[15px] font-bold italic">
+                  v.39
+                </p>
               {/* Aggiunta del nome utente */}
               {session?.user?.name && (
                 <p className="text-[7px] text-[#1976d2] lg:mt-1 lg:text-[15px] font-bold italic">
