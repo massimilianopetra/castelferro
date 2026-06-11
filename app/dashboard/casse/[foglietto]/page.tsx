@@ -471,8 +471,10 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   if (isSagraLoading) {
     return (
       <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', alignItems: 'center', justifyContent: 'center' }}>
-        <CircularProgress size="4rem" />
-        <Typography variant="h6" sx={{ mt: 2, color: 'text.secondary' }}>Caricamento in corso...</Typography>
+        <CircularProgress size="6rem" />
+        <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold', color: 'text.secondary' }}>
+          Verifica stato apertura giornata sagra (CASSE)
+        </Typography>
       </Box>
     );
   }

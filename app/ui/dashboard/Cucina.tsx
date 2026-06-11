@@ -94,7 +94,7 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
                     setSagra(gg);
                 }
             } catch (error) {
-                console.error("Errore nel recupero dello stato della sagra:", error);
+                console.error("Errore nel recupero dello stato della sagra - cucine:", error);
             } finally {
                 setIsSagraLoading(false); // <-- STOP AL CARICAMENTO DELLA GIORNATA
             }
@@ -446,7 +446,7 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
                 }}>
                     <CircularProgress size="6rem" />
                     <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold', color: 'text.secondary' }}>
-                        Verifica stato apertura giornata sagra
+                        Verifica stato apertura giornata sagra (CUCINE)
                     </Typography>
                 </Box>
             </main>
