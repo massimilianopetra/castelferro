@@ -470,8 +470,16 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   // 1. ROTELLA DI CARICAMENTO DURANTE L'INIZIALIZZAZIONE DELLA PAGINA
   if (isSagraLoading) {
     return (
-      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw', alignItems: 'center', justifyContent: 'center' }}>
-        <CircularProgress size="6rem" />
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100vh',
+          width: '100%', // Evita scrollbar orizzontali indesiderate
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >  <CircularProgress size="6rem" />
         <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold', color: 'text.secondary' }}>
           Verifica stato apertura giornata sagra (CASSE)
         </Typography>

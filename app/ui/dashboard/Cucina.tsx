@@ -234,52 +234,62 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
             return;
         }
 
-        // Se invece il conto è NUOVO ma ha portate valide, lo apriamo sul DB adesso.
-        if (isNewConto) {
-            await apriConto(Number(numeroFoglietto), sagra.giornata, conto?.cameriere || 'Sconosciuto');
-            await writeLog(Number(numeroFoglietto), sagra.giornata, nomeCucina, '', 'START', '');
-            setIsNewConto(false);
+        // Impostiamo la fase di invio in corso per mostrare lo spinner
+        setPhase('invio_in_corso');
+
+        try {
+            // Se invece il conto è NUOVO ma ha portate valide, lo apriamo sul DB adesso.
+            if (isNewConto) {
+                await apriConto(Number(numeroFoglietto), sagra.giornata, conto?.cameriere || 'Sconosciuto');
+                await writeLog(Number(numeroFoglietto), sagra.giornata, nomeCucina, '', 'START', '');
+                setIsNewConto(false);
+            }
+
+            // Se siamo arrivati qui, significa che:
+            // - O il conto era nuovo e aveva piatti validi (quindic l'abbiamo aperto sopra)
+            // - O il conto esisteva già (e quindi anche se lo azzeri del tutto, procediamo a salvare gli zeri sul DB)
+            let gc = await getConto(Number(numeroFoglietto), sagra.giornata);
+
+            if (gc?.stato !== "APERTO") {
+                setPhase('bloccato');
+                return;
+            }
+
+            // Prepariamo i log delle variazioni di quantità
+            const logPromises = products
+                .map(item => {
+                    const orig = iniProducts.find(o => o.id_piatto === item.id_piatto);
+                    const origQuantita = orig ? orig.quantita : 0;
+                    if (item.quantita === origQuantita) return null;
+
+                    const message = item.quantita > origQuantita
+                        ? `Aggiunti: ${item.quantita - origQuantita} ${item.piatto}`
+                        : `Eliminati: ${origQuantita - item.quantita} ${item.piatto}`;
+
+                    return writeLog(item.id_comanda, sagra.giornata, nomeCucina, '', 'UPDATE', message);
+                })
+                .filter((p): p is Promise<any> => p !== null);
+
+            // Inviamo l'aggiornamento (comprese le quantità azzerate) al database
+            await Promise.all([
+                ...logPromises,
+                sendConsumazioni(products)
+            ]);
+
+            await updateTotaleConto(Number(numeroFoglietto), sagra.giornata);
+
+            const logs = await getLastLog(sagra.giornata, nomeCucina);
+            if (logs) setLastLog(logs);
+
+            setPhase('inviato');
+            setProducts([]);
+            setIniProducts([]);
+        } catch (error) {
+            console.error("Errore durante l'invio delle consumazioni:", error);
+            setSnackbarMessage("Errore durante l'invio dei dati al server.");
+            setOpenSnackbar(true);
+            setPhase('caricato'); // Ripristina la tabella in caso di errore
         }
-
-        // Se siamo arrivati qui, significa che:
-        // - O il conto era nuovo e aveva piatti validi (quindic l'abbiamo aperto sopra)
-        // - O il conto esisteva già (e quindi anche se lo azzeri del tutto, procediamo a salvare gli zeri sul DB)
-        let gc = await getConto(Number(numeroFoglietto), sagra.giornata);
-
-        if (gc?.stato !== "APERTO") {
-            setPhase('bloccato');
-            return;
-        }
-
-        // Prepariamo i log delle variazioni di quantità
-        const logPromises = products
-            .map(item => {
-                const orig = iniProducts.find(o => o.id_piatto === item.id_piatto);
-                const origQuantita = orig ? orig.quantita : 0;
-                if (item.quantita === origQuantita) return null;
-
-                const message = item.quantita > origQuantita
-                    ? `Aggiunti: ${item.quantita - origQuantita} ${item.piatto}`
-                    : `Eliminati: ${origQuantita - item.quantita} ${item.piatto}`;
-
-                return writeLog(item.id_comanda, sagra.giornata, nomeCucina, '', 'UPDATE', message);
-            })
-            .filter((p): p is Promise<any> => p !== null);
-
-        // Inviamo l'aggiornamento (comprese le quantità azzerate) al database
-        await Promise.all([
-            ...logPromises,
-            sendConsumazioni(products)
-        ]);
-
-        await updateTotaleConto(Number(numeroFoglietto), sagra.giornata);
-
-        const logs = await getLastLog(sagra.giornata, nomeCucina);
-        if (logs) setLastLog(logs);
-
-        setPhase('inviato');
-        setProducts([]);
-        setIniProducts([]);
     };
 
 
@@ -347,6 +357,15 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
                     <p className="text-5xl py-4">Cucina</p>
                     <CircularProgress size="9rem" />
                     <p className="text-5xl py-4">Caricamento in corso ...</p>
+                </div>
+            );
+
+        if (phase === 'invio_in_corso')
+            return (
+                <div className='text-center'>
+                    <p className="text-5xl py-4">Cucina</p>
+                    <CircularProgress size="9rem" color="success" />
+                    <p className="text-5xl py-4">Invio dati in corso ...</p>
                 </div>
             );
 
@@ -470,7 +489,7 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
             return (
                 <main>
                     <div className="container_cucine">
-                        {phase !== 'caricato' && phase !== 'modificaquantita' ? (
+                        {phase !== 'caricato' && phase !== 'modificaquantita' && phase !== 'invio_in_corso' ? (
                             <header className="header_cucine_sup">
                                 <div className="p-30 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
                                     <ul className="flex" style={{ borderRadius: '9999px' }}>
@@ -509,7 +528,7 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
                             </header>
                         ) : null}
 
-                        {phase !== 'caricato' && phase !== 'modificaquantita' ? (
+                        {phase !== 'caricato' && phase !== 'modificaquantita' && phase !== 'invio_in_corso' ? (
                             <header className="header_cucine_inf">
                                 <div className="z-0 xl:text-3xl font-extralight xl:text-end lg:text-3xl lg:py-2 lg:text-center">
                                     {showAlternateView ? (
@@ -552,22 +571,25 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
                                                     </span>
                                                 ))}
                                                 <Button size="small" color="secondary" className="font-semibold rounded-full" variant="outlined" style={{ borderRadius: '9999px' }} onClick={handleButtonClickCaricaConto1}>Camerieri</Button>
-                                            </ButtonGroup>
+                                             </ButtonGroup>
                                         </div>
                                     )}
                                 </div>
                             </header>
                         ) : (
-                            <div className="flex justify-between items-center w-full">
-                                <div className="flex space-x-8">
-                                    <p className="z-0 text-xl lg:text-3xl font-extralight">
-                                        Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}</span>
-                                    </p>
-                                    <p className="z-0 text-xl lg:text-3xl font-extralight">
-                                        Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}</span>
-                                    </p>
+                            // Mostriamo i dettagli del conto solo se siamo in modalità "caricato" e non durante il loader di invio
+                            phase === 'caricato' && (
+                                <div className="flex justify-between items-center w-full">
+                                    <div className="flex space-x-8">
+                                        <p className="z-0 text-xl lg:text-3xl font-extralight">
+                                            Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere}</span>
+                                        </p>
+                                        <p className="z-0 text-xl lg:text-3xl font-extralight">
+                                            Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}</span>
+                                        </p>
+                                    </div>
                                 </div>
-                            </div>
+                            )
                         )}
 
                         <div className="mainContent_cucine_p">{renderPhaseContent()}</div>
