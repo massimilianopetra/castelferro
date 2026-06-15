@@ -210,8 +210,18 @@ export default function Chiama() {
         });
     }, [lista, order, orderBy]);
 
-    // --- GESTORI AZIONI ---
+// --- GESTORI AZIONI ---
     const handleChiamaTicket = async (ticket: any) => {
+        // [MODIFICA/CHIAMA] Controllo se il numero c'è o se è impostato a 100
+        if (!ticket || !ticket.id || ticket.caricato === 100) {
+            setSnackbar({
+                open: true,
+                message: "Impossibile chiamare il ticket: il numero è inesistente o è stato annullato (Codice 100).",
+                severity: 'error'
+            });
+            return;
+        }
+
         try {
             setChiamatiMemory(prev => new Set(prev).add(ticket.id));
             setNumeroAttuale(ticket.id);
@@ -228,7 +238,17 @@ export default function Chiama() {
         }
     };
 
-    const handleSiediTicket = async (ticket: any) => {
+const handleSiediTicket = async (ticket: any) => {
+        // [UNISCI/ENTRA] Controllo se il numero c'è o se è impostato a 100
+        if (!ticket || !ticket.id || ticket.caricato === 100) {
+            setSnackbar({
+                open: true,
+                message: "Impossibile far entrare il ticket: numero mancante o record annullato (Codice 100).",
+                severity: 'error'
+            });
+            return;
+        }
+
         try {
             setLista(prev => prev.filter(t => t.id !== ticket.id));
             await updateTickets({ ...ticket, seduto: 1, data_chiamato: ticket.data_chiamato || Date.now() });
@@ -245,8 +265,20 @@ export default function Chiama() {
         }
     };
 
-    const handleConfirmDelete = async () => {
+const handleConfirmDelete = async () => {
         if (!selectedTicket) return;
+
+        // [ELIMINA] Controllo se il numero c'è o se è già stato impostato a 100
+        if (!selectedTicket.id || selectedTicket.caricato === 100) {
+            setSnackbar({
+                open: true,
+                message: "Impossibile eliminare: il ticket non esiste o risulta già annullato con Codice 100.",
+                severity: 'error'
+            });
+            setOpenDeleteDialog(false);
+            return;
+        }
+
         try {
             const idDaRimuovere = selectedTicket.id;
             setLista(prev => prev.filter(t => t.id !== idDaRimuovere));
@@ -260,6 +292,12 @@ export default function Chiama() {
                 body: JSON.stringify({ type: 'REFRESH_TABLE' }),
             });
             if (isAuthorizedUser) caricaStatistiche();
+            
+            setSnackbar({
+                open: true,
+                message: `Ticket ${idDaRimuovere} eliminato correttamente (Annullato con codice 100).`,
+                severity: 'success'
+            });
         } catch (error) {
             console.error(error);
             fetchDati();

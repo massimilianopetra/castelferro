@@ -313,12 +313,17 @@ export default function DistributorePage() {
         }
     };
 
-    const handleModifica = async () => {
+const handleModifica = async () => {
         const targetId = Number(modTicketId);
         const nuoviCoperti = Number(modCoperti);
 
+        // Controllo se il numero non c'è o non è valido
         if (!modTicketId || targetId <= 0) {
-            setSnackbar({ open: true, message: "Il numero del ticket deve essere positivo", severity: 'warning' });
+            setSnackbar({ 
+                open: true, 
+                message: "Impossibile modificare: inserire un numero di ticket valido.", 
+                severity: 'error' 
+            });
             return;
         }
         if (!modCoperti || nuoviCoperti <= 0) {
@@ -329,13 +334,23 @@ export default function DistributorePage() {
         setLoading(true);
         try {
             const ticketEsistente = await getTicketById(targetId);
+            
+            // Controllo se il ticket non esiste sul DB o se è annullato (Codice 100)
             if (!ticketEsistente) {
-                setSnackbar({ open: true, message: `Il TICKET ${targetId} non esiste`, severity: 'warning' });
+                setSnackbar({ 
+                    open: true, 
+                    message: `Operazione fallita: Il TICKET N° ${targetId} non esiste a sistema.`, 
+                    severity: 'error' 
+                });
                 setLoading(false);
                 return;
             }
             if (ticketEsistente.caricato === 100) {
-                setSnackbar({ open: true, message: `Il TICKET ${targetId} è stato eliminato`, severity: 'warning' });
+                setSnackbar({ 
+                    open: true, 
+                    message: `Impossibile modificare il TICKET N° ${targetId}: il record è stato annullato (Codice 100).`, 
+                    severity: 'error' 
+                });
                 setLoading(false);
                 return;
             }
@@ -358,21 +373,36 @@ export default function DistributorePage() {
     const handleElimina = async () => {
         const idDaEliminare = Number(eliminaTicketId);
 
+        // Controllo se il numero non c'è o non è valido
         if (!eliminaTicketId || idDaEliminare <= 0) {
-            setSnackbar({ open: true, message: "Il numero del ticket deve essere positivo", severity: 'warning' });
+            setSnackbar({ 
+                open: true, 
+                message: "Impossibile eliminare: inserire un numero di ticket valido.", 
+                severity: 'error' 
+            });
             return;
         }
 
         setLoading(true);
         try {
             const ticketEsistente = await getTicketById(idDaEliminare);
+            
+            // Controllo se il ticket non esiste sul DB o se è già annullato (Codice 100)
             if (!ticketEsistente) {
-                setSnackbar({ open: true, message: `Il TICKET ${idDaEliminare} non esiste`, severity: 'warning' });
+                setSnackbar({ 
+                    open: true, 
+                    message: `Operazione fallita: Il TICKET N° ${idDaEliminare} non esiste a sistema.`, 
+                    severity: 'error' 
+                });
                 setLoading(false);
                 return;
             }
             if (ticketEsistente.caricato === 100) {
-                setSnackbar({ open: true, message: `Il TICKET ${idDaEliminare} è stato eliminato`, severity: 'warning' });
+                setSnackbar({ 
+                    open: true, 
+                    message: `Il TICKET N° ${idDaEliminare} risulta già annullato (Codice 100).`, 
+                    severity: 'error' 
+                });
                 setLoading(false);
                 return;
             }
@@ -383,7 +413,7 @@ export default function DistributorePage() {
 
             setLastEntry({ type: 'ELIMINATO', numero: idDaEliminare });
             await notificaCambioTabella();
-            setSnackbar({ open: true, message: `Ticket ${idDaEliminare} eliminato con successo`, severity: 'success' });
+            setSnackbar({ open: true, message: `Ticket ${idDaEliminare} eliminato con successo (Codice 100)`, severity: 'success' });
         } catch (e) {
             setSnackbar({ open: true, message: "Errore durante l'eliminazione del ticket", severity: 'error' });
         }
@@ -394,8 +424,13 @@ export default function DistributorePage() {
         const id1 = Number(unisciTicket1);
         const id2 = Number(unisciTicket2);
 
+        // Controllo se uno o entrambi i numeri di ticket mancano o sono negativi
         if (!unisciTicket1 || id1 <= 0 || !unisciTicket2 || id2 <= 0) {
-            setSnackbar({ open: true, message: "Entrambi i numeri di ticket inseriti devono essere positivi", severity: 'warning' });
+            setSnackbar({ 
+                open: true, 
+                message: "Impossibile unire: assicurati di aver inserito correttamente entrambi i numeri di ticket.", 
+                severity: 'error' 
+            });
             return;
         }
 
@@ -406,21 +441,24 @@ export default function DistributorePage() {
 
             let messaggiErrore: string[] = [];
 
+            // Analisi parlante per Ticket 1
             if (!tA) {
-                messaggiErrore.push(`il TICKET ${id1} non esiste`);
+                messaggiErrore.push(`il TICKET N° ${id1} non esiste`);
             } else if (tA.caricato === 100) {
-                messaggiErrore.push(`il TICKET ${id1} è stato eliminato`);
+                messaggiErrore.push(`il TICKET N° ${id1} è annullato (Codice 100)`);
             }
 
+            // Analisi parlante per Ticket 2
             if (!tB) {
-                messaggiErrore.push(`il TICKET ${id2} non esiste`);
+                messaggiErrore.push(`il TICKET N° ${id2} non esiste`);
             } else if (tB.caricato === 100) {
-                messaggiErrore.push(`il TICKET ${id2} è stato eliminato`);
+                messaggiErrore.push(`il TICKET N° ${id2} è annullato (Codice 100)`);
             }
 
+            // Se ci sono errori bloccanti su uno o entrambi i record, mostra il riepilogo
             if (messaggiErrore.length > 0) {
-                const messaggioFinale = messaggiErrore.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join(' e ');
-                setSnackbar({ open: true, message: messaggioFinale, severity: 'warning' });
+                const messaggioFinale = "Impossibile unire: " + messaggiErrore.map(m => m.charAt(0).toUpperCase() + m.slice(1)).join(' e ');
+                setSnackbar({ open: true, message: messaggioFinale, severity: 'error' });
                 setLoading(false);
                 return;
             }
@@ -441,7 +479,7 @@ export default function DistributorePage() {
                 setLastEntry({ type: 'TICKET', numero: ticketBasso.id, coperti: nuoviCoperti });
                 await notificaCambioTabella();
                 await eseguiStampaFisica(ticketBasso.id, nuoviCoperti);
-                setSnackbar({ open: true, message: `Ticket uniti sul N° ${ticketBasso.id} con ${nuoviCoperti} coperti totali`, severity: 'success' });
+                setSnackbar({ open: true, message: `Ticket uniti sul N° ${ticketBasso.id} con ${nuoviCoperti} coperti totali. Ticket ${ticketAlto.id} annullato.`, severity: 'success' });
             }
         } catch (e) {
             setSnackbar({ open: true, message: "Errore durante l'unione dei ticket", severity: 'error' });
