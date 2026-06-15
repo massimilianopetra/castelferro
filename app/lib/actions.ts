@@ -346,24 +346,33 @@ export async function getNextTickets(): Promise<number> {
   }
 }
 
-
 export async function getFirstFreeTicket(): Promise<number> {
   try {
-    // Aggiungiamo la condizione 'AND caricato != 100' per escludere quelli terminati (100 è il valore che gli do quando li cancello da CHIAMA)
+    // 1. Cerchiamo il primo "buco" nei ticket escludendo quelli annullati (caricato = 100)
     const result = await executeQuery<{ freeId: number }>(`
       SELECT MIN(t1.id + 1) AS "freeId"
       FROM tickets t1
-      LEFT JOIN tickets t2 ON t1.id + 1 = t2.id
+      LEFT JOIN tickets t2 ON t1.id + 1 = t2.id AND t2.caricato != 100
       WHERE t2.id IS NULL AND t1.caricato != 100
     `);
     
-    const firstGap = result?.[0]?.freeId;
+    let firstGap = result?.[0]?.freeId;
     
-    // Verifica se il ticket 1 esiste e non è caricato 100
+    // 2. Verifica se il ticket 1 esiste ed è valido
     const checkOne = await executeQuery(`SELECT id FROM tickets WHERE id = 1 AND caricato != 100`);
-    
     if (!checkOne || checkOne.length === 0) return 1;
-    return firstGap ? Number(firstGap) : 1;
+
+    let ticketDaAssegnare = firstGap ? Number(firstGap) : 1;
+
+    // 3. Controllo di sicurezza: se il numero calcolato esiste ancora come record a 100, 
+    // incrementiamo finché non troviamo un ID veramente libero dall'inserimento
+    let checkDuplicate = await executeQuery(`SELECT id FROM tickets WHERE id = ${ticketDaAssegnare}`);
+    while (checkDuplicate && checkDuplicate.length > 0) {
+      ticketDaAssegnare++;
+      checkDuplicate = await executeQuery(`SELECT id FROM tickets WHERE id = ${ticketDaAssegnare}`);
+    }
+
+    return ticketDaAssegnare;
   } catch (error) {
     return 1;
   }
