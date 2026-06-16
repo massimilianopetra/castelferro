@@ -210,7 +210,7 @@ export default function Chiama() {
         });
     }, [lista, order, orderBy]);
 
-// --- GESTORI AZIONI ---
+    // --- GESTORI AZIONI ---
     const handleChiamaTicket = async (ticket: any) => {
         // [MODIFICA/CHIAMA] Controllo se il numero c'è o se è impostato a 100
         if (!ticket || !ticket.id || ticket.caricato === 100) {
@@ -238,7 +238,7 @@ export default function Chiama() {
         }
     };
 
-const handleSiediTicket = async (ticket: any) => {
+    const handleSiediTicket = async (ticket: any) => {
         // [UNISCI/ENTRA] Controllo se il numero c'è o se è impostato a 100
         if (!ticket || !ticket.id || ticket.caricato === 100) {
             setSnackbar({
@@ -265,7 +265,7 @@ const handleSiediTicket = async (ticket: any) => {
         }
     };
 
-const handleConfirmDelete = async () => {
+    const handleConfirmDelete = async () => {
         if (!selectedTicket) return;
 
         // [ELIMINA] Controllo se il numero c'è o se è già stato impostato a 100
@@ -292,7 +292,7 @@ const handleConfirmDelete = async () => {
                 body: JSON.stringify({ type: 'REFRESH_TABLE' }),
             });
             if (isAuthorizedUser) caricaStatistiche();
-            
+
             setSnackbar({
                 open: true,
                 message: `Ticket ${idDaRimuovere} eliminato correttamente (Annullato con codice 100).`,

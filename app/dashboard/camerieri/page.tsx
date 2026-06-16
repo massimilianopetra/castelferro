@@ -12,10 +12,13 @@ import SaveAltIcon from '@mui/icons-material/Save';
 import CancelIcon from '@mui/icons-material/Close';
 import InfoIcon from '@mui/icons-material/InfoOutlined';
 import IconButton from '@mui/material/IconButton';
+import RefreshIcon from '@mui/icons-material/Refresh';
 
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogContentText from '@mui/material/DialogContentText';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import useMediaQuery from '@mui/material/useMediaQuery';
@@ -46,7 +49,7 @@ type RowsData = {
     col2: string;
     col3: number | string;
     col4: number | string;
-    col5: number; // Numero Conti
+    col5: number; 
     isNew: boolean;
 };
 
@@ -54,7 +57,10 @@ interface MyToolbarProps {
     setRows: React.Dispatch<React.SetStateAction<RowsData[]>>;
     setRowModesModel: React.Dispatch<React.SetStateAction<GridRowModesModel>>;
     rows: RowsData[];
+    rowModesModel: GridRowModesModel;
     apiRef: any;
+    setSnackbar: React.Dispatch<React.SetStateAction<{ open: boolean, message: string, severity: 'success' | 'error' | 'warning' }>>;
+    rinfrescaDatiDalServer: () => Promise<void>;
 }
 
 // --- EDITOR INTELLIGENTE CON SUGGERIMENTI ---
@@ -132,14 +138,26 @@ function LegendaColori({ onClose }: { onClose: () => void }) {
 
 // --- TOOLBAR ---
 function EditToolbar(props: MyToolbarProps) {
-    const { setRows, setRowModesModel, rows, apiRef } = props;
+    const { setRows, setRowModesModel, rows, rowModesModel, apiRef, setSnackbar, rinfrescaDatiDalServer } = props;
     const isMobile = useMediaQuery('(max-width:600px)'); 
+    const [refreshing, setRefreshing] = useState(false);
 
     const handleClick = () => {
+        const rigaInEditing = Object.values(rowModesModel).some(row => row.mode === GridRowModes.Edit);
+        const ciSonoNuoveRighe = rows.some(r => r.isNew);
+
+        if (rigaInEditing || ciSonoNuoveRighe) {
+            setSnackbar({ 
+                open: true, 
+                message: 'Completa o annulla la riga aperta prima di aggiungerne un\'altra!', 
+                severity: 'warning' 
+            });
+            return;
+        }
+
         const maxID = rows.length > 0 ? Math.max(...rows.map((r: RowsData) => Number(r.id))) : 0;
         const newId = maxID + 1;
 
-        // Inseriamo la riga nuova TASSATIVAMENTE come primo elemento dell'array di stato locale
         setRows((old: RowsData[]) => [
             { id: newId, col1: 1, col2: '', col3: '', col4: '', col5: 0, isNew: true }, 
             ...old
@@ -153,9 +171,39 @@ function EditToolbar(props: MyToolbarProps) {
         setTimeout(() => apiRef.current?.scrollToIndexes({ rowIndex: 0 }), 50);
     };
 
+    const handleRefreshClick = async () => {
+        setRefreshing(true);
+        try {
+            const activeEdits = Object.keys(rowModesModel);
+            activeEdits.forEach(id => {
+                apiRef.current?.stopRowEditMode({ id: Number(id), ignoreModifications: true });
+            });
+            setRowModesModel({});
+            
+            await rinfrescaDatiDalServer();
+            setSnackbar({ open: true, message: 'Dati aggiornati dal server!', severity: 'success' });
+        } catch (err) {
+            setSnackbar({ open: true, message: 'Errore durante l\'aggiornamento.', severity: 'error' });
+        } finally {
+            setRefreshing(false);
+        }
+    };
+
     return (
-        <GridToolbarContainer sx={{ p: 1 }}>
-            <Button variant="contained" startIcon={<AddIcon />} onClick={handleClick} size={isMobile ? "small" : "medium"}>Aggiungi Cameriere</Button>
+        <GridToolbarContainer sx={{ p: 1, display: 'flex', gap: 1 }}>
+            <Button variant="contained" startIcon={<AddIcon />} onClick={handleClick} size={isMobile ? "small" : "medium"}>
+                Aggiungi Cameriere
+            </Button>
+            <Button 
+                variant="outlined" 
+                color="secondary"
+                startIcon={refreshing ? <CircularProgress size={16} color="inherit" /> : <RefreshIcon />} 
+                onClick={handleRefreshClick} 
+                disabled={refreshing}
+                size={isMobile ? "small" : "medium"}
+            >
+                Aggiorna Lista
+            </Button>
         </GridToolbarContainer>
     );
 }
@@ -170,64 +218,59 @@ export default function CamerieriPage() {
     const [loading, setLoading] = useState(true);
     const [rowModesModel, setRowModesModel] = useState<GridRowModesModel>({});
     const [showLegenda, setShowLegenda] = useState(true);
-    const [deleteDialog, setDeleteDialog] = useState<{open: boolean, id: GridRowId | null}>({ open: false, id: null });
+    
+    // MODIFICATO: Salva tutto l'oggetto della riga selezionata per la cancellazione
+    const [deleteDialog, setDeleteDialog] = useState<{open: boolean, row: RowsData | null}>({ open: false, row: null });
+    
     const [snackbar, setSnackbar] = useState<{ open: boolean, message: string, severity: 'success' | 'error' | 'warning' }>({ 
         open: false, message: '', severity: 'success' 
     });
 
-    // Funzione helper centralizzata per ordinare l'array: 
-    // Mantiene le righe nuove in cima assoluto, e ordina i record salvati stabili per "Primo" (col3) decrescente.
     const ordinaEAssegnaProgressivi = (lista: RowsData[]): RowsData[] => {
         const nuove = lista.filter(r => r.isNew);
         const salvate = lista.filter(r => !r.isNew).sort((a, b) => Number(b.col3) - Number(a.col3));
         
         const unita = [...nuove, ...salvate];
-        // Ricalcola i progressivi N. (col1) basandosi sull'ordine reale visualizzato finale
         return unita.map((row, index) => ({
             ...row,
             col1: index + 1
         }));
     };
 
-    // Aggiornamento asincrono silenzioso del numero dei conti reali presi dal Database
-    const refreshContiSilenzioso = async () => {
+    const rinfrescaDatiDalServer = async () => {
         const data = await getListaCamerieri();
         if (data) {
-            setRows((prevRows) => {
-                const mappati = prevRows.map((row) => {
-                    const dbItem = data.find((item: any) => item.id === row.id);
-                    if (dbItem) {
-                        return {
-                            ...row,
-                            col5: dbItem.n_conti || 0 // Sincronizza il valore dei conti reali aggiornato
-                        };
-                    }
-                    return row;
-                });
-                return ordinaEAssegnaProgressivi(mappati);
-            });
+            const mappati = data.map((item: any) => ({
+                id: item.id,
+                col1: 0,
+                col2: item.nome,
+                col3: item.foglietto_start,
+                col4: item.foglietto_end,
+                col5: item.n_conti || 0,
+                isNew: false
+            }));
+            setRows(ordinaEAssegnaProgressivi(mappati));
         }
     };
 
     useEffect(() => {
-        getListaCamerieri().then((data) => {
-            if (data) {
-                const mappati = data.map((item: any) => ({
-                    id: item.id,
-                    col1: 0,
-                    col2: item.nome,
-                    col3: item.foglietto_start,
-                    col4: item.foglietto_end,
-                    col5: item.n_conti || 0,
-                    isNew: false
-                }));
-                setRows(ordinaEAssegnaProgressivi(mappati));
-            }
-            setLoading(false);
-        });
+        rinfrescaDatiDalServer().then(() => setLoading(false));
     }, []);
 
-    const processRowUpdate = async (newRow: GridRowModel) => {
+    const interrompiAnnullaEInvalida = async (rowId: GridRowId) => {
+        apiRef.current.stopRowEditMode({ id: rowId, ignoreModifications: true });
+        
+        setRowModesModel((old) => {
+            const copy = { ...old };
+            delete copy[rowId];
+            return copy;
+        });
+
+        setRows(prev => ordinaEAssegnaProgressivi(prev.filter(r => r.id !== rowId)));
+        await rinfrescaDatiDalServer();
+    };
+
+    const processRowUpdate = async (newRow: GridRowModel, oldRow: GridRowModel) => {
         if (!newRow.col3) {
             setSnackbar({ open: true, message: 'Inserisci il valore iniziale in "Primo"!', severity: 'warning' });
             throw new Error('Campo Primo obbligatorio');
@@ -241,25 +284,35 @@ export default function CamerieriPage() {
             throw new Error('Validazione Fallita');
         }
 
-        const hasOverlap = rows.some(r => r.id !== newRow.id && !r.isNew && (start <= Number(r.col4) && end >= Number(r.col3)));
-        if (hasOverlap) { 
-            setSnackbar({ open: true, message: 'ERRORE: Sovrapposizione foglietti!', severity: 'error' }); 
-            throw new Error('Sovrapposizione');
-        }
-
         try {
             let finalId = Number(newRow.id);
             
             if (newRow.isNew) {
                 const res = await addCamerieri(newRow.col2, start, end);
-                if (res && res[0]?.id) {
+                
+                if (res && !Array.isArray(res) && (res as any).error) {
+                    setSnackbar({ open: true, message: `ERRORE: ${(res as any).message}`, severity: 'error' });
+                    await interrompiAnnullaEInvalida(newRow.id);
+                    return oldRow;
+                }
+
+                if (Array.isArray(res) && res[0]?.id) {
                     finalId = res[0].id;
                 }
             } else {
-                await updateCamerieri([{ id: finalId, nome: newRow.col2, foglietto_start: start, foglietto_end: end }]);
+                const res = await updateCamerieri([{ id: finalId, nome: newRow.col2, foglietto_start: start, foglietto_end: end }]);
+                
+                if (res && (res as any).error) {
+                    setSnackbar({ open: true, message: `ERRORE: ${(res as any).message}`, severity: 'error' });
+                    await interrompiAnnullaEInvalida(newRow.id);
+                    return oldRow;
+                }
             }
             
-            const updatedRow = { 
+            setSnackbar({ open: true, message: 'Salvato con successo!', severity: 'success' });
+            await rinfrescaDatiDalServer();
+
+            return { 
                 ...newRow, 
                 id: finalId, 
                 col3: start, 
@@ -267,24 +320,10 @@ export default function CamerieriPage() {
                 col5: newRow.isNew ? 0 : (newRow.col5 || 0), 
                 isNew: false 
             } as RowsData;
-            
-            // Applica il nuovo record ordinando tutto correttamente nello stato locale
-            setRows(prevRows => {
-                const listaModificata = prevRows.map(r => r.id === newRow.id ? updatedRow : r);
-                return ordinaEAssegnaProgressivi(listaModificata);
-            });
 
-            setSnackbar({ open: true, message: 'Salvato!', severity: 'success' });
-            
-            // Rinfresca silenziosamente il conteggio reale dal DB
-            setTimeout(() => {
-                refreshContiSilenzioso();
-            }, 150);
-
-            return updatedRow;
         } catch (e) { 
-            setSnackbar({ open: true, message: 'Errore nel salvataggio!', severity: 'error' });
-            throw e;
+            await interrompiAnnullaEInvalida(newRow.id);
+            return oldRow;
         }
     };
 
@@ -313,14 +352,17 @@ export default function CamerieriPage() {
         },
         {
             field: 'actions', type: 'actions', width: 100,
-            getActions: ({ id }) => {
+            getActions: (params) => {
+                const id = params.id;
                 const isEdit = rowModesModel[id]?.mode === GridRowModes.Edit;
                 return isEdit ? [
                     <GridActionsCellItem key="s" icon={<SaveAltIcon />} label="Salva" onClick={() => setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.View } })} color="primary" />,
                     <GridActionsCellItem key="c" icon={<CancelIcon />} label="Annulla" onClick={handleCancelClick(id)} color="inherit" />,
                 ] : [
                     <GridActionsCellItem key="e" icon={<EditIcon />} label="Edit" onClick={() => setRowModesModel({ ...rowModesModel, [id]: { mode: GridRowModes.Edit } })} color="inherit" />,
-                    <GridActionsCellItem key="d" icon={<DeleteIcon />} label="Del" onClick={() => setDeleteDialog({ open: true, id })} color="inherit" />,
+                    
+                    // MODIFICATO: Passa l'intero oggetto row quando clicchi elimina
+                    <GridActionsCellItem key="d" icon={<DeleteIcon />} label="Del" onClick={() => setDeleteDialog({ open: true, row: params.row as RowsData })} color="inherit" />,
                 ];
             }
         }
@@ -365,9 +407,7 @@ export default function CamerieriPage() {
                     processRowUpdate={processRowUpdate}
                     onProcessRowUpdateError={() => {}}
                     slots={{ toolbar: EditToolbar as any }}
-                    slotProps={{ toolbar: { setRows, setRowModesModel, rows, apiRef } as any }}
-                    
-                    // Rimuoviamo l'ordinamento interno controllato di DataGrid: viene gestito via JS!
+                    slotProps={{ toolbar: { setRows, setRowModesModel, rows, rowModesModel, apiRef, setSnackbar, rinfrescaDatiDalServer } as any }}
                     sx={{ 
                         border: 'none', 
                         height: '100%',
@@ -388,16 +428,24 @@ export default function CamerieriPage() {
                 />
             </Box>
 
-            <Dialog open={deleteDialog.open} onClose={() => setDeleteDialog({ open: false, id: null })}>
-                <DialogTitle>Elimina Cameriere?</DialogTitle>
+            {/* MODIFICATO: Dialog di cancellazione descrittivo con Nome e Intervallo Foglietti */}
+            <Dialog open={deleteDialog.open} onClose={() => setDeleteDialog({ open: false, row: null })}>
+                <DialogTitle sx={{ fontWeight: 'bold' }}>Elimina Cameriere?</DialogTitle>
+                <DialogContent>
+                    <DialogContentText sx={{ color: 'text.primary', fontSize: '1.05rem' }}>
+                        Sei sicuro di voler eliminare il cameriere{' '}
+                        <strong>{deleteDialog.row?.col2 || 'Selezionato'}</strong>?<br />
+                        Intervallo foglietti: <strong>{deleteDialog.row?.col3} - {deleteDialog.row?.col4}</strong>
+                    </DialogContentText>
+                </DialogContent>
                 <DialogActions sx={{ p: 2 }}>
-                    <Button onClick={() => setDeleteDialog({ open: false, id: null })} color="inherit">Annulla</Button>
+                    <Button onClick={() => setDeleteDialog({ open: false, row: null })} color="inherit">Annulla</Button>
                     <Button onClick={async () => {
-                        if (deleteDialog.id) {
-                            await delCamerieri(Number(deleteDialog.id));
-                            setRows(prev => ordinaEAssegnaProgressivi(prev.filter(r => r.id !== deleteDialog.id)));
-                            setDeleteDialog({ open: false, id: null });
-                            setSnackbar({ open: true, message: 'Eliminato!', severity: 'success' });
+                        if (deleteDialog.row) {
+                            await delCamerieri(Number(deleteDialog.row.id));
+                            setDeleteDialog({ open: false, row: null });
+                            setSnackbar({ open: true, message: 'Cameriere eliminato con successo!', severity: 'success' });
+                            await rinfrescaDatiDalServer(); 
                         }
                     }} color="error" variant="contained">Elimina</Button>
                 </DialogActions>

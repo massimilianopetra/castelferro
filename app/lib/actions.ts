@@ -637,17 +637,6 @@ export async function getCamerieri(foglietto: number): Promise<string | undefine
   return undefined;
 }
 
-export async function updateCamerieri(c: DbCamerieri[]) {
-  c.map(async (item) => {
-    return await executeQuery(`
-         UPDATE camerieri
-         SET nome = '${item.nome}',
-             foglietto_start = ${item.foglietto_start},
-             foglietto_end = ${item.foglietto_end}
-         WHERE id = ${item.id};
-      `);
-  });
-}
 
 // Sostituisci la funzione esistente in actions.ts con questa:
 export async function getClassificaCopertiCamerieri(giorno?: number): Promise<{ nome: string; coperti: number }[] | undefined> {
@@ -686,7 +675,7 @@ export async function getClassificaCopertiCamerieri(giorno?: number): Promise<{ 
 /* MODIFICATO: Include il calcolo automatico dei conti fatti nell'intervallo */
 export async function getListaCamerieri(): Promise<any[] | undefined> {
   try {
-    console.log(`Get Lista Camerieri con Conteggio Conti Real-Time`);
+ //   console.log(`Get Lista Camerieri con Conteggio Conti Real-Time`);
 
     // Calcoliamo quanti record nella tabella "conti" hanno un "id_comanda" compreso nel range del cameriere
     const query = `
@@ -711,15 +700,6 @@ export async function getListaCamerieri(): Promise<any[] | undefined> {
   return undefined;
 }
 
-/* MODIFICATO: Aggiunto RETURNING id per sincronizzare l'ID generato in inserimento */
-export async function addCamerieri(nome: string, foglietto_start: number, foglietto_end: number) {
-  console.log("Add camerieri");
-  return await executeQuery<{ id: number }>(`
-    INSERT INTO camerieri (nome, foglietto_start, foglietto_end)
-    VALUES ('${nome}', ${foglietto_start}, ${foglietto_end})
-    RETURNING id;
-  `);
-}
 
 export async function listTables(): Promise<any[] | undefined> {
   return await executeQuery(`SELECT table_name FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'`);
@@ -791,8 +771,147 @@ export async function doDrop(tableName: string): Promise<any[] | undefined> {
     return [];
   }
 }
+/* ******************** GESTIONE CAMERIERI ATOMICA ********************* */
+/* MODIFICATO: Aggiunto controllo preventivo di sovrapposizione in tempo reale direttamente sul DB prima dell'inserimento */
+/* MODIFICATO: Aggiunto controllo preventivo di sovrapposizione sul DB in tempo reale 
+export async function addCamerieri(nome: string, foglietto_start: number, foglietto_end: number) {
+  try {
+   // console.log("Add camerieri con controllo di sovrapposizione DB");
 
+    // Controlla se sul DB esiste già un cameriere con un range che si sovrappone
+    const checkOverlap = await executeQuery(`
+      SELECT nome FROM camerieri 
+      WHERE ($1 <= foglietto_end AND $2 >= foglietto_start)
+      LIMIT 1;
+    `, [foglietto_start, foglietto_end]);
+
+    if (checkOverlap && checkOverlap.length > 0) {
+      return { 
+        error: true, 
+        message: `L'intervallo si sovrappone con il blocchetto di un altro cameriere!` 
+      };
+    }
+
+    const res = await executeQuery<{ id: number }>(`
+      INSERT INTO camerieri (nome, foglietto_start, foglietto_end)
+      VALUES ($1, $2, $3)
+      RETURNING id;
+    `, [nome, foglietto_start, foglietto_end]);
+
+    return res; // Ritorna l'array con l'id generato
+  } catch (error: any) {
+    console.error("Errore in addCamerieri:", error);
+    return { error: true, message: "Errore interno del server durante l'inserimento." };
+  }
+}
+
+*//* MODIFICATO: Aggiunto controllo preventivo di sovrapposizione sul DB anche per le modifiche 
+export async function updateCamerieri(c: DbCamerieri[]) {
+  try {
+    for (const item of c) {
+      // Controlla la sovrapposizione escludendo se stesso (id != item.id)
+      const checkOverlap = await executeQuery(`
+        SELECT nome FROM camerieri 
+        WHERE id != $1 AND ($2 <= foglietto_end AND $3 >= foglietto_start)
+        LIMIT 1;
+      `, [item.id, item.foglietto_start, item.foglietto_end]);
+
+      if (checkOverlap && checkOverlap.length > 0) {
+        return { 
+          error: true, 
+          message: `Impossibile modificare: l'intervallo si sovrappone con un altro cameriere!` 
+        };
+      }
+
+      await executeQuery(`
+        UPDATE camerieri
+        SET nome = $1,
+            foglietto_start = $2,
+            foglietto_end = $3
+        WHERE id = $4;
+      `, [item.nome, item.foglietto_start, item.foglietto_end, item.id]);
+    }
+    return { success: true };
+  } catch (error) {
+    console.error("Errore in updateCamerieri:", error);
+    return { error: true, message: "Errore interno del server durante la modifica." };
+  }
+}
+*/
+/* MODIFICATO: Controllo sovrapposizione real-time con messaggi d'errore contenenti il range bloccante */
+export async function addCamerieri(nome: string, foglietto_start: number, foglietto_end: number) {
+  try {
+    console.log("Add camerieri con controllo sovrapposizione");
+
+    // 1. Cerchiamo se esiste già un intervallo che si sovrappone a quello inserito
+    const conflictCheck = await executeQuery<{ foglietto_start: number; foglietto_end: number }>(`
+      SELECT foglietto_start, foglietto_end 
+      FROM camerieri 
+      WHERE NOT ($1 > foglietto_end OR $2 < foglietto_start)
+      LIMIT 1;
+    `, [foglietto_start, foglietto_end]);
+
+    // Se troviamo un conflitto, blocchiamo l'inserimento e restituiamo l'intervallo esistente
+    if (conflictCheck && conflictCheck.length > 0) {
+      const esistente = conflictCheck[0];
+      return { 
+        error: true, 
+        message: `I foglietti inseriti si sovrappongono con l'intervallo già esistente ${esistente.foglietto_start}-${esistente.foglietto_end}!` 
+      };
+    }
+
+    // 2. Se non ci sono sovrapposizioni, eseguiamo l'inserimento sicuro
+    const res = await executeQuery<{ id: number }>(`
+      INSERT INTO camerieri (nome, foglietto_start, foglietto_end)
+      VALUES ($1, $2, $3)
+      RETURNING id;
+    `, [nome, foglietto_start, foglietto_end]);
+
+    return res;
+  } catch (error: any) {
+    console.error("Errore in addCamerieri:", error);
+    return { error: true, message: "Errore interno durante l'inserimento nel database." };
+  }
+}
+
+/* MODIFICATO: Controllo sovrapposizione in fase di modifica, escludendo il record corrente (id) */
+export async function updateCamerieri(c: DbCamerieri[]) {
+  try {
+    for (const item of c) {
+      // 1. Cerchiamo conflitti escludendo il cameriere stesso tramite il suo ID (id != $1)
+      const conflictCheck = await executeQuery<{ foglietto_start: number; foglietto_end: number }>(`
+        SELECT foglietto_start, foglietto_end 
+        FROM camerieri 
+        WHERE id != $1 AND NOT ($2 > foglietto_end OR $3 < foglietto_start)
+        LIMIT 1;
+      `, [item.id, item.foglietto_start, item.foglietto_end]);
+
+      // Se la modifica va a collidere con un altro intervallo esistente
+      if (conflictCheck && conflictCheck.length > 0) {
+        const esistente = conflictCheck[0];
+        return { 
+          error: true, 
+          message: `Modifica fallita! Si sovrappone con l'intervallo ${esistente.foglietto_start}-${esistente.foglietto_end}!` 
+        };
+      }
+
+      // 2. Se tutto è libero procediamo all'aggiornamento
+      await executeQuery(`
+        UPDATE camerieri
+        SET nome = $1,
+            foglietto_start = $2,
+            foglietto_end = $3
+        WHERE id = $4;
+      `, [item.nome, item.foglietto_start, item.foglietto_end, item.id]);
+    }
+    return { success: true };
+  } catch (error: any) {
+    console.error("Errore in updateCamerieri:", error);
+    return { error: true, message: "Errore interno durante la modifica dei dati." };
+  }
+}
 export async function delCamerieri(id: number) {
+  //  console.log(`Del camerieri: ${id}`);
   await executeQuery(`DELETE FROM camerieri WHERE id=${id};`);
 }
 
