@@ -946,13 +946,40 @@ export async function delCamerieri(id: number) {
   //  console.log(`Del camerieri: ${id}`);
   await executeQuery(`DELETE FROM camerieri WHERE id=${id};`);
 }
-
+/*
 export async function listConti(stato: string, giornata: number): Promise<DbConti[] | undefined> {
   if (stato == '*') {
     return await executeQuery<DbConti>(`SELECT * FROM conti WHERE giorno = ${giornata} ORDER BY data_apertura`);
   } else {
     return await executeQuery<DbConti>(`SELECT * FROM conti WHERE stato = '${stato}' AND giorno = ${giornata} ORDER BY data_apertura`);
   }
+}
+*/
+export async function listConti(stato: string, giornata: number): Promise<DbConti[] | undefined> {
+  
+  // 1. UPDATE massivo: colleghiamo le consumazioni al menu per prendere il prezzo reale
+  const queryUpdateMassivo = `
+    UPDATE conti c
+    SET totale = (
+      SELECT COALESCE(SUM(co.quantita * m.prezzo), 0)
+      FROM consumazioni co
+      JOIN menus m ON co.id_piatto = m.id
+      WHERE co.id_comanda = c.id_comanda AND co.giorno = c.giorno
+    )
+    WHERE c.giorno = ${giornata} AND c.stato = 'APERTO';
+  `;
+  
+  // Eseguiamo l'aggiornamento solo se lo stato richiesto comprende i conti APERTI
+  if (stato === '*' || stato === 'APERTO') {
+    await executeQuery(queryUpdateMassivo);
+  }
+
+  // 2. Scarichiamo i conti aggiornati dal DB
+  const querySelect = stato === '*' 
+    ? `SELECT * FROM conti WHERE giorno = ${giornata} ORDER BY data_apertura`
+    : `SELECT * FROM conti WHERE stato = '${stato}' AND giorno = ${giornata} ORDER BY data_apertura`;
+
+  return await executeQuery<DbConti>(querySelect);
 }
 
 export async function listContiPerChiusra(giornata: number): Promise<DbExtendedConti[] | undefined> {
