@@ -304,8 +304,9 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
 
         // OTTIMIZZAZIONE 2: Lanciamo in parallelo l'aggiornamento del totale e il fetch degli ultimi log
         // Entrambi hanno bisogno che le chiamate precedenti siano finite, ma sono indipendenti tra di loro.
-        const [, logs] = await Promise.all([
-            updateTotaleConto(numFoglietto, sagra.giornata),
+        const [logs] = await Promise.all([
+       // const [, logs] = await Promise.all([
+            //   updateTotaleConto(numFoglietto, sagra.giornata),
             getLastLog(sagra.giornata, nomeCucina)
         ]);
 

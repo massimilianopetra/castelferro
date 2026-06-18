@@ -337,8 +337,9 @@ const handleAggiorna = async () => {
         ]);
 
         // 5. OTTIMIZZAZIONE 2: Eseguiamo in parallelo l'aggiornamento del totale, la lettura dei log e il nuovo conto
-        const [, logs, newCc] = await Promise.all([
-            updateTotaleConto(numFoglietto, sagra.giornata),
+        const [logs, newCc] = await Promise.all([
+//        const [, logs, newCc] = await Promise.all([
+  //          updateTotaleConto(numFoglietto, sagra.giornata),
             getLastLog(sagra.giornata, 'Casse'),
             getConto(numFoglietto, sagra.giornata)
         ]);
