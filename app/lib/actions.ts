@@ -581,20 +581,52 @@ export async function getConsumazioniCassa(comanda: number = -1, giornata: numbe
     throw new Error('Failed to fetch consumazioni.');
   }
 }
-
+/*
 export async function sendConsumazioni(c: DbConsumazioni[]) {
   const date_format_millis = Date.now();
   c.map(async (item) => {
     if (item.id == -1) {
+       console.log(`INSERT item.id : ${item.id }`);
+              console.log(`INSERT item.id_piatto : ${item.id_piatto }`);
+                     console.log(`INSERT item.piatto : ${item.piatto }`);
+                            console.log(`INSERT item.quantita : ${item.quantita }`);
+                                   console.log(`INSERT item.cucina : ${item.cucina }`);
+ 
+
       return await executeQuery(`
          INSERT INTO consumazioni (id_comanda, id_piatto, piatto, quantita, cucina, giorno, data, alias)
          VALUES (${item.id_comanda}, ${item.id_piatto}, '${item.piatto}', ${item.quantita}, '${item.cucina}',${item.giorno},${date_format_millis}, '${item.alias}')
          ON CONFLICT (id) DO NOTHING;
       `);
-    } else {
+    } else {       console.log(`UPDATE item.id : ${item.id }`);
+              console.log(`UPDATE item.id_piatto : ${item.id_piatto }`);
+                     console.log(`UPDATE item.piatto : ${item.piatto }`);
+                            console.log(`UPDATE item.quantita : ${item.quantita }`);
+                                   console.log(`UPDATE item.cucina : ${item.cucina }`);
       return await executeQuery(`UPDATE consumazioni SET quantita = ${item.quantita}, data = ${date_format_millis} WHERE id = ${item.id};`);
     }
   });
+}*/
+export async function sendConsumazioni(c: DbConsumazioni[]) {
+  const date_format_millis = Date.now();
+  
+  // Usiamo Promise.all mappando le promesse delle query
+  const queryPromises = c.map(async (item) => {
+    if (item.id == -1) {
+     // console.log(`INSERT item.piatto : id ${item.id} - ${item.piatto} (quantita: ${item.quantita})`);
+      return await executeQuery(`
+         INSERT INTO consumazioni (id_comanda, id_piatto, piatto, quantita, cucina, giorno, data, alias)
+         VALUES (${item.id_comanda}, ${item.id_piatto}, '${item.piatto}', ${item.quantita}, '${item.cucina}', ${item.giorno}, ${date_format_millis}, '${item.alias}')
+         ON CONFLICT (id) DO NOTHING;
+      `);
+    } else {
+     // console.log(`UPDATE item.piatto : id ${item.id} - ${item.piatto} (quantita: ${item.quantita})`);
+      return await executeQuery(`UPDATE consumazioni SET quantita = ${item.quantita}, data = ${date_format_millis} WHERE id = ${item.id};`);
+    }
+  });
+
+  // ATTENDIAMO che tutte le query siano terminate sul DB
+  await Promise.all(queryPromises);
 }
 
 export async function updateTotaleConto(foglietto: number, giorno: number) {
@@ -841,7 +873,7 @@ export async function updateCamerieri(c: DbCamerieri[]) {
 /* MODIFICATO: Controllo sovrapposizione real-time con messaggi d'errore contenenti il range bloccante */
 export async function addCamerieri(nome: string, foglietto_start: number, foglietto_end: number) {
   try {
-    console.log("Add camerieri con controllo sovrapposizione");
+   // console.log("Add camerieri con controllo sovrapposizione");
 
     // 1. Cerchiamo se esiste già un intervallo che si sovrappone a quello inserito
     const conflictCheck = await executeQuery<{ foglietto_start: number; foglietto_end: number }>(`

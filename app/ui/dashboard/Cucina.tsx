@@ -6,7 +6,7 @@ import { Button, ButtonGroup, Snackbar, TextField, Modal, Box, Typography, IconB
 import StarsIcon from '@mui/icons-material/Stars';
 import CircularProgress from '@mui/material/CircularProgress';
 import Filter1Icon from '@mui/icons-material/Filter1';
-import { useConfig } from '@/context/ConfigContext'; // <-- Importazione del Context globale
+ 
 import type { DbConsumazioni, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
 import {
     getConsumazioni,
@@ -237,61 +237,90 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
         // Impostiamo la fase di invio in corso per mostrare lo spinner
         setPhase('invio_in_corso');
 
-        try {
-            // Se invece il conto è NUOVO ma ha portate valide, lo apriamo sul DB adesso.
-            if (isNewConto) {
-                await apriConto(Number(numeroFoglietto), sagra.giornata, conto?.cameriere || 'Sconosciuto');
-                await writeLog(Number(numeroFoglietto), sagra.giornata, nomeCucina, '', 'START', '');
-                setIsNewConto(false);
-            }
+    try {
+        const numFoglietto = Number(numeroFoglietto);
 
-            // Se siamo arrivati qui, significa che:
-            // - O il conto era nuovo e aveva piatti validi (quindic l'abbiamo aperto sopra)
-            // - O il conto esisteva già (e quindi anche se lo azzeri del tutto, procediamo a salvare gli zeri sul DB)
-            let gc = await getConto(Number(numeroFoglietto), sagra.giornata);
+        // 1. SCARICHIAMO I DATI FRESCHI DAL DB ADESSO
+        const [consumazioniFresh, contoFresh] = await Promise.all([
+            getConsumazioni(nomeCucina, numFoglietto, sagra.giornata, 'MUST_BE_AVAILABLE'),
+            getConto(numFoglietto, sagra.giornata)
+        ]);
 
-            if (gc?.stato !== "APERTO") {
-                setPhase('bloccato');
-                return;
-            }
-
-            // Prepariamo i log delle variazioni di quantità
-            const logPromises = products
-                .map(item => {
-                    const orig = iniProducts.find(o => o.id_piatto === item.id_piatto);
-                    const origQuantita = orig ? orig.quantita : 0;
-                    if (item.quantita === origQuantita) return null;
-
-                    const message = item.quantita > origQuantita
-                        ? `Aggiunti: ${item.quantita - origQuantita} ${item.piatto}`
-                        : `Eliminati: ${origQuantita - item.quantita} ${item.piatto}`;
-
-                    return writeLog(item.id_comanda, sagra.giornata, nomeCucina, '', 'UPDATE', message);
-                })
-                .filter((p): p is Promise<any> => p !== null);
-
-            // Inviamo l'aggiornamento (comprese le quantità azzerate) al database
-            await Promise.all([
-                ...logPromises,
-                sendConsumazioni(products)
-            ]);
-
-            await updateTotaleConto(Number(numeroFoglietto), sagra.giornata);
-
-            const logs = await getLastLog(sagra.giornata, nomeCucina);
-            if (logs) setLastLog(logs);
-
-            setPhase('inviato');
-            setProducts([]);
-            setIniProducts([]);
-        } catch (error) {
-            console.error("Errore durante l'invio delle consumazioni:", error);
-            setSnackbarMessage("Errore durante l'invio dei dati al server.");
+        if (isNewConto && contoFresh) {
+            // Se nel frattempo un'altra cucina ha già aperto il conto
+            setSnackbarMessage("ATTENZIONE: Un'altra cucina ha appena aperto questo conto. Operazione bloccata per evitare duplicati.");
             setOpenSnackbar(true);
-            setPhase('caricato'); // Ripristina la tabella in caso di errore
+            setPhase('caricato');
+            return;
         }
-    };
 
+        if (isNewConto) {
+            // OTTIMIZZAZIONE 1: Lanciamo in parallelo l'apertura del conto e il log iniziale
+            await Promise.all([
+                apriConto(numFoglietto, sagra.giornata, conto?.cameriere || 'Sconosciuto'),
+                writeLog(numFoglietto, sagra.giornata, nomeCucina, '', 'START', '')
+            ]);
+            setIsNewConto(false);
+        }
+
+        // 2. UNIAMO LE QUANTITÀ DELLO SCHERMO CON GLI ID DEL DATABASE APPENA SCARICATI
+        // `products` contiene le quantità correnti decise dall'utente in questa cucina
+        const datiDaInviare: DbConsumazioni[] = products.map(itemSchermo => {
+            // Cerchiamo se questo piatto esiste già sul database (magari inserito dall'altra cucina, es. Pane e Coperto)
+            const riscontroDb = consumazioniFresh?.find(dbItem => dbItem.id_piatto === itemSchermo.id_piatto);
+            
+            return {
+                ...itemSchermo,
+                id: riscontroDb ? riscontroDb.id : -1, // Se esiste sul DB prende il suo ID reale, altrimenti resta -1
+                // Se la riga esiste sul DB ma appartiene a un'ALTRA cucina (es. Pane e Coperto), e noi non l'abbiamo toccata (quantità sullo schermo pari a 0 o al valore iniziale originario), 
+                // manteniamo la quantità del DB per evitare di azzerare il lavoro altrui
+                quantita: (itemSchermo.cucina !== nomeCucina && itemSchermo.quantita === 0 && riscontroDb) 
+                    ? riscontroDb.quantita 
+                    : itemSchermo.quantita
+            };
+        });
+
+        // 3. Generiamo i log usando i vecchi iniProducts
+        const logPromises = products
+            .map(item => {
+                const orig = iniProducts.find(o => o.id_piatto === item.id_piatto);
+                const origQuantita = orig ? orig.quantita : 0;
+                if (item.quantita === origQuantita) return null;
+
+                const message = item.quantita > origQuantita
+                    ? `Aggiunti: ${item.quantita - origQuantita} ${item.piatto}`
+                    : `Eliminati: ${origQuantita - item.quantita} ${item.piatto}`;
+
+                return writeLog(item.id_comanda, sagra.giornata, nomeCucina, '', 'UPDATE', message);
+            })
+            .filter((p): p is Promise<any> => p !== null);
+
+        // 4. INVIAMO E ATTENDIAMO REALMENTE IL COMPLETAMENTO
+        // Inviamo `datiDaInviare` che contiene gli ID reali corretti aggiornati!
+        await Promise.all([
+            ...logPromises,
+            sendConsumazioni(datiDaInviare) 
+        ]);
+
+        // OTTIMIZZAZIONE 2: Lanciamo in parallelo l'aggiornamento del totale e il fetch degli ultimi log
+        // Entrambi hanno bisogno che le chiamate precedenti siano finite, ma sono indipendenti tra di loro.
+        const [, logs] = await Promise.all([
+            updateTotaleConto(numFoglietto, sagra.giornata),
+            getLastLog(sagra.giornata, nomeCucina)
+        ]);
+
+        if (logs) setLastLog(logs);
+
+        setPhase('inviato');
+        setProducts([]);
+        setIniProducts([]);
+    } catch (error) {
+        console.error("Errore nell'invio:", error);
+        setSnackbarMessage("Errore durante il salvataggio.");
+        setOpenSnackbar(true);
+        setPhase('caricato');
+    }
+};
 
     /* ------------------------------       MODIFICA QUANTITA'    ------------------------------ */
     const updateQuantity = useCallback((id: number, delta: number) => {

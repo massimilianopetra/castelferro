@@ -12,12 +12,12 @@ import {
 import Filter1Icon from '@mui/icons-material/Filter1';
 import * as React from 'react';
 
-import type { DbConsumazioniPrezzo, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
+import type { DbConsumazioni, DbConsumazioniPrezzo, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
 import {
   getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto,
   aggiornaConto, stampaConto, riapriConto, apriConto, getContoPiuAlto,
   writeLog, getGiornoSagra, getLastLog,
-  getInizializzazioneCassa
+  getInizializzazioneCassa,updateTotaleConto
 } from '@/app/lib/actions';
 import { deltanow, milltodatestring } from '@/app/lib/utils';
 import { useConfig } from '@/context/ConfigContext';
@@ -223,7 +223,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     }
     return true;
   };
-
+/*
   const handleAggiorna = async () => {
     const canProceed = await checkAndSaveToDb();
     if (!canProceed) return;
@@ -256,6 +256,109 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     setConto(newCc);
     setPhase('aperto');
   };
+*/
+const handleAggiorna = async () => {
+    const haPortateValide = products.some(item => item.quantita > 0);
+
+    // NUOVO CONTROLLO: Se il conto è NUOVO (isNewConto === true) e non ha piatti (> 0),
+    // allora usciamo subito senza toccare il DB, pulendo solo la schermata.
+    if (!haPortateValide && isNewConto) {
+        setPhase('iniziale');
+        setProducts([]);
+        setIniProducts([]);
+        return;
+    }
+
+    // Impostiamo la fase di invio in corso per mostrare lo spinner
+    setPhase('caricamento');
+    
+    try {
+        const numFoglietto = Number(numeroFoglietto);
+
+        // 1. SCARICHIAMO I DATI FRESCHI DAL DB ADESSO
+        const [consumazioniFresh, contoFresh] = await Promise.all([
+            getConsumazioniCassa(numFoglietto, sagra.giornata),
+            getConto(numFoglietto, sagra.giornata)
+        ]);
+
+        if (isNewConto && contoFresh) {
+            // Se nel frattempo un'altra cucina ha già aperto il conto
+            setSnackbarMessage("ATTENZIONE: Un'altra postazione ha appena aperto questo conto. Operazione bloccata per evitare duplicati.");
+            setOpenSnackbar(true);
+            setPhase('iniziale');
+            return;
+        }
+
+        if (isNewConto) {
+            // OTTIMIZZAZIONE 1: Lanciamo in parallelo l'apertura del conto e il log iniziale.
+            // (Corretto anche l'errore di sintassi con la virgola che avevi nello snippet originale)
+            await Promise.all([
+                apriConto(numFoglietto, sagra.giornata, 'Casse'),
+                writeLog(numFoglietto, sagra.giornata, 'Casse', '', 'UPDATE', '')
+            ]);
+            setIsNewConto(false);
+        }
+
+        // 2. UNIAMO LE QUANTITÀ DELLO SCHERMO CON GLI ID DEL DATABASE APPENA SCARICATI
+        const datiDaInviare: DbConsumazioni[] = products.map(itemSchermo => {
+            // Cerchiamo se questo piatto esiste già sul database (magari inserito dall'altra cucina, es. Pane e Coperto)
+            const riscontroDb = consumazioniFresh?.find(dbItem => dbItem.id_piatto === itemSchermo.id_piatto);
+            
+            return {
+                ...itemSchermo,
+                id: riscontroDb ? riscontroDb.id : -1, // Se esiste sul DB prende il suo ID reale, altrimenti resta -1
+                // Se la riga esiste sul DB ma appartiene a un'ALTRA cucina e noi non l'abbiamo toccata, 
+                // manteniamo la quantità del DB per evitare di azzerare il lavoro altrui
+                quantita: (itemSchermo.cucina !== 'Casse' && itemSchermo.quantita === 0 && riscontroDb) 
+                    ? riscontroDb.quantita 
+                    : itemSchermo.quantita
+            };
+        });
+
+        // 3. Generiamo i log usando i vecchi iniProducts
+        const logPromises = products
+            .map(item => {
+                const orig = iniProducts.find(o => o.id_piatto === item.id_piatto);
+                const origQuantita = orig ? orig.quantita : 0;
+                if (item.quantita === origQuantita) return null;
+
+                const message = item.quantita > origQuantita
+                    ? `Aggiunti: ${item.quantita - origQuantita} ${item.piatto}`
+                    : `Eliminati: ${origQuantita - item.quantita} ${item.piatto}`;
+
+                return writeLog(item.id_comanda, sagra.giornata, 'Casse', '', 'UPDATE', message);
+            })
+            .filter((p): p is Promise<any> => p !== null);
+
+        // 4. INVIAMO E ATTENDIAMO REALMENTE IL COMPLETAMENTO
+        await Promise.all([
+            ...logPromises,
+            sendConsumazioni(datiDaInviare) 
+        ]);
+
+        // 5. OTTIMIZZAZIONE 2: Eseguiamo in parallelo l'aggiornamento del totale, la lettura dei log e il nuovo conto
+        const [, logs, newCc] = await Promise.all([
+            updateTotaleConto(numFoglietto, sagra.giornata),
+            getLastLog(sagra.giornata, 'Casse'),
+            getConto(numFoglietto, sagra.giornata)
+        ]);
+
+        if (logs) setLastLog(logs);
+        
+        setConto(newCc);
+        setPhase('aperto');
+
+    } catch (error) {
+        console.error("Errore nell'invio:", error);
+        setSnackbarMessage("Errore durante il salvataggio.");
+        setOpenSnackbar(true);
+        setPhase('iniziale');
+    }
+};
+
+
+
+
 
   const handleStampa = async () => {
     const canProceed = await checkAndSaveToDb();
@@ -550,6 +653,17 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     <main>
       {(() => {
         switch (phase) {
+          case 'iniziale':
+            return (
+              <div className="container">
+                <header className="top-section"><div className="sez-sx">{headerCasse}{ultimiRicercati}</div>{bottoniServizio}</header>       <main className="middle-section"><br />
+                  <p className="text-2xl md:text-5xl py-4 text-center text-blue-800">
+                    Conto: <span className="font-extrabold">{numeroFoglietto}</span> aperto contestualmente per evitare doppioni. Riaprire <Link href={`/dashboard/casse/${numeroFoglietto}`}>{numeroFoglietto}</Link><br /><br />
+                  </p>
+                </main>
+              </div>
+            );
+
           case 'iniziale_stampato':
             return (
               <div className="container">
