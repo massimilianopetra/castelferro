@@ -20,6 +20,7 @@ import {
     getLastLog,
     getMenu,
     getTickets,
+    salvaComandaCompleta,
     listConsumazioni
 } from '@/app/lib/actions';
 
@@ -65,6 +66,7 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
     const [openSnackbar, setOpenSnackbar] = useState(false);
     const [openPopup, setOpenPopup] = useState(false);
     const [showAlternateView, setShowAlternateView] = useState(false);
+    const [chiamataunicaDB, setChiamataunicaDB] = useState(false);
     const [nuovaquantitaValue, setQuantitaValue] = useState('');
     const [idmodificaquantitaValue, setIdModQuantita] = useState(1);
     const [piattomodificaquantitaValue, setPiattoModQuantita] = useState("non definito");
@@ -106,8 +108,8 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
         setNumero(event.target.value);
     const handleClose = () => setOpenSnackbar(false);
     const handleClosePopup = () => setOpenPopup(false);
-    const handleToggleView = () =>
-        setShowAlternateView(prev => !prev);
+    const handleToggleView = () => setShowAlternateView(prev => !prev);
+    const handlechiamataunicaDB = () => setChiamataunicaDB(prev => !prev);
     const handleButtonClickCaricaConto1 = () => carica(1);
 
     /* ------------------------------CARICAMENTO CONTO------------------------------ */
@@ -223,6 +225,80 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
 
     /* ------------------------------INVIO CONSUMAZIONI------------------------------ */
     const handleButtonClickInvia = async () => {
+        if (chiamataunicaDB) {
+                  setSnackbarMessage("handleButtonClickInviaNew chiamata unica DB");
+      setOpenSnackbar(true);
+            await handleButtonClickInviaNew();
+        } else {
+                  setSnackbarMessage("handleButtonClickInviaOld chiamate standard");
+      setOpenSnackbar(true);
+            await handleButtonClickInviaOld();
+        }
+    };
+ 
+
+    const handleButtonClickInviaNew = async () => {
+        const haPortateValide = products.some(item => item.quantita > 0);
+
+        if (!haPortateValide && isNewConto) {
+            setPhase('iniziale');
+            setProducts([]);
+            setIniProducts([]);
+            return;
+        }
+
+        setPhase('invio_in_corso');
+
+        try {
+            const numFoglietto = Number(numeroFoglietto);
+
+            // 1. Generiamo l'array dei messaggi di LOG in modo sincrono sul client
+            const logMessaggi = products
+                .map(item => {
+                    const orig = iniProducts.find(o => o.id_piatto === item.id_piatto);
+                    const origQuantita = orig ? orig.quantita : 0;
+                    if (item.quantita === origQuantita) return null;
+
+                    return item.quantita > origQuantita
+                        ? `Aggiunti: ${item.quantita - origQuantita} ${item.piatto}`
+                        : `Eliminati: ${origQuantita - item.quantita} ${item.piatto}`;
+                })
+                .filter((msg): msg is string => msg !== null);
+
+            // 2. Chiamata UNICA al Database
+            const response = await salvaComandaCompleta(
+                numFoglietto,
+                sagra.giornata,
+                conto?.cameriere || 'Sconosciuto',
+                nomeCucina,
+                isNewConto,
+                products,
+                logMessaggi
+            );
+
+            if (response.success === false && response.error === 'DUPLICATE_CONTO') {
+                setSnackbarMessage("ATTENZIONE: Un'altra cucina ha appena aperto questo conto. Operazione bloccata per evitare duplicati.");
+                setOpenSnackbar(true);
+                setPhase('caricato');
+                return;
+            }
+
+            if (isNewConto) setIsNewConto(false);
+            if (response.logs) setLastLog(response.logs);
+
+            setPhase('inviato');
+            setProducts([]);
+            setIniProducts([]);
+
+        } catch (error) {
+            console.error("Errore nell'invio:", error);
+            setSnackbarMessage("Errore durante il salvataggio.");
+            setOpenSnackbar(true);
+            setPhase('caricato');
+        }
+    };
+
+    const handleButtonClickInviaOld = async () => {
         const haPortateValide = products.some(item => item.quantita > 0);
 
         // NUOVO CONTROLLO: Se il conto è NUOVO (isNewConto === true) e non ha piatti (> 0),
@@ -378,6 +454,16 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
                             ? 'Disattiva Visualizzazione Elementare'
                             : 'Attiva Visualizzazione Elementare'}
                     </Button>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handlechiamataunicaDB}
+                        sx={{ mt: 3, borderRadius: '9999px' }}
+                    >
+                        {chiamataunicaDB
+                            ? 'Disattiva chiamataunicaDB'
+                            : 'Attiva chiamataunicaDB'}
+                    </Button>
                 </div>
             );
 
@@ -424,6 +510,16 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
                         {showAlternateView
                             ? 'Disattiva Visualizzazione Elementare'
                             : 'Attiva Visualizzazione Elementare'}
+                    </Button>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handlechiamataunicaDB}
+                        sx={{ mt: 3, borderRadius: '9999px' }}
+                    >
+                        {chiamataunicaDB
+                            ? 'Disattiva chiamataunicaDB'
+                            : 'Attiva chiamataunicaDB'}
                     </Button>
                 </div>
             );

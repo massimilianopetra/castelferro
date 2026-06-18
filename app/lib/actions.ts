@@ -1151,3 +1151,115 @@ export async function getInizializzazioneCassa(num: number) {
   // Restituiamo un array vuoto se log è undefined
   return { gg, log: log || [], cc, c }; 
 }
+
+export async function salvaComandaCompleta(
+  id_comanda: number,
+  giorno: number,
+  cameriere: string,
+  cucina: string,
+  isNewConto: boolean,
+  prodotti: { id_piatto: number; piatto: string; quantita: number; alias: string; cucina: string }[],
+  logMessaggi: string[]
+) {
+  const date_format_millis = Date.now();
+
+  try {
+    // 1. Controllo preventivo concorrenza (Se un'altra postazione ha già creato il conto)
+    if (isNewConto) {
+      const checkConto = await executeQuery(`SELECT id FROM conti WHERE id_comanda = $1 AND giorno = $2`, [id_comanda, giorno]);
+      if (checkConto && checkConto.length > 0) {
+        return { success: false, error: 'DUPLICATE_CONTO' };
+      }
+      
+      // Crea il conto iniziale
+      await executeQuery(`
+        INSERT INTO conti (id_comanda, stato, totale, cameriere, giorno, data_apertura, data, data_chiusura)
+        VALUES ($1, 'APERTO', 0.0, $2, $3, $4, $4, 0)
+        ON CONFLICT DO NOTHING;
+      `, [id_comanda, cameriere, giorno, date_format_millis]);
+
+      // Scrive il log di inizio
+      await executeQuery(`
+        INSERT INTO logger (foglietto, azione, note, cucina, utente, giornata, data)
+        VALUES ($1, 'START', '', $2, '', $3, $4);
+      `, [id_comanda, cucina, giorno, date_format_millis]);
+    }
+
+    // 2. Prepariamo gli array nativi per l'operazione Batch sul DB
+    const idsPiatti = prodotti.map(p => p.id_piatto);
+    const nomiPiatti = prodotti.map(p => p.piatto);
+    const qtaPiatti = prodotti.map(p => p.quantita);
+    const cucinePiatti = prodotti.map(p => p.cucina);
+    const aliasesPiatti = prodotti.map(p => p.alias);
+
+    // 3. BULK UPSERT delle Consumazioni in un'unica query
+    // Applica direttamente sul DB la regola della "cucina diversa" che preserva le quantità altrui
+    await executeQuery(`
+      WITH input_data AS (
+        SELECT 
+          $1::integer AS comanda,
+          $2::integer AS g,
+          unnest($3::integer[]) AS piatto_id,
+          unnest($4::varchar[]) AS piatto_nome,
+          unnest($5::integer[]) AS qta,
+          unnest($6::varchar[]) AS cuc,
+          unnest($7::varchar[]) AS al,
+          $8::bigint AS data_millis
+      ),
+      upsert_existing AS (
+        UPDATE consumazioni c
+        SET 
+          quantita = CASE 
+            WHEN c.cucina != $9 AND i.qta = 0 THEN c.quantita 
+            ELSE i.qta 
+          END,
+          data = i.data_millis
+        FROM input_data i
+        WHERE c.id_comanda = i.comanda 
+          AND c.giorno = i.g 
+          AND c.id_piatto = i.piatto_id
+        RETURNING c.id_piatto
+      )
+      INSERT INTO consumazioni (id_comanda, giorno, id_piatto, piatto, quantita, cucina, data, alias)
+      SELECT comanda, g, piatto_id, piatto_nome, qta, cuc, data_millis, al
+      FROM input_data
+      WHERE piatto_id NOT IN (SELECT id_piatto FROM upsert_existing);
+    `, [id_comanda, giorno, idsPiatti, nomiPiatti, qtaPiatti, cucinePiatti, aliasesPiatti, date_format_millis, cucina]);
+
+    // 4. BULK INSERT dei Log di modifica (senza cicli di rete!)
+    if (logMessaggi && logMessaggi.length > 0) {
+      await executeQuery(`
+        INSERT INTO logger (foglietto, azione, note, cucina, utente, giornata, data)
+        SELECT $1, 'UPDATE', unnest($2::varchar[]), $3, '', $4, $5;
+      `, [id_comanda, logMessaggi, cucina, giorno, date_format_millis]);
+    }
+
+    // 5. RICALCOLO DEL TOTALE istantaneo eseguito dal motore SQL solo per questo conto
+    await executeQuery(`
+      UPDATE conti
+      SET totale = (
+        SELECT COALESCE(SUM(co.quantita * m.prezzo), 0)
+        FROM consumazioni co
+        JOIN menus m ON co.id_piatto = m.id
+        WHERE co.id_comanda = $1 AND co.giorno = $2
+      )
+      WHERE id_comanda = $1 AND giorno = $2;
+    `, [id_comanda, giorno]);
+
+    // 6. Recupero parallelo dello stato fresco da ritornare alla UI
+    const [logs, updatedConto] = await Promise.all([
+      getLastLog(giorno, cucina),
+      getConto(id_comanda, giorno)
+    ]);
+
+    return {
+      success: true,
+      logs: logs || [],
+      conto: updatedConto
+    };
+
+  } catch (error) {
+    console.error("Errore critico durante il salvataggio atomico:", error);
+    throw new Error("Salvataggio fallito.");
+  }
+}
