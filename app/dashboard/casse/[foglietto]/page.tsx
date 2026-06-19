@@ -6,8 +6,7 @@ import { useRouter } from 'next/navigation';
 import {
   Button, ButtonGroup, Link, Snackbar, TextField,
   Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress,
-  Box,
-  Typography
+  Box,FormControlLabel, Switch, Typography
 } from '@mui/material';
 import Filter1Icon from '@mui/icons-material/Filter1';
 import * as React from 'react';
@@ -286,8 +285,27 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     try {
       const numFoglietto = Number(numeroFoglietto);
 
-      // 1. Generiamo l'array dei messaggi di LOG in modo sincrono sul client
-      const logMessaggi = products
+      // 1. COSTRUIAMO IL PAYLOAD COMPLETO (Includendo i piatti eliminati o portati a zero)
+      // Partiamo clonando i prodotti attualmente visibili a schermo
+      const datiDaInviare = [...products];
+
+      // CORREZIONE: Confrontiamo con lo stato iniziale per trovare i piatti che l'utente ha del tutto rimosso dallo schermo
+      iniProducts.forEach(itemIniziale => {
+        const esisteAncoraA_Schermo = products.some(itemSchermo => itemSchermo.id_piatto === itemIniziale.id_piatto);
+
+        // Se il piatto era presente all'apertura ma ora non c'è più nell'array dello schermo,
+        // lo reinseriamo nel payload forzando la quantità a 0 per dire al backend di eliminarlo/azzerarlo.
+        if (!esisteAncoraA_Schermo) {
+          datiDaInviare.push({
+            ...itemIniziale,
+            quantita: 0
+          });
+        }
+      });
+
+      // 2. Generiamo l'array dei messaggi di LOG basandoci sul nuovo array 'datiDaInviare'
+      // In questo modo i log conterranno correttamente anche le diciture "Eliminati: X ..." per i piatti spariti
+      const logMessaggi = datiDaInviare
         .map(item => {
           const orig = iniProducts.find(o => o.id_piatto === item.id_piatto);
           const origQuantita = orig ? orig.quantita : 0;
@@ -299,14 +317,14 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         })
         .filter((msg): msg is string => msg !== null);
 
-      // 2. Chiamata UNICA al Database
+      // 3. Chiamata UNICA al Database (passando 'datiDaInviare' invece di 'products')
       const response = await salvaComandaCompleta(
         numFoglietto,
         sagra.giornata,
         'Casse',
         'Casse',
         isNewConto,
-        products,
+        datiDaInviare, // <-- Array corretto con i piatti a quantità 0
         logMessaggi
       );
 
@@ -317,7 +335,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         return;
       }
 
-      // 3. Aggiornamento dello stato della UI con la risposta del server
+      // 4. Aggiornamento dello stato della UI con la risposta del server
       if (isNewConto) setIsNewConto(false);
       if (response.logs) setLastLog(response.logs);
       if (response.conto) setConto(response.conto);
@@ -331,6 +349,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       setPhase('iniziale');
     }
   };
+
   const handleAggiornaOld = async () => {
     const haPortateValide = products.some(item => item.quantita > 0);
 
@@ -364,8 +383,6 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       }
 
       if (isNewConto) {
-        // OTTIMIZZAZIONE 1: Lanciamo in parallelo l'apertura del conto e il log iniziale.
-        // (Corretto anche l'errore di sintassi con la virgola che avevi nello snippet originale)
         await Promise.all([
           apriConto(numFoglietto, sagra.giornata, 'Casse'),
           writeLog(numFoglietto, sagra.giornata, 'Casse', '', 'UPDATE', '')
@@ -374,33 +391,63 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       }
 
       // 2. UNIAMO LE QUANTITÀ DELLO SCHERMO CON GLI ID DEL DATABASE APPENA SCARICATI
-      const datiDaInviare: DbConsumazioni[] = products.map(itemSchermo => {
-        // Cerchiamo se questo piatto esiste già sul database (magari inserito dall'altra cucina, es. Pane e Coperto)
-        const riscontroDb = consumazioniFresh?.find(dbItem => dbItem.id_piatto === itemSchermo.id_piatto);
+      const datiDaInviare: DbConsumazioni[] = [];
 
-        return {
+      // Gestiamo prima i prodotti attualmente visibili a schermo
+      products.forEach(itemSchermo => {
+        const riscontroDb = consumazioniFresh?.find(dbItem => dbItem.id_piatto === itemSchermo.id_piatto);
+        const orig = iniProducts.find(o => o.id_piatto === itemSchermo.id_piatto);
+
+        // Controlliamo se l'operatore ha modificato questo piatto rispetto a quando ha aperto la pagina
+        const rigaModificataDallUtente = orig ? orig.quantita !== itemSchermo.quantita : itemSchermo.quantita > 0;
+
+        let quantitaFinale = itemSchermo.quantita;
+
+        // Se l'utente NON ha toccato questo piatto, appartiene a un'altra cucina ed esiste già sul DB,
+        // allora preserviamo il valore fresco del DB (evita di sovrascrivere modifiche concorrenti).
+        // Se invece l'utente l'ha modificato (es. diminuito o azzerato), inviamo il suo nuovo valore.
+        if (!rigaModificataDallUtente && itemSchermo.cucina !== 'Casse' && riscontroDb) {
+          quantitaFinale = riscontroDb.quantita;
+        }
+
+        datiDaInviare.push({
           ...itemSchermo,
-          id: riscontroDb ? riscontroDb.id : -1, // Se esiste sul DB prende il suo ID reale, altrimenti resta -1
-          // Se la riga esiste sul DB ma appartiene a un'ALTRA cucina e noi non l'abbiamo toccata, 
-          // manteniamo la quantità del DB per evitare di azzerare il lavoro altrui
-          quantita: (itemSchermo.cucina !== 'Casse' && itemSchermo.quantita === 0 && riscontroDb)
-            ? riscontroDb.quantita
-            : itemSchermo.quantita
-        };
+          id: riscontroDb ? riscontroDb.id : -1,
+          quantita: quantitaFinale
+        });
       });
 
-      // 3. Generiamo i log usando i vecchi iniProducts
-      const logPromises = products
+      // CORREZIONE CRUCIALE: Recuperiamo i piatti che erano nel DB ma sono stati COMPLETAMENTE CANCELLATI dall'array 'products'
+      if (consumazioniFresh) {
+        consumazioniFresh.forEach(dbItem => {
+          const esisteInSchermo = products.some(itemSchermo => itemSchermo.id_piatto === dbItem.id_piatto);
+          const eraNeiProdottiIniziali = iniProducts.some(o => o.id_piatto === dbItem.id_piatto);
+
+          // Se il piatto non c'è più a schermo è stato portato a 0, ma era presente all'inizio (o appartiene alle Casse), dobbiamo inviarlo con quantità 0 per rimuoverlo
+          if (!esisteInSchermo && (eraNeiProdottiIniziali || dbItem.cucina === 'Casse')) {
+            datiDaInviare.push({
+              ...dbItem,
+              quantita: 0 // Comunica al backend di azzerare/eliminare la riga
+            });
+          }
+        });
+      }
+
+      // 3. Generiamo i log basandoci su 'datiDaInviare' confrontati con i vecchi 'iniProducts'
+      // In questo modo intercettiamo correttamente anche i log di eliminazione totale dei piatti rimossi dallo stato
+      const logPromises = datiDaInviare
         .map(item => {
           const orig = iniProducts.find(o => o.id_piatto === item.id_piatto);
           const origQuantita = orig ? orig.quantita : 0;
+
           if (item.quantita === origQuantita) return null;
 
+          const nomePiatto = item.piatto || orig?.piatto || `Piatto #${item.id_piatto}`;
           const message = item.quantita > origQuantita
-            ? `Aggiunti: ${item.quantita - origQuantita} ${item.piatto}`
-            : `Eliminati: ${origQuantita - item.quantita} ${item.piatto}`;
+            ? `Aggiunti: ${item.quantita - origQuantita} ${nomePiatto}`
+            : `Eliminati: ${origQuantita - item.quantita} ${nomePiatto}`;
 
-          return writeLog(item.id_comanda, sagra.giornata, 'Casse', '', 'UPDATE', message);
+          return writeLog(item.id_comanda || numFoglietto, sagra.giornata, 'Casse', '', 'UPDATE', message);
         })
         .filter((p): p is Promise<any> => p !== null);
 
@@ -410,10 +457,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         sendConsumazioni(datiDaInviare)
       ]);
 
-      // 5. OTTIMIZZAZIONE 2: Eseguiamo in parallelo l'aggiornamento del totale, la lettura dei log e il nuovo conto
+      // 5. OTTIMIZZAZIONE 2: Aggiornamento log e conto freschi
       const [logs, newCc] = await Promise.all([
-        //        const [, logs, newCc] = await Promise.all([
-        //          updateTotaleConto(numFoglietto, sagra.giornata),
         getLastLog(sagra.giornata, 'Casse'),
         getConto(numFoglietto, sagra.giornata)
       ]);
@@ -638,17 +683,18 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         <Button size="medium" className="font-semibold" variant="outlined" onClick={handleButtonClickCaricaAsporto} style={{ borderRadius: '9999px' }}>Asporto</Button>
         &nbsp;&nbsp;
         <Button size="medium" color="secondary" className="font-semibold" variant="outlined" onClick={handleButtonClickCaricaConto1} style={{ borderRadius: '9999px' }}>Camerieri</Button>
-           <Button
-           size="small"
-        variant="contained"
-        color="primary"
-        onClick={handlechiamataunicaDB}
-        sx={{ mt: 1, borderRadius: '9999px' }}
-      >
-        {chiamataunicaDB
-          ? 'Dis. Chiam.UnicaDB'
-          : 'Att. Chiam.UnicaDB'}
-      </Button>
+        &nbsp;
+        <FormControlLabel
+          control={
+            <Switch
+              checked={chiamataunicaDB} // Legge la variabile (true o false)
+              onChange={handlechiamataunicaDB} // Questa serve SOLO a far muovere la levetta quando clicchi
+              color="primary"
+            />
+          }
+          label={chiamataunicaDB ? 'Chiam_Unica' : 'Chiam_Standard'}
+          sx={{ mt: 1, '& .MuiFormControlLabel-label': { fontSize: '0.875rem', fontWeight: 'bold' } }}
+        />
       </div>
     </div>
   );

@@ -2,7 +2,7 @@
 import { memo } from 'react';
 import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { Button, ButtonGroup, Snackbar, TextField, Modal, Box, Typography, IconButton } from '@mui/material';
+import { Button, ButtonGroup, Snackbar, TextField, Modal, Box, Typography, IconButton,FormControlLabel, Switch  } from '@mui/material';
 import StarsIcon from '@mui/icons-material/Stars';
 import CircularProgress from '@mui/material/CircularProgress';
 import Filter1Icon from '@mui/icons-material/Filter1';
@@ -14,7 +14,6 @@ import {
     getConto,
     apriConto,
     getCamerieri,
-    updateTotaleConto,
     writeLog,
     getGiornoSagra,
     getLastLog,
@@ -454,16 +453,17 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
                             ? 'Disattiva Visualizzazione Elementare'
                             : 'Attiva Visualizzazione Elementare'}
                     </Button>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handlechiamataunicaDB}
-                        sx={{ mt: 3, borderRadius: '9999px' }}
-                    >
-                        {chiamataunicaDB
-                            ? 'Disattiva chiamataunicaDB'
-                            : 'Attiva chiamataunicaDB'}
-                    </Button>
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={chiamataunicaDB} // Legge la variabile (true o false)
+                                onChange={handlechiamataunicaDB} // Questa serve SOLO a far muovere la levetta quando clicchi
+                                color="primary"
+                            />
+                        }
+                        label={chiamataunicaDB ? 'Chiam_Unica' : 'Chiam_Standard'}
+                        sx={{ mt: 1, '& .MuiFormControlLabel-label': { fontSize: '0.875rem', fontWeight: 'bold' } }}
+                    />
                 </div>
             );
 
@@ -511,16 +511,17 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
                             ? 'Disattiva Visualizzazione Elementare'
                             : 'Attiva Visualizzazione Elementare'}
                     </Button>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        onClick={handlechiamataunicaDB}
-                        sx={{ mt: 3, borderRadius: '9999px' }}
-                    >
-                        {chiamataunicaDB
-                            ? 'Disattiva chiamataunicaDB'
-                            : 'Attiva chiamataunicaDB'}
-                    </Button>
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={chiamataunicaDB} // Legge la variabile (true o false)
+                                onChange={handlechiamataunicaDB} // Questa serve SOLO a far muovere la levetta quando clicchi
+                                color="primary"
+                            />
+                        }
+                        label={chiamataunicaDB ? 'Chiam_Unica' : 'Chiam_Standard'}
+                        sx={{ mt: 1, '& .MuiFormControlLabel-label': { fontSize: '0.875rem', fontWeight: 'bold' } }}
+                    />
                 </div>
             );
 
