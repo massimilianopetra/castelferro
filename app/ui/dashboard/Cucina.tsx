@@ -224,18 +224,18 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
 
     /* ------------------------------INVIO CONSUMAZIONI------------------------------ */
     const handleButtonClickInvia = async () => {
-        if (chiamataunicaDB) {
-                  setSnackbarMessage("handleButtonClickInviaNew chiamata unica DB");
-      setOpenSnackbar(true);
-            await handleButtonClickInviaNew();
-        } else {
-                  setSnackbarMessage("handleButtonClickInviaOld chiamate standard");
-      setOpenSnackbar(true);
-            await handleButtonClickInviaOld();
-        }
+        //   if (chiamataunicaDB) {
+        //             setSnackbarMessage("handleButtonClickInviaNew chiamata unica DB");
+        //  setOpenSnackbar(true);
+        //      await handleButtonClickInviaNew();
+        //  } else {
+        // setSnackbarMessage("handleButtonClickInviaOld chiamate standard");
+        // setOpenSnackbar(true);
+        await handleButtonClickInviaOld();
+        //  }
     };
- 
 
+/*
     const handleButtonClickInviaNew = async () => {
         const haPortateValide = products.some(item => item.quantita > 0);
 
@@ -296,7 +296,7 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
             setPhase('caricato');
         }
     };
-
+*/
     const handleButtonClickInviaOld = async () => {
         const haPortateValide = products.some(item => item.quantita > 0);
 
@@ -453,17 +453,7 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
                             ? 'Disattiva Visualizzazione Elementare'
                             : 'Attiva Visualizzazione Elementare'}
                     </Button>
-                    <FormControlLabel
-                        control={
-                            <Switch
-                                checked={chiamataunicaDB} // Legge la variabile (true o false)
-                                onChange={handlechiamataunicaDB} // Questa serve SOLO a far muovere la levetta quando clicchi
-                                color="primary"
-                            />
-                        }
-                        label={chiamataunicaDB ? 'Chiam_Unica' : 'Chiam_Standard'}
-                        sx={{ mt: 1, '& .MuiFormControlLabel-label': { fontSize: '0.875rem', fontWeight: 'bold' } }}
-                    />
+ 
                 </div>
             );
 
@@ -511,17 +501,7 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
                             ? 'Disattiva Visualizzazione Elementare'
                             : 'Attiva Visualizzazione Elementare'}
                     </Button>
-                    <FormControlLabel
-                        control={
-                            <Switch
-                                checked={chiamataunicaDB} // Legge la variabile (true o false)
-                                onChange={handlechiamataunicaDB} // Questa serve SOLO a far muovere la levetta quando clicchi
-                                color="primary"
-                            />
-                        }
-                        label={chiamataunicaDB ? 'Chiam_Unica' : 'Chiam_Standard'}
-                        sx={{ mt: 1, '& .MuiFormControlLabel-label': { fontSize: '0.875rem', fontWeight: 'bold' } }}
-                    />
+
                 </div>
             );
 

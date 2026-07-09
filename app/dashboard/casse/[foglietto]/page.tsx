@@ -260,17 +260,17 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   */
   /* ------------------------------AGGIORNA CONSUMAZIONI------------------------------ */
   const handleAggiorna = async () => {
-    if (chiamataunicaDB) {
-      setSnackbarMessage("handleAggiornaNew chiamata unica DB");
-      setOpenSnackbar(true);
-      await handleAggiornaNew();
-    } else {
-      setSnackbarMessage("handleAggiornaOld chiamate standard");
-      setOpenSnackbar(true);
+   // if (chiamataunicaDB) {
+   //   setSnackbarMessage("handleAggiornaNew chiamata unica DB");
+   //   setOpenSnackbar(true);
+   //   await handleAggiornaNew();
+   // } else {
+   //   setSnackbarMessage("handleAggiornaOld chiamate standard");
+   //   setOpenSnackbar(true);
       await handleAggiornaOld();
-    }
+   // }
   };
-  const handleAggiornaNew = async () => {
+  /*const handleAggiornaNew = async () => {
     const haPortateValide = products.some(item => item.quantita > 0);
 
     if (!haPortateValide && isNewConto) {
@@ -349,7 +349,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       setPhase('iniziale');
     }
   };
-
+*/
   const handleAggiornaOld = async () => {
     const haPortateValide = products.some(item => item.quantita > 0);
 
@@ -684,18 +684,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         &nbsp;&nbsp;
         <Button size="medium" color="secondary" className="font-semibold" variant="outlined" onClick={handleButtonClickCaricaConto1} style={{ borderRadius: '9999px' }}>Camerieri</Button>
         &nbsp;
-        <FormControlLabel
-          control={
-            <Switch
-              checked={chiamataunicaDB} // Legge la variabile (true o false)
-              onChange={handlechiamataunicaDB} // Questa serve SOLO a far muovere la levetta quando clicchi
-              color="primary"
-            />
-          }
-          label={chiamataunicaDB ? 'Chiam_Unica' : 'Chiam_Standard'}
-          sx={{ mt: 1, '& .MuiFormControlLabel-label': { fontSize: '0.875rem', fontWeight: 'bold' } }}
-        />
-      </div>
+    </div>
     </div>
   );
 
