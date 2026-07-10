@@ -57,7 +57,7 @@ export default function MenuPage() {
         await setMenuAllAvailable();
         setProducts(newProducts);
     };
-
+/*
     const handleFileChange = async (event: Event) => {
         const input = event.target as HTMLInputElement;
         const file = input.files?.[0];
@@ -75,7 +75,35 @@ export default function MenuPage() {
             await overwriteMenu(data);
         }
     };
+*/
+const handleFileChange = async (event: Event) => {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (file) {
+        const text = await file.text();
+        const rows = text.trim().split("\n"); 
+        
+        const data = rows.slice(1).map((row) => {
+            // Questa regex divide per virgola MA ignora le virgole dentro i testi tra virgolette
+            const values = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || row.split(",");
+            
+            // Pulisce le virgolette dai testi se presenti
+            const clean = (val: string) => val ? val.replace(/^"|确认|"$|/g, '').trim() : '';
 
+            return { 
+                id: Number(clean(values[0])), 
+                piatto: clean(values[1]), 
+                prezzo: Number(clean(values[2])), 
+                cucina: clean(values[3]), 
+                disponibile: clean(values[4]), 
+                alias: clean(values[5]), 
+                percentuale: Number(clean(values[6])) 
+            } as DbMenu;
+        });
+        setProducts(data);
+        await overwriteMenu(data);
+    }
+};
     const handleUploadClick = () => {
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
