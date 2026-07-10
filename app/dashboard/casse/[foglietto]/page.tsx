@@ -511,7 +511,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       setPhase('aperto');
     }
   };
-const print = () => {
+
+  const print = () => {
     const printArea = printRef.current;
     if (!printArea) {
       console.warn("ATTENZIONE: La stampa è fallita perché 'printRef.current' è NULL.");
@@ -519,10 +520,9 @@ const print = () => {
     }
     const newWindow = window.open("", "", "width=800,height=900");
     if (newWindow) {
-      newWindow.document.write('<html><head><title>Stampa Conto</title>');
+      newWindow.document.write('<!DOCTYPE html><html><head><title>Stampa Conto</title>');
 
-      // 1. CLONIAMO TUTTI I FOGLI DI STILE ESISTENTI (Sia tag <style> che fogli <link>)
-      // Questo dice al pop-up di caricare le esatte classi reali generate da Docker/MUI/Tailwind
+      // Clona gli stili attuali (in Dev terranno centrato tutto, in Docker evitano disastri)
       document.querySelectorAll('link[rel="stylesheet"]').forEach(s => {
         const href = s.getAttribute('href');
         if (href && href.startsWith('/')) {
@@ -533,41 +533,36 @@ const print = () => {
       });
       document.querySelectorAll('style').forEach(s => newWindow.document.write(s.outerHTML));
 
-      // 2. AGGIUNGIAMO SOLO LE DIRETTIME FISICHE DI PAGINA SENZA TOCCARE LE CLASSI INTERNE
+      // Reset della pagina fisica per eliminare i margini variabili del browser in Docker
       newWindow.document.write(`
         <style>
-          /* Rimuove i margini predefiniti del browser che in Docker sballano */
           @page {
             size: auto;
             margin: 0mm !important;
           }
-          
-          /* Resetta l'ambiente contenitore ma NON gli elementi interni della comanda */
           html, body {
-            background-color: #ffffff !important;
             margin: 0px !important;
             padding: 0px !important;
+            background-color: #ffffff !important;
             width: 100% !important;
+            height: auto !important;
           }
-
-          /* Contenitore protettivo: dà solo il margine esterno sul foglio */
-          .wrapper-stampa-docker {
-            padding: 6mm 8mm 6mm 8mm !important; /* Spazio dai bordi fisici del foglio */
-            width: 100% !important;
-            box-sizing: border-box !important;
-          }
-
           * {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+            box-sizing: border-box !important;
           }
         </style>
       `);
 
       newWindow.document.write('</head><body>');
-      // Avvolgiamo l'HTML originale nel wrapper per i margini sul foglio
-      newWindow.document.write('<div class="wrapper-stampa-docker">');
+      
+      // Wrapper con stile inline nativo: forza la centratura totale sia in VS Code (Dev) che in Docker Desktop (Prod)
+      newWindow.document.write('<div style="display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: flex-start !important; width: 100% !important; padding: 8mm 12mm 8mm 12mm !important; box-sizing: border-box !important;">');
+      
+      // Inserisce l'HTML effettivo del preconto
       newWindow.document.write(printArea.innerHTML);
+      
       newWindow.document.write('</div>');
       newWindow.document.write('</body></html>');
       newWindow.document.close();
