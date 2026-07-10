@@ -511,84 +511,95 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       setPhase('aperto');
     }
   };
-  const print = () => {
-  const printArea = printRef.current;
-  if (!printArea) {
-    console.warn("ATTENZIONE: La stampa è fallita perché 'printRef.current' è NULL.");
-    return;
-  }
-  const newWindow = window.open("", "", "width=800,height=900");
-  if (newWindow) {
-    newWindow.document.write('<html><head><title>Stampa Conto</title>');
+const print = () => {
+    const printArea = printRef.current;
+    if (!printArea) {
+      console.warn("ATTENZIONE: La stampa è fallita perché 'printRef.current' è NULL.");
+      return;
+    }
+    const newWindow = window.open("", "", "width=800,height=900");
+    if (newWindow) {
+      newWindow.document.write('<html><head><title>Stampa Conto</title>');
 
-    // Manteniamo il ciclo dei fogli di stile attuali per sicurezza...
-    document.querySelectorAll('link[rel="stylesheet"]').forEach(s => {
-      const href = s.getAttribute('href');
-      if (href && href.startsWith('/')) {
-        newWindow.document.write(`<link rel="stylesheet" href="${window.location.origin}${href}">`);
-      } else {
-        newWindow.document.write(s.outerHTML);
+      // 1. Proviamo a clonare gli stili attuali presenti nella pagina
+      try {
+        document.querySelectorAll('link[rel="stylesheet"]').forEach(s => {
+          const href = s.getAttribute('href');
+          if (href && href.startsWith('/')) {
+            newWindow.document.write(`<link rel="stylesheet" href="${window.location.origin}${href}">`);
+          } else {
+            newWindow.document.write(s.outerHTML);
+          }
+        });
+        document.querySelectorAll('style').forEach(s => newWindow.document.write(s.outerHTML));
+      } catch (e) {
+        console.error("Errore nel caricamento dei link CSS dinamici:", e);
       }
-    });
 
-    document.querySelectorAll('style').forEach(s => newWindow.document.write(s.outerHTML));
+      // 2. FORZIAMO IL CSS DI EMERGENZA (Risolve il problema del container Docker)
+      // Queste regole dicono al browser esattamente come renderizzare la tabella 
+      // anche se Tailwind o i fogli di stile di produzione venissero bloccati.
+      newWindow.document.write(`
+        <style>
+          html, body {
+            height: auto !important;
+            overflow: visible !important;
+            background-color: #ffffff !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+            color: #000000 !important;
+          }
+          @page {
+            size: auto;
+            margin: 8mm 10mm 8mm 10mm !important; /* Forza i margini della pagina di stampa */
+          }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            box-sizing: border-box !important;
+          }
+          
+          /* Ripristino e forzatura del layout della tabella dello scontrino */
+          table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            margin-top: 10px !important;
+            margin-bottom: 10px !important;
+          }
+          th, td {
+            padding: 4px 6px !important;
+            line-height: 1.4 !important;
+          }
+          
+          /* Assicuriamoci che le classi di allineamento basilari funzionino sempre */
+          .text-left { text-align: left !important; }
+          .text-center { text-align: center !important; }
+          .text-right { text-align: right !important; }
+          .font-bold { font-weight: 700 !important; }
+          .w-full { width: 100% !important; }
+          
+          /* Separatori (le linee tratteggiate o i bordi sotto i totali) */
+          .border-t { border-top: 1px solid #000000 !important; }
+          .border-b { border-bottom: 1px solid #000000 !important; }
+          .border-dashed { border-style: dashed !important; }
+        </style>
+      `);
 
-    // FORZIAMO GLI STILI INTERNI (Risolve il problema dei margini e dei font in Docker)
-    newWindow.document.write(`
-    <style>
-      html, body {
-        height: auto !important;
-        overflow: visible !important;
-        background-color: #ffffff !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
-      }
-      @page {
-        size: auto;
-        margin: 10mm 15mm 10mm 15mm; /* Forza i margini fisici della pagina di stampa */
-      }
-      * {
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-      }
-      .print-container {
-        width: 100% !important;
-        height: auto !important;
-        overflow: visible !important;
-        padding: 10px;
-      }
-      /* Stili di fallback espliciti per la tabella se i CSS di Tailwind/MUI non caricano in Docker */
-      table {
-        width: 100% !important;
-        border-collapse: collapse !important;
-        margin-top: 15px !important;
-      }
-      th, td {
-        padding: 6px 8px !important;
-        text-align: left !important;
-      }
-      .text-end {
-        text-align: right !important;
-      }
-      .font-bold {
-        font-weight: bold !important;
-      }
-    </style>
-  `);
+      newWindow.document.write('</head><body>');
+      // Inseriamo l'HTML racchiuso nel printRef
+      newWindow.document.write(printArea.innerHTML);
+      newWindow.document.write('</body></html>');
+      newWindow.document.close();
 
-    newWindow.document.write('</head><body><div class="print-container">');
-    newWindow.document.write(printArea.innerHTML);
-    newWindow.document.write('</div></body></html>');
-    newWindow.document.close();
-
-    setTimeout(() => {
-      newWindow.focus();
-      newWindow.print();
-      newWindow.close();
-    }, 600);
-  }
-};
+      // Un leggero ritardo permette al browser in Docker di renderizzare i font prima del comando di stampa
+      setTimeout(() => {
+        newWindow.focus();
+        newWindow.print();
+        newWindow.close();
+      }, 400);
+    }
+  };
 /*
   const print = () => {
     const printArea = printRef.current;
