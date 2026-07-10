@@ -567,17 +567,7 @@ const print = () => {
             box-sizing: border-box !important;
           }
 
-          /* === FORZATURA DI PRECISIONE PER L'ULTIMA RIGA / RIGHE DI TOTALE === */
-          /* Impedisce alla parola Totale e al Prezzo di dividersi su due righe diverse */
-          div[class*="total"], 
-          p[class*="total"], 
-          .MuiBox-root:last-child {
-            display: flex !important;
-            flex-direction: row !important;
-            justify-content: space-between !important; /* Spinge il testo a sinistra e il prezzo a destra */
-            align-items: center !important;
-            width: 100% !important;
-            white-space: nowrap !important; /* Blocca il ritorno a capo del prezzo */
+
           }
         </style>
       `);
