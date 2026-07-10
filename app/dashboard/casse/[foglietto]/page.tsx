@@ -521,11 +521,11 @@ const print = () => {
     if (newWindow) {
       newWindow.document.write('<html><head><title>Stampa Conto</title>');
 
-      // FORZIAMO IL RESET STRUTTURALE (Risolve il problema del container Docker)
-      // Questo mini-bundle CSS emula esattamente il comportamento locale e impedisce alle scritte di unirsi
+      // FORZATURA STRUTTURALE COMPLETA SUI TAG NATIVI
+      // Questo stile si applica a prescindere dalle classi di Tailwind/MUI
       newWindow.document.write(`
         <style>
-          /* Reset globale per la finestra di stampa */
+          /* Reset Radicale */
           html, body {
             height: auto !important;
             overflow: visible !important;
@@ -540,56 +540,70 @@ const print = () => {
           
           @page {
             size: auto;
-            margin: 4mm 6mm 4mm 6mm !important; /* Margini fisici dello scontrino */
+            margin: 6mm 8mm !important;
           }
 
-          /* Struttura per preservare gli allineamenti orizzontali dei div ed elementi inline */
-          div, span, p {
+          /* Intercettiamo la struttura a riga (Flexbox o griglie) */
+          /* Se gli elementi sono dentro contenitori affiancati, forziamo il comportamento corretto */
+          div {
             box-sizing: border-box !important;
           }
 
-          /* Se usi tabelle standard HTML, impediamo che collassino o azzerino i padding */
+          /* Se il componente usa una Tabella HTML standard */
           table {
             width: 100% !important;
             border-collapse: collapse !important;
-            margin-top: 5px !important;
-            margin-bottom: 5px !important;
+            margin-top: 10px !important;
+            margin-bottom: 10px !important;
           }
           th, td {
-            padding: 4px 6px !important;
+            padding: 5px 8px !important;
             line-height: 1.4 !important;
           }
 
-          /* Supporto nativo di emergenza per le classi Tailwind (se usate nel preconto) */
+          /* SOVRASCRITTURA AGGRESSIVA DELLE CLASSI DI DISTANZIAMENTO */
+          /* Mappiamo tutte le varianti possibili che Tailwind o MUI generano in produzione */
+          *[class*="justify-between"], 
+          *[class*="MuiGrid-container"] {
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: space-between !important;
+            width: 100% !important;
+          }
+
+          *[class*="text-right"], 
+          *[class*="alignRight"] {
+            text-align: right !important;
+          }
+
+          *[class*="text-center"] {
+            text-align: center !important;
+          }
+
+          *[class*="font-bold"], 
+          *[class*="fontWeightBold"] {
+            font-weight: bold !important;
+          }
+
+          /* Forza un blocco di sicurezza se ci sono allineamenti saltati */
           .flex { display: flex !important; }
           .justify-between { justify-content: space-between !important; }
-          .text-left { text-align: left !important; }
-          .text-center { text-align: center !important; }
           .text-right { text-align: right !important; }
-          .font-bold { font-weight: 700 !important; }
-          .w-full { width: 100% !important; }
-          .whitespace-nowrap { white-space: nowrap !important; }
-          
-          /* Separatori */
-          .border-t { border-top: 1px solid #000000 !important; }
-          .border-b { border-bottom: 1px solid #000000 !important; }
-          .border-dashed { border-style: dashed !important; }
         </style>
       `);
 
       newWindow.document.write('</head><body>');
-      // Cloniamo l'HTML esatto generato a schermo dal tuo componente
+      // Prendiamo l'HTML così come lo vede l'utente a schermo (già renderizzato con successo)
       newWindow.document.write(printArea.innerHTML);
       newWindow.document.write('</body></html>');
       newWindow.document.close();
 
-      // Un piccolo ritardo (400ms) permette al motore del browser in produzione 
-      // di applicare le regole CSS prima di aprire la schermata di stampa
+      // Diamo un po' di millisecondi in più per forzare il rendering in ambiente di produzione Docker
       setTimeout(() => {
         newWindow.focus();
         newWindow.print();
         newWindow.close();
-      }, 400);
+      }, 500);
     }
   };
 /*
