@@ -517,66 +517,47 @@ const print = () => {
       console.warn("ATTENZIONE: La stampa è fallita perché 'printRef.current' è NULL.");
       return;
     }
-    
     const newWindow = window.open("", "", "width=800,height=900");
     if (newWindow) {
-      // Creiamo un documento pulito senza fare affidamento sui file CSS esterni di Next.js/Docker
-      newWindow.document.write('<!DOCTYPE html><html><head><title>Stampa Conto</title>');
+      newWindow.document.write('<html><head><title>Stampa Conto</title>');
 
-      // INIETTIAMO LO STILE DIRETTAMENTE (Docker non può bloccarlo)
+      // 1. CLONIAMO TUTTI I FOGLI DI STILE ESISTENTI (Sia tag <style> che fogli <link>)
+      // Questo dice al pop-up di caricare le esatte classi reali generate da Docker/MUI/Tailwind
+      document.querySelectorAll('link[rel="stylesheet"]').forEach(s => {
+        const href = s.getAttribute('href');
+        if (href && href.startsWith('/')) {
+          newWindow.document.write(`<link rel="stylesheet" href="${window.location.origin}${href}">`);
+        } else {
+          newWindow.document.write(s.outerHTML);
+        }
+      });
+      document.querySelectorAll('style').forEach(s => newWindow.document.write(s.outerHTML));
+
+      // 2. AGGIUNGIAMO SOLO LE DIRETTIME FISICHE DI PAGINA SENZA TOCCARE LE CLASSI INTERNE
       newWindow.document.write(`
         <style>
-          /* Forza i margini della pagina fisica della stampante */
+          /* Rimuove i margini predefiniti del browser che in Docker sballano */
           @page {
             size: auto;
-            margin: 4mm 6mm 4mm 6mm !important;
+            margin: 0mm !important;
           }
           
-          /* Reset totale del corpo del pop-up */
+          /* Resetta l'ambiente contenitore ma NON gli elementi interni della comanda */
           html, body {
-            margin: 0 !important;
-            padding: 0 !important;
             background-color: #ffffff !important;
-            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
-            color: #000000 !important;
+            margin: 0px !important;
+            padding: 0px !important;
             width: 100% !important;
           }
 
-          /* Garantisce che i contenitori interni occupino tutto lo spazio orizzontale */
-          .stampa-body-wrapper {
+          /* Contenitore protettivo: dà solo il margine esterno sul foglio */
+          .wrapper-stampa-docker {
+            padding: 6mm 8mm 6mm 8mm !important; /* Spazio dai bordi fisici del foglio */
             width: 100% !important;
-            display: block !important;
+            box-sizing: border-box !important;
           }
-
-          /* --- EMULAZIONE STILI TAVOLO / COMANDA --- */
-          /* Se Summarythebill genera strutture Flex (justify-between), le forziamo in modo nativo */
-          .flex { display: flex !important; }
-          .justify-between { justify-content: space-between !important; }
-          .items-center { align-items: center !important; }
-          .w-full { width: 100% !important; }
-          
-          /* Allineamenti e Pesi testo */
-          .text-left { text-align: left !important; }
-          .text-center { text-align: center !important; }
-          .text-right { text-align: right !important; }
-          .font-bold { font-weight: 700 !important; }
-          
-          /* Gestione tabelle (se presenti nel componente) */
-          table {
-            width: 100% !important;
-            border-collapse: collapse !important;
-          }
-          th, td {
-            padding: 4px 6px !important;
-          }
-
-          /* Linee e divisori */
-          .border-t { border-top: 1px solid #000000 !important; }
-          .border-b { border-bottom: 1px solid #000000 !important; }
-          .border-dashed { border-style: dashed !important; }
 
           * {
-            box-sizing: border-box !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
@@ -584,19 +565,18 @@ const print = () => {
       `);
 
       newWindow.document.write('</head><body>');
-      // Avvolgiamo il tutto nel wrapper protettivo a larghezza piena
-      newWindow.document.write('<div class="stampa-body-wrapper">');
+      // Avvolgiamo l'HTML originale nel wrapper per i margini sul foglio
+      newWindow.document.write('<div class="wrapper-stampa-docker">');
       newWindow.document.write(printArea.innerHTML);
       newWindow.document.write('</div>');
       newWindow.document.write('</body></html>');
       newWindow.document.close();
 
-      // Aspettiamo che il browser elabori il DOM strutturato
       setTimeout(() => {
         newWindow.focus();
         newWindow.print();
         newWindow.close();
-      }, 350);
+      }, 400);
     }
   };
 /*
