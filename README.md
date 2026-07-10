@@ -42,3 +42,5 @@ docker builder prune -f
 
 # PER FAR LOGGARE IL DOCKER DESKTOP docker login
 # DOWNLOAD DI UNA IMMAGINE docker scout quickview ironcastle/castelferro:v41
+(Apri Docker Desktop  - IMAGE - MY HUB - e cerca l-immagine e poi fai PULL  )
+
