@@ -521,89 +521,61 @@ const print = () => {
     if (newWindow) {
       newWindow.document.write('<html><head><title>Stampa Conto</title>');
 
-      // FORZATURA STRUTTURALE COMPLETA SUI TAG NATIVI
-      // Questo stile si applica a prescindere dalle classi di Tailwind/MUI
+      // Copiamo i fogli di stile esistenti per non perdere la struttura
+      document.querySelectorAll('link[rel="stylesheet"]').forEach(s => {
+        const href = s.getAttribute('href');
+        if (href && href.startsWith('/')) {
+          newWindow.document.write(`<link rel="stylesheet" href="${window.location.origin}${href}">`);
+        } else {
+          newWindow.document.write(s.outerHTML);
+        }
+      });
+      document.querySelectorAll('style').forEach(s => newWindow.document.write(s.outerHTML));
+
+      // CORREZIONE DEI MARGINI E DELLA GEOMETRIA DI STAMPA
       newWindow.document.write(`
         <style>
-          /* Reset Radicale */
-          html, body {
-            height: auto !important;
-            overflow: visible !important;
-            background-color: #ffffff !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
-            color: #000000 !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          
+          /* 1. Reset totale dei margini della pagina fisica gestiti dal browser */
           @page {
             size: auto;
-            margin: 6mm 8mm !important;
+            margin: 0mm !important; /* Elimina i margini del browser che in Docker sballano */
+          }
+          
+          /* 2. Applichiamo i margini reali direttamente sul body tramite padding */
+          html, body {
+            background-color: #ffffff !important;
+            margin: 0px !important;
+            padding: 0px !important;
           }
 
-          /* Intercettiamo la struttura a riga (Flexbox o griglie) */
-          /* Se gli elementi sono dentro contenitori affiancati, forziamo il comportamento corretto */
-          div {
+          /* 3. Contenitore wrapper per bloccare la formattazione originale senza farla attaccare ai bordi */
+          .docker-print-wrapper {
+            padding: 10mm 12mm 10mm 12mm !important; /* Regola questi valori per distanziare il blocco dai bordi */
+            width: 100% !important;
             box-sizing: border-box !important;
           }
 
-          /* Se il componente usa una Tabella HTML standard */
-          table {
-            width: 100% !important;
-            border-collapse: collapse !important;
-            margin-top: 10px !important;
-            margin-bottom: 10px !important;
+          /* Forza il motore di rendering a mantenere i colori e i layout esatti */
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
           }
-          th, td {
-            padding: 5px 8px !important;
-            line-height: 1.4 !important;
-          }
-
-          /* SOVRASCRITTURA AGGRESSIVA DELLE CLASSI DI DISTANZIAMENTO */
-          /* Mappiamo tutte le varianti possibili che Tailwind o MUI generano in produzione */
-          *[class*="justify-between"], 
-          *[class*="MuiGrid-container"] {
-            display: flex !important;
-            flex-direction: row !important;
-            justify-content: space-between !important;
-            width: 100% !important;
-          }
-
-          *[class*="text-right"], 
-          *[class*="alignRight"] {
-            text-align: right !important;
-          }
-
-          *[class*="text-center"] {
-            text-align: center !important;
-          }
-
-          *[class*="font-bold"], 
-          *[class*="fontWeightBold"] {
-            font-weight: bold !important;
-          }
-
-          /* Forza un blocco di sicurezza se ci sono allineamenti saltati */
-          .flex { display: flex !important; }
-          .justify-between { justify-content: space-between !important; }
-          .text-right { text-align: right !important; }
         </style>
       `);
 
+      // Avvolgiamo il tuo HTML originale nel wrapper protettivo dei margini
       newWindow.document.write('</head><body>');
-      // Prendiamo l'HTML così come lo vede l'utente a schermo (già renderizzato con successo)
+      newWindow.document.write('<div class="docker-print-wrapper">');
       newWindow.document.write(printArea.innerHTML);
+      newWindow.document.write('</div>');
       newWindow.document.write('</body></html>');
       newWindow.document.close();
 
-      // Diamo un po' di millisecondi in più per forzare il rendering in ambiente di produzione Docker
       setTimeout(() => {
         newWindow.focus();
         newWindow.print();
         newWindow.close();
-      }, 500);
+      }, 400);
     }
   };
 /*
