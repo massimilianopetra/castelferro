@@ -39,3 +39,6 @@ docker builder prune -f
 # MENTRE PER scariare 
 - git pull 
 # se hai fatto dekke modifiche per cui non puoi fare la pull il comando per non considerale è 
+
+# PER FAR LOGGARE IL DOCKER DESKTOP docker login
+# DOWNLOAD DI UNA IMMAGINE docker scout quickview ironcastle/castelferro:v41
