@@ -512,7 +512,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     }
   };
 
-  const print = () => {
+ const print = () => {
     const printArea = printRef.current;
     if (!printArea) {
       console.warn("ATTENZIONE: La stampa è fallita perché 'printRef.current' è NULL.");
@@ -522,7 +522,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     if (newWindow) {
       newWindow.document.write('<!DOCTYPE html><html><head><title>Stampa Conto</title>');
 
-      // Clona gli stili attuali (in Dev terranno centrato tutto, in Docker evitano disastri)
+      // Clona gli stili attuali
       document.querySelectorAll('link[rel="stylesheet"]').forEach(s => {
         const href = s.getAttribute('href');
         if (href && href.startsWith('/')) {
@@ -533,7 +533,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       });
       document.querySelectorAll('style').forEach(s => newWindow.document.write(s.outerHTML));
 
-      // Reset della pagina fisica per eliminare i margini variabili del browser in Docker
+      // 1. BLOCCO DI SALVATAGGIO CSS (Reintegra i bold e gli allineamenti persi in Docker)
       newWindow.document.write(`
         <style>
           @page {
@@ -546,7 +546,25 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             background-color: #ffffff !important;
             width: 100% !important;
             height: auto !important;
+            color: #000000 !important;
           }
+          
+          /* Forziamo i comandi Tailwind/MUI che Docker cancella in produzione */
+          .flex, [class*="flex"] { display: flex !important; }
+          .justify-between, [class*="justify-between"] { justify-content: space-between !important; }
+          .items-center, [class*="items-center"] { align-items: center !important; }
+          .w-full, [class*="w-full"] { width: 100% !important; }
+          
+          /* Forzatura aggressiva dei grassetti e degli allineamenti testo */
+          .font-bold, [class*="bold"], b, strong { font-weight: 700 !important; }
+          .text-right, [class*="text-right"] { text-align: right !important; }
+          .text-center, [class*="text-center"] { text-align: center !important; }
+          .text-left, [class*="text-left"] { text-align: left !important; }
+
+          /* Se ci sono tabelle, assicuriamo che prezzi e quantità siano allineati */
+          table { width: 100% !important; border-collapse: collapse !important; }
+          th { font-weight: 700 !important; }
+          
           * {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
@@ -557,13 +575,32 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
       newWindow.document.write('</head><body>');
       
-      // Wrapper con stile inline nativo: forza la centratura totale sia in VS Code (Dev) che in Docker Desktop (Prod)
-      newWindow.document.write('<div style="display: flex !important; flex-direction: column !important; align-items: center !important; justify-content: flex-start !important; width: 100% !important; padding: 8mm 12mm 8mm 12mm !important; box-sizing: border-box !important;">');
+      // 2. DOPPIO WRAPPER INLINE
+      // Il div esterno centra il contenuto sul foglio della stampante (come già faceva)
+      // Il div interno fissa una larghezza massima da scontrino (es. 80mm) affinché il justify-between funzioni
+      newWindow.document.write(`
+        <div style="
+          display: flex !important; 
+          flex-direction: column !important; 
+          align-items: center !important; 
+          justify-content: flex-start !important; 
+          width: 100% !important; 
+          padding: 8mm 0 !important; 
+          box-sizing: border-box !important;
+        ">
+          <div style="
+            width: 100% !important; 
+            max-width: 78mm !important; /* Modifica questo valore in base alla larghezza della carta (es. 58mm o 80mm) */
+            padding: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+          ">
+      `);
       
       // Inserisce l'HTML effettivo del preconto
       newWindow.document.write(printArea.innerHTML);
       
-      newWindow.document.write('</div>');
+      newWindow.document.write('</div></div>');
       newWindow.document.write('</body></html>');
       newWindow.document.close();
 
