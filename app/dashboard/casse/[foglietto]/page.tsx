@@ -511,7 +511,85 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       setPhase('aperto');
     }
   };
+  const print = () => {
+  const printArea = printRef.current;
+  if (!printArea) {
+    console.warn("ATTENZIONE: La stampa è fallita perché 'printRef.current' è NULL.");
+    return;
+  }
+  const newWindow = window.open("", "", "width=800,height=900");
+  if (newWindow) {
+    newWindow.document.write('<html><head><title>Stampa Conto</title>');
 
+    // Manteniamo il ciclo dei fogli di stile attuali per sicurezza...
+    document.querySelectorAll('link[rel="stylesheet"]').forEach(s => {
+      const href = s.getAttribute('href');
+      if (href && href.startsWith('/')) {
+        newWindow.document.write(`<link rel="stylesheet" href="${window.location.origin}${href}">`);
+      } else {
+        newWindow.document.write(s.outerHTML);
+      }
+    });
+
+    document.querySelectorAll('style').forEach(s => newWindow.document.write(s.outerHTML));
+
+    // FORZIAMO GLI STILI INTERNI (Risolve il problema dei margini e dei font in Docker)
+    newWindow.document.write(`
+    <style>
+      html, body {
+        height: auto !important;
+        overflow: visible !important;
+        background-color: #ffffff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif !important;
+      }
+      @page {
+        size: auto;
+        margin: 10mm 15mm 10mm 15mm; /* Forza i margini fisici della pagina di stampa */
+      }
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .print-container {
+        width: 100% !important;
+        height: auto !important;
+        overflow: visible !important;
+        padding: 10px;
+      }
+      /* Stili di fallback espliciti per la tabella se i CSS di Tailwind/MUI non caricano in Docker */
+      table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        margin-top: 15px !important;
+      }
+      th, td {
+        padding: 6px 8px !important;
+        text-align: left !important;
+      }
+      .text-end {
+        text-align: right !important;
+      }
+      .font-bold {
+        font-weight: bold !important;
+      }
+    </style>
+  `);
+
+    newWindow.document.write('</head><body><div class="print-container">');
+    newWindow.document.write(printArea.innerHTML);
+    newWindow.document.write('</div></body></html>');
+    newWindow.document.close();
+
+    setTimeout(() => {
+      newWindow.focus();
+      newWindow.print();
+      newWindow.close();
+    }, 600);
+  }
+};
+/*
   const print = () => {
     const printArea = printRef.current;
     if (!printArea) {
@@ -569,7 +647,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         newWindow.close();
       }, 600);
     }
-  };
+  };*/
 
   const handleFinalizzaChiusura = async (tipo: number, nota = '', importo = '', skipPrintWait = false) => {
     const savedPrinterIp = typeof window !== 'undefined' ? localStorage.getItem('sagra_printer_ip') : null;
