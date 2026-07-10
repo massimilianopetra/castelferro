@@ -119,7 +119,7 @@ export default function Summarythebill({ item }: { item: DbConsumazioniPrezzo[] 
                 
                 {/* Intestazione */}
                 <Box sx={{ mb: 1, textAlign: 'center' }}>
-                    <Typography sx={{ fontSize: '16px', fontWeight: 'bold' }}>
+                    <Typography sx={{ fontSize: '15px', fontWeight: 'bold' }}>
                         {config.edizione}° Edizione dal {config.inizio} al {config.fine} {config.mese} {config.anno}
                     </Typography>
                 </Box>
@@ -167,20 +167,20 @@ export default function Summarythebill({ item }: { item: DbConsumazioniPrezzo[] 
                 <FinalTotalBox>
                     {/* Gruppo Sinistra: A coperto */}
                     <Box sx={{ display: 'flex', alignItems: 'baseline' }}>
-                        <Typography sx={{ fontSize: '1.0rem', fontWeight: 400 }}>
+                        <Typography sx={{ fontSize: '0.7rem', fontWeight: 400 }}>
                             A coperto:
                         </Typography>
-                        <Typography sx={{ fontSize: '1.0rem', fontWeight: 700, ml: 1 }}>
+                        <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, ml: 1 }}>
                             {media.toFixed(2)}&nbsp;€
                         </Typography>
                     </Box>
 
                     {/* Gruppo Destra: TOTALE */}
                     <Box sx={{ display: 'flex', alignItems: 'baseline' }}>
-                        <Typography sx={{ fontSize: '1.2rem', fontWeight: 700, mr: 1 }}>
+                        <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, mr: 1 }}>
                             TOTALE:
                         </Typography>
-                        <Typography sx={{ fontSize: '1.2rem', fontWeight: 900 }}>
+                        <Typography sx={{ fontSize: '1.1rem', fontWeight: 900 }}>
                             {subtotal.toFixed(2)}&nbsp;€
                         </Typography>
                     </Box>
