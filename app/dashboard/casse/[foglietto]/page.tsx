@@ -512,7 +512,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     }
   };
 
- const print = () => {
+const print = () => {
     const printArea = printRef.current;
     if (!printArea) {
       console.warn("ATTENZIONE: La stampa è fallita perché 'printRef.current' è NULL.");
@@ -520,7 +520,6 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     }
 
     // 1. ESTRAZIONE COMPLETA DEI CSS ATTIVI (Sia Tailwind che Material-UI / Emotion)
-    // Questo ciclo legge le regole matematiche dei fogli di stile attivi a schermo e le trasforma in testo
     let cssCompilatoInLinea = "";
     try {
       Array.from(document.styleSheets).forEach((sheet) => {
@@ -532,7 +531,6 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             });
           }
         } catch (e) {
-          // Protezione CORS: Se un font remoto (es. Google Fonts) blocca la lettura, prendiamo il testo del nodo
           if (sheet.ownerNode) {
             cssCompilatoInLinea += (sheet.ownerNode as HTMLElement).innerText + "\n";
           }
@@ -546,16 +544,15 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     if (newWindow) {
       newWindow.document.write('<!DOCTYPE html><html><head><title>Stampa Conto</title>');
 
-      // 2. INIETTIAMO TUTTO IL CSS CLONATO COME TAG STYLE INLINE
-      // Questo azzera la latenza di rete e forza Docker a comportarsi come l'ambiente di sviluppo locale
+      // INIETTIAMO IL CSS CLONATO
       newWindow.document.write(`<style>${cssCompilatoInLinea}</style>`);
 
-      // 3. IMPOSTAZIONI DI GEOMETRIA FISICA DELLA PAGINA DI STAMPA
+      // 2. AGGIUNGIAMO LE REGOLE "SALVA-TOTALE" PER L'ULTIMA RIGA
       newWindow.document.write(`
         <style>
           @page {
             size: auto;
-            margin: 0mm !important; /* Elimina i margini asimmetrici del browser */
+            margin: 0mm !important;
           }
           html, body {
             margin: 0px !important;
@@ -569,14 +566,26 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             print-color-adjust: exact !important;
             box-sizing: border-box !important;
           }
+
+          /* === FORZATURA DI PRECISIONE PER L'ULTIMA RIGA / RIGHE DI TOTALE === */
+          /* Impedisce alla parola Totale e al Prezzo di dividersi su due righe diverse */
+          div[class*="total"], 
+          p[class*="total"], 
+          .MuiBox-root:last-child {
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: space-between !important; /* Spinge il testo a sinistra e il prezzo a destra */
+            align-items: center !important;
+            width: 100% !important;
+            white-space: nowrap !important; /* Blocca il ritorno a capo del prezzo */
+          }
         </style>
       `);
 
       newWindow.document.write('</head><body>');
       
-      // 4. IL DOPPIO CONTENITORE PROTETTIVO (Quello che ti garantisce la centratura)
-      // Il primo div centra tutto sul foglio, il secondo blocca la larghezza dello scontrino (es. 78mm)
-      // così l'allineamento dei prezzi a destra (justify-between) sa dove fermarsi.
+      // 3. IL DOPPIO CONTENITORE CON LARGHEZZA OTTIMIZZATA
+      // Se vedi che l'ultima riga è ancora stretta, puoi alzare "max-width: 80mm" a "85mm" o "100%"
       newWindow.document.write(`
         <div style="
           display: flex !important; 
@@ -589,21 +598,20 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         ">
           <div style="
             width: 100% !important; 
-            max-width: 78mm !important; /* Calibrato per la larghezza delle stampanti termiche standard */
-            padding: 0 !important;
+            max-width: 80mm !important; /* <--- MODIFICA QUESTO VALORE SE VUOI ALLARGARE O STRINGERE LO SCONTRINO */
+            padding: 0 4mm !important;  /* Un minimo di padding interno per non far toccare i bordi fisici della carta */
             display: flex !important;
             flex-direction: column !important;
           ">
       `);
       
-      // Inseriamo l'HTML effettivo del preconto
+      // Inseriamo l'HTML del preconto
       newWindow.document.write(printArea.innerHTML);
       
       newWindow.document.write('</div></div>');
       newWindow.document.write('</body></html>');
       newWindow.document.close();
 
-      // Un piccolo delay (300ms) per dare tempo al motore di rendering del browser di applicare i testi
       setTimeout(() => {
         newWindow.focus();
         newWindow.print();
