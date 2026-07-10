@@ -512,7 +512,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     }
   };
 
- const print = () => {
+const print = () => {
     const printArea = printRef.current;
     if (!printArea) {
       console.warn("ATTENZIONE: La stampa è fallita perché 'printRef.current' è NULL.");
