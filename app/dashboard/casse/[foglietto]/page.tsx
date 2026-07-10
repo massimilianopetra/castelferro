@@ -521,7 +521,7 @@ const print = () => {
     if (newWindow) {
       newWindow.document.write('<html><head><title>Stampa Conto</title>');
 
-      // Copiamo i fogli di stile esistenti per non perdere la struttura
+      // 1. Cloniamo gli stili esistenti per le regole interne dei componenti
       document.querySelectorAll('link[rel="stylesheet"]').forEach(s => {
         const href = s.getAttribute('href');
         if (href && href.startsWith('/')) {
@@ -532,40 +532,55 @@ const print = () => {
       });
       document.querySelectorAll('style').forEach(s => newWindow.document.write(s.outerHTML));
 
-      // CORREZIONE DEI MARGINI E DELLA GEOMETRIA DI STAMPA
+      // 2. CSS DI RIPRISTINO GEOMETRIA (Annulla il restringimento causato dai CSS di Docker)
       newWindow.document.write(`
         <style>
-          /* 1. Reset totale dei margini della pagina fisica gestiti dal browser */
+          /* Forza la pagina di stampa a rimuovere i margini del browser */
           @page {
             size: auto;
-            margin: 0mm !important; /* Elimina i margini del browser che in Docker sballano */
+            margin: 0mm !important;
           }
           
-          /* 2. Applichiamo i margini reali direttamente sul body tramite padding */
-          html, body {
+          /* Resetta body, html e main per evitare che ereditino i vincoli della dashboard di Next.js */
+          html, body, main, #root {
             background-color: #ffffff !important;
             margin: 0px !important;
             padding: 0px !important;
-          }
-
-          /* 3. Contenitore wrapper per bloccare la formattazione originale senza farla attaccare ai bordi */
-          .docker-print-wrapper {
-            padding: 10mm 12mm 10mm 12mm !important; /* Regola questi valori per distanziare il blocco dai bordi */
             width: 100% !important;
-            box-sizing: border-box !important;
+            max-width: 100% !important;
+            min-width: 100% !important;
+            display: block !important; /* Distrugge eventuali Flexbox/Grid globali ereditati da Docker */
+            position: static !important;
           }
 
-          /* Forza il motore di rendering a mantenere i colori e i layout esatti */
+          /* Wrapper dedicato che dà il margine corretto e forza la larghezza intera dello scontrino */
+          .contenitore-stampa-blindato {
+            width: 100% !important;
+            max-width: 100% !important;
+            padding: 8mm 10mm 8mm 10mm !important; /* Questo controlla lo spazio dai bordi del foglio */
+            box-sizing: border-box !important;
+            display: block !important;
+          }
+
+          /* Forza l'elemento principale generato da Summarythebill a prendersi tutto lo spazio */
+          .contenitore-stampa-blindato > * {
+            width: 100% !important;
+            max-width: 100% !important;
+            display: block !important;
+          }
+
+          /* Assicura che la stampa mantenga i colori originali */
           * {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+            box-sizing: border-box !important;
           }
         </style>
       `);
 
-      // Avvolgiamo il tuo HTML originale nel wrapper protettivo dei margini
       newWindow.document.write('</head><body>');
-      newWindow.document.write('<div class="docker-print-wrapper">');
+      // Avvolgiamo l'HTML dentro il wrapper pulito che ignora i vincoli di Docker
+      newWindow.document.write('<div class="contenitore-stampa-blindato">');
       newWindow.document.write(printArea.innerHTML);
       newWindow.document.write('</div>');
       newWindow.document.write('</body></html>');
