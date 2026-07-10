@@ -517,80 +517,86 @@ const print = () => {
       console.warn("ATTENZIONE: La stampa è fallita perché 'printRef.current' è NULL.");
       return;
     }
+    
     const newWindow = window.open("", "", "width=800,height=900");
     if (newWindow) {
-      newWindow.document.write('<html><head><title>Stampa Conto</title>');
+      // Creiamo un documento pulito senza fare affidamento sui file CSS esterni di Next.js/Docker
+      newWindow.document.write('<!DOCTYPE html><html><head><title>Stampa Conto</title>');
 
-      // 1. Cloniamo gli stili esistenti per le regole interne dei componenti
-      document.querySelectorAll('link[rel="stylesheet"]').forEach(s => {
-        const href = s.getAttribute('href');
-        if (href && href.startsWith('/')) {
-          newWindow.document.write(`<link rel="stylesheet" href="${window.location.origin}${href}">`);
-        } else {
-          newWindow.document.write(s.outerHTML);
-        }
-      });
-      document.querySelectorAll('style').forEach(s => newWindow.document.write(s.outerHTML));
-
-      // 2. CSS DI RIPRISTINO GEOMETRIA (Annulla il restringimento causato dai CSS di Docker)
+      // INIETTIAMO LO STILE DIRETTAMENTE (Docker non può bloccarlo)
       newWindow.document.write(`
         <style>
-          /* Forza la pagina di stampa a rimuovere i margini del browser */
+          /* Forza i margini della pagina fisica della stampante */
           @page {
             size: auto;
-            margin: 0mm !important;
+            margin: 4mm 6mm 4mm 6mm !important;
           }
           
-          /* Resetta body, html e main per evitare che ereditino i vincoli della dashboard di Next.js */
-          html, body, main, #root {
+          /* Reset totale del corpo del pop-up */
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
             background-color: #ffffff !important;
-            margin: 0px !important;
-            padding: 0px !important;
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
+            color: #000000 !important;
             width: 100% !important;
-            max-width: 100% !important;
-            min-width: 100% !important;
-            display: block !important; /* Distrugge eventuali Flexbox/Grid globali ereditati da Docker */
-            position: static !important;
           }
 
-          /* Wrapper dedicato che dà il margine corretto e forza la larghezza intera dello scontrino */
-          .contenitore-stampa-blindato {
+          /* Garantisce che i contenitori interni occupino tutto lo spazio orizzontale */
+          .stampa-body-wrapper {
             width: 100% !important;
-            max-width: 100% !important;
-            padding: 8mm 10mm 8mm 10mm !important; /* Questo controlla lo spazio dai bordi del foglio */
-            box-sizing: border-box !important;
             display: block !important;
           }
 
-          /* Forza l'elemento principale generato da Summarythebill a prendersi tutto lo spazio */
-          .contenitore-stampa-blindato > * {
+          /* --- EMULAZIONE STILI TAVOLO / COMANDA --- */
+          /* Se Summarythebill genera strutture Flex (justify-between), le forziamo in modo nativo */
+          .flex { display: flex !important; }
+          .justify-between { justify-content: space-between !important; }
+          .items-center { align-items: center !important; }
+          .w-full { width: 100% !important; }
+          
+          /* Allineamenti e Pesi testo */
+          .text-left { text-align: left !important; }
+          .text-center { text-align: center !important; }
+          .text-right { text-align: right !important; }
+          .font-bold { font-weight: 700 !important; }
+          
+          /* Gestione tabelle (se presenti nel componente) */
+          table {
             width: 100% !important;
-            max-width: 100% !important;
-            display: block !important;
+            border-collapse: collapse !important;
+          }
+          th, td {
+            padding: 4px 6px !important;
           }
 
-          /* Assicura che la stampa mantenga i colori originali */
+          /* Linee e divisori */
+          .border-t { border-top: 1px solid #000000 !important; }
+          .border-b { border-bottom: 1px solid #000000 !important; }
+          .border-dashed { border-style: dashed !important; }
+
           * {
+            box-sizing: border-box !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
-            box-sizing: border-box !important;
           }
         </style>
       `);
 
       newWindow.document.write('</head><body>');
-      // Avvolgiamo l'HTML dentro il wrapper pulito che ignora i vincoli di Docker
-      newWindow.document.write('<div class="contenitore-stampa-blindato">');
+      // Avvolgiamo il tutto nel wrapper protettivo a larghezza piena
+      newWindow.document.write('<div class="stampa-body-wrapper">');
       newWindow.document.write(printArea.innerHTML);
       newWindow.document.write('</div>');
       newWindow.document.write('</body></html>');
       newWindow.document.close();
 
+      // Aspettiamo che il browser elabori il DOM strutturato
       setTimeout(() => {
         newWindow.focus();
         newWindow.print();
         newWindow.close();
-      }, 400);
+      }, 350);
     }
   };
 /*
