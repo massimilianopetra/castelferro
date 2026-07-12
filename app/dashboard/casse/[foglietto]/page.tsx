@@ -588,7 +588,7 @@ const print = () => {
         ">
           <div style="
             width: 100% !important; 
-            max-width: 105mm !important; /* <--- MODIFICA QUESTO VALORE SE VUOI ALLARGARE O STRINGERE LO SCONTRINO */
+            max-width: 129mm !important; /* <--- MODIFICA QUESTO VALORE SE VUOI ALLARGARE O STRINGERE LO SCONTRINO */
             padding: 0 4mm !important;  /* Un minimo di padding interno per non far toccare i bordi fisici della carta */
             display: flex !important;
             flex-direction: column !important;

@@ -167,10 +167,10 @@ export default function Summarythebill({ item }: { item: DbConsumazioniPrezzo[] 
                 <FinalTotalBox>
                     {/* Gruppo Sinistra: A coperto */}
                     <Box sx={{ display: 'flex', alignItems: 'baseline' }}>
-                        <Typography sx={{ fontSize: '0.6rem', fontWeight: 400 }}>
+                        <Typography sx={{ fontSize: '0.8rem', fontWeight: 600 }}>
                             A coperto:
                         </Typography>
-                        <Typography sx={{ fontSize: '0.6rem', fontWeight: 700, ml: 1 }}>
+                        <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, ml: 1 }}>
                             {media.toFixed(2)}&nbsp;€
                         </Typography>
                     </Box>
