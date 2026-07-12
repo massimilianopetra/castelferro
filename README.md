@@ -40,7 +40,8 @@ docker builder prune -f
 - git pull 
 # se hai fatto dekke modifiche per cui non puoi fare la pull il comando per non considerale è 
 
-# PER FAR LOGGARE IL DOCKER DESKTOP docker login
+# PER FAR LOGGARE IL DOCKER DESKTOP 
+- docker login
 # DOWNLOAD DI UNA IMMAGINE docker scout quickview ironcastle/castelferro:v41
 (Apri Docker Desktop  - IMAGE - MY HUB - e cerca l-immagine e poi fai PULL  )
 
