@@ -577,22 +577,20 @@ const print = () => {
       // 3. IL DOPPIO CONTENITORE CON LARGHEZZA OTTIMIZZATA
       // Se vedi che l'ultima riga è ancora stretta, puoi alzare "max-width: 80mm" a "85mm" o "100%"
       newWindow.document.write(`
+      <div style="
+        width:100% !important;
+        padding:0 !important;
+        margin:0 !important;
+        display:block !important;
+        box-sizing:border-box !important;
+      ">
         <div style="
-          display: flex !important; 
-          flex-direction: column !important; 
-          align-items: center !important; 
-          justify-content: flex-start !important; 
-          width: 100% !important; 
-          padding: 6mm 0 !important; 
-          box-sizing: border-box !important;
+          width:100% !important;
+          max-width:none !important;
+          padding:0 !important;
+          margin:0 !important;
+          box-sizing:border-box !important;
         ">
-          <div style="
-            width: 100% !important; 
-            max-width: 100% !important; /* <--- MODIFICA QUESTO VALORE SE VUOI ALLARGARE O STRINGERE LO SCONTRINO */
-            padding: 0 4mm !important;  /* Un minimo di padding interno per non far toccare i bordi fisici della carta */
-            display: flex !important;
-            flex-direction: column !important;
-          ">
       `);
       
       // Inseriamo l'HTML del preconto
