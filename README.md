@@ -7,6 +7,7 @@ image: ironcastle/castelferro:v5
  docker build -t ironcastle/castelferro:v34 .      
 # andare sul Hub repository e capire se c'e' stata caricata. 
 # Aprire: Docker Desktop loggarsi 
+# fare image - hub repository -  PUSH 
 # (soluzione che non sembra andare) andare su -IMAGE - HUB REPOSITORY e fare PULL dell'immagine. 
 # Andare nelle Immagini e fare push (dai 3 puntini sul Docker Hub). 
 # Andare su -IMAGE - HUB REPOSITORY e fare PULL dell'immagine. qualcosa fa chiedere PETRA. 
