@@ -103,7 +103,7 @@ for (let i = 1; i <= totaleCoperti; i++) {
               }
               printer
                 .style('b').font('b').size(2, 2)
-                .text(new Date().toLocaleDateString('it-IT'))
+                .text(new Date().toLocaleDateString('it-IT', { timeZone: 'Europe/Rome' }))
                 .size(3, 3).style('b')
                 .text(`${numeroTicket}`)
                 .style('normal').font('b').size(1, 1)
