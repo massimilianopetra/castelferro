@@ -58,6 +58,7 @@ export default function NavLinks() {
     case 'IngressoE':
       links = [
         { name: 'Home', href: '/dashboard', icon: HomeIcon },
+        { name: 'Gestione Termiche', href: '/dashboard/stampantitermiche', icon: LocalPrintshopIcon },        
         { name: 'Display', href: '/dashboard/display', icon: TvIcon },
         { name: 'Chiama', href: '/dashboard/chiama', icon: RecordVoiceOverIcon },
         { name: 'Distributore di Ticket', href: '/dashboard/distributore', icon: LocalActivityIcon },
