@@ -39,7 +39,7 @@ export default function GestioneStampantePage() {
     { label: "Wi-Fi: " + config.stampante_wifi, ip: config.stampante_wifi },
   ].filter(p => p.ip); // Mostra solo quelle che hanno un IP configurato nel .env
 
-  if ((session?.user?.name === "Casse") || (session?.user?.name === "SuperUser")) {
+  if ((session?.user?.name === "Ingressoe") || (session?.user?.name === "Ingresso") || (session?.user?.name === "Casse") || (session?.user?.name === "SuperUser")) {
 
     return (
 
