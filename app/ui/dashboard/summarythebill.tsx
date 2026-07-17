@@ -130,7 +130,7 @@ export default function Summarythebill({ item }: { item: DbConsumazioniPrezzo[] 
                             <TableRow>
                                 <TableCell align="left">Piatto</TableCell>
                                 <TableCell align="center">Qtà</TableCell>
-                                <TableCell align="right">Cad.</TableCell>
+                                <TableCell align="left">Cad.</TableCell>
                                 <TableCell align="right">Tot</TableCell>
                             </TableRow>
                         </StyledTableHead>
