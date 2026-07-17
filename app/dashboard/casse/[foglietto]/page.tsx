@@ -576,7 +576,7 @@ const print = () => {
       
       // 3. IL DOPPIO CONTENITORE CON LARGHEZZA OTTIMIZZATA
       // Se vedi che l'ultima riga è ancora stretta, puoi alzare "max-width: 80mm" a "85mm" o "100%"
-      newWindow.document.write(`con 
+      newWindow.document.write(`
       <div style="
         width:100% !important;
         padding:0 !important;

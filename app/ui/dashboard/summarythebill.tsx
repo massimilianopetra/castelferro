@@ -146,7 +146,7 @@ export default function Summarythebill({ item }: { item: DbConsumazioniPrezzo[] 
                                         <StyledTableCell align="center">
                                             <Typography variant="body2">{row.quantita}</Typography>
                                         </StyledTableCell>
-                                        <StyledTableCell align="right">
+                                        <StyledTableCell align="left">
                                             <Typography variant="body2">
                                                 {row.prezzo_unitario.toFixed(2)}
                                             </Typography>
