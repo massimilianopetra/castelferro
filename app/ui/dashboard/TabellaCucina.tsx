@@ -38,7 +38,7 @@ function TabellaCucina({
                 <TableHead>
                     <TableRow className="text-blue-800 rounded-lg bg-gray-100 font-extralight text-end">
                         <TableCell align="left"><p className="text-base font-bold md:text-2xl">Piatto</p></TableCell>
-                        <TableCell align="left" sx={{ display: { xs: 'none', sm: 'block' } }}><p className="text-base font-bold md:text-2xl">Quantità</p></TableCell>
+                        <TableCell align="left" sx={{ display: { xs: 'none', sm: 'block' } }}><p className="text-base font-bold md:text-2xl">Qtà</p></TableCell>
                         <TableCell align="left" sx={{ display: { xs: 'block', sm: 'none' } }}><p className="text-base font-bold md:text-2xl">Q</p></TableCell>
                         <TableCell className="text-2xl" align="left"></TableCell>
                     </TableRow>
@@ -64,13 +64,12 @@ function TabellaCucina({
                                         {showDetailedControls && <></>} 
                                         <Button onClick={() => onAdd(row.id_piatto)} size="large" variant="contained" startIcon={<AddCircleIcon />} disabled={isRowDisabled} />
                                     </ButtonGroup>
-                                    &nbsp;&nbsp;&nbsp;
+                                    &nbsp;
                                     {!showDetailedControls && (
                                         <>
                                             <ButtonGroup>
                                                 <Button onClick={() => onAdd10(row.id_piatto)} size="medium" variant="contained" startIcon={<Replay10Icon />} disabled={isRowDisabled} />
                                             </ButtonGroup>
-                                            &nbsp;&nbsp;&nbsp;
                                         </>
                                     )}
                                     <ButtonGroup>
