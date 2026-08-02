@@ -20,7 +20,8 @@ import {
     getMenu,
     getTickets,
     salvaComandaCompleta,
-    listConsumazioni
+    listConsumazioni,
+    getCopertiCheStannoServendo
 } from '@/app/lib/actions';
 
 import TabellaCucina from '@/app/ui/dashboard/TabellaCucina';
@@ -71,7 +72,12 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
     const [piattomodificaquantitaValue, setPiattoModQuantita] = useState("non definito");
     const [copertiInAttesa, setCopertiInAttesa] = useState(0);
     const [menuPrevisionale, setMenuPrevisionale] = useState<any[]>([]);
-    const [dettaglioCoperti, setDettaglioCoperti] = useState({ seduti: 0, nonseduti_incoda: 0, serviti: 0 });
+    const [dettaglioCoperti, setDettaglioCoperti] = useState({
+        seduti: 0,
+        nonseduti_incoda: 0,
+        serviti: 0,
+        copertiStannoServendo: 0
+    });
     const [snackbarMessage, setSnackbarMessage] = useState('');
 
 // 3. Logica autorizzazione
@@ -182,7 +188,7 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
         setProducts([]);
         setIniProducts([]);
     };
-
+/*
     const caricaStatistiche = async () => {
         // Se le statistiche sono disabilitate globalmente, blocca l'esecuzione e le query sul database
         if (!isAuthorizedUser) {
@@ -220,8 +226,56 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
         } catch (error) {
             console.error("Errore durante il caricamento delle statistiche della cucina:", error);
         }
-    };
+*/
+const caricaStatistiche = async () => {
+    if (!isAuthorizedUser) {
+        setSnackbarMessage("Statistiche disattivate temporaneamente per alleggerire il carico del server.");
+        setOpenSnackbar(true);
+        return;
+    }
+    
+    try {
+        const [
+            ticketNonSedutiRows,
+            ticketSedutiRows,
+            consumazioniCoperti,
+            resCoperti,
+            fullMenu
+        ] = await Promise.all([
+            getTickets('non-seduti'),
+            getTickets('seduti'),
+            listConsumazioni(1, sagra.giornata),
+            getCopertiCheStannoServendo(sagra.giornata, nomeCucina),
+            getMenu()
+        ]);
 
+        const nonseduti_incoda = ticketNonSedutiRows?.reduce((acc, curr) => acc + curr.numpersone, 0) || 0;
+        const seduti = ticketSedutiRows?.reduce((acc, curr) => acc + curr.numpersone, 0) || 0;
+        const serviti = consumazioniCoperti?.reduce((acc, curr) => acc + curr.quantita, 0) || 0;
+        const copertiStannoServendo = resCoperti?.copertiStannoServendo || 0;
+
+        // Formula corretta: (seduti + nonseduti_incoda) - serviti + Coperti_che_stanno_servendo
+        const totale = (seduti + nonseduti_incoda) - serviti + copertiStannoServendo;
+
+        setDettaglioCoperti({ 
+            seduti, 
+            nonseduti_incoda, 
+            serviti,
+            copertiStannoServendo 
+        } as any);
+
+        setCopertiInAttesa(Math.max(0, totale));
+
+        if (fullMenu) {
+            const filtrato = fullMenu.filter(m => m.cucina === nomeCucina);
+            setMenuPrevisionale(filtrato);
+        }
+
+        setOpenPopup(true);
+    } catch (error) {
+        console.error("Errore durante il caricamento delle statistiche della cucina:", error);
+    }
+};
     /* ------------------------------INVIO CONSUMAZIONI------------------------------ */
     const handleButtonClickInvia = async () => {
         //   if (chiamataunicaDB) {
@@ -732,7 +786,8 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
                             <Typography id="modal-stats-title" variant="h6" color="primary" sx={{ mb: 1, fontWeight: 'bold', fontSize: '1.1rem', flexShrink: 0 }}>
                                 Statistiche: {nomeCucina}
                             </Typography>
-                            <Box sx={{ mb: 1.5, p: 1, bgcolor: '#f0f7ff', borderRadius: '8px', border: '1px solid #d0e3ff', flexShrink: 0 }}>
+                            
+                  {/*          <Box sx={{ mb: 1.5, p: 1, bgcolor: '#f0f7ff', borderRadius: '8px', border: '1px solid #d0e3ff', flexShrink: 0 }}>
                                 <Typography variant="body1" sx={{ lineHeight: 1.2, fontWeight: 'medium' }}>
                                     Stima coperti da servire: <b className="text-blue-700" style={{ fontSize: '1.3rem', marginLeft: '4px' }}>{copertiInAttesa}</b>
                                 </Typography>
@@ -740,6 +795,19 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
                                 ({dettaglioCoperti.seduti} + {dettaglioCoperti.nonseduti_incoda}) - {dettaglioCoperti.serviti } = (tot.seduti + in coda) - tot.serviti
                                 </Typography>
                             </Box>
+                    */}
+                            <Box sx={{ mb: 1.5, p: 1, bgcolor: '#f0f7ff', borderRadius: '8px', border: '1px solid #d0e3ff', flexShrink: 0 }}>
+                                <Typography variant="body1" sx={{ lineHeight: 1.2, fontWeight: 'medium' }}>
+                                    Stima coperti da servire: <b className="text-blue-700" style={{ fontSize: '1.3rem', marginLeft: '4px' }}>{copertiInAttesa}</b>
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: '#555', display: 'block', mt: 0.5 }}>
+                                    ({dettaglioCoperti.seduti} + {dettaglioCoperti.nonseduti_incoda}) - {dettaglioCoperti.serviti} + {dettaglioCoperti.copertiStannoServendo}
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: '#888', display: 'block', fontSize: '0.65rem' }}>
+                                    (seduti + in coda) - serviti + coperti in cucine precedenti
+                                </Typography>
+                            </Box>
+
                             <Typography variant="caption" sx={{ mb: 0.5, textTransform: 'uppercase', fontSize: '0.65rem', color: 'gray', fontWeight: 'bold', display: 'block', flexShrink: 0 }}>
                                 Previsione piatti
                             </Typography>

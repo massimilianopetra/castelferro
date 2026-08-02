@@ -1263,3 +1263,81 @@ export async function salvaComandaCompleta(
     throw new Error("Salvataggio fallito.");
   }
 }
+export async function getCopertiCheStannoServendo(giornata: number, cucinaAttuale: string) {
+  try {
+    const cucinaLower = cucinaAttuale.trim().toLowerCase();
+
+    const query = `
+      WITH UltimeCucineConti AS (
+        -- Trova l'ultima cucina/fase di ogni conto
+        SELECT DISTINCT ON (foglietto)
+          foglietto,
+          LOWER(cucina) AS cucina_attuale
+        FROM logger
+        WHERE giornata = $1 AND foglietto >= 10
+        ORDER BY foglietto, data DESC
+      ),
+      CopertiAttuali AS (
+        -- Trova l'ultimo numero di coperti aggiornato (id_piatto = 1)
+        SELECT DISTINCT ON (id_comanda)
+          id_comanda,
+          quantita AS coperti
+        FROM consumazioni
+        WHERE giorno = $1 AND id_piatto = 1
+        ORDER BY id_comanda, data DESC
+      )
+      SELECT 
+        COALESCE(SUM(CASE WHEN c.stato IN ('APERTO', 'STAMPATO') AND uc.cucina_attuale IN ('bevande', 'birre') THEN cp.coperti ELSE 0 END), 0)::int AS coperti_bevande_birre,
+        COALESCE(SUM(CASE WHEN c.stato IN ('APERTO', 'STAMPATO') AND uc.cucina_attuale = 'antipasti' THEN cp.coperti ELSE 0 END), 0)::int AS coperti_antipasti,
+        COALESCE(SUM(CASE WHEN c.stato IN ('APERTO', 'STAMPATO') AND uc.cucina_attuale = 'primi' THEN cp.coperti ELSE 0 END), 0)::int AS coperti_primi,
+        COALESCE(SUM(CASE WHEN c.stato IN ('APERTO', 'STAMPATO') AND uc.cucina_attuale = 'secondi' THEN cp.coperti ELSE 0 END), 0)::int AS coperti_secondi,
+        COALESCE(SUM(CASE WHEN c.stato IN ('APERTO', 'STAMPATO') AND uc.cucina_attuale = 'dolci' THEN cp.coperti ELSE 0 END), 0)::int AS coperti_dolci
+      FROM conti c
+      LEFT JOIN UltimeCucineConti uc ON c.id_comanda = uc.foglietto
+      LEFT JOIN CopertiAttuali cp ON c.id_comanda = cp.id_comanda
+      WHERE c.giorno = $1 AND c.id_comanda >= 10;
+    `;
+
+    const res = await executeQuery<any>(query, [giornata]);
+    const r = res?.[0] || {
+      coperti_bevande_birre: 0,
+      coperti_antipasti: 0,
+      coperti_primi: 0,
+      coperti_secondi: 0,
+      coperti_dolci: 0
+    };
+
+    let copertiStannoServendo = 0;
+
+    // Per Bevande e Birre -> 0
+    if (['bevande', 'birre'].includes(cucinaLower)) {
+      copertiStannoServendo = 0;
+    }
+    // Per Antipasti -> Bevande + Birre
+    else if (cucinaLower === 'antipasti') {
+      copertiStannoServendo = r.coperti_bevande_birre;
+    }
+    // Per Primi -> Bevande + Birre + Antipasti
+    else if (cucinaLower === 'primi') {
+      copertiStannoServendo = r.coperti_bevande_birre + r.coperti_antipasti;
+    }
+    // Per Secondi -> Bevande + Birre + Antipasti + Primi
+    else if (cucinaLower === 'secondi') {
+      copertiStannoServendo = r.coperti_bevande_birre + r.coperti_antipasti + r.coperti_primi;
+    }
+    // Per Dolci -> Bevande + Birre + Antipasti + Primi + Secondi
+    else if (cucinaLower === 'dolci') {
+      copertiStannoServendo = r.coperti_bevande_birre + r.coperti_antipasti + r.coperti_primi + r.coperti_secondi;
+    }
+
+    return {
+      success: true,
+      copertiStannoServendo,
+      dettaglio: r
+    };
+
+  } catch (error) {
+    console.error("Errore in getCopertiServitiEStannoServendo:", error);
+    return { success: false, copertiStannoServendo: 0 };
+  }
+}
