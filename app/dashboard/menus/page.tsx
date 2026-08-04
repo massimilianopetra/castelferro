@@ -84,11 +84,12 @@ const handleFileChange = async (event: Event) => {
         const rows = text.trim().split("\n"); 
         
         const data = rows.slice(1).map((row) => {
-            // Questa regex divide per virgola MA ignora le virgole dentro i testi tra virgolette
-            const values = row.match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || row.split(",");
+            // Regex completa per parsing di campi CSV separati da virgola
+            const matches = row.match(/(?:^|,)("(?:[^"]|"")*"|[^,]*)/g);
+            const values = matches ? matches.map(m => m.replace(/^,/, '')) : row.split(",");
             
-            // Pulisce le virgolette dai testi se presenti
-            const clean = (val: string) => val ? val.replace(/^"|确认|"$|/g, '').trim() : '';
+            // Pulisce virgolette e spazi attorno ai valori
+            const clean = (val: string) => val ? val.trim().replace(/^"|"$/g, '').replace(/""/g, '"') : '';
 
             return { 
                 id: Number(clean(values[0])), 
@@ -104,6 +105,7 @@ const handleFileChange = async (event: Event) => {
         await overwriteMenu(data);
     }
 };
+
     const handleUploadClick = () => {
         const fileInput = document.createElement('input');
         fileInput.type = 'file';
