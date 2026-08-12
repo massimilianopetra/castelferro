@@ -29,7 +29,7 @@ const denseTheme = createTheme({
         },
         MuiTypography: {
             styleOverrides: {
-                body1: { fontSize: '0.8rem' },
+                body1: { fontSize: '0.75rem' },
                 body2: { fontSize: '0.75rem' },
             },
         },
@@ -40,7 +40,7 @@ const denseTheme = createTheme({
 const ElegantContainer = styled(Paper)(({ theme }) => ({
     maxWidth: 550,
     margin: '10px auto !important', // Ridotto margine per la stampa
-    padding: '8px',
+    padding: '7px',
     borderRadius: 12,
     backgroundColor: '#fff',
     boxShadow: 'none', // Rimosso ombra per la stampa
@@ -116,12 +116,12 @@ export default function Summarythebill({ item }: { item: DbConsumazioniPrezzo[] 
             <CssBaseline />
             <ElegantContainer elevation={0}>
                 
-                {/* Intestazione */}
-                <Box sx={{ mb: 1, textAlign: 'center' }}>
-                    <Typography sx={{ fontSize: '15px', fontWeight: 'bold' }}>
+                {/* Intestazione 
+                <Box sx={{ mb: 1, textAlign: 'center' }}>*/}
+                    <Typography sx={{ fontSize: '15px', fontWeight: 'bold', textAlign: 'center' }}>
                         {config.edizione}° Edizione dal {config.inizio} al {config.fine} {config.mese} {config.anno}
                     </Typography>
-                </Box>
+             {/*   </Box>*/}
 
                 <TableContainer component={Box}>
                     <Table size="small">
