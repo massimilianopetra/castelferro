@@ -21,16 +21,16 @@ const denseTheme = createTheme({
         MuiTableCell: {
             styleOverrides: {
                 root: {
-                    padding: '2px 4px',
-                    borderBottom: '1px solid #e0e0e0',
-                    lineHeight: '1.2',
+                    padding: '0.9px 2.8px',
+                    borderBottom: '0.9px solid #e0e0e0',
+                    lineHeight: '0.8',
                 },
             },
         },
         MuiTypography: {
             styleOverrides: {
-                body1: { fontSize: '0.85rem' },
-                body2: { fontSize: '0.8rem' },
+                body1: { fontSize: '0.8rem' },
+                body2: { fontSize: '0.75rem' },
             },
         },
     },
@@ -47,11 +47,10 @@ const ElegantContainer = styled(Paper)(({ theme }) => ({
 }));
 
 const StyledTableHead = styled(TableHead)(({ theme }) => ({
-    backgroundColor: '#f5f5f5',
     '& .MuiTableCell-root': {
-        fontWeight: 600,
+        fontWeight: 500,
         color: '#333',
-        fontSize: '0.9rem',
+        fontSize: '0.7rem',
     },
 }));
 
@@ -167,20 +166,20 @@ export default function Summarythebill({ item }: { item: DbConsumazioniPrezzo[] 
                 <FinalTotalBox>
                     {/* Gruppo Sinistra: A coperto */}
                     <Box sx={{ display: 'flex', alignItems: 'baseline' }}>
-                        <Typography sx={{ fontSize: '0.8rem', fontWeight: 600 }}>
+                        <Typography sx={{ fontSize: '0.7rem', fontWeight: 600 }}>
                             A coperto:
                         </Typography>
-                        <Typography sx={{ fontSize: '0.8rem', fontWeight: 700, ml: 1 }}>
+                        <Typography sx={{ fontSize: '0.7rem', fontWeight: 700, ml: 1 }}>
                             {media.toFixed(2)}&nbsp;€
                         </Typography>
                     </Box>
 
                     {/* Gruppo Destra: TOTALE */}
                     <Box sx={{ display: 'flex', alignItems: 'baseline' }}>
-                        <Typography sx={{ fontSize: '1.1rem', fontWeight: 700, mr: 1 }}>
+                        <Typography sx={{ fontSize: '1rem', fontWeight: 700, mr: 1 }}>
                             TOTALE:
                         </Typography>
-                        <Typography sx={{ fontSize: '1.1rem', fontWeight: 900 }}>
+                        <Typography sx={{ fontSize: '1rem', fontWeight: 900 }}>
                             {subtotal.toFixed(2)}&nbsp;€
                         </Typography>
                     </Box>
