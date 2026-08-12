@@ -70,9 +70,9 @@ const StyledTableCell = styled(TableCell)(({ theme }) => ({
 }));
 
 const FinalTotalBox = styled(Box)(({ theme }) => ({
-    marginTop: theme.spacing(1),
-    paddingTop: theme.spacing(0.5),
-    borderTop: '2px solid #000',
+    marginTop: theme.spacing(0),
+    paddingTop: theme.spacing(0),
+    borderTop: '1px solid #000',
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'baseline',
@@ -80,9 +80,9 @@ const FinalTotalBox = styled(Box)(({ theme }) => ({
 
 const FooterBox = styled(Box)(({ theme }) => ({
     textAlign: 'center',
-    marginTop: theme.spacing(1),
-    paddingTop: theme.spacing(1),
-    borderTop: '1px dashed #e0e0e0',
+    marginTop: theme.spacing(0),
+    paddingTop: theme.spacing(0),
+    borderTop: '0.5px dashed #e0e0e0',
     color: '#707070',
     fontSize: '0.85rem',
 }));
