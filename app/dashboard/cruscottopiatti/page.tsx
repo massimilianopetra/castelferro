@@ -253,7 +253,7 @@ export default function Page() {
               </Typography>
             </Divider>
           </Grid>
-          <Grid size={{ xs: 12, lg: 6 }}>
+          <Grid size={{ xs: 12, lg: 12 }}>
             <DataRowCard 
               title="Piatto Selezionato" 
               value={record.piatto} 
@@ -263,17 +263,17 @@ export default function Page() {
               bgColor="#fff"
             />
           </Grid>
-          <Grid size={{ xs: 12, lg: 6 }}>
+ {/*          <Grid size={{ xs: 12, lg: 6 }}>
             <DataRowCard 
               title="Incasso Stimato Totale" 
               value={`${(record.pagatitotali * record.prezzo).toFixed(2)} €`} 
               icon={<MonetizationOnIcon />} 
               color="#4CAF50" 
-        //      subValue={`Calcolato su ${record.pagatitotali} comande saldate`} */}
+        //      subValue={`Calcolato su ${record.pagatitotali} comande saldate`} 
               bgColor="#fff"
             />
           </Grid>
-
+*/}
           {/* SEZIONE 2: STATO COMANDE (Su PC affiancati a 3 colonne - Sfondo Violetto) */}
           <Grid size={12}>
             <Divider sx={{ mt: 2, mb: 1 }}>
@@ -291,6 +291,8 @@ export default function Page() {
               bgColor="#00E676" // <--- VERDE PASTELLO
             />
           </Grid>
+
+           {/* DA DATI SBALLATI DEVO TOGLIERLO  
           <Grid size={12}>
             <Divider sx={{ mt: 2, mb: 1 }}>
               <Typography variant="overline" sx={{ fontWeight: 'bold', color: '#666', letterSpacing: 1 }}>
@@ -325,7 +327,7 @@ export default function Page() {
               bgColor="#f3e5f5" // <--- AZZURRINO
             />
           </Grid>
-          {/* SEZIONE 3: DETTAGLIO PAGAMENTI (Su PC affiancati a 4 colonne - Sfondo Azzurrino) */}
+          {/* SEZIONE 3: DETTAGLIO PAGAMENTI (Su PC affiancati a 4 colonne - Sfondo Azzurrino) 
           <Grid size={12}>
             <Divider sx={{ mt: 2, mb: 1 }}>
               <Typography variant="overline" sx={{ fontWeight: 'bold', color: '#666', letterSpacing: 1 }}>
@@ -363,7 +365,7 @@ export default function Page() {
               bgColor="#e3f2fd" // <--- AZZURRINO
             />
           </Grid>
-
+*/}
         </Grid>
       )}
     </Box>
