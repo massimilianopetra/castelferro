@@ -281,7 +281,7 @@ export async function getUser(email: string): Promise<DbUser | undefined> {
 }
 
 /* ************************ GESTIONE DB **************************** */
-export async function getTickets(modo: string): Promise<DbTickets[] | undefined> {
+/*export async function getTickets(modo: string): Promise<DbTickets[] | undefined> {
   try {
     let query = `SELECT * FROM tickets`;
     let conditions = "";
@@ -296,6 +296,34 @@ export async function getTickets(modo: string): Promise<DbTickets[] | undefined>
       default: conditions = "";
     }
     const tickets = await executeQuery<DbTickets>(`${query} ${conditions} ORDER BY id`);
+    return tickets;
+  } catch (error) {
+    console.error('Failed to fetch tickets:', error);
+    throw new Error('Failed to fetch tickets.');
+  }
+}
+*/
+export async function getTickets(modo: string): Promise<DbTickets[] | undefined> {
+  try {
+    let query = `SELECT * FROM tickets`;
+    
+    // Escludiamo sempre i ticket eliminati (caricato = 100)
+    const whereClauses: string[] = ['caricato <> 100'];
+
+    switch (modo) {
+      case 'all':      break;
+      case 'seduti':          whereClauses.push('seduto = 1');                  break;
+      case 'non-seduti':      whereClauses.push('seduto = 0');                  break;
+      case 'automatico':      whereClauses.push('caricato = 0');                break;
+      case 'manuale':         whereClauses.push('caricato = 1');                break;
+      case 'entrata-libera':  whereClauses.push('caricato = 2');                break;
+      case 'distribuiti':     whereClauses.push('data_distributo IS NOT NULL'); break;
+      default:         break;
+    }
+
+    const whereString = `WHERE ${whereClauses.join(' AND ')}`;
+    const tickets = await executeQuery<DbTickets>(`${query} ${whereString} ORDER BY id`);
+    
     return tickets;
   } catch (error) {
     console.error('Failed to fetch tickets:', error);
