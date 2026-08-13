@@ -42,6 +42,7 @@ export default function NavLinks() {
         { name: 'Incassa Conti', href: '/dashboard/chiudiconti', icon: ShoppingCartIcon },
         { name: 'Verifica conti (aperti e chiusi)', href: '/dashboard/listaconti', icon: CheckCircleOutlineIcon },
         { name: 'Gestione Camerieri', href: '/dashboard/camerieri', icon: AccessibilityIcon },
+        { name: 'Cruscotto Piatti', href: '/dashboard/cruscottopiatti', icon: RestaurantOutlinedIcon },
       ];
       break;
     case 'SuperUser':
@@ -62,6 +63,7 @@ export default function NavLinks() {
         { name: 'Display', href: '/dashboard/display', icon: TvIcon },
         { name: 'Chiama', href: '/dashboard/chiama', icon: RecordVoiceOverIcon },
         { name: 'Distributore di Ticket', href: '/dashboard/distributore', icon: LocalActivityIcon },
+        { name: 'Cruscotto Piatti', href: '/dashboard/cruscottopiatti', icon: RestaurantOutlinedIcon },
       ];
       break;
     case 'Antipasti':

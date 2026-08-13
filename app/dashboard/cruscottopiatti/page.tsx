@@ -269,7 +269,7 @@ export default function Page() {
               value={`${(record.pagatitotali * record.prezzo).toFixed(2)} €`} 
               icon={<MonetizationOnIcon />} 
               color="#4CAF50" 
-              subValue={`Calcolato su ${record.pagatitotali} comande saldate`}
+        //      subValue={`Calcolato su ${record.pagatitotali} comande saldate`} */}
               bgColor="#fff"
             />
           </Grid>
@@ -278,18 +278,25 @@ export default function Page() {
           <Grid size={12}>
             <Divider sx={{ mt: 2, mb: 1 }}>
               <Typography variant="overline" sx={{ fontWeight: 'bold', color: '#666', letterSpacing: 1 }}>
-                Stato Comande e Cucina
+                STATO ATTUALE COMPLESSIVO DELLA PORTATA 
               </Typography>
             </Divider>
           </Grid>
-          <Grid size={{ xs: 12, lg: 4 }}>
+          <Grid size={{ xs: 12, lg: 12 }}>
             <DataRowCard 
               title="Ordinati Totali" 
               value={record.ordinati} 
               icon={<QueryStatsIcon />} 
               color="#2196F3" 
-              bgColor="#f3e5f5" // <--- VIOLETTO PASTELLO
+              bgColor="#00E676" // <--- VERDE PASTELLO
             />
+          </Grid>
+          <Grid size={12}>
+            <Divider sx={{ mt: 2, mb: 1 }}>
+              <Typography variant="overline" sx={{ fontWeight: 'bold', color: '#666', letterSpacing: 1 }}>
+                Stato di dettaglio della portata
+              </Typography>
+            </Divider>
           </Grid>
           <Grid size={{ xs: 12, lg: 4 }}>
             <DataRowCard 
@@ -309,7 +316,15 @@ export default function Page() {
               bgColor="#f3e5f5" // <--- VIOLETTO PASTELLO
             />
           </Grid>
-
+          <Grid size={{ xs: 12, lg: 4 }}>
+            <DataRowCard 
+              title="Totale Piatti Pagati" 
+              value={record.pagatitotali} 
+              icon={<PaymentsIcon />} 
+              color="#9C27B0" 
+              bgColor="#f3e5f5" // <--- AZZURRINO
+            />
+          </Grid>
           {/* SEZIONE 3: DETTAGLIO PAGAMENTI (Su PC affiancati a 4 colonne - Sfondo Azzurrino) */}
           <Grid size={12}>
             <Divider sx={{ mt: 2, mb: 1 }}>
@@ -318,16 +333,7 @@ export default function Page() {
               </Typography>
             </Divider>
           </Grid>
-          <Grid size={{ xs: 12, lg: 3 }}>
-            <DataRowCard 
-              title="Totale Piatti Pagati" 
-              value={record.pagatitotali} 
-              icon={<PaymentsIcon />} 
-              color="#4CAF50" 
-              bgColor="#e3f2fd" // <--- AZZURRINO
-            />
-          </Grid>
-          <Grid size={{ xs: 12, lg: 3 }}>
+          <Grid size={{ xs: 12, lg: 4 }}>
             <DataRowCard 
               title="Pagati in Contanti" 
               value={record.pagaticontanti} 
@@ -337,7 +343,7 @@ export default function Page() {
               bgColor="#e3f2fd" // <--- AZZURRINO
             />
           </Grid>
-          <Grid size={{ xs: 12, lg: 3 }}>
+          <Grid size={{ xs: 12, lg: 4 }}>
             <DataRowCard 
               title="Pagati con POS" 
               value={record.pagatipos} 
@@ -347,7 +353,7 @@ export default function Page() {
               bgColor="#e3f2fd" // <--- AZZURRINO
             />
           </Grid>
-          <Grid size={{ xs: 12, lg: 3 }}>
+          <Grid size={{ xs: 12, lg: 4 }}>
             <DataRowCard 
               title="Altri Importo" 
               value={record.pagatialtro} 
