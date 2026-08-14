@@ -451,21 +451,31 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         })
         .filter((p): p is Promise<any> => p !== null);
 
-      // 4. INVIAMO E ATTENDIAMO REALMENTE IL COMPLETAMENTO
+// 4. INVIAMO E ATTENDIAMO REALMENTE IL COMPLETAMENTO
       await Promise.all([
         ...logPromises,
         sendConsumazioni(datiDaInviare)
       ]);
 
-      // 5. OTTIMIZZAZIONE 2: Aggiornamento log e conto freschi
-      const [logs, newCc] = await Promise.all([
+      // 5. OTTIMIZZAZIONE 2: Aggiornamento log, conto E CONSUMAZIONI fresche
+      const [logs, newCc, updatedConsumazioni] = await Promise.all([ // <-- Aggiunto updatedConsumazioni
         getLastLog(sagra.giornata, 'Casse'),
-        getConto(numFoglietto, sagra.giornata)
+        getConto(numFoglietto, sagra.giornata),
+        getConsumazioniCassa(numFoglietto, sagra.giornata) // <-- Aggiunta interrogazione al DB
       ]);
 
       if (logs) setLastLog(logs);
-
+      
       setConto(newCc);
+
+      // --- INIZIO AGGIUNTA FONDAMENTALE ---
+      if (updatedConsumazioni) {
+        setProducts(updatedConsumazioni);
+        setIniProducts(updatedConsumazioni);
+        // Ora il frontend ha i veri 'id' e la base di calcolo corretta per i log successivi!
+      }
+      // --- FINE AGGIUNTA FONDAMENTALE ---
+
       setPhase('aperto');
 
     } catch (error) {

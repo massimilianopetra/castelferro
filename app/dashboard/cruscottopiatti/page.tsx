@@ -263,7 +263,8 @@ export default function Page() {
               bgColor="#fff"
             />
           </Grid>
- {/*          <Grid size={{ xs: 12, lg: 6 }}>
+ {/* 
+          <Grid size={{ xs: 12, lg: 6 }}>
             <DataRowCard 
               title="Incasso Stimato Totale" 
               value={`${(record.pagatitotali * record.prezzo).toFixed(2)} €`} 
