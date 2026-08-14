@@ -788,12 +788,12 @@ export async function getSintesiPiatti(id: number, giorno: number): Promise<{ or
           SUM(CASE WHEN s.stato = 'CHIUSOPOS' THEN c.quantita ELSE 0 END) AS pagatopos,
           SUM(CASE WHEN s.stato = 'CHIUSOALTRO' THEN c.quantita ELSE 0 END) AS pagatoaltro
       FROM consumazioni c
-      LEFT JOIN (
-          SELECT id_comanda, MAX(stato) AS stato
-          FROM conti
-          GROUP BY id_comanda
-      ) s ON c.id_comanda = s.id_comanda
-      WHERE c.id_piatto = ${id} AND c.giorno = ${giorno} AND c.quantita > 0;
+      LEFT JOIN conti s 
+            ON c.id_comanda = s.id_comanda AND c.giorno = s.giorno
+      WHERE c.id_piatto = ${id} 
+        AND c.giorno = ${giorno} 
+        AND c.quantita > 0 
+        AND c.id_comanda >= 10; -- <--- AGGIUNGENDO QUESTO, IGNORI LO STAFF
     `);
     return {
       ordinati: Number(result?.[0]?.ordinati || 0),
