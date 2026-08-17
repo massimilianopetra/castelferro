@@ -34,7 +34,7 @@ export async function POST(req: Request) {
             printer.model('qsprinter').font('a').align('ct');
 
             if (isPass) {
-              console.log(`Stampa pass`);
+             //console.log(`Stampa pass`);
               // --- LOGICA STAMPA PASS MULTIPLI ---
               const totaleCoperti = Number(coperti) || 1;
 

@@ -182,7 +182,7 @@ export default function Page() {
   );
 
   // Controllo Sicurezza
-  if (session?.user?.name !== "SuperUser" && session?.user?.name !== "Casse") {
+  if (session?.user?.name !== "SuperUser" && session?.user?.name !== "Casse" && session?.user?.name !== "IngressoE") {
     return (
       <Box sx={{ p: 4, display: 'flex', justifyContent: 'center' }}>
         <Alert severity="error" variant="filled" sx={{ maxWidth: 500, width: '100%', borderRadius: 2 }}>

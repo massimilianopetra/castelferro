@@ -1009,7 +1009,22 @@ export async function listConti(stato: string, giornata: number): Promise<DbCont
 
   return await executeQuery<DbConti>(querySelect);
 }
-
+export async function listContiPerChiusra(giornata: number): Promise<DbExtendedConti[] | undefined> {
+  return await executeQuery<DbExtendedConti>(`
+    WITH ultimi_coperti AS (
+      SELECT DISTINCT ON (id_comanda) id_comanda, quantita AS coperti
+      FROM consumazioni
+      WHERE giorno = ${giornata} AND id_piatto = 1
+      ORDER BY id_comanda, data DESC, id DESC
+    )
+    SELECT s.*, COALESCE(uc.coperti, 0) as coperti 
+    FROM conti s
+    LEFT JOIN ultimi_coperti uc ON uc.id_comanda = s.id_comanda
+    WHERE s.giorno = ${giornata} AND s.id_comanda > 9 AND s.stato IN ('STAMPATO')
+    ORDER BY s.id_comanda;
+  `);
+}
+/* 17 agosto
 export async function listContiPerChiusra(giornata: number): Promise<DbExtendedConti[] | undefined> {
   return await executeQuery<DbExtendedConti>(`
     SELECT DISTINCT ON (s.id_comanda) s.*, c.quantita as coperti 
@@ -1019,7 +1034,7 @@ export async function listContiPerChiusra(giornata: number): Promise<DbExtendedC
     ORDER BY s.id_comanda;
   `);
 }
-
+*/
 export async function getContoPiuAlto(): Promise<Number | undefined> {
   try {
     const cc = await executeQuery<DbConti>(`SELECT * FROM conti ORDER BY Id_comanda DESC`);
