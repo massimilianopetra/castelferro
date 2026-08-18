@@ -15,7 +15,7 @@ import type { DbConsumazioni, DbConsumazioniPrezzo, DbFiera, DbConti, DbLog } fr
 import {
   getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto,
   aggiornaConto, stampaConto, riapriConto, apriConto, getContoPiuAlto,
-  writeLog, getGiornoSagra, getLastLog, salvaComandaCompleta,
+  writeLog, getGiornoSagra, getLastLog, 
   getInizializzazioneCassa, updateTotaleConto
 } from '@/app/lib/actions';
 import { deltanow, milltodatestring } from '@/app/lib/utils';
@@ -270,86 +270,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       await handleAggiornaOld();
    // }
   };
-  /*const handleAggiornaNew = async () => {
-    const haPortateValide = products.some(item => item.quantita > 0);
-
-    if (!haPortateValide && isNewConto) {
-      setPhase('iniziale');
-      setProducts([]);
-      setIniProducts([]);
-      return;
-    }
-
-    setPhase('caricamento');
-
-    try {
-      const numFoglietto = Number(numeroFoglietto);
-
-      // 1. COSTRUIAMO IL PAYLOAD COMPLETO (Includendo i piatti eliminati o portati a zero)
-      // Partiamo clonando i prodotti attualmente visibili a schermo
-      const datiDaInviare = [...products];
-
-      // CORREZIONE: Confrontiamo con lo stato iniziale per trovare i piatti che l'utente ha del tutto rimosso dallo schermo
-      iniProducts.forEach(itemIniziale => {
-        const esisteAncoraA_Schermo = products.some(itemSchermo => itemSchermo.id_piatto === itemIniziale.id_piatto);
-
-        // Se il piatto era presente all'apertura ma ora non c'è più nell'array dello schermo,
-        // lo reinseriamo nel payload forzando la quantità a 0 per dire al backend di eliminarlo/azzerarlo.
-        if (!esisteAncoraA_Schermo) {
-          datiDaInviare.push({
-            ...itemIniziale,
-            quantita: 0
-          });
-        }
-      });
-
-      // 2. Generiamo l'array dei messaggi di LOG basandoci sul nuovo array 'datiDaInviare'
-      // In questo modo i log conterranno correttamente anche le diciture "Eliminati: X ..." per i piatti spariti
-      const logMessaggi = datiDaInviare
-        .map(item => {
-          const orig = iniProducts.find(o => o.id_piatto === item.id_piatto);
-          const origQuantita = orig ? orig.quantita : 0;
-          if (item.quantita === origQuantita) return null;
-
-          return item.quantita > origQuantita
-            ? `Aggiunti: ${item.quantita - origQuantita} ${item.piatto}`
-            : `Eliminati: ${origQuantita - item.quantita} ${item.piatto}`;
-        })
-        .filter((msg): msg is string => msg !== null);
-
-      // 3. Chiamata UNICA al Database (passando 'datiDaInviare' invece di 'products')
-      const response = await salvaComandaCompleta(
-        numFoglietto,
-        sagra.giornata,
-        'Casse',
-        'Casse',
-        isNewConto,
-        datiDaInviare, // <-- Array corretto con i piatti a quantità 0
-        logMessaggi
-      );
-
-      if (response.success === false && response.error === 'DUPLICATE_CONTO') {
-        setSnackbarMessage("ATTENZIONE: Un'altra postazione ha appena aperto questo conto. Operazione bloccata per evitare duplicati.");
-        setOpenSnackbar(true);
-        setPhase('iniziale');
-        return;
-      }
-
-      // 4. Aggiornamento dello stato della UI con la risposta del server
-      if (isNewConto) setIsNewConto(false);
-      if (response.logs) setLastLog(response.logs);
-      if (response.conto) setConto(response.conto);
-
-      setPhase('aperto');
-
-    } catch (error) {
-      console.error("Errore nell'invio:", error);
-      setSnackbarMessage("Errore durante il salvataggio.");
-      setOpenSnackbar(true);
-      setPhase('iniziale');
-    }
-  };
-*/
+ 
   const handleAggiornaOld = async () => {
     const haPortateValide = products.some(item => item.quantita > 0);
 

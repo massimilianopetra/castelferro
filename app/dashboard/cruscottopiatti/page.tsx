@@ -293,11 +293,11 @@ export default function Page() {
             />
           </Grid>
 
-           {/* DA DATI SBALLATI DEVO TOGLIERLO  
+           {/* DA DATI SBALLATI DEVO TOGLIERLO  */}
           <Grid size={12}>
             <Divider sx={{ mt: 2, mb: 1 }}>
               <Typography variant="overline" sx={{ fontWeight: 'bold', color: '#666', letterSpacing: 1 }}>
-                Stato di dettaglio della portata
+                Stato di dettaglio della portata 
               </Typography>
             </Divider>
           </Grid>
@@ -312,7 +312,7 @@ export default function Page() {
           </Grid>
           <Grid size={{ xs: 12, lg: 4 }}>
             <DataRowCard 
-              title="Stampati in Cucina" 
+              title="Stampati" 
               value={record.stampati} 
               icon={<LocalPrintshopIcon />} 
               color="#9C27B0" 
