@@ -649,14 +649,14 @@ export async function sendConsumazioni(c: DbConsumazioni[]) {
   // Usiamo Promise.all mappando le promesse delle query
   const queryPromises = c.map(async (item) => {
     if (item.id == -1) {
-      console.log(`INSERT item.piatto : id ${item.id} - ${item.piatto} (quantita: ${item.quantita})`);
+   //   console.log(`INSERT item.piatto : id ${item.id} - ${item.piatto} (quantita: ${item.quantita})`);
       return await executeQuery(`
          INSERT INTO consumazioni (id_comanda, id_piatto, piatto, quantita, cucina, giorno, data, alias)
          VALUES (${item.id_comanda}, ${item.id_piatto}, '${item.piatto}', ${item.quantita}, '${item.cucina}', ${item.giorno}, ${date_format_millis}, '${item.alias}')
          ON CONFLICT (id) DO NOTHING;
       `);
     } else {
-      console.log(`UPDATE item.piatto : id ${item.id} - ${item.piatto} (quantita: ${item.quantita})`);
+  //    console.log(`UPDATE item.piatto : id ${item.id} - ${item.piatto} (quantita: ${item.quantita})`);
       return await executeQuery(`UPDATE consumazioni SET quantita = ${item.quantita}, data = ${date_format_millis} WHERE id = ${item.id};`);
     }
   });
