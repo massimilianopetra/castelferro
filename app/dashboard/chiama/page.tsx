@@ -1,16 +1,14 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useSession } from 'next-auth/react'; // 1. Importa useSession
+import { useSession } from 'next-auth/react';
 import {
     Box, Typography, Button, Snackbar, Alert,
     Table, TableBody, TableCell, TableContainer,
     TableHead, TableRow, Paper, IconButton,
     TableSortLabel, Dialog, DialogTitle, DialogContent,
     DialogContentText, DialogActions,
-    Stack,
-    FormControlLabel,
-    Switch
+    Stack
 } from '@mui/material';
 
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -18,6 +16,7 @@ import AccessTimeFilledIcon from '@mui/icons-material/AccessTimeFilled';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import ChairIcon from '@mui/icons-material/Chair';
 import InfoIcon from '@mui/icons-material/Info';
+import GroupsIcon from '@mui/icons-material/Groups';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -28,21 +27,24 @@ import {
     getStimaAttesa,
     getPuntiGraficoAttesa, getStatoContiStats, getGiornoSagra
 } from '@/app/lib/actions';
-import { useConfig } from '@/context/ConfigContext'; // <-- Importazione del Context globale
+import { useConfig } from '@/context/ConfigContext';
 
 type Order = 'asc' | 'desc';
 
 export default function Chiama() {
-    const { data: session } = useSession(); // 2. Recupera sessione
+    const { data: session } = useSession();
     const isMobile = useMediaQuery('(max-width:600px)');
-
 
     // --- STATI PRINCIPALI ---
     const [numeroAttuale, setNumeroAttuale] = useState(0);
     const [lista, setLista] = useState<any[]>([]);
     const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
     const [selectedTicket, setSelectedTicket] = useState<any>(null);
-    const [showActions, setShowActions] = useState(true);
+
+    // --- CALCOLO TOTALE COPERTI IN CODA ---
+    const totCopertiInCoda = useMemo(() => {
+        return lista.reduce((acc, item) => acc + (Number(item.numpersone) || 0), 0);
+    }, [lista]);
 
     // --- STATI ORDINAMENTO E MEMORIA ---
     const [order, setOrder] = useState<Order>('asc');
@@ -74,7 +76,6 @@ export default function Chiama() {
 
     const isAuthorizedUser = authorizedNames.includes(session?.user?.name ?? "");
 
-    // Svuota i dati temporanei locali se la configurazione centrale disabilita le statistiche
     useEffect(() => {
         if (!isAuthorizedUser) {
             setStima(null);
@@ -92,7 +93,6 @@ export default function Chiama() {
         }
     };
 
-    // Carica lo stato della sagra all'avvio
     useEffect(() => {
         const fetchSagra = async () => {
             const gg = await getGiornoSagra();
@@ -101,7 +101,6 @@ export default function Chiama() {
         fetchSagra();
     }, []);
 
-    // Gestione apertura modale Stato Conti
     const handleOpenStatoConti = async () => {
         if (!isAuthorizedUser) return;
 
@@ -136,7 +135,7 @@ export default function Chiama() {
         }
     };
 
-    // --- LOGICA SINCRONIZZAZIONE (SSE E INTERVAL) ---
+    // --- LOGICA SINCRONIZZAZIONE ---
     useEffect(() => {
         fetchDati();
 
@@ -212,7 +211,6 @@ export default function Chiama() {
 
     // --- GESTORI AZIONI ---
     const handleChiamaTicket = async (ticket: any) => {
-        // [MODIFICA/CHIAMA] Controllo se il numero c'è o se è impostato a 100
         if (!ticket || !ticket.id || ticket.caricato === 100) {
             setSnackbar({
                 open: true,
@@ -239,7 +237,6 @@ export default function Chiama() {
     };
 
     const handleSiediTicket = async (ticket: any) => {
-        // [UNISCI/ENTRA] Controllo se il numero c'è o se è impostato a 100
         if (!ticket || !ticket.id || ticket.caricato === 100) {
             setSnackbar({
                 open: true,
@@ -268,7 +265,6 @@ export default function Chiama() {
     const handleConfirmDelete = async () => {
         if (!selectedTicket) return;
 
-        // [ELIMINA] Controllo se il numero c'è o se è già stato impostato a 100
         if (!selectedTicket.id || selectedTicket.caricato === 100) {
             setSnackbar({
                 open: true,
@@ -364,12 +360,51 @@ export default function Chiama() {
                     </Typography>
                 </Box>
 
-                {/* --- CONTROLLI SETTING (Mantiene solo le azioni extra) --- */}
-                <Box sx={{ width: '100%', maxWidth: '900px', mx: 'auto', display: 'flex', justifyContent: 'flex-end', gap: 2, mb: 0.5, flexShrink: 0 }}>
-                    <FormControlLabel
-                        control={<Switch checked={showActions} onChange={(e) => setShowActions(e.target.checked)} color="primary" size="small" />}
-                        label={<Typography sx={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Funzioni extra</Typography>}
-                    />
+                {/* --- BADGE COPERTI IN CODA (CENTRATO E GRAFICAMENTE IMPATTANTE) --- */}
+                <Box sx={{ 
+                    width: '100%', 
+                    maxWidth: '900px', 
+                    mx: 'auto', 
+                    display: 'flex', 
+                    justify: 'center', 
+                    alignItems: 'center', 
+                    mb: 1.5, 
+                    flexShrink: 0 
+                }}>
+                    <Paper 
+                        elevation={4}
+                        sx={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 1.5,
+                            px: isMobile ? 2.5 : 4,
+                            py: isMobile ? 0.8 : 1.2,
+                            borderRadius: '50px',
+                            background: 'linear-gradient(135deg, #0d47a1 0%, #1976d2 100%)',
+                            color: '#ffffff',
+                            boxShadow: '0 8px 16px rgba(25, 118, 210, 0.25)',
+                            border: '1px solid rgba(255, 255, 255, 0.2)'
+                        }}
+                    >
+                        <GroupsIcon sx={{ fontSize: isMobile ? '1.5rem' : '2.2rem', color: '#90caf9' }} />
+                        <Typography sx={{ 
+                            fontWeight: 800, 
+                            fontSize: isMobile ? '0.95rem' : '1.25rem',
+                            letterSpacing: '0.5px',
+                            textTransform: 'uppercase'
+                        }}>
+                            Coperti in coda:
+                        </Typography>
+                        <Typography sx={{ 
+                            fontWeight: 1000, 
+                            fontSize: isMobile ? '1.4rem' : '1.8rem',
+                            color: '#ffeb3b',
+                            fontFamily: 'monospace',
+                            lineHeight: 1
+                        }}>
+                            {totCopertiInCoda}
+                        </Typography>
+                    </Paper>
                 </Box>
 
                 {/* --- TABELLA TICKET --- */}
@@ -471,28 +506,24 @@ export default function Chiama() {
                                                         <CampaignIcon fontSize="medium" />
                                                         <Typography component="span" sx={{ fontSize: isMobile ? '0.9rem' : '1rem', ml: 1 }}>Chiama</Typography>
                                                     </Button>
-                                                    {showActions && (
-                                                        <>
-                                                            <Button
-                                                                variant="contained" size="small" color="primary"
-                                                                component={motion.button}
-                                                                whileTap={{ scale: 0.92 }}
-                                                                onClick={() => handleSiediTicket(row)}
-                                                                sx={{ fontWeight: 'bold', minWidth: isMobile ? '45px' : '100px' }}
-                                                            >
-                                                                <ChairIcon fontSize="medium" />
-                                                                <Typography component="span" sx={{ fontSize: isMobile ? '0.9rem' : '1rem', ml: 1 }}>Entra</Typography>
-                                                            </Button>
-                                                            <IconButton
-                                                                color="error"
-                                                                size="large"
-                                                                onClick={() => { setSelectedTicket(row); setOpenDeleteDialog(true); }}
-                                                                sx={{ border: '1px solid', borderRadius: '8px', p: isMobile ? 1 : 'default' }}
-                                                            >
-                                                                <DeleteIcon fontSize="small" />
-                                                            </IconButton>
-                                                        </>
-                                                    )}
+                                                    <Button
+                                                        variant="contained" size="small" color="primary"
+                                                        component={motion.button}
+                                                        whileTap={{ scale: 0.92 }}
+                                                        onClick={() => handleSiediTicket(row)}
+                                                        sx={{ fontWeight: 'bold', minWidth: isMobile ? '45px' : '100px' }}
+                                                    >
+                                                        <ChairIcon fontSize="medium" />
+                                                        <Typography component="span" sx={{ fontSize: isMobile ? '0.9rem' : '1rem', ml: 1 }}>Entra</Typography>
+                                                    </Button>
+                                                    <IconButton
+                                                        color="error"
+                                                        size="large"
+                                                        onClick={() => { setSelectedTicket(row); setOpenDeleteDialog(true); }}
+                                                        sx={{ border: '1px solid', borderRadius: '8px', p: isMobile ? 1 : 'default' }}
+                                                    >
+                                                        <DeleteIcon fontSize="small" />
+                                                    </IconButton>
                                                 </Stack>
                                             </TableCell>
                                         </TableRow>
