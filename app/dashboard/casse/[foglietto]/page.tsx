@@ -906,17 +906,88 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   )}
                 </main>
 {/* FOOTER ADATTIVO - SU DUE RIGHE FINO A SCHERMI GRANDE (LG) */}
-<footer className="bottom-section flex-none pt-2 border-t border-gray-200">
-  <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 lg:gap-4 w-full">
+<footer className="bottom-section flex-none pt-2 border-t border-gray-200 px-1 lg:px-0">
+  <div className="flex flex-row flex-nowrap lg:flex-row items-center justify-between gap-1 lg:gap-4 w-full overflow-x-auto">
 
     {/* SEZIONE AZIONI CONTO */}
-    <div className="sez-sx-bassa flex items-center justify-between lg:justify-start gap-2 w-full lg:w-auto">
-1 riga 
+    <div className="sez-sx-bassa flex items-center justify-between gap-1 w-auto lg:w-auto">
+      <Button
+        variant="contained"
+        size="small"
+        className="font-bold px-1 lg:px-6 py-1 lg:py-2 shadow-sm text-[9px] sm:text-xs lg:text-lg whitespace-nowrap"
+        style={{ borderRadius: '9999px' }}
+        sx={{ minWidth: 0 }}
+        onClick={handleStampa}
+        disabled={phase === 'modificato' || phase === 'caricamento' || phase === 'elaborazione'}
+      >
+        Stampa Conto
+      </Button>
+
+      <Button
+        variant="contained"
+        color="info"
+        size="small"
+        className="font-bold px-1 lg:px-6 py-1 lg:py-2 shadow-sm text-[9px] sm:text-xs lg:text-lg text-white whitespace-nowrap"
+        style={{ borderRadius: '9999px', backgroundColor: phase === 'modificato' ? '#0284c7' : undefined }}
+        sx={{ minWidth: 0 }}
+        onClick={handleAggiorna}
+        disabled={phase !== 'modificato'}
+      >
+        Aggiorna & Stampa
+      </Button>
     </div>
 
     {/* SEZIONE CHIUDI CONTO */}
-    <div className="sez-dx-bassa w-full lg:w-auto lg:flex-1 lg:max-w-2xl">
-    seconda riga    </div>
+    <div className="sez-dx-bassa flex-1 lg:max-w-2xl">
+      <div className="flex items-center gap-1 lg:gap-3 p-1 lg:p-2.5 px-1.5 lg:px-4 border lg:border-3 border-blue-600 bg-blue-100 rounded-full shadow-md w-full">
+
+        <span className="text-blue-900 font-black text-[9px] sm:text-xs lg:text-xl uppercase whitespace-nowrap pl-0.5">
+          Chiudi:
+        </span>
+
+        <div className="flex items-center gap-1 lg:gap-3 w-full">
+          <Button
+            variant="contained"
+            color="primary"
+            size="small"
+            className="flex-1 font-black text-[10px] sm:text-xs lg:text-xl py-1 lg:py-2.5 px-1 lg:px-4 shadow-md"
+            style={{ borderRadius: '9999px' }}
+            sx={{ minWidth: 0 }}
+            onClick={() => handleFinalizzaChiusura(2)}
+            disabled={phase !== 'stampato'}
+          >
+            POS
+          </Button>
+
+          <Button
+            variant="contained"
+            color="success"
+            size="small"
+            className="flex-1 font-black text-[10px] sm:text-xs lg:text-xl py-1 lg:py-2.5 px-1 lg:px-4 shadow-md"
+            style={{ borderRadius: '9999px' }}
+            sx={{ minWidth: 0 }}
+            onClick={() => handleFinalizzaChiusura(1)}
+            disabled={phase !== 'stampato'}
+          >
+            Contanti
+          </Button>
+
+          <Button
+            variant="contained"
+            color="secondary"
+            size="small"
+            className="flex-1 font-black text-[10px] sm:text-xs lg:text-xl py-1 lg:py-2.5 px-1 lg:px-4 shadow-md"
+            style={{ borderRadius: '9999px' }}
+            sx={{ minWidth: 0 }}
+            onClick={() => setPhase('gratis')}
+            disabled={phase !== 'stampato'}
+          >
+            Altro
+          </Button>
+        </div>
+
+      </div>
+    </div>
 
   </div>
 </footer>
