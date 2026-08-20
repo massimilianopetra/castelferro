@@ -824,72 +824,70 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
             {/* Sostituisci il blocco dei casi 'aperto', 'modificato', 'stampato' in page.tsx */ }
 
-          case 'aperto':
+case 'aperto':
           case 'modificato':
           case 'stampato':
           case 'caricamento':
           case 'elaborazione':
             return (
-<div className="min-h-[100dvh] flex flex-col justify-between">
-<header className="top-section mb-2 flex-none">
-  {/* HEADER PRINCIPALE ORIGINALE (Input foglietto + Ultime ricerche) */}
-  <div className="sez-sx">
-    {headerCasse}
-    {ultimiRicercati}
-  </div>
+              <div className="min-h-[100dvh] flex flex-col justify-between overflow-hidden sm:overflow-visible">
+                <header className="top-section mb-1 flex-none">
+                  {/* HEADER PRINCIPALE ORIGINALE */}
+                  <div className="sez-sx">
+                    {headerCasse}
+                    {ultimiRicercati}
+                  </div>
 
-  {/* 1. LAYOUT PER PC DESKTOP (Mostrato solo da schermi grandi in su: lg:flex) */}
-  <div className="sez-dx hidden lg:block">
-    {bottoniServizio}
-    <div className="text-base md:text-2xl py-2 text-end">
-      <p>Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}</span> {conto ? `(${deltanow(conto?.data_apertura)})` : "(Nuovo)"}</p>
-      <p>Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere || 'Casse'}</span></p>
-    </div>
-  </div>
+                  {/* 1. LAYOUT PER PC DESKTOP */}
+                  <div className="sez-dx hidden lg:block">
+                    {bottoniServizio}
+                    <div className="text-base md:text-2xl py-2 text-end">
+                      <p>Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}</span> {conto ? `(${deltanow(conto?.data_apertura)})` : "(Nuovo)"}</p>
+                      <p>Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere || 'Casse'}</span></p>
+                    </div>
+                  </div>
 
-  {/* 2. LAYOUT 2x2 COMPATTO PER MOBILE/TABLET (Nascosto su PC: lg:hidden) */}
-  <div className="grid grid-cols-2 items-center justify-between gap-2 my-2 w-full px-2 pt-2 border-t border-gray-200 lg:hidden">
-    
-    {/* COLONNA SX MOBILE: Tasti Asporto / Camerieri */}
-    <div className="flex flex-col gap-1.5 justify-start items-start">
-      <Button 
-        size="small" 
-        className="font-semibold w-full" 
-        variant="outlined" 
-        onClick={handleButtonClickCaricaAsporto} 
-        style={{ borderRadius: '9999px' }}
-      >
-        Asporto
-      </Button>
-      <Button 
-        size="small" 
-        color="secondary" 
-        className="font-semibold w-full" 
-        variant="outlined" 
-        onClick={handleButtonClickCaricaConto1} 
-        style={{ borderRadius: '9999px' }}
-      >
-        Camerieri
-      </Button>
-    </div>
+                  {/* 2. LAYOUT COMPATTO PER MOBILE */}
+                  <div className="grid grid-cols-2 items-center justify-between gap-2 my-1 w-full px-2 pt-1 border-t border-gray-200 lg:hidden">
+                    <div className="flex flex-col gap-1 justify-start items-start">
+                      <Button 
+                        size="small" 
+                        className="font-semibold w-full !text-xs !py-0.5" 
+                        variant="outlined" 
+                        onClick={handleButtonClickCaricaAsporto} 
+                        style={{ borderRadius: '9999px' }}
+                      >
+                        Asporto
+                      </Button>
+                      <Button 
+                        size="small" 
+                        color="secondary" 
+                        className="font-semibold w-full !text-xs !py-0.5" 
+                        variant="outlined" 
+                        onClick={handleButtonClickCaricaConto1} 
+                        style={{ borderRadius: '9999px' }}
+                      >
+                        Camerieri
+                      </Button>
+                    </div>
 
-    {/* COLONNA DX MOBILE: Conto / Cameriere */}
-    <div className="flex flex-col text-right justify-end items-end">
-      <p className="text-sm font-medium leading-tight">
-        Conto: <span className="font-extrabold text-blue-800 text-base">{numeroFoglietto}</span>{' '}
-        <span className="text-[10px] text-gray-500 block">{conto ? `(${deltanow(conto?.data_apertura)})` : "(Nuovo)"}</span>
-      </p>
-      <p className="text-xs text-gray-700 leading-tight mt-1">
-        Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere || 'Casse'}</span>
-      </p>
-    </div>
+                    <div className="flex flex-col text-right justify-end items-end">
+                      <p className="text-xs font-medium leading-tight">
+                        Conto: <span className="font-extrabold text-blue-800 text-sm">{numeroFoglietto}</span>{' '}
+                        <span className="text-[10px] text-gray-500 block">{conto ? `(${deltanow(conto?.data_apertura)})` : "(Nuovo)"}</span>
+                      </p>
+                      <p className="text-[11px] text-gray-700 leading-tight mt-0.5">
+                        Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere || 'Casse'}</span>
+                      </p>
+                    </div>
+                  </div>
+                </header>
 
-  </div>
-</header>
-                {/* PARTE CENTRALE CON TABELLA CHE SCROLLA SE SERVE */}
-            <main className="middle-section_XS flex-1 overflow-y-auto my-1 h-[calc(100dvh-340px)] max-h-[calc(100dvh-340px)] sm:h-auto sm:max-h-none">      {phase === 'caricamento' || phase === 'elaborazione' ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px', width: '100%' }}>
-                      <CircularProgress size="4rem" />
+                {/* PARTE CENTRALE: ALTEZZA CALCOLATA PER FARE SPAZIO AL FOOTER SU MOBILE */}
+                <main className="middle-section_XS flex-1 overflow-y-auto my-1 h-[calc(100dvh-260px)] max-h-[calc(100dvh-260px)] sm:h-auto sm:max-h-none">
+                  {phase === 'caricamento' || phase === 'elaborazione' ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px', width: '100%' }}>
+                      <CircularProgress size="3rem" />
                     </Box>
                   ) : (
                     <TabellaConto
@@ -903,37 +901,52 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                     />
                   )}
                 </main>
-{/* FOOTER ADATTIVO - SU DUE RIGHE FINO A SCHERMI GRANDE (LG) */}
-<footer className="bottom-section flex-none pt-2 border-t border-gray-200">
-{/* FOOTER COMPATTO PER SMARTPHONE */}
-<div className="w-full bg-white p-1.5 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-2xl z-50 flex-shrink-0">
-  
-  {/* Prima riga: STAMPA CONTO e AGGIORNA & STAMPA (più compatti su mobile) */}
-  <div className="flex gap-1.5 mb-1.5">
-    <button className="flex-1 bg-blue-600 text-white py-1 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-bold shadow-sm">
-      STAMPA CONTO
-    </button>
-    <button className="flex-1 bg-gray-300 text-gray-600 py-1 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-bold shadow-sm">
-      AGGIORNA & STAMPA
-    </button>
-  </div>
 
-  {/* Seconda riga: CHIUDI: POS | CONTANTI | ALTRO (più compatti su mobile) */}
-  <div className="flex items-center gap-1 border border-purple-500 rounded-xl p-0.5 bg-purple-50/50">
-    <span className="text-blue-900 font-extrabold text-[10px] sm:text-xs px-1 whitespace-nowrap">CHIUDI:</span>
-    <button className="flex-1 bg-blue-600 text-white py-1 rounded-lg text-[10px] sm:text-xs font-bold shadow-sm">
-      POS
-    </button>
-    <button className="flex-1 bg-green-600 text-white py-1 rounded-lg text-[10px] sm:text-xs font-bold shadow-sm">
-      CONTANTI
-    </button>
-    <button className="flex-1 bg-purple-600 text-white py-1 rounded-lg text-[10px] sm:text-xs font-bold shadow-sm">
-      ALTRO
-    </button>
-  </div>
+                {/* FOOTER COMPATTO E FUNZIONANTE PER SMARTPHONE & PC */}
+                <footer className="bottom-section flex-none w-full bg-white p-1.5 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-2xl z-50">
+                  <div className="w-full max-w-7xl mx-auto">
+                    
+                    {/* Prima riga: STAMPA CONTO e AGGIORNA & STAMPA */}
+                    <div className="flex gap-1.5 mb-1.5">
+                      <button 
+                        onClick={handleStampa}
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-1 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-bold shadow-sm transition-colors"
+                      >
+                        STAMPA CONTO
+                      </button>
+                      <button 
+                        onClick={handleAggiorna}
+                        className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-1 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-bold shadow-sm transition-colors"
+                      >
+                        AGGIORNA & STAMPA
+                      </button>
+                    </div>
 
-</div>
-</footer>
+                    {/* Seconda riga: CHIUDI POS | CONTANTI | ALTRO */}
+                    <div className="flex items-center gap-1 border border-purple-400 rounded-xl p-0.5 bg-purple-50/60">
+                      <span className="text-blue-900 font-extrabold text-[10px] sm:text-xs px-1 whitespace-nowrap">CHIUDI:</span>
+                      <button 
+                        onClick={() => handleFinalizzaChiusura(2)}
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-1 rounded-lg text-[10px] sm:text-xs font-bold shadow-sm transition-colors"
+                      >
+                        POS
+                      </button>
+                      <button 
+                        onClick={() => handleFinalizzaChiusura(1)}
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white py-1 rounded-lg text-[10px] sm:text-xs font-bold shadow-sm transition-colors"
+                      >
+                        CONTANTI
+                      </button>
+                      <button 
+                        onClick={() => setPhase('gratis')}
+                        className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-1 rounded-lg text-[10px] sm:text-xs font-bold shadow-sm transition-colors"
+                      >
+                        ALTRO
+                      </button>
+                    </div>
+
+                  </div>
+                </footer>
               </div>
             );
           case 'chiuso':
