@@ -911,18 +911,22 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   <div className="sez-sx-bassa ">
                     <div className="z-0 text-2xl font-extralight text-end">
                     </div>
-                    {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button> :
+                    {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa}         disabled={phase === 'modificato' || phase === 'caricamento' || phase === 'elaborazione'} >Stampa Conto</Button> :
                       <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button>
                     }
-                    &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
+                    &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled={phase !== 'modificato'}>Aggiorna Conto</Button>
                   </div>
 
                   <div className="sez-dx-bassa">
                     <ul className="inline-block text-base md:text-2xl py-3 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
-                      &nbsp;Chiudi conto&nbsp;&nbsp;
-                       <Button size="medium" className="rounded-full" variant="contained" onClick={() => handleFinalizzaChiusura(2)} >  POS  </Button>
-                        <Button size="medium" className="rounded-full" variant="contained" onClick={() => handleFinalizzaChiusura(1)}>Contanti</Button>
-                        <Button size="medium" className="rounded-full" variant="contained"   onClick={() => setPhase('gratis')} >Altro Importo</Button>
+                      &nbsp;{/* Visibile solo su desktop (lg e superiori) */}
+  <span className="hidden lg:inline text-lg truncate">
+    Chiudi conti
+  </span>
+&nbsp;&nbsp;
+                       <Button size="medium" className="rounded-full" variant="contained" disabled={phase !== 'stampato'} onClick={() => handleFinalizzaChiusura(2)} >  POS  </Button>
+                        <Button size="medium" className="rounded-full" variant="contained" disabled={phase !== 'stampato'} onClick={() => handleFinalizzaChiusura(1)}>Contanti</Button>
+                        <Button size="medium" className="rounded-full" variant="contained" disabled={phase !== 'stampato'}  onClick={() => setPhase('gratis')} >Altro Importo</Button>
                        &nbsp;&nbsp;
                     </ul>
                   </div>
