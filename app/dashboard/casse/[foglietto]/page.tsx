@@ -830,7 +830,7 @@ case 'aperto':
           case 'caricamento':
           case 'elaborazione':
             return (
-              <div className="min-h-[100dvh] flex flex-col justify-between overflow-hidden sm:overflow-visible">
+              <div className="h-[100dvh] max-h-[100dvh] flex flex-col justify-between overflow-hidden sm:h-auto sm:max-h-none sm:overflow-visible">
                 <header className="top-section mb-1 flex-none">
                   {/* HEADER PRINCIPALE ORIGINALE */}
                   <div className="sez-sx">
@@ -883,8 +883,8 @@ case 'aperto':
                   </div>
                 </header>
 
-                {/* PARTE CENTRALE: ALTEZZA CALCOLATA PER FARE SPAZIO AL FOOTER SU MOBILE */}
-                <main className="middle-section_XS flex-1 overflow-y-auto my-1 h-[calc(100dvh-260px)] max-h-[calc(100dvh-260px)] sm:h-auto sm:max-h-none">
+                {/* PARTE CENTRALE: PRENDE AUTOMATICAMENTE LO SPAZIO RIMANENTE TRA HEADER E FOOTER */}
+                <main className="middle-section_XS flex-1 min-h-0 overflow-y-auto my-1">
                   {phase === 'caricamento' || phase === 'elaborazione' ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px', width: '100%' }}>
                       <CircularProgress size="3rem" />
@@ -902,7 +902,7 @@ case 'aperto':
                   )}
                 </main>
 
-                {/* FOOTER COMPATTO E FUNZIONANTE PER SMARTPHONE & PC */}
+                {/* FOOTER GARANTITO SEMPRE IN BASSO ALLO SCHERMO */}
                 <footer className="bottom-section flex-none w-full bg-white p-1.5 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-2xl z-50">
                   <div className="w-full max-w-7xl mx-auto">
                     
@@ -910,36 +910,36 @@ case 'aperto':
                     <div className="flex gap-1.5 mb-1.5">
                       <button 
                         onClick={handleStampa}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-1 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-bold shadow-sm transition-colors"
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold shadow-sm transition-colors"
                       >
                         STAMPA CONTO
                       </button>
                       <button 
                         onClick={handleAggiorna}
-                        className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-1 sm:py-2 rounded-lg sm:rounded-xl text-[11px] sm:text-sm font-bold shadow-sm transition-colors"
+                        className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold shadow-sm transition-colors"
                       >
                         AGGIORNA & STAMPA
                       </button>
                     </div>
 
                     {/* Seconda riga: CHIUDI POS | CONTANTI | ALTRO */}
-                    <div className="flex items-center gap-1 border border-purple-400 rounded-xl p-0.5 bg-purple-50/60">
+                    <div className="flex items-center gap-1 border border-purple-400 rounded-xl p-1 bg-purple-50/60">
                       <span className="text-blue-900 font-extrabold text-[10px] sm:text-xs px-1 whitespace-nowrap">CHIUDI:</span>
                       <button 
                         onClick={() => handleFinalizzaChiusura(2)}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-1 rounded-lg text-[10px] sm:text-xs font-bold shadow-sm transition-colors"
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-1 rounded-lg text-xs font-bold shadow-sm transition-colors"
                       >
                         POS
                       </button>
                       <button 
                         onClick={() => handleFinalizzaChiusura(1)}
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white py-1 rounded-lg text-[10px] sm:text-xs font-bold shadow-sm transition-colors"
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white py-1 rounded-lg text-xs font-bold shadow-sm transition-colors"
                       >
                         CONTANTI
                       </button>
                       <button 
                         onClick={() => setPhase('gratis')}
-                        className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-1 rounded-lg text-[10px] sm:text-xs font-bold shadow-sm transition-colors"
+                        className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-1 rounded-lg text-xs font-bold shadow-sm transition-colors"
                       >
                         ALTRO
                       </button>
