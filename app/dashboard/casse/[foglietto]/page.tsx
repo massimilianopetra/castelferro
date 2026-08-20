@@ -928,8 +928,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                        &nbsp;&nbsp;
                     </ul>
                   </div>
-                  &nbsp;&nbsp;
-
+                  &nbsp;&nbsp;<br/><br/><br/><br/>
                 </footer>
               </div>
             );
