@@ -926,7 +926,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 &nbsp;&nbsp;
                        <Button size="medium" className="rounded-full" variant="contained" disabled={phase !== 'stampato'} onClick={() => handleFinalizzaChiusura(2)} >  POS  </Button>
                         <Button size="medium" className="rounded-full" variant="contained" disabled={phase !== 'stampato'} onClick={() => handleFinalizzaChiusura(1)}>Contanti</Button>
-                        <Button size="medium" className="rounded-full" variant="contained" disabled={phase !== 'stampato'}  onClick={() => setPhase('gratis')} >Altro Importo</Button>
+                        <Button size="medium" className="rounded-full" variant="contained" disabled={phase !== 'stampato'}  onClick={() => setPhase('gratis')} >Altro</Button>
                        &nbsp;&nbsp;
                     </ul>
                   </div>
