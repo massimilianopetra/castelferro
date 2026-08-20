@@ -919,7 +919,14 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         onClick={handleStampa}
         disabled={phase === 'modificato' || phase === 'caricamento' || phase === 'elaborazione'}
       >
-        Stampa Conto
+<span className="hidden lg:inline truncate">
+    Stampa Conto
+  </span>
+
+  {/* Visibile solo su mobile (sotto lg), testo piccolissimo */}
+  <span className="inline lg:hidden leading-tight truncate">
+    Stampa
+  </span>
       </Button>
 
       <Button
@@ -931,7 +938,14 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         onClick={handleAggiorna}
         disabled={phase !== 'modificato'}
       >
-        Aggiorna 
+<span className="hidden lg:inline truncate">
+    Aggiorna & Stampa
+  </span>
+
+  {/* Visibile solo su mobile (sotto lg), testo piccolissimo */}
+  <span className="inline lg:hidden leading-tight truncate">
+    Aggiorna
+  </span>
       </Button>
     </div>
 
