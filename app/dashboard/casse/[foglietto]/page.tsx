@@ -688,77 +688,6 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     </div>
   );
 
-  const riga1 = (
-    <div >
-      <Button
-        variant="contained"
-        size="large"
-        className="flex-1 lg:flex-none font-bold px-4 lg:px-6 py-2 shadow-sm text-sm lg:text-lg"
-        style={{ borderRadius: '9999px' }}
-        onClick={handleStampa}
-        disabled={phase === 'modificato' || phase === 'caricamento' || phase === 'elaborazione'}
-      >
-        Stampa Conto
-      </Button>
-
-      <Button
-        variant="contained"
-        color="info"
-        size="large"
-        className="flex-1 lg:flex-none font-bold px-4 lg:px-6 py-2 shadow-sm text-sm lg:text-lg text-white"
-        style={{ borderRadius: '9999px', backgroundColor: phase === 'modificato' ? '#0284c7' : undefined }}
-        onClick={handleAggiorna}
-        disabled={phase !== 'modificato'}
-      >
-        Aggiorna & Stampa
-      </Button>
-    </div>
-  );
-  const riga2 = (
-    <div> <span className="text-blue-900 font-black text-sm lg:text-xl uppercase whitespace-nowrap pl-1">
-          Chiudi:
-        </span>
-
-        <div className="flex items-center gap-2 lg:gap-3 w-full">
-          <Button
-            variant="contained"
-            color="primary"
-            size="medium"
-            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
-            style={{ borderRadius: '9999px' }}
-            onClick={() => handleFinalizzaChiusura(2)}
-            disabled={phase !== 'stampato'}
-          >
-            POS
-          </Button>
-
-          <Button
-            variant="contained"
-            color="success"
-            size="medium"
-            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
-            style={{ borderRadius: '9999px' }}
-            onClick={() => handleFinalizzaChiusura(1)}
-            disabled={phase !== 'stampato'}
-          >
-            Contanti
-          </Button>
-
-          <Button
-            variant="contained"
-            color="secondary"
-            size="medium"
-            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
-            style={{ borderRadius: '9999px' }}
-            onClick={() => setPhase('gratis')}
-            disabled={phase !== 'stampato'}
-          >
-            Altro
-          </Button>
-        </div>
-
-      </div>
-  );
   const bottoniServizio = (
     <div className="sez-dx" style={{ display: 'flex', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
       <div className="xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
@@ -978,9 +907,83 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 </main>
 {/* FOOTER ADATTIVO - SU DUE RIGHE FINO A SCHERMI GRANDE (LG) */}
 <footer className="bottom-section flex-none pt-2 border-t border-gray-200">
-    <div className="sez-sx">
-    {riga1}
-    {riga2}
+  <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 lg:gap-4 w-full">
+
+    {/* SEZIONE AZIONI CONTO */}
+    <div className="sez-sx-bassa flex items-center justify-between lg:justify-start gap-2 w-full lg:w-auto">
+      <Button
+        variant="contained"
+        size="large"
+        className="flex-1 lg:flex-none font-bold px-4 lg:px-6 py-2 shadow-sm text-sm lg:text-lg"
+        style={{ borderRadius: '9999px' }}
+        onClick={handleStampa}
+        disabled={phase === 'modificato' || phase === 'caricamento' || phase === 'elaborazione'}
+      >
+        Stampa Conto
+      </Button>
+
+      <Button
+        variant="contained"
+        color="info"
+        size="large"
+        className="flex-1 lg:flex-none font-bold px-4 lg:px-6 py-2 shadow-sm text-sm lg:text-lg text-white"
+        style={{ borderRadius: '9999px', backgroundColor: phase === 'modificato' ? '#0284c7' : undefined }}
+        onClick={handleAggiorna}
+        disabled={phase !== 'modificato'}
+      >
+        Aggiorna & Stampa
+      </Button>
+    </div>
+
+    {/* SEZIONE CHIUDI CONTO */}
+    <div className="sez-dx-bassa w-full lg:w-auto lg:flex-1 lg:max-w-2xl">
+      <div className="flex items-center gap-2 lg:gap-3 p-2 lg:p-2.5 px-3 lg:px-4 border-2 lg:border-3 border-blue-600 bg-blue-100 rounded-full shadow-md w-full">
+
+        <span className="text-blue-900 font-black text-sm lg:text-xl uppercase whitespace-nowrap pl-1">
+          Chiudi:
+        </span>
+
+        <div className="flex items-center gap-2 lg:gap-3 w-full">
+          <Button
+            variant="contained"
+            color="primary"
+            size="medium"
+            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
+            style={{ borderRadius: '9999px' }}
+            onClick={() => handleFinalizzaChiusura(2)}
+            disabled={phase !== 'stampato'}
+          >
+            POS
+          </Button>
+
+          <Button
+            variant="contained"
+            color="success"
+            size="medium"
+            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
+            style={{ borderRadius: '9999px' }}
+            onClick={() => handleFinalizzaChiusura(1)}
+            disabled={phase !== 'stampato'}
+          >
+            Contanti
+          </Button>
+
+          <Button
+            variant="contained"
+            color="secondary"
+            size="medium"
+            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
+            style={{ borderRadius: '9999px' }}
+            onClick={() => setPhase('gratis')}
+            disabled={phase !== 'stampato'}
+          >
+            Altro
+          </Button>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 </footer>
               </div>
