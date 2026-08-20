@@ -906,17 +906,24 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   )}
                 </main>
 {/* FOOTER ADATTIVO - SU DUE RIGHE FINO A SCHERMI GRANDE (LG) */}
- <footer className="bottom-section border-t border-gray-200 pt-2">
-  <div className="flex flex-col gap-1.5 sm:gap-2">
+<footer className="bottom-section border-t border-gray-200 pt-1 pb-1">
+  <div className="flex flex-col gap-1">
 
     {/* Prima riga: STAMPA CONTO e AGGIORNA & STAMPA */}
-    <div className="flex flex-row flex-wrap gap-1 sm:gap-2 justify-center lg:justify-end">
+    <div className="flex flex-row gap-1.5 justify-center lg:justify-end">
       <Button
         variant="contained"
         color="primary"
-        size="large"
-        className="flex-1 lg:flex-none font-bold px-2 lg:px-6 py-1 lg:py-2 shadow-sm text-[10px] sm:text-xs lg:text-lg text-white"
-        style={{ borderRadius: '9999px', minWidth: '0' }}
+        size="small"
+        className="flex-1 lg:flex-none font-bold text-white"
+        style={{ borderRadius: '9999px' }}
+        sx={{
+          py: { xs: 0.5, lg: 1.5 },
+          px: { xs: 1, lg: 3 },
+          fontSize: { xs: '0.7rem', sm: '0.8rem', lg: '1rem' },
+          lineHeight: 1.2,
+          minWidth: 0,
+        }}
         onClick={handleStampa}
       >
         Stampa Conto
@@ -925,12 +932,18 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       <Button
         variant="contained"
         color="info"
-        size="large"
-        className="flex-1 lg:flex-none font-bold px-2 lg:px-6 py-1 lg:py-2 shadow-sm text-[10px] sm:text-xs lg:text-lg text-white"
+        size="small"
+        className="flex-1 lg:flex-none font-bold text-white"
         style={{ 
           borderRadius: '9999px', 
-          backgroundColor: phase === 'modificato' ? '#0284c7' : undefined,
-          minWidth: '0' 
+          backgroundColor: phase === 'modificato' ? '#0284c7' : undefined 
+        }}
+        sx={{
+          py: { xs: 0.5, lg: 1.5 },
+          px: { xs: 1, lg: 3 },
+          fontSize: { xs: '0.7rem', sm: '0.8rem', lg: '1rem' },
+          lineHeight: 1.2,
+          minWidth: 0,
         }}
         onClick={handleAggiorna}
         disabled={phase !== 'modificato'}
@@ -940,16 +953,22 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     </div>
 
     {/* Seconda riga: CHIUDI CONTO (POS / CONTANTI / ALTRO) */}
-    <div className="flex flex-row items-center gap-1 sm:gap-2 border-2 border-purple-600 rounded-full p-1 bg-purple-50">
-      <span className="text-blue-900 font-bold text-[10px] sm:text-xs lg:text-base px-1 whitespace-nowrap">
+    <div className="flex flex-row items-center gap-1 border border-purple-500 rounded-full p-0.5 bg-purple-50">
+      <span className="text-blue-900 font-bold text-[9px] sm:text-xs lg:text-sm px-1 whitespace-nowrap">
         CHIUDI:
       </span>
       <Button
         variant="contained"
         color="primary"
         size="small"
-        className="flex-1 font-bold px-1 lg:px-4 py-0.5 lg:py-1.5 text-[10px] sm:text-xs lg:text-base"
-        style={{ borderRadius: '9999px', minWidth: '0' }}
+        className="flex-1 font-bold"
+        style={{ borderRadius: '9999px' }}
+        sx={{
+          py: { xs: 0.3, lg: 1 },
+          px: { xs: 0.5, lg: 2 },
+          fontSize: { xs: '0.65rem', sm: '0.75rem', lg: '0.9rem' },
+          minWidth: 0,
+        }}
         onClick={() => handleFinalizzaChiusura(2)}
       >
         POS
@@ -958,8 +977,14 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         variant="contained"
         color="success"
         size="small"
-        className="flex-1 font-bold px-1 lg:px-4 py-0.5 lg:py-1.5 text-[10px] sm:text-xs lg:text-base"
-        style={{ borderRadius: '9999px', minWidth: '0' }}
+        className="flex-1 font-bold"
+        style={{ borderRadius: '9999px' }}
+        sx={{
+          py: { xs: 0.3, lg: 1 },
+          px: { xs: 0.5, lg: 2 },
+          fontSize: { xs: '0.65rem', sm: '0.75rem', lg: '0.9rem' },
+          minWidth: 0,
+        }}
         onClick={() => handleFinalizzaChiusura(1)}
       >
         Contanti
@@ -968,8 +993,14 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         variant="contained"
         color="secondary"
         size="small"
-        className="flex-1 font-bold px-1 lg:px-4 py-0.5 lg:py-1.5 text-[10px] sm:text-xs lg:text-base"
-        style={{ borderRadius: '9999px', minWidth: '0' }}
+        className="flex-1 font-bold"
+        style={{ borderRadius: '9999px' }}
+        sx={{
+          py: { xs: 0.3, lg: 1 },
+          px: { xs: 0.5, lg: 2 },
+          fontSize: { xs: '0.65rem', sm: '0.75rem', lg: '0.9rem' },
+          minWidth: 0,
+        }}
         onClick={() => setPhase('gratis')}
       >
         Altro
