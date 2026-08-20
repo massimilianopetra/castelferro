@@ -824,172 +824,170 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
             {/* Sostituisci il blocco dei casi 'aperto', 'modificato', 'stampato' in page.tsx */ }
 
-     case 'aperto':
-case 'modificato':
-case 'stampato':
-case 'caricamento':
-case 'elaborazione':
-  return (
-    /* USO DI h-[100dvh] PER GARANTIRE L'ALTEZZA ESATTA DELLO SCHERMO DEL TELEFONO */
-    <div className="container flex flex-col h-[100dvh] justify-between overflow-hidden relative">
+          case 'aperto':
+          case 'modificato':
+          case 'stampato':
+          case 'caricamento':
+          case 'elaborazione':
+            return (
+              <div className="container flex flex-col h-[calc(100vh-20px)] justify-between overflow-hidden">
 
-      <header className="top-section flex-none">
-        {/* HEADER PRINCIPALE */}
-        <div className="sez-sx">
-          {headerCasse}
-          {ultimiRicercati}
-        </div>
+<header className="top-section mb-2 flex-none">
+  {/* HEADER PRINCIPALE ORIGINALE (Input foglietto + Ultime ricerche) */}
+  <div className="sez-sx">
+    {headerCasse}
+    {ultimiRicercati}
+  </div>
 
-        {/* 1. LAYOUT PER PC DESKTOP (lg:flex) */}
-        <div className="sez-dx hidden lg:block">
-          {bottoniServizio}
-          <div className="text-base md:text-2xl py-2 text-end">
-            <p>Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}</span> {conto ? `(${deltanow(conto?.data_apertura)})` : "(Nuovo)"}</p>
-            <p>Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere || 'Casse'}</span></p>
-          </div>
-        </div>
-
-        {/* 2. LAYOUT COMPATTO PER MOBILE/TABLET (lg:hidden) */}
-        <div className="grid grid-cols-2 items-center justify-between gap-2 my-1 w-full px-2 pt-1 border-t border-gray-200 lg:hidden">
-          {/* COLONNA SX MOBILE: Tasti Asporto / Camerieri */}
-          <div className="flex flex-col gap-1 justify-start items-start">
-            <Button 
-              size="small" 
-              className="font-semibold w-full !py-0.5 !text-xs" 
-              variant="outlined" 
-              onClick={handleButtonClickCaricaAsporto} 
-              style={{ borderRadius: '9999px' }}
-            >
-              Asporto
-            </Button>
-            <Button 
-              size="small" 
-              color="secondary" 
-              className="font-semibold w-full !py-0.5 !text-xs" 
-              variant="outlined" 
-              onClick={handleButtonClickCaricaConto1} 
-              style={{ borderRadius: '9999px' }}
-            >
-              Camerieri
-            </Button>
-          </div>
-
-          {/* COLONNA DX MOBILE: Conto / Cameriere */}
-          <div className="flex flex-col text-right justify-end items-end">
-            <p className="text-xs font-medium leading-tight">
-              Conto: <span className="font-extrabold text-blue-800 text-sm">{numeroFoglietto}</span>{' '}
-              <span className="text-[9px] text-gray-500 block">{conto ? `(${deltanow(conto?.data_apertura)})` : "(Nuovo)"}</span>
-            </p>
-            <p className="text-[11px] text-gray-700 leading-tight mt-0.5">
-              Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere || 'Casse'}</span>
-            </p>
-          </div>
-        </div>
-      </header>
-
-      {/* SEZIONE CENTRALE CON TABELLA AD ALTEZZA FLUIDA */}
-      <main className="middle-section_XS flex-1 overflow-y-auto my-1">
-        {phase === 'caricamento' || phase === 'elaborazione' ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px', width: '100%' }}>
-            <CircularProgress size="3rem" />
-          </Box>
-        ) : (
-          <TabellaConto
-            item={products}
-            onAdd10={(id) => handleAdd(id, 10)}
-            onAdd={(id) => handleAdd(id)}
-            onRemove={handleRemove}
-            onSet={handleOpenSetQty}
-            stato={isNewConto ? 'DA CREARE' : phase}
-            numeroFoglietto={numeroFoglietto}
-          />
-        )}
-      </main>
-
-      {/* FOOTER APPICCICATO IN BASSO (STICKY) CON Z-INDEX */}
-      <footer className="bottom-section flex-none sticky bottom-0 z-30 pt-1 pb-1 border-t border-gray-200 bg-white shadow-lg">
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-1 lg:gap-4 w-full px-1">
-
-          {/* RIGA 1 MOBILE: STAMPA / AGGIORNA */}
-          <div className="flex items-center justify-between gap-2 w-full lg:w-auto">
-            <Button
-              variant="contained"
-              size="small"
-              className="flex-1 lg:flex-none font-bold py-1.5 shadow-sm text-xs lg:text-lg"
-              style={{ borderRadius: '9999px' }}
-              onClick={handleStampa}
-              disabled={phase === 'modificato' || phase === 'caricamento' || phase === 'elaborazione'}
-            >
-              Stampa Conto
-            </Button>
-
-            <Button
-              variant="contained"
-              color="info"
-              size="small"
-              className="flex-1 lg:flex-none font-bold py-1.5 shadow-sm text-xs lg:text-lg text-white"
-              style={{ borderRadius: '9999px', backgroundColor: phase === 'modificato' ? '#0284c7' : undefined }}
-              onClick={handleAggiorna}
-              disabled={phase !== 'modificato'}
-            >
-              Aggiorna & Stampa
-            </Button>
-          </div>
-
-          {/* RIGA 2 MOBILE: CHIUDI CONTO (POS / CONTANTI / ALTRO) */}
-          <div className="w-full lg:w-auto lg:flex-1 lg:max-w-2xl">
-            <div className="flex items-center gap-1 p-0.5 border border-blue-500 lg:border-2 bg-blue-50 lg:bg-blue-100 rounded-full shadow-sm lg:shadow-md w-full">
-
-              <span className="text-blue-900 font-bold text-[10px] lg:text-xl uppercase whitespace-nowrap pl-1">
-                Chiudi:
-              </span>
-
-              <div className="flex items-center gap-1 lg:gap-3 w-full">
-                <Button
-                  variant="contained"
-                  color="primary"
-                  size="small"
-                  className="flex-1 font-extrabold text-[10px] lg:text-xl py-1 min-w-0 px-0.5 shadow-sm"
-                  style={{ borderRadius: '9999px' }}
-                  onClick={() => handleFinalizzaChiusura(2)}
-                  disabled={phase !== 'stampato'}
-                >
-                  POS
-                </Button>
-
-                <Button
-                  variant="contained"
-                  color="success"
-                  size="small"
-                  className="flex-1 font-extrabold text-[10px] lg:text-xl py-1 min-w-0 px-0.5 shadow-sm"
-                  style={{ borderRadius: '9999px' }}
-                  onClick={() => handleFinalizzaChiusura(1)}
-                  disabled={phase !== 'stampato'}
-                >
-                  Contanti
-                </Button>
-
-                <Button
-                  variant="contained"
-                  color="secondary"
-                  size="small"
-                  className="flex-1 font-extrabold text-[10px] lg:text-xl py-1 min-w-0 px-0.5 shadow-sm"
-                  style={{ borderRadius: '9999px' }}
-                  onClick={() => setPhase('gratis')}
-                  disabled={phase !== 'stampato'}
-                >
-                  Altro
-                </Button>
-              </div>
-
-            </div>
-          </div>
-
-        </div>
-      </footer>
-
+  {/* 1. LAYOUT PER PC DESKTOP (Mostrato solo da schermi grandi in su: lg:flex) */}
+  <div className="sez-dx hidden lg:block">
+    {bottoniServizio}
+    <div className="text-base md:text-2xl py-2 text-end">
+      <p>Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}</span> {conto ? `(${deltanow(conto?.data_apertura)})` : "(Nuovo)"}</p>
+      <p>Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere || 'Casse'}</span></p>
     </div>
-  );
+  </div>
+
+  {/* 2. LAYOUT 2x2 COMPATTO PER MOBILE/TABLET (Nascosto su PC: lg:hidden) */}
+  <div className="grid grid-cols-2 items-center justify-between gap-2 my-2 w-full px-2 pt-2 border-t border-gray-200 lg:hidden">
+    
+    {/* COLONNA SX MOBILE: Tasti Asporto / Camerieri */}
+    <div className="flex flex-col gap-1.5 justify-start items-start">
+      <Button 
+        size="small" 
+        className="font-semibold w-full" 
+        variant="outlined" 
+        onClick={handleButtonClickCaricaAsporto} 
+        style={{ borderRadius: '9999px' }}
+      >
+        Asporto
+      </Button>
+      <Button 
+        size="small" 
+        color="secondary" 
+        className="font-semibold w-full" 
+        variant="outlined" 
+        onClick={handleButtonClickCaricaConto1} 
+        style={{ borderRadius: '9999px' }}
+      >
+        Camerieri
+      </Button>
+    </div>
+
+    {/* COLONNA DX MOBILE: Conto / Cameriere */}
+    <div className="flex flex-col text-right justify-end items-end">
+      <p className="text-sm font-medium leading-tight">
+        Conto: <span className="font-extrabold text-blue-800 text-base">{numeroFoglietto}</span>{' '}
+        <span className="text-[10px] text-gray-500 block">{conto ? `(${deltanow(conto?.data_apertura)})` : "(Nuovo)"}</span>
+      </p>
+      <p className="text-xs text-gray-700 leading-tight mt-1">
+        Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere || 'Casse'}</span>
+      </p>
+    </div>
+
+  </div>
+</header>
+                {/* PARTE CENTRALE CON TABELLA CHE SCROLLA SE SERVE */}
+                <main className="middle-section_XS flex-1 overflow-y-auto my-1">
+                  {phase === 'caricamento' || phase === 'elaborazione' ? (
+                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px', width: '100%' }}>
+                      <CircularProgress size="4rem" />
+                    </Box>
+                  ) : (
+                    <TabellaConto
+                      item={products}
+                      onAdd10={(id) => handleAdd(id, 10)}
+                      onAdd={(id) => handleAdd(id)}
+                      onRemove={handleRemove}
+                      onSet={handleOpenSetQty}
+                      stato={isNewConto ? 'DA CREARE' : phase}
+                      numeroFoglietto={numeroFoglietto}
+                    />
+                  )}
+                </main>
+{/* FOOTER ADATTIVO - SU DUE RIGHE FINO A SCHERMI GRANDE (LG) */}
+<footer className="bottom-section flex-none pt-2 border-t border-gray-200">
+  <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 lg:gap-4 w-full">
+
+    {/* SEZIONE AZIONI CONTO */}
+    <div className="sez-sx-bassa flex items-center justify-between lg:justify-start gap-2 w-full lg:w-auto">
+      <Button
+        variant="contained"
+        size="large"
+        className="flex-1 lg:flex-none font-bold px-4 lg:px-6 py-2 shadow-sm text-sm lg:text-lg"
+        style={{ borderRadius: '9999px' }}
+        onClick={handleStampa}
+        disabled={phase === 'modificato' || phase === 'caricamento' || phase === 'elaborazione'}
+      >
+        Stampa Conto
+      </Button>
+
+      <Button
+        variant="contained"
+        color="info"
+        size="large"
+        className="flex-1 lg:flex-none font-bold px-4 lg:px-6 py-2 shadow-sm text-sm lg:text-lg text-white"
+        style={{ borderRadius: '9999px', backgroundColor: phase === 'modificato' ? '#0284c7' : undefined }}
+        onClick={handleAggiorna}
+        disabled={phase !== 'modificato'}
+      >
+        Aggiorna & Stampa
+      </Button>
+    </div>
+
+    {/* SEZIONE CHIUDI CONTO */}
+    <div className="sez-dx-bassa w-full lg:w-auto lg:flex-1 lg:max-w-2xl">
+      <div className="flex items-center gap-2 lg:gap-3 p-2 lg:p-2.5 px-3 lg:px-4 border-2 lg:border-3 border-blue-600 bg-blue-100 rounded-full shadow-md w-full">
+
+        <span className="text-blue-900 font-black text-sm lg:text-xl uppercase whitespace-nowrap pl-1">
+          Chiudi:
+        </span>
+
+        <div className="flex items-center gap-2 lg:gap-3 w-full">
+          <Button
+            variant="contained"
+            color="primary"
+            size="medium"
+            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
+            style={{ borderRadius: '9999px' }}
+            onClick={() => handleFinalizzaChiusura(2)}
+            disabled={phase !== 'stampato'}
+          >
+            POS
+          </Button>
+
+          <Button
+            variant="contained"
+            color="success"
+            size="medium"
+            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
+            style={{ borderRadius: '9999px' }}
+            onClick={() => handleFinalizzaChiusura(1)}
+            disabled={phase !== 'stampato'}
+          >
+            Contanti
+          </Button>
+
+          <Button
+            variant="contained"
+            color="secondary"
+            size="medium"
+            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
+            style={{ borderRadius: '9999px' }}
+            onClick={() => setPhase('gratis')}
+            disabled={phase !== 'stampato'}
+          >
+            Altro
+          </Button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</footer>
+              </div>
+            );
           case 'chiuso':
           case 'none':
             return (
