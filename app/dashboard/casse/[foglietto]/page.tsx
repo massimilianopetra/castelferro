@@ -888,7 +888,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   </div>
 </header>
                 {/* PARTE CENTRALE CON TABELLA CHE SCROLLA SE SERVE */}
-                <main className="min-h-screen min-h-[100dvh] flex flex-col justify-between pb-[env(safe-area-inset-bottom)]">
+                <main className="middle-section_XS flex-1 overflow-y-auto my-1">
                   {phase === 'caricamento' || phase === 'elaborazione' ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px', width: '100%' }}>
                       <CircularProgress size="4rem" />
