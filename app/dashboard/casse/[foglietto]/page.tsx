@@ -906,60 +906,17 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   )}
                 </main>
 {/* FOOTER ADATTIVO - SU DUE RIGHE FINO A SCHERMI GRANDE (LG) */}
-<footer className="bottom-section border-t border-gray-200 pt-1 pb-2 px-2 bg-white">
-  <div className="flex flex-col gap-1.5 max-w-7xl mx-auto">
+<footer className="bottom-section flex-none pt-2 border-t border-gray-200">
+  <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 lg:gap-4 w-full">
 
-    {/* Prima riga: STAMPA CONTO e AGGIORNA & STAMPA */}
-    <div className="flex flex-row gap-1.5 justify-center">
-      <button
-        type="button"
-        onClick={handleStampa}
-        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1 px-2 lg:py-2 lg:px-6 rounded-full text-[11px] sm:text-xs lg:text-base shadow-sm transition-colors"
-      >
-        Stampa Conto
-      </button>
-
-      <button
-        type="button"
-        onClick={handleAggiorna}
-        disabled={phase !== 'modificato'}
-        className={`flex-1 font-bold py-1 px-2 lg:py-2 lg:px-6 rounded-full text-[11px] sm:text-xs lg:text-base shadow-sm transition-colors text-white ${
-          phase === 'modificato'
-            ? 'bg-[#0284c7] hover:bg-sky-700 cursor-pointer'
-            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-        }`}
-      >
-        Aggiorna & Stampa
-      </button>
+    {/* SEZIONE AZIONI CONTO */}
+    <div className="sez-sx-bassa flex items-center justify-between lg:justify-start gap-2 w-full lg:w-auto">
+1 riga 
     </div>
 
-    {/* Seconda riga: CHIUDI CONTO (POS / CONTANTI / ALTRO) */}
-    <div className="flex flex-row items-center gap-1 border border-purple-500 rounded-full p-1 bg-purple-50">
-      <span className="text-blue-900 font-bold text-[10px] sm:text-xs lg:text-sm px-1 whitespace-nowrap">
-        CHIUDI:
-      </span>
-      <button
-        type="button"
-        onClick={() => handleFinalizzaChiusura(2)}
-        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-0.5 px-1 lg:py-1.5 lg:px-3 rounded-full text-[10px] sm:text-xs lg:text-sm shadow-sm transition-colors"
-      >
-        POS
-      </button>
-      <button
-        type="button"
-        onClick={() => handleFinalizzaChiusura(1)}
-        className="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-0.5 px-1 lg:py-1.5 lg:px-3 rounded-full text-[10px] sm:text-xs lg:text-sm shadow-sm transition-colors"
-      >
-        Contanti
-      </button>
-      <button
-        type="button"
-        onClick={() => setPhase('gratis')}
-        className="flex-1 bg-purple-600 hover:bg-purple-700 text-white font-bold py-0.5 px-1 lg:py-1.5 lg:px-3 rounded-full text-[10px] sm:text-xs lg:text-sm shadow-sm transition-colors"
-      >
-        Altro
-      </button>
-    </div>
+    {/* SEZIONE CHIUDI CONTO */}
+    <div className="sez-dx-bassa w-full lg:w-auto lg:flex-1 lg:max-w-2xl">
+    seconda riga    </div>
 
   </div>
 </footer>
