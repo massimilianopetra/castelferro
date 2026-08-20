@@ -931,7 +931,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         onClick={handleAggiorna}
         disabled={phase !== 'modificato'}
       >
-        Aggiorna & Stampa
+        Aggiorna 
       </Button>
     </div>
 
@@ -980,11 +980,10 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             Altro
           </Button>
         </div>
-<br/>
       </div>
-
+ 
     </div>
-<br/>
+          <br/><br/><br/>
 
   </div>
 </footer>
