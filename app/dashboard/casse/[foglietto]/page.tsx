@@ -688,6 +688,16 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     </div>
   );
 
+  const riga1 = (
+    <div className="p-1 mt-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
+     riga 1
+    </div>
+  );
+  const riga2 = (
+    <div className="p-1 mt-1 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200 text-end rounded-full" style={{ borderRadius: '9999px' }}>
+     riga 2 
+    </div>
+  );
   const bottoniServizio = (
     <div className="sez-dx" style={{ display: 'flex', flexWrap: 'nowrap', justifyContent: 'flex-end' }}>
       <div className="xl:text-3xl xl:py-4 font-extralight text-end lg:text-base lg:py-1">
@@ -907,58 +917,9 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 </main>
 {/* FOOTER ADATTIVO - SU DUE RIGHE FINO A SCHERMI GRANDE (LG) */}
 <footer className="bottom-section flex-none pt-2 border-t border-gray-200">
-  {/* HEADER PRINCIPALE ORIGINALE (Input foglietto + Ultime ricerche) */}
-  <div className="sez-sx">
-    {headerCasse}
-    {ultimiRicercati}
-  </div>
-
-  {/* 1. LAYOUT PER PC DESKTOP (Mostrato solo da schermi grandi in su: lg:flex) */}
-  <div className="sez-dx hidden lg:block">
-    {bottoniServizio}
-    <div className="text-base md:text-2xl py-2 text-end">
-      <p>Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}</span> {conto ? `(${deltanow(conto?.data_apertura)})` : "(Nuovo)"}</p>
-      <p>Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere || 'Casse'}</span></p>
-    </div>
-  </div>
-
-  {/* 2. LAYOUT 2x2 COMPATTO PER MOBILE/TABLET (Nascosto su PC: lg:hidden) */}
-  <div className="grid grid-cols-2 items-center justify-between gap-2 my-2 w-full px-2 pt-2 border-t border-gray-200 lg:hidden">
-    
-    {/* COLONNA SX MOBILE: Tasti Asporto / Camerieri */}
-    <div className="flex flex-col gap-1.5 justify-start items-start">
-      <Button 
-        size="small" 
-        className="font-semibold w-full" 
-        variant="outlined" 
-        onClick={handleButtonClickCaricaAsporto} 
-        style={{ borderRadius: '9999px' }}
-      >
-        Asporto
-      </Button>
-      <Button 
-        size="small" 
-        color="secondary" 
-        className="font-semibold w-full" 
-        variant="outlined" 
-        onClick={handleButtonClickCaricaConto1} 
-        style={{ borderRadius: '9999px' }}
-      >
-        Camerieri
-      </Button>
-    </div>
-
-    {/* COLONNA DX MOBILE: Conto / Cameriere */}
-    <div className="flex flex-col text-right justify-end items-end">
-      <p className="text-sm font-medium leading-tight">
-        Conto: <span className="font-extrabold text-blue-800 text-base">{numeroFoglietto}</span>{' '}
-        <span className="text-[10px] text-gray-500 block">{conto ? `(${deltanow(conto?.data_apertura)})` : "(Nuovo)"}</span>
-      </p>
-      <p className="text-xs text-gray-700 leading-tight mt-1">
-        Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere || 'Casse'}</span>
-      </p>
-    </div>
-
+    <div className="sez-sx">
+    {riga1}
+    {riga2}
   </div>
 </footer>
               </div>
