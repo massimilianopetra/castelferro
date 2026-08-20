@@ -906,15 +906,16 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   )}
                 </main>
 {/* FOOTER ADATTIVO PER MOBILE */}
-<footer className="bottom-section flex-none pt-2 border-t border-gray-200 bg-white">
-  <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2 lg:gap-4 w-full px-1 pb-1">
+{/* FOOTER OPTIMIZED FOR MOBILE PORTRAIT & DESKTOP */}
+<footer className="bottom-section flex-none pt-1 pb-2 border-t border-gray-200 bg-white">
+  <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-1.5 lg:gap-4 w-full px-1">
 
-    {/* RIGA 1 MOBILE: STAMPA / AGGIORNA */}
+    {/* RIGA 1 MOBILE: STAMPA / AGGIORNA & STAMPA */}
     <div className="flex items-center justify-between gap-2 w-full lg:w-auto">
       <Button
         variant="contained"
-        size="medium"
-        className="flex-1 lg:flex-none font-bold px-2 lg:px-6 py-2 shadow-sm text-xs lg:text-lg"
+        size="small"
+        className="flex-1 lg:flex-none font-bold py-2 shadow-sm text-xs sm:text-sm lg:text-lg"
         style={{ borderRadius: '9999px' }}
         onClick={handleStampa}
         disabled={phase === 'modificato' || phase === 'caricamento' || phase === 'elaborazione'}
@@ -925,8 +926,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       <Button
         variant="contained"
         color="info"
-        size="medium"
-        className="flex-1 lg:flex-none font-bold px-2 lg:px-6 py-2 shadow-sm text-xs lg:text-lg text-white"
+        size="small"
+        className="flex-1 lg:flex-none font-bold py-2 shadow-sm text-xs sm:text-sm lg:text-lg text-white"
         style={{ borderRadius: '9999px', backgroundColor: phase === 'modificato' ? '#0284c7' : undefined }}
         onClick={handleAggiorna}
         disabled={phase !== 'modificato'}
@@ -937,9 +938,9 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
     {/* RIGA 2 MOBILE: CHIUDI CONTO (POS / CONTANTI / ALTRO) */}
     <div className="w-full lg:w-auto lg:flex-1 lg:max-w-2xl">
-      <div className="flex items-center gap-1.5 p-1.5 border-2 border-blue-600 bg-blue-100 rounded-full shadow-md w-full">
+      <div className="flex items-center gap-1 p-1 border border-blue-500 lg:border-2 bg-blue-50 lg:bg-blue-100 rounded-full shadow-sm lg:shadow-md w-full">
 
-        <span className="text-blue-900 font-black text-xs lg:text-xl uppercase whitespace-nowrap pl-1">
+        <span className="text-blue-900 font-bold text-[10px] sm:text-xs lg:text-xl uppercase whitespace-nowrap pl-1.5">
           Chiudi:
         </span>
 
@@ -948,7 +949,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             variant="contained"
             color="primary"
             size="small"
-            className="flex-1 font-black text-[11px] lg:text-xl py-1.5 min-w-0 px-1 shadow-md"
+            className="flex-1 font-extrabold text-[10px] sm:text-xs lg:text-xl py-1 min-w-0 px-0.5 shadow-sm"
             style={{ borderRadius: '9999px' }}
             onClick={() => handleFinalizzaChiusura(2)}
             disabled={phase !== 'stampato'}
@@ -960,7 +961,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             variant="contained"
             color="success"
             size="small"
-            className="flex-1 font-black text-[11px] lg:text-xl py-1.5 min-w-0 px-1 shadow-md"
+            className="flex-1 font-extrabold text-[10px] sm:text-xs lg:text-xl py-1 min-w-0 px-0.5 shadow-sm"
             style={{ borderRadius: '9999px' }}
             onClick={() => handleFinalizzaChiusura(1)}
             disabled={phase !== 'stampato'}
@@ -972,7 +973,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             variant="contained"
             color="secondary"
             size="small"
-            className="flex-1 font-black text-[11px] lg:text-xl py-1.5 min-w-0 px-1 shadow-md"
+            className="flex-1 font-extrabold text-[10px] sm:text-xs lg:text-xl py-1 min-w-0 px-0.5 shadow-sm"
             style={{ borderRadius: '9999px' }}
             onClick={() => setPhase('gratis')}
             disabled={phase !== 'stampato'}
