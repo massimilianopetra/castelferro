@@ -907,35 +907,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 </main>
 {/* FOOTER ADATTIVO - SU DUE RIGHE FINO A SCHERMI GRANDE (LG) */}
 <footer className="bottom-section flex-none pt-2 border-t border-gray-200">
-  <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 lg:gap-4 w-full">
 
-    {/* SEZIONE AZIONI CONTO */}
-    <div className="sez-sx-bassa flex items-center justify-between lg:justify-start gap-2 w-full lg:w-auto">
-      <Button
-        variant="contained"
-        size="large"
-        className="flex-1 lg:flex-none font-bold px-4 lg:px-6 py-2 shadow-sm text-sm lg:text-lg"
-        style={{ borderRadius: '9999px' }}
-        onClick={handleStampa}
-        disabled={phase === 'modificato' || phase === 'caricamento' || phase === 'elaborazione'}
-      >
-        Stampa Conto
-      </Button>
-
-      <Button
-        variant="contained"
-        color="info"
-        size="large"
-        className="flex-1 lg:flex-none font-bold px-4 lg:px-6 py-2 shadow-sm text-sm lg:text-lg text-white"
-        style={{ borderRadius: '9999px', backgroundColor: phase === 'modificato' ? '#0284c7' : undefined }}
-        onClick={handleAggiorna}
-        disabled={phase !== 'modificato'}
-      >
-        Aggiorna & Stampa
-      </Button>
-    </div>
-
-    {/* SEZIONE CHIUDI CONTO */}
   {/* Aumentato il padding superiore a pt-3 o pt-4 e ridotto il margine interno tra le righe */}
 <div className="sticky bottom-0 left-0 right-0 bg-white pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] px-2 shadow-2xl z-50">
   
@@ -963,7 +935,6 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     </button>
   </div>
 
-</div>
 
   </div>
 </footer>
