@@ -888,8 +888,8 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   </div>
 </header>
                 {/* PARTE CENTRALE CON TABELLA CHE SCROLLA SE SERVE */}
-                <main className="middle-section_XS flex-1 overflow-y-auto my-1 max-h-[calc(100dvh-280px)] sm:max-h-none">
-                  {phase === 'caricamento' || phase === 'elaborazione' ? (
+               <main className="middle-section_XS flex-1 overflow-y-auto my-1 max-h-[35vh] sm:max-h-none">
+                   {phase === 'caricamento' || phase === 'elaborazione' ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px', width: '100%' }}>
                       <CircularProgress size="4rem" />
                     </Box>
