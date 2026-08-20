@@ -833,11 +833,11 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               <div className="container flex flex-col h-[calc(100vh-20px)] justify-between overflow-hidden">
 
 <header className="top-section mb-2 flex-none">
-  {/* HEADER PRINCIPALE ORIGINALE (Input foglietto + Ultime ricerche) */}
-  <div className="sez-sx">
-    {headerCasse}
+   {/* HEADER PRINCIPALE ORIGINALE (Input foglietto + Ultime ricerche) */}
+  {/*  <div className="sez-sx">*/}
+   {/*   {headerCasse}*/}
   {/*   {ultimiRicercati}*/}
-  </div>
+  {/*  </div>*/}
 
   {/* 1. LAYOUT PER PC DESKTOP (Mostrato solo da schermi grandi in su: lg:flex) */}
   <div className="sez-dx hidden lg:block">
