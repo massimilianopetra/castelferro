@@ -915,9 +915,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                       <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button>
                     }
                     &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled={phase !== 'modificato'}>Aggiorna Conto</Button>
-                  </div>
-
-                  <div className="sez-dx-bassa">
+                &nbsp; &nbsp; &nbsp;
                     <ul className="inline-block text-base md:text-2xl py-3 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
                       &nbsp;{/* Visibile solo su desktop (lg e superiori) */}
   <span className="hidden lg:inline text-lg truncate">
