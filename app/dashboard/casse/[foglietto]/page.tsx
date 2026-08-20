@@ -6,8 +6,7 @@ import { useRouter } from 'next/navigation';
 import {
   Button, Link, Snackbar, TextField,
   Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress,
-  Box, Typography,
-  ButtonGroup
+  Box, Typography
 } from '@mui/material';
 import Filter1Icon from '@mui/icons-material/Filter1';
 import * as React from 'react';
@@ -907,29 +906,86 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   )}
                 </main>
 {/* FOOTER ADATTIVO - SU DUE RIGHE FINO A SCHERMI GRANDE (LG) */}
-    <footer className="bottom-section">
-                  <div className="sez-sx-bassa ">
-                    <div className="z-0 text-2xl font-extralight text-end">
-                    </div>
-                    {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa}         disabled={phase === 'modificato' || phase === 'caricamento' || phase === 'elaborazione'} >Stampa Conto</Button> :
-                      <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button>
-                    }
-                    &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled={phase !== 'modificato'}>Aggiorna Conto</Button>
-                &nbsp; &nbsp; &nbsp;
-                    <ul className="inline-block text-base md:text-2xl py-3 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
-                      &nbsp;{/* Visibile solo su desktop (lg e superiori) */}
-  <span className="hidden lg:inline text-lg truncate">
-    Chiudi conti
-  </span>
-&nbsp;&nbsp;
-                       <Button size="medium" className="rounded-full" variant="contained" disabled={phase !== 'stampato'} onClick={() => handleFinalizzaChiusura(2)} >  POS  </Button>
-                        <Button size="medium" className="rounded-full" variant="contained" disabled={phase !== 'stampato'} onClick={() => handleFinalizzaChiusura(1)}>Contanti</Button>
-                        <Button size="medium" className="rounded-full" variant="contained" disabled={phase !== 'stampato'}  onClick={() => setPhase('gratis')} >Altro</Button>
-                       &nbsp;&nbsp;
-                    </ul>
-                  </div>
-                  &nbsp;&nbsp;<br/><br/><br/><br/>
-                </footer>
+<footer className="bottom-section flex-none pt-2 border-t border-gray-200">
+  <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 lg:gap-4 w-full">
+
+    {/* SEZIONE AZIONI CONTO */}
+    <div className="sez-sx-bassa flex items-center justify-between lg:justify-start gap-2 w-full lg:w-auto">
+      <Button
+        variant="contained"
+        size="large"
+        className="flex-1 lg:flex-none font-bold px-4 lg:px-6 py-2 shadow-sm text-sm lg:text-lg"
+        style={{ borderRadius: '9999px' }}
+        onClick={handleStampa}
+        disabled={phase === 'modificato' || phase === 'caricamento' || phase === 'elaborazione'}
+      >
+        Stampa Conto
+      </Button>
+
+      <Button
+        variant="contained"
+        color="info"
+        size="large"
+        className="flex-1 lg:flex-none font-bold px-4 lg:px-6 py-2 shadow-sm text-sm lg:text-lg text-white"
+        style={{ borderRadius: '9999px', backgroundColor: phase === 'modificato' ? '#0284c7' : undefined }}
+        onClick={handleAggiorna}
+        disabled={phase !== 'modificato'}
+      >
+        Aggiorna & Stampa
+      </Button>
+    </div>
+
+    {/* SEZIONE CHIUDI CONTO */}
+    <div className="sez-dx-bassa w-full lg:w-auto lg:flex-1 lg:max-w-2xl">
+      <div className="flex items-center gap-2 lg:gap-3 p-2 lg:p-2.5 px-3 lg:px-4 border-2 lg:border-3 border-blue-600 bg-blue-100 rounded-full shadow-md w-full">
+
+        <span className="text-blue-900 font-black text-sm lg:text-xl uppercase whitespace-nowrap pl-1">
+          Chiudi:
+        </span>
+
+        <div className="flex items-center gap-2 lg:gap-3 w-full">
+          <Button
+            variant="contained"
+            color="primary"
+            size="medium"
+            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
+            style={{ borderRadius: '9999px' }}
+            onClick={() => handleFinalizzaChiusura(2)}
+            disabled={phase !== 'stampato'}
+          >
+            POS
+          </Button>
+
+          <Button
+            variant="contained"
+            color="success"
+            size="medium"
+            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
+            style={{ borderRadius: '9999px' }}
+            onClick={() => handleFinalizzaChiusura(1)}
+            disabled={phase !== 'stampato'}
+          >
+            Contanti
+          </Button>
+
+          <Button
+            variant="contained"
+            color="secondary"
+            size="medium"
+            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
+            style={{ borderRadius: '9999px' }}
+            onClick={() => setPhase('gratis')}
+            disabled={phase !== 'stampato'}
+          >
+            Altro
+          </Button>
+        </div>
+<br/><br/><br/>
+      </div>
+    </div>
+
+  </div>
+</footer>
               </div>
             );
           case 'chiuso':
