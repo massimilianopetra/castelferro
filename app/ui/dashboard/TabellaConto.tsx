@@ -110,43 +110,54 @@ export default function TabellaConto({
                                     </TableCell>
 
                                     {/* TASTI AZIONE */}
-                                    <TableCell align="left" className="py-1 md:py-1.5">
-                                        {/* DESKTOP (sm e superiori) */}
-                                        <div className="hidden sm:flex items-center">
-                                            <ButtonGroup>
-                                                <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} disabled={isCopertoDisabilitato} />
-                                                <Button onClick={() => onAdd(row.id_piatto)} size="large" variant="contained" startIcon={<AddCircleIcon />} disabled={isCopertoDisabilitato} />
-                                            </ButtonGroup>
-                                            &nbsp;&nbsp;&nbsp;
-                                            <ButtonGroup>
-                                                <Button onClick={() => onAdd10(row.id_piatto)} size="medium" variant="contained" startIcon={<Replay10Icon />} disabled={isCopertoDisabilitato} />
-                                            </ButtonGroup>
-                                            &nbsp;&nbsp;&nbsp;
-                                            <ButtonGroup>
-                                                <Button onClick={() => onSet(row.id_piatto)} size="medium" variant="outlined" color="secondary" startIcon={<EditIcon />} disabled={isCopertoDisabilitato} />
-                                            </ButtonGroup>
-                                        </div>
+{/* TASTI AZIONE */}
+<TableCell align="left" className="py-1 md:py-1.5 px-1">
+    {/* DESKTOP (sm e superiori) */}
+    <div className="hidden sm:flex items-center">
+        <ButtonGroup>
+            <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} disabled={isCopertoDisabilitato} />
+            <Button onClick={() => onAdd(row.id_piatto)} size="large" variant="contained" startIcon={<AddCircleIcon />} disabled={isCopertoDisabilitato} />
+        </ButtonGroup>
+        &nbsp;&nbsp;&nbsp;
+        <ButtonGroup>
+            <Button onClick={() => onAdd10(row.id_piatto)} size="medium" variant="contained" startIcon={<Replay10Icon />} disabled={isCopertoDisabilitato} />
+        </ButtonGroup>
+        &nbsp;&nbsp;&nbsp;
+        <ButtonGroup>
+            <Button onClick={() => onSet(row.id_piatto)} size="medium" variant="outlined" color="secondary" startIcon={<EditIcon />} disabled={isCopertoDisabilitato} />
+        </ButtonGroup>
+    </div>
 
-                                        {/* MOBILE / TABLET PORTRAIT (xs) - TASTI ACCOPPIATI 2 A 2 */}
-                                        <div className="flex sm:hidden items-center gap-1.5">
-                                            <ButtonGroup size="small">
-                                                <Button onClick={() => onRemove(row.id_piatto)} variant="outlined" startIcon={<RemoveCircleSharpIcon />} disabled={isCopertoDisabilitato} />
-                                                <Button onClick={() => onAdd(row.id_piatto)} variant="contained" startIcon={<AddCircleIcon />} disabled={isCopertoDisabilitato} />
-                                            </ButtonGroup>
+    {/* MOBILE (xs) - 4 TASTI DISPOSTI SU 2 RIGHE (2 PER RIGA, PIÙ PICCOLI) */}
+    <div className="flex sm:hidden flex-col gap-1 items-center justify-center">
+        {/* Prima Riga: Meno e Più */}
+        <ButtonGroup size="small">
+            <Button onClick={() => onRemove(row.id_piatto)} variant="outlined" disabled={isCopertoDisabilitato} sx={{ minWidth: '32px', p: '2px 6px' }}>
+                <RemoveCircleSharpIcon fontSize="small" />
+            </Button>
+            <Button onClick={() => onAdd(row.id_piatto)} variant="contained" disabled={isCopertoDisabilitato} sx={{ minWidth: '32px', p: '2px 6px' }}>
+                <AddCircleIcon fontSize="small" />
+            </Button>
+        </ButtonGroup>
 
-                                            <ButtonGroup size="small">
-                                                <Button onClick={() => onSet(row.id_piatto)} variant="outlined" color="secondary" startIcon={<EditIcon />} disabled={isCopertoDisabilitato} />
-                                                <Button onClick={() => onAdd10(row.id_piatto)} variant="contained" color="primary" startIcon={<Replay10Icon />} disabled={isCopertoDisabilitato} />
-                                            </ButtonGroup>
-                                        </div>
-                                    </TableCell>
+        {/* Seconda Riga: Reset 10 e Matita Modifica */}
+        <ButtonGroup size="small">
+            <Button onClick={() => onAdd10(row.id_piatto)} variant="contained" color="primary" disabled={isCopertoDisabilitato} sx={{ minWidth: '32px', p: '2px 6px' }}>
+                <Replay10Icon fontSize="small" />
+            </Button>
+            <Button onClick={() => onSet(row.id_piatto)} variant="outlined" color="secondary" disabled={isCopertoDisabilitato} sx={{ minWidth: '32px', p: '2px 6px' }}>
+                <EditIcon fontSize="small" />
+            </Button>
+        </ButtonGroup>
+    </div>
+</TableCell>
 
-                                    {/* PREZZO TOTALE COLONNA */}
-                                    <TableCell align="right" className="py-1 md:py-1.5 pr-4">
-                                        <span className="text-base font-bold md:text-2xl text-gray-900">
-                                            {(row.quantita * row.prezzo_unitario).toFixed(2)} &euro;
-                                        </span>
-                                    </TableCell>
+{/* PREZZO TOTALE COLONNA (Senza il simbolo € per risparmiare spazio) */}
+<TableCell align="right" className="py-1 md:py-1.5 pr-2">
+    <span className="text-sm font-bold md:text-2xl text-gray-900 whitespace-nowrap">
+        {(row.quantita * row.prezzo_unitario).toFixed(2)}
+    </span>
+</TableCell>
                                 </TableRow>
                             );
                         })}
