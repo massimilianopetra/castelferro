@@ -830,8 +830,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           case 'caricamento':
           case 'elaborazione':
             return (
-              <div className="container flex flex-col h-[calc(100vh-20px)] justify-between overflow-hidden">
-
+             <div className="h-screen flex flex-col justify-between overflow-hidden sm:h-auto sm:overflow-visible">
 <header className="top-section mb-2 flex-none">
   {/* HEADER PRINCIPALE ORIGINALE (Input foglietto + Ultime ricerche) */}
   <div className="sez-sx">
