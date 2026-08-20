@@ -6,7 +6,8 @@ import { useRouter } from 'next/navigation';
 import {
   Button, Link, Snackbar, TextField,
   Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress,
-  Box, Typography
+  Box, Typography,
+  ButtonGroup
 } from '@mui/material';
 import Filter1Icon from '@mui/icons-material/Filter1';
 import * as React from 'react';
@@ -906,120 +907,32 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                   )}
                 </main>
 {/* FOOTER ADATTIVO - SU DUE RIGHE FINO A SCHERMI GRANDE (LG) */}
-<footer className="bottom-section flex-none pt-2 border-t border-gray-200">
-  <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 lg:gap-4 w-full">
+    <footer className="bottom-section">
+                  <div className="sez-sx-bassa ">
+                    <div className="z-0 text-2xl font-extralight text-end">
+                    </div>
+                    {+numeroFoglietto > 9 ? <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button> :
+                      <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button>
+                    }
+                    &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
+                    <br />
+                    {+numeroFoglietto < 10 ? <p> Conto "non stampabile" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p> : <p> Conto "stampato" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>}
+                  </div>
 
-    {/* SEZIONE AZIONI CONTO */}
-    <div className="sez-sx-bassa flex items-center justify-between lg:justify-start gap-2 w-full lg:w-auto">
-      <Button
-   variant="contained"
-  color="info"
-  size="medium"
-  className="flex-1 lg:flex-none font-bold px-1.5 py-0.5 lg:px-6 lg:py-2 shadow-sm text-[5px] lg:text-lg text-white min-w-0"
-  style={{ borderRadius: '9999px', backgroundColor: phase === 'modificato' ? '#0284c7' : undefined }}
- 
-        onClick={handleStampa}
-        disabled={phase === 'modificato' || phase === 'caricamento' || phase === 'elaborazione'}
-      >
-  <span className="hidden lg:inline text-lg ">
-    Chiudi conto
-  </span>
+                  <div className="sez-dx-bassa">
+                    <ul className="inline-block text-base md:text-2xl py-3 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
+                      &nbsp;Chiudi conto&nbsp;&nbsp;
+                      <ButtonGroup size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}>
+                        <Button size="medium" className="rounded-full" variant="contained" onClick={() => handleFinalizzaChiusura(2)} >  POS  </Button>
+                        <Button size="medium" className="rounded-full" variant="contained" onClick={() => handleFinalizzaChiusura(1)}>Contanti</Button>
+                        <Button size="medium" className="rounded-full" variant="contained"   onClick={() => setPhase('gratis')} >Altro Importo</Button>
+                      </ButtonGroup>
+                      &nbsp;&nbsp;
+                    </ul>
+                  </div>
+                  &nbsp;&nbsp;
 
-  {/* Visibile solo su mobile (sotto lg), testo piccolissimo */}
-  <span className="inline lg:hidden text-[9px] leading-tight ">
-    Chiudi
-  </span>
-      </Button>
-
-<Button
-  variant="contained"
-  color="info"
-  size="medium"
-  className="flex-1 lg:flex-none font-bold px-1.5 py-0.5 lg:px-6 lg:py-2 shadow-sm text-[5px] lg:text-lg text-white min-w-0"
-  style={{ borderRadius: '9999px', backgroundColor: phase === 'modificato' ? '#0284c7' : undefined }}
-  onClick={handleAggiorna}
-  disabled={phase !== 'modificato'}
->
-{/* Visibile solo su desktop (lg e superiori) */}
-  <span className="hidden lg:inline text-lg ">
-    Aggiorna & Stampa
-  </span>
-
-  {/* Visibile solo su mobile (sotto lg), testo piccolissimo */}
-  <span className="inline lg:hidden text-[9px] leading-tight ">
-    Aggiorna
-  </span>
-</Button>
-      <div className="flex items-center gap-2 lg:gap-3 p-2 lg:p-2.5 px-3 lg:px-4 border-2 lg:border-3 border-blue-600 bg-blue-100 rounded-full shadow-md w-full">
-
-<span className="hidden lg:inline text-blue-900 font-black lg:text-xl uppercase whitespace-nowrap pl-1">
-  Chiudi:
-</span>
-
-        <div className="flex items-center gap-2 lg:gap-3 w-full">
-          <Button
-            variant="contained"
-            color="primary"
-            size="medium"
-            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
-            style={{ borderRadius: '9999px' }}
-            onClick={() => handleFinalizzaChiusura(2)}
-            disabled={phase !== 'stampato'}
-          >
-  <span className="hidden lg:inline text-lg truncate">
-    POS
-  </span>
-
-  {/* Visibile solo su mobile (sotto lg), testo piccolissimo */}
-  <span className="inline lg:hidden text-[9px] leading-tight truncate">
-   POS
-  </span>
-          </Button>
-
-          <Button
-            variant="contained"
-            color="success"
-            size="medium"
-            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
-            style={{ borderRadius: '9999px' }}
-            onClick={() => handleFinalizzaChiusura(1)}
-            disabled={phase !== 'stampato'}
-          >
-  <span className="hidden lg:inline text-lg truncate">
-    Contanti
-  </span>
-
-  {/* Visibile solo su mobile (sotto lg), testo piccolissimo */}
-  <span className="inline lg:hidden text-[9px] leading-tight truncate">
-   Contanti
-  </span>
-          </Button>
-
-          <Button
-            variant="contained"
-            color="secondary"
-            size="medium"
-            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
-            style={{ borderRadius: '9999px' }}
-            onClick={() => setPhase('gratis')}
-            disabled={phase !== 'stampato'}
-          >
-  <span className="hidden lg:inline text-lg truncate">
-    Altro
-  </span>
-
-  {/* Visibile solo su mobile (sotto lg), testo piccolissimo */}
-  <span className="inline lg:hidden text-[9px] leading-tight truncate">
-   Altro
-  </span>
-          </Button>
-        </div>
-
-      </div>
-    </div>
-
-  </div>
-</footer>
+                </footer>
               </div>
             );
           case 'chiuso':
