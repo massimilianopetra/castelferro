@@ -912,36 +912,49 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     {/* SEZIONE AZIONI CONTO */}
     <div className="sez-sx-bassa flex items-center justify-between lg:justify-start gap-2 w-full lg:w-auto">
       <Button
-        variant="contained"
-        size="large"
-        className="flex-1 lg:flex-none font-bold px-4 lg:px-6 py-2 shadow-sm text-sm lg:text-lg"
-        style={{ borderRadius: '9999px' }}
+   variant="contained"
+  color="info"
+  size="medium"
+  className="flex-1 lg:flex-none font-bold px-1.5 py-0.5 lg:px-6 lg:py-2 shadow-sm text-[5px] lg:text-lg text-white min-w-0"
+  style={{ borderRadius: '9999px', backgroundColor: phase === 'modificato' ? '#0284c7' : undefined }}
+ 
         onClick={handleStampa}
         disabled={phase === 'modificato' || phase === 'caricamento' || phase === 'elaborazione'}
       >
-        Stampa Conto
+  <span className="hidden lg:inline text-lg ">
+    Chiudi conto
+  </span>
+
+  {/* Visibile solo su mobile (sotto lg), testo piccolissimo */}
+  <span className="inline lg:hidden text-[9px] leading-tight ">
+    Chiudi
+  </span>
       </Button>
 
-      <Button
-        variant="contained"
-        color="info"
-        size="large"
-        className="flex-1 lg:flex-none font-bold px-4 lg:px-6 py-2 shadow-sm text-sm lg:text-lg text-white"
-        style={{ borderRadius: '9999px', backgroundColor: phase === 'modificato' ? '#0284c7' : undefined }}
-        onClick={handleAggiorna}
-        disabled={phase !== 'modificato'}
-      >
-        Aggiorna & Stampa
-      </Button>
-    </div>
+<Button
+  variant="contained"
+  color="info"
+  size="medium"
+  className="flex-1 lg:flex-none font-bold px-1.5 py-0.5 lg:px-6 lg:py-2 shadow-sm text-[5px] lg:text-lg text-white min-w-0"
+  style={{ borderRadius: '9999px', backgroundColor: phase === 'modificato' ? '#0284c7' : undefined }}
+  onClick={handleAggiorna}
+  disabled={phase !== 'modificato'}
+>
+{/* Visibile solo su desktop (lg e superiori) */}
+  <span className="hidden lg:inline text-lg ">
+    Aggiorna & Stampa
+  </span>
 
-    {/* SEZIONE CHIUDI CONTO */}
-    <div className="sez-dx-bassa w-full lg:w-auto lg:flex-1 lg:max-w-2xl">
+  {/* Visibile solo su mobile (sotto lg), testo piccolissimo */}
+  <span className="inline lg:hidden text-[9px] leading-tight ">
+    Aggiorna
+  </span>
+</Button>
       <div className="flex items-center gap-2 lg:gap-3 p-2 lg:p-2.5 px-3 lg:px-4 border-2 lg:border-3 border-blue-600 bg-blue-100 rounded-full shadow-md w-full">
 
-        <span className="text-blue-900 font-black text-sm lg:text-xl uppercase whitespace-nowrap pl-1">
-          Chiudi:
-        </span>
+<span className="hidden lg:inline text-blue-900 font-black lg:text-xl uppercase whitespace-nowrap pl-1">
+  Chiudi:
+</span>
 
         <div className="flex items-center gap-2 lg:gap-3 w-full">
           <Button
@@ -953,7 +966,14 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             onClick={() => handleFinalizzaChiusura(2)}
             disabled={phase !== 'stampato'}
           >
-            POS
+  <span className="hidden lg:inline text-lg truncate">
+    POS
+  </span>
+
+  {/* Visibile solo su mobile (sotto lg), testo piccolissimo */}
+  <span className="inline lg:hidden text-[9px] leading-tight truncate">
+   POS
+  </span>
           </Button>
 
           <Button
@@ -965,7 +985,14 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             onClick={() => handleFinalizzaChiusura(1)}
             disabled={phase !== 'stampato'}
           >
-            Contanti
+  <span className="hidden lg:inline text-lg truncate">
+    Contanti
+  </span>
+
+  {/* Visibile solo su mobile (sotto lg), testo piccolissimo */}
+  <span className="inline lg:hidden text-[9px] leading-tight truncate">
+   Contanti
+  </span>
           </Button>
 
           <Button
@@ -977,7 +1004,14 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             onClick={() => setPhase('gratis')}
             disabled={phase !== 'stampato'}
           >
-            Altro
+  <span className="hidden lg:inline text-lg truncate">
+    Altro
+  </span>
+
+  {/* Visibile solo su mobile (sotto lg), testo piccolissimo */}
+  <span className="inline lg:hidden text-[9px] leading-tight truncate">
+   Altro
+  </span>
           </Button>
         </div>
 
