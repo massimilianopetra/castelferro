@@ -830,7 +830,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
           case 'caricamento':
           case 'elaborazione':
             return (
-             <div className="h-screen flex flex-col justify-between overflow-hidden sm:h-auto sm:overflow-visible">
+<div className="min-h-[100dvh] flex flex-col justify-between">
 <header className="top-section mb-2 flex-none">
   {/* HEADER PRINCIPALE ORIGINALE (Input foglietto + Ultime ricerche) */}
   <div className="sez-sx">
@@ -887,8 +887,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
   </div>
 </header>
                 {/* PARTE CENTRALE CON TABELLA CHE SCROLLA SE SERVE */}
-               <main className="middle-section_XS flex-1 overflow-y-auto my-1 max-h-[35vh] sm:max-h-none">
-                   {phase === 'caricamento' || phase === 'elaborazione' ? (
+            <main className="middle-section_XS flex-1 overflow-y-auto my-1 h-[calc(100dvh-340px)] max-h-[calc(100dvh-340px)] sm:h-auto sm:max-h-none">      {phase === 'caricamento' || phase === 'elaborazione' ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px', width: '100%' }}>
                       <CircularProgress size="4rem" />
                     </Box>
