@@ -830,8 +830,9 @@ case 'aperto':
           case 'caricamento':
           case 'elaborazione':
             return (
-              <div className="h-[100dvh] max-h-[100dvh] flex flex-col justify-between overflow-hidden sm:h-auto sm:max-h-none sm:overflow-visible">
-                <header className="top-section mb-1 flex-none">
+              <div className="w-full relative min-h-screen pb-[135px]">
+                {/* HEADER */}
+                <header className="top-section mb-1">
                   {/* HEADER PRINCIPALE ORIGINALE */}
                   <div className="sez-sx">
                     {headerCasse}
@@ -883,8 +884,8 @@ case 'aperto':
                   </div>
                 </header>
 
-                {/* PARTE CENTRALE: PRENDE AUTOMATICAMENTE LO SPAZIO RIMANENTE TRA HEADER E FOOTER */}
-                <main className="middle-section_XS flex-1 min-h-0 overflow-y-auto my-1">
+                {/* TABELLA CONTO */}
+                <main className="middle-section_XS my-1">
                   {phase === 'caricamento' || phase === 'elaborazione' ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '200px', width: '100%' }}>
                       <CircularProgress size="3rem" />
@@ -902,44 +903,44 @@ case 'aperto':
                   )}
                 </main>
 
-                {/* FOOTER GARANTITO SEMPRE IN BASSO ALLO SCHERMO */}
-                <footer className="bottom-section flex-none w-full bg-white p-1.5 pb-[calc(0.5rem+env(safe-area-inset-bottom))] shadow-2xl z-50">
+                {/* FOOTER ANCORATO IN BASSO ALLO SCHERMO (FIXED BOTTOM) */}
+                <footer className="fixed bottom-0 left-0 right-0 w-full bg-white p-2 border-t border-gray-300 shadow-[0_-5px_15px_rgba(0,0,0,0.15)] z-[9999]">
                   <div className="w-full max-w-7xl mx-auto">
                     
                     {/* Prima riga: STAMPA CONTO e AGGIORNA & STAMPA */}
                     <div className="flex gap-1.5 mb-1.5">
                       <button 
                         onClick={handleStampa}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold shadow-sm transition-colors"
+                        className="flex-1 bg-blue-600 active:bg-blue-800 text-white py-1.5 rounded-lg text-xs font-bold shadow-sm"
                       >
                         STAMPA CONTO
                       </button>
                       <button 
                         onClick={handleAggiorna}
-                        className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold shadow-sm transition-colors"
+                        className="flex-1 bg-gray-200 active:bg-gray-400 text-gray-800 py-1.5 rounded-lg text-xs font-bold shadow-sm"
                       >
                         AGGIORNA & STAMPA
                       </button>
                     </div>
 
                     {/* Seconda riga: CHIUDI POS | CONTANTI | ALTRO */}
-                    <div className="flex items-center gap-1 border border-purple-400 rounded-xl p-1 bg-purple-50/60">
-                      <span className="text-blue-900 font-extrabold text-[10px] sm:text-xs px-1 whitespace-nowrap">CHIUDI:</span>
+                    <div className="flex items-center gap-1 border border-purple-400 rounded-xl p-1 bg-purple-50">
+                      <span className="text-blue-900 font-extrabold text-[10px] px-1 whitespace-nowrap">CHIUDI:</span>
                       <button 
                         onClick={() => handleFinalizzaChiusura(2)}
-                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-1 rounded-lg text-xs font-bold shadow-sm transition-colors"
+                        className="flex-1 bg-blue-600 active:bg-blue-800 text-white py-1 rounded-lg text-xs font-bold shadow-sm"
                       >
                         POS
                       </button>
                       <button 
                         onClick={() => handleFinalizzaChiusura(1)}
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white py-1 rounded-lg text-xs font-bold shadow-sm transition-colors"
+                        className="flex-1 bg-green-600 active:bg-green-800 text-white py-1 rounded-lg text-xs font-bold shadow-sm"
                       >
                         CONTANTI
                       </button>
                       <button 
                         onClick={() => setPhase('gratis')}
-                        className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-1 rounded-lg text-xs font-bold shadow-sm transition-colors"
+                        className="flex-1 bg-purple-600 active:bg-purple-800 text-white py-1 rounded-lg text-xs font-bold shadow-sm"
                       >
                         ALTRO
                       </button>
