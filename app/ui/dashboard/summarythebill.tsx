@@ -186,7 +186,7 @@ export default function Summarythebill({ item }: { item: DbConsumazioniPrezzo[] 
                 </FinalTotalBox>
 
                 {/* Footer */}
-                <FooterBox sx={{ fontSize: '13px', fontWeight: 'bold' }}>
+                <FooterBox sx={{ fontSize: '17px', fontWeight: 'bold' }}>
                     Id: {comanda}_{giorno} — {currentDate}
                 </FooterBox>
             </ElegantContainer>

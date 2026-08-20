@@ -4,19 +4,18 @@ import { useState, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import {
-  Button, ButtonGroup, Link, Snackbar, TextField,
+  Button, Link, Snackbar, TextField,
   Dialog, DialogTitle, DialogContent, DialogActions, CircularProgress,
-  Box,FormControlLabel, Switch, Typography
+  Box, Typography
 } from '@mui/material';
 import Filter1Icon from '@mui/icons-material/Filter1';
 import * as React from 'react';
-
 import type { DbConsumazioni, DbConsumazioniPrezzo, DbFiera, DbConti, DbLog } from '@/app/lib/definitions';
 import {
   getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto,
   aggiornaConto, stampaConto, riapriConto, apriConto, getContoPiuAlto,
-  writeLog, getGiornoSagra, getLastLog, 
-  getInizializzazioneCassa, updateTotaleConto
+  writeLog, getGiornoSagra, getLastLog,
+  getInizializzazioneCassa
 } from '@/app/lib/actions';
 import { deltanow, milltodatestring } from '@/app/lib/utils';
 import { useConfig } from '@/context/ConfigContext';
@@ -224,53 +223,36 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     }
     return true;
   };
-  /*
-    const handleAggiorna = async () => {
-      const canProceed = await checkAndSaveToDb();
-      if (!canProceed) return;
-  
-      setPhase('caricamento');
-      const numFogl = Number(numeroFoglietto);
-      const totale = products.reduce((acc, i) => acc + (i.quantita * i.prezzo_unitario), 0);
-  
-      const logPromises = products
-        .map(item => {
-          const orig = iniProducts.find(o => o.id_piatto === item.id_piatto);
-          if (orig && item.quantita !== orig.quantita) {
-            const msg = item.quantita > orig.quantita
-              ? `Aggiunti: ${item.quantita - orig.quantita} ${item.piatto}`
-              : `Eliminati: ${orig.quantita - item.quantita} ${item.piatto}`;
-            return writeLog(numFogl, sagra.giornata, 'Casse', '', 'UPDATE', msg);
-          }
-          return null;
-        })
-        .filter((p): p is Promise<void> => p !== null);
-  
-      await Promise.all([
-        sendConsumazioni(products),
-        aggiornaConto(numFogl, sagra.giornata, totale),
-        ...logPromises
-      ]);
-  
-      const newCc = await getConto(numFogl, sagra.giornata);
-  
-      setConto(newCc);
-      setPhase('aperto');
-    };
-  */
   /* ------------------------------AGGIORNA CONSUMAZIONI------------------------------ */
   const handleAggiorna = async () => {
-   // if (chiamataunicaDB) {
-   //   setSnackbarMessage("handleAggiornaNew chiamata unica DB");
-   //   setOpenSnackbar(true);
-   //   await handleAggiornaNew();
-   // } else {
-   //   setSnackbarMessage("handleAggiornaOld chiamate standard");
-   //   setOpenSnackbar(true);
-      await handleAggiornaOld();
-   // }
+    // 1. Esegue l'aggiornamento e recupera la lista piatti aggiornata dal DB
+    const prodottiAggiornati = await handleAggiornaOld();
+
+    // Se l'aggiornamento si è interrotto (es. conto vuoto), fermiamo la stampa
+    if (!prodottiAggiornati) return;
+    // --- INIZIO BLOCCO STAMPA (Cancellabile per rollback) ---
+    const numFogl = Number(numeroFoglietto);
+
+    // Calcola il totale sui prodotti AGGIORNATI
+    const totale = prodottiAggiornati.reduce((acc, i) => acc + (i.quantita * i.prezzo_unitario), 0);
+
+    // 2. Aggiorna il conto sul DB con il totale esatto
+    await aggiornaConto(numFogl, sagra.giornata, totale);
+    await stampaConto(numFogl, sagra.giornata);
+
+    // 3. Log di stampa
+    await writeLog(numFogl, sagra.giornata, 'Casse', '', 'PRINT', 'Stampa conto');
+
+    // 4. Aggiorna log a schermo
+    const logs = await getLastLog(sagra.giornata, 'Casse');
+    if (logs) setLastLog(logs);
+
+    // 5. Stampa e cambio fase
+    print();
+    setPhase('iniziale_stampato');
+    // --- FINE BLOCCO STAMPA ---
   };
- 
+
   const handleAggiornaOld = async () => {
     const haPortateValide = products.some(item => item.quantita > 0);
 
@@ -372,7 +354,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         })
         .filter((p): p is Promise<any> => p !== null);
 
-// 4. INVIAMO E ATTENDIAMO REALMENTE IL COMPLETAMENTO
+      // 4. INVIAMO E ATTENDIAMO REALMENTE IL COMPLETAMENTO
       await Promise.all([
         ...logPromises,
         sendConsumazioni(datiDaInviare)
@@ -386,7 +368,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       ]);
 
       if (logs) setLastLog(logs);
-      
+
       setConto(newCc);
 
       // --- INIZIO AGGIUNTA FONDAMENTALE ---
@@ -397,7 +379,9 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       }
       // --- FINE AGGIUNTA FONDAMENTALE ---
 
+      // Alla fine di handleAggiornaOld:
       setPhase('aperto');
+      return updatedConsumazioni || products; // <-- Aggiunto return
 
     } catch (error) {
       console.error("Errore nell'invio:", error);
@@ -443,7 +427,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     }
   };
 
-const print = () => {
+  const print = () => {
     const printArea = printRef.current;
     if (!printArea) {
       console.warn("ATTENZIONE: La stampa è fallita perché 'printRef.current' è NULL.");
@@ -504,7 +488,7 @@ const print = () => {
       `);
 
       newWindow.document.write('</head><body>');
-      
+
       // 3. IL DOPPIO CONTENITORE CON LARGHEZZA OTTIMIZZATA
       // Se vedi che l'ultima riga è ancora stretta, puoi alzare "max-width: 80mm" a "85mm" o "100%"
       newWindow.document.write(`
@@ -523,10 +507,10 @@ const print = () => {
           box-sizing:border-box !important;
         ">
       `);
-      
+
       // Inseriamo l'HTML del preconto
       newWindow.document.write(printArea.innerHTML);
-      
+
       newWindow.document.write('</div></div>');
       newWindow.document.write('</body></html>');
       newWindow.document.close();
@@ -538,65 +522,65 @@ const print = () => {
       }, 300);
     }
   };
-/*
-  const print = () => {
-    const printArea = printRef.current;
-    if (!printArea) {
-      console.warn("ATTENZIONE: La stampa è fallita perché 'printRef.current' è NULL.");
-      return;
-    }
-    const newWindow = window.open("", "", "width=800,height=900");
-    if (newWindow) {
-      newWindow.document.write('<html><head><title>Stampa Conto</title>');
-
-      document.querySelectorAll('link[rel="stylesheet"]').forEach(s => {
-        const href = s.getAttribute('href');
-        if (href && href.startsWith('/')) {
-          newWindow.document.write(`<link rel="stylesheet" href="${window.location.origin}${href}">`);
-        } else {
-          newWindow.document.write(s.outerHTML);
-        }
-      });
-
-      document.querySelectorAll('style').forEach(s => newWindow.document.write(s.outerHTML));
-
-      newWindow.document.write(`
-      <style>
-        html, body {
-          height: auto !important;
-          overflow: visible !important;
-          background-color: #ffffff !important;
-          margin: 0 !important;
-          padding: 0 !important;
-        }
-        @page {
-          size: auto;
-          margin: 4mm 6mm;
-        }
-        * {
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-        }
-        .print-container {
-          width: 100% !important;
-          height: auto !important;
-          overflow: visible !important;
-        }
-      </style>
-    `);
-
-      newWindow.document.write('</head><body><div class="print-container">');
-      newWindow.document.write(printArea.innerHTML);
-      newWindow.document.write('</div></body></html>');
-      newWindow.document.close();
-
-      setTimeout(() => {
-        newWindow.focus();
-        newWindow.print();
-        newWindow.close();
-      }, 600);
-    }
-  };*/
+  /*
+    const print = () => {
+      const printArea = printRef.current;
+      if (!printArea) {
+        console.warn("ATTENZIONE: La stampa è fallita perché 'printRef.current' è NULL.");
+        return;
+      }
+      const newWindow = window.open("", "", "width=800,height=900");
+      if (newWindow) {
+        newWindow.document.write('<html><head><title>Stampa Conto</title>');
+  
+        document.querySelectorAll('link[rel="stylesheet"]').forEach(s => {
+          const href = s.getAttribute('href');
+          if (href && href.startsWith('/')) {
+            newWindow.document.write(`<link rel="stylesheet" href="${window.location.origin}${href}">`);
+          } else {
+            newWindow.document.write(s.outerHTML);
+          }
+        });
+  
+        document.querySelectorAll('style').forEach(s => newWindow.document.write(s.outerHTML));
+  
+        newWindow.document.write(`
+        <style>
+          html, body {
+            height: auto !important;
+            overflow: visible !important;
+            background-color: #ffffff !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          @page {
+            size: auto;
+            margin: 4mm 6mm;
+          }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .print-container {
+            width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
+          }
+        </style>
+      `);
+  
+        newWindow.document.write('</head><body><div class="print-container">');
+        newWindow.document.write(printArea.innerHTML);
+        newWindow.document.write('</div></body></html>');
+        newWindow.document.close();
+  
+        setTimeout(() => {
+          newWindow.focus();
+          newWindow.print();
+          newWindow.close();
+        }, 600);
+      }
+    };*/
 
   const handleFinalizzaChiusura = async (tipo: number, nota = '', importo = '', skipPrintWait = false) => {
     const savedPrinterIp = typeof window !== 'undefined' ? localStorage.getItem('sagra_printer_ip') : null;
@@ -711,7 +695,7 @@ const print = () => {
         &nbsp;&nbsp;
         <Button size="medium" color="secondary" className="font-semibold" variant="outlined" onClick={handleButtonClickCaricaConto1} style={{ borderRadius: '9999px' }}>Camerieri</Button>
         &nbsp;
-    </div>
+      </div>
     </div>
   );
 
@@ -836,27 +820,75 @@ const print = () => {
               </div>
             );
 
+            {/* Sostituisci il blocco dei casi 'aperto', 'modificato', 'stampato' in page.tsx */ }
+
+            {/* Sostituisci il blocco dei casi 'aperto', 'modificato', 'stampato' in page.tsx */ }
+
           case 'aperto':
           case 'modificato':
           case 'stampato':
           case 'caricamento':
           case 'elaborazione':
             return (
-              <div className="container">
-                <header className="top-section mb-2">
-                  <div className="sez-sx">
-                    {headerCasse}
-                    {ultimiRicercati}
-                  </div>
-                  <div className="sez-dx">
-                    {bottoniServizio}
-                    <div className="text-base md:text-2xl py-2 text-end">
-                      <p>Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}</span> {conto ? `(${deltanow(conto?.data_apertura)})` : "(Nuovo)"}</p>
-                      <p>Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere || 'Casse'}</span></p>
-                    </div>
-                  </div>
-                </header>
-                <main className="middle-section_XS">
+              <div className="container flex flex-col h-[calc(100vh-20px)] justify-between overflow-hidden">
+
+<header className="top-section mb-2 flex-none">
+  {/* HEADER PRINCIPALE ORIGINALE (Input foglietto + Ultime ricerche) */}
+  <div className="sez-sx">
+    {headerCasse}
+    {ultimiRicercati}
+  </div>
+
+  {/* 1. LAYOUT PER PC DESKTOP (Mostrato solo da schermi grandi in su: lg:flex) */}
+  <div className="sez-dx hidden lg:block">
+    {bottoniServizio}
+    <div className="text-base md:text-2xl py-2 text-end">
+      <p>Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}</span> {conto ? `(${deltanow(conto?.data_apertura)})` : "(Nuovo)"}</p>
+      <p>Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere || 'Casse'}</span></p>
+    </div>
+  </div>
+
+  {/* 2. LAYOUT 2x2 COMPATTO PER MOBILE/TABLET (Nascosto su PC: lg:hidden) */}
+  <div className="grid grid-cols-2 items-center justify-between gap-2 my-2 w-full px-2 pt-2 border-t border-gray-200 lg:hidden">
+    
+    {/* COLONNA SX MOBILE: Tasti Asporto / Camerieri */}
+    <div className="flex flex-col gap-1.5 justify-start items-start">
+      <Button 
+        size="small" 
+        className="font-semibold w-full" 
+        variant="outlined" 
+        onClick={handleButtonClickCaricaAsporto} 
+        style={{ borderRadius: '9999px' }}
+      >
+        Asporto
+      </Button>
+      <Button 
+        size="small" 
+        color="secondary" 
+        className="font-semibold w-full" 
+        variant="outlined" 
+        onClick={handleButtonClickCaricaConto1} 
+        style={{ borderRadius: '9999px' }}
+      >
+        Camerieri
+      </Button>
+    </div>
+
+    {/* COLONNA DX MOBILE: Conto / Cameriere */}
+    <div className="flex flex-col text-right justify-end items-end">
+      <p className="text-sm font-medium leading-tight">
+        Conto: <span className="font-extrabold text-blue-800 text-base">{numeroFoglietto}</span>{' '}
+        <span className="text-[10px] text-gray-500 block">{conto ? `(${deltanow(conto?.data_apertura)})` : "(Nuovo)"}</span>
+      </p>
+      <p className="text-xs text-gray-700 leading-tight mt-1">
+        Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere || 'Casse'}</span>
+      </p>
+    </div>
+
+  </div>
+</header>
+                {/* PARTE CENTRALE CON TABELLA CHE SCROLLA SE SERVE */}
+                <main className="middle-section_XS flex-1 overflow-y-auto my-1">
                   {phase === 'caricamento' || phase === 'elaborazione' ? (
                     <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px', width: '100%' }}>
                       <CircularProgress size="4rem" />
@@ -868,31 +900,94 @@ const print = () => {
                       onAdd={(id) => handleAdd(id)}
                       onRemove={handleRemove}
                       onSet={handleOpenSetQty}
+                      stato={isNewConto ? 'DA CREARE' : phase}
+                      numeroFoglietto={numeroFoglietto}
                     />
                   )}
                 </main>
-                <footer className="bottom-section">
-                  <div className="sez-sx-bassa">
-                    <Button variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled={phase === 'modificato' || phase === 'caricamento' || phase === 'elaborazione'}>Stampa Conto</Button>
-                    &nbsp;
-                    <Button variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled={phase !== 'modificato'}>Aggiorna Conto</Button>
-                    <p>Stato: <span className="font-extrabold text-blue-800">{isNewConto ? 'DA CREARE' : phase}</span> n. {numeroFoglietto}</p>
-                  </div>
-                  <div className="sez-dx-bassa">
-                    <ul className=" inline-block p-3 border-2 border-blue-600 bg-blue-200 rounded-full"
-                      style={{ marginTop: '1px' }}>
-                      Chiudi conto &nbsp;
-                      <ButtonGroup variant="contained">
-                        <Button onClick={() => handleFinalizzaChiusura(2)} disabled={phase !== 'stampato'}>POS</Button>
-                        <Button onClick={() => handleFinalizzaChiusura(1)} disabled={phase !== 'stampato'}>Contanti</Button>
-                        <Button onClick={() => setPhase('gratis')} disabled={phase !== 'stampato'}>Altro</Button>
-                      </ButtonGroup>
-                    </ul>
-                  </div>
-                </footer>
+{/* FOOTER ADATTIVO - SU DUE RIGHE FINO A SCHERMI GRANDE (LG) */}
+<footer className="bottom-section flex-none pt-2 border-t border-gray-200">
+  <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 lg:gap-4 w-full">
+
+    {/* SEZIONE AZIONI CONTO */}
+    <div className="sez-sx-bassa flex items-center justify-between lg:justify-start gap-2 w-full lg:w-auto">
+      <Button
+        variant="contained"
+        size="large"
+        className="flex-1 lg:flex-none font-bold px-4 lg:px-6 py-2 shadow-sm text-sm lg:text-lg"
+        style={{ borderRadius: '9999px' }}
+        onClick={handleStampa}
+        disabled={phase === 'modificato' || phase === 'caricamento' || phase === 'elaborazione'}
+      >
+        Stampa Conto
+      </Button>
+
+      <Button
+        variant="contained"
+        color="info"
+        size="large"
+        className="flex-1 lg:flex-none font-bold px-4 lg:px-6 py-2 shadow-sm text-sm lg:text-lg text-white"
+        style={{ borderRadius: '9999px', backgroundColor: phase === 'modificato' ? '#0284c7' : undefined }}
+        onClick={handleAggiorna}
+        disabled={phase !== 'modificato'}
+      >
+        Aggiorna & Stampa
+      </Button>
+    </div>
+
+    {/* SEZIONE CHIUDI CONTO */}
+    <div className="sez-dx-bassa w-full lg:w-auto lg:flex-1 lg:max-w-2xl">
+      <div className="flex items-center gap-2 lg:gap-3 p-2 lg:p-2.5 px-3 lg:px-4 border-2 lg:border-3 border-blue-600 bg-blue-100 rounded-full shadow-md w-full">
+
+        <span className="text-blue-900 font-black text-sm lg:text-xl uppercase whitespace-nowrap pl-1">
+          Chiudi:
+        </span>
+
+        <div className="flex items-center gap-2 lg:gap-3 w-full">
+          <Button
+            variant="contained"
+            color="primary"
+            size="medium"
+            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
+            style={{ borderRadius: '9999px' }}
+            onClick={() => handleFinalizzaChiusura(2)}
+            disabled={phase !== 'stampato'}
+          >
+            POS
+          </Button>
+
+          <Button
+            variant="contained"
+            color="success"
+            size="medium"
+            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
+            style={{ borderRadius: '9999px' }}
+            onClick={() => handleFinalizzaChiusura(1)}
+            disabled={phase !== 'stampato'}
+          >
+            Contanti
+          </Button>
+
+          <Button
+            variant="contained"
+            color="secondary"
+            size="medium"
+            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
+            style={{ borderRadius: '9999px' }}
+            onClick={() => setPhase('gratis')}
+            disabled={phase !== 'stampato'}
+          >
+            Altro
+          </Button>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</footer>
               </div>
             );
-
           case 'chiuso':
           case 'none':
             return (
@@ -941,7 +1036,12 @@ const print = () => {
         }
       })()}
 
-      <div ref={printRef} className="hidden"><Summarythebill item={products} /></div>
+      <div ref={printRef} className="hidden">
+        <Summarythebill
+          item={products}
+        />
+      </div>
+
 
       <Dialog open={openConfirmDialog} onClose={handleCancelNewConto}>
         <DialogTitle sx={{ fontWeight: 'bold', color: '#1e3a8a' }}>Apertura Nuovo Conto</DialogTitle>
