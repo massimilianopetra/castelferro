@@ -907,7 +907,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                 </main>
 {/* FOOTER ADATTIVO - SU DUE RIGHE FINO A SCHERMI GRANDE (LG) */}
 <footer className="bottom-section flex-none pt-2 border-t border-gray-200">
-  <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 lg:gap-4 w-full">
+   <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 lg:gap-4 w-full">
 
     {/* SEZIONE AZIONI CONTO */}
     <div className="sez-sx-bassa flex items-center justify-between lg:justify-start gap-2 w-full lg:w-auto">
@@ -980,9 +980,11 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             Altro
           </Button>
         </div>
-<br/><br/><br/>
+<br/>
       </div>
+
     </div>
+<br/>
 
   </div>
 </footer>
