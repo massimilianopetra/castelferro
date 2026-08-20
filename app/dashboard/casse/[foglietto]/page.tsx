@@ -915,19 +915,15 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                       <Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleStampa} disabled >Stampa Conto</Button>
                     }
                     &nbsp;<Button size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }} onClick={handleAggiorna} disabled>Aggiorna Conto</Button>
-                    <br />
-                    {+numeroFoglietto < 10 ? <p> Conto "non stampabile" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p> : <p> Conto "stampato" numero: <span className="font-extrabold text-blue-800">{numeroFoglietto}&nbsp;&nbsp;&nbsp;</span></p>}
                   </div>
 
                   <div className="sez-dx-bassa">
                     <ul className="inline-block text-base md:text-2xl py-3 font-extralight border-4 border-blue-600 shadow-2xl bg-blue-200  rounded-full">
                       &nbsp;Chiudi conto&nbsp;&nbsp;
-                      <ButtonGroup size="medium" className="rounded-full" variant="contained" style={{ borderRadius: '9999px' }}>
-                        <Button size="medium" className="rounded-full" variant="contained" onClick={() => handleFinalizzaChiusura(2)} >  POS  </Button>
+                       <Button size="medium" className="rounded-full" variant="contained" onClick={() => handleFinalizzaChiusura(2)} >  POS  </Button>
                         <Button size="medium" className="rounded-full" variant="contained" onClick={() => handleFinalizzaChiusura(1)}>Contanti</Button>
                         <Button size="medium" className="rounded-full" variant="contained"   onClick={() => setPhase('gratis')} >Altro Importo</Button>
-                      </ButtonGroup>
-                      &nbsp;&nbsp;
+                       &nbsp;&nbsp;
                     </ul>
                   </div>
                   &nbsp;&nbsp;
