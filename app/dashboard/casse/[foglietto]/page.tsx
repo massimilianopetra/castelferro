@@ -936,53 +936,34 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     </div>
 
     {/* SEZIONE CHIUDI CONTO */}
-    <div className="sez-dx-bassa w-full lg:w-auto lg:flex-1 lg:max-w-2xl">
-      <div className="flex items-center gap-2 lg:gap-3 p-2 lg:p-2.5 px-3 lg:px-4 border-2 lg:border-3 border-blue-600 bg-blue-100 rounded-full shadow-md w-full">
+  {/* Aumentato il padding superiore a pt-3 o pt-4 e ridotto il margine interno tra le righe */}
+<div className="sticky bottom-0 left-0 right-0 bg-white pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))] px-2 shadow-2xl z-50">
+  
+  {/* Prima riga */}
+  <div className="flex gap-2 mb-1.5">
+    <button className="flex-1 bg-blue-600 text-white py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold">
+      STAMPA CONTO
+    </button>
+    <button className="flex-1 bg-gray-300 text-gray-500 py-1.5 sm:py-2 rounded-xl text-xs sm:text-sm font-bold">
+      AGGIORNA & STAMPA
+    </button>
+  </div>
 
-        <span className="text-blue-900 font-black text-sm lg:text-xl uppercase whitespace-nowrap pl-1">
-          Chiudi:
-        </span>
+  {/* Seconda riga */}
+  <div className="flex items-center gap-1 sm:gap-2 border-2 border-purple-600 rounded-xl p-1">
+    <span className="text-blue-900 font-bold text-[10px] sm:text-xs px-0.5">CHIUDI:</span>
+    <button className="flex-1 bg-blue-600 text-white py-1 rounded-xl text-[11px] sm:text-xs font-bold">
+      POS
+    </button>
+    <button className="flex-1 bg-green-600 text-white py-1 rounded-xl text-[11px] sm:text-xs font-bold">
+      CONTANTI
+    </button>
+    <button className="flex-1 bg-purple-600 text-white py-1 rounded-xl text-[11px] sm:text-xs font-bold">
+      ALTRO
+    </button>
+  </div>
 
-        <div className="flex items-center gap-2 lg:gap-3 w-full">
-          <Button
-            variant="contained"
-            color="primary"
-            size="medium"
-            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
-            style={{ borderRadius: '9999px' }}
-            onClick={() => handleFinalizzaChiusura(2)}
-            disabled={phase !== 'stampato'}
-          >
-            POS
-          </Button>
-
-          <Button
-            variant="contained"
-            color="success"
-            size="medium"
-            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
-            style={{ borderRadius: '9999px' }}
-            onClick={() => handleFinalizzaChiusura(1)}
-            disabled={phase !== 'stampato'}
-          >
-            Contanti
-          </Button>
-
-          <Button
-            variant="contained"
-            color="secondary"
-            size="medium"
-            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
-            style={{ borderRadius: '9999px' }}
-            onClick={() => setPhase('gratis')}
-            disabled={phase !== 'stampato'}
-          >
-            Altro
-          </Button>
-        </div>
-
-      </div>
-    </div>
+</div>
 
   </div>
 </footer>
