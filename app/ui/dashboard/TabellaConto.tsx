@@ -58,112 +58,112 @@ export default function TabellaConto({
                 </div>
             </div>
 
-            {/* TABELLA CONTO DENSA */}
-            <TableContainer component={Paper} elevation={1} className="rounded-xl overflow-hidden border border-gray-200">
-                <Table sx={{ minWidth: 150 }} size="small" aria-label="tabella conto">
-                    <TableHead>
-                        <TableRow className="bg-blue-100/70 border-b border-blue-200">
-                            <TableCell align="left" className="py-2">
-                                <p className="text-base font-bold md:text-2xl text-blue-950">Piatto</p>
+            <Table sx={{ minWidth: 150 }} size="small" aria-label="a dense table">
+                <TableHead>
+                    <TableRow className=" text-gray-800 rounded-lg bg-gray ">
+                        <TableCell align="left"><p className="text-base font-bold md:text-2xl">Piatto</p></TableCell>
+
+                        <TableCell align="left" sx={{ display: { xs: 'none', md: 'block' } }}>
+                            <p className="text-base font-bold md:text-2xl">Quantità</p>
+                        </TableCell>
+                        <TableCell align="left" sx={{ display: { xs: 'block', md: 'none' }, }} >
+                            <p className="text-base font-bold md:text-2xl">Q</p>
+                        </TableCell>
+
+                        <TableCell className=" text-base md:text-2xl " align="left"><p></p></TableCell>
+                        <TableCell align="left" sx={{ display: { xs: 'none', md: 'block' } }}>
+                            <p className="text-base font-bold md:text-2xl"> Prezzo Totale</p>
+                        </TableCell>
+                        <TableCell align="left" sx={{ display: { xs: 'block', md: 'none' }, }} >
+                            <p className="text-base font-bold md:text-2xl">Totale</p>
+                        </TableCell>
+
+                    </TableRow>
+                </TableHead>
+                <TableBody >
+ 
+                    {item.map((row) => (
+                        <TableRow
+                            key={`${row.id_comanda}-${row.id_piatto}`} // 👈 chiave unica
+                            className=" md:text-2xl"
+                            
+                            //className="hover:bg-yellow-100 md:text-2xl" /TOLTO GIALLINO 
+                            sx={{
+                                backgroundColor: row.quantita > 0 ? "rgb(174, 258, 174)" : "white",
+                            }}
+                        >
+                            <TableCell align="left">
+                                <span className="text-base font-normal md:text-2xl">{row.alias}</span>
+                            </TableCell>
+                            <TableCell align="left">
+                                <span className="text-base font-bold md:text-2xl">{row.quantita}</span> &nbsp;&nbsp;&nbsp;&nbsp;
                             </TableCell>
 
-                            <TableCell align="left" sx={{ display: { xs: 'none', md: 'table-cell' } }} className="py-2">
-                                <p className="text-base font-bold md:text-2xl text-blue-950">Quantità</p>
-                            </TableCell>
-                            <TableCell align="left" sx={{ display: { xs: 'table-cell', md: 'none' } }} className="py-2">
-                                <p className="text-base font-bold md:text-2xl text-blue-950">Q</p>
-                            </TableCell>
+                            {(row.id_comanda === 1 || row.id_comanda > 8000) && row.id_piatto === 1 ?
+                                //se è la comanda camerieri o se è asporto >8000 non posso mettere coperti (disabilito tasti)
+                                <><TableCell align="left" sx={{ display: { xs: 'none', sm: 'block' } }}>
+                                    <ButtonGroup>
+                                        <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} disabled />
+                                        <Button onClick={() => onAdd(row.id_piatto)} size="large" variant="contained" startIcon={<AddCircleIcon />} disabled />
+                                    </ButtonGroup>
+                                    &nbsp;&nbsp;&nbsp;
+                                    <ButtonGroup>
+                                        <Button onClick={() => onAdd10(row.id_piatto)} size="medium" variant="contained" startIcon={<Replay10Icon />} disabled />
+                                    </ButtonGroup>
+                                    &nbsp;&nbsp;&nbsp;
+                                    <ButtonGroup>
+                                        <Button onClick={() => onSet(row.id_piatto)} size="medium" variant="outlined" color="secondary" startIcon={<EditIcon />} disabled />
+                                    </ButtonGroup>
+                                </TableCell><TableCell align="center" sx={{ display: { xs: 'block', sm: 'none' } }}>
+                                        <ButtonGroup>
+                                            <Button onClick={() => onRemove(row.id_piatto)} size="small" variant="outlined" startIcon={<RemoveCircleSharpIcon />} disabled />
+                                            <Button onClick={() => onAdd(row.id_piatto)} size="small" variant="contained" startIcon={<AddCircleIcon />} disabled />
+                                        </ButtonGroup>
+                                        &nbsp;
+                                        <ButtonGroup>
+                                            <Button onClick={() => onAdd10(row.id_piatto)} size="small" variant="contained" startIcon={<Replay10Icon />} disabled />
+                                            <Button onClick={() => onSet(row.id_piatto)} size="small" variant="outlined" color="secondary" startIcon={<EditIcon />} disabled />
+                                        </ButtonGroup>
+                                    </TableCell></>
 
-                            <TableCell align="left" className="py-2"></TableCell>
+                                :
+                                <><TableCell align="left" sx={{ display: { xs: 'none', sm: 'block' } }}>
+                                    <ButtonGroup>
+                                        <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
+                                        <Button onClick={() => onAdd(row.id_piatto)} size="large" variant="contained" startIcon={<AddCircleIcon />} />
+                                    </ButtonGroup>
+                                    &nbsp;&nbsp;&nbsp;
+                                    <ButtonGroup>
+                                        <Button onClick={() => onAdd10(row.id_piatto)} size="medium" variant="contained" startIcon={<Replay10Icon />} />
+                                    </ButtonGroup>
+                                    &nbsp;&nbsp;&nbsp;
+                                    <ButtonGroup>
+                                        <Button onClick={() => onSet(row.id_piatto)} size="medium" variant="outlined" color="secondary" startIcon={<EditIcon />} />
+                                    </ButtonGroup>
+                                </TableCell><TableCell align="center" sx={{ display: { xs: 'block', sm: 'none' } }}>
+                                        <ButtonGroup>
+                                            <Button onClick={() => onRemove(row.id_piatto)} size="small" variant="outlined" startIcon={<RemoveCircleSharpIcon />} />
+                                            <Button onClick={() => onAdd(row.id_piatto)} size="small" variant="contained" startIcon={<AddCircleIcon />} />
+                                        </ButtonGroup>
+                                        &nbsp;
+                                        <ButtonGroup>
+                                            <Button onClick={() => onAdd10(row.id_piatto)} size="small" variant="contained" startIcon={<Replay10Icon />} />
+                                            <Button onClick={() => onSet(row.id_piatto)} size="small" variant="outlined" color="secondary" startIcon={<EditIcon />} />
+                                        </ButtonGroup>
+                                    </TableCell></>
 
-                            <TableCell align="right" sx={{ display: { xs: 'none', md: 'table-cell' } }} className="py-2 pr-4">
-                                <p className="text-base font-bold md:text-2xl text-blue-950">Prezzo Totale</p>
-                            </TableCell>
-                            <TableCell align="right" sx={{ display: { xs: 'table-cell', md: 'none' } }} className="py-2 pr-2">
-                                <p className="text-base font-bold md:text-2xl text-blue-950">Totale</p>
+                            }
+
+                            <TableCell align="right" className="text-base font-extralight md:text-2xl"> 
+                                <span className="text-base font-bold md:text-2xl"> {(row.quantita * row.prezzo_unitario).toFixed(2)}</span>
+                               
                             </TableCell>
                         </TableRow>
-                    </TableHead>
+                    ))}
+  
+                </TableBody>
+            </Table>
 
-                    <TableBody>
-                        {item.map((row) => {
-                            const isCopertoDisabilitato = (row.id_comanda === 1 || row.id_comanda > 8000) && row.id_piatto === 1;
-
-                            return (
-                                <TableRow
-                                    key={`${row.id_comanda}-${row.id_piatto}`}
-                                    className="hover:bg-amber-100 border-b border-gray-200"
-                                    sx={{
-                                        backgroundColor: row.quantita > 0 ? "rgb(220 252 231)" : "white",
-                                    }}
-                                >
-                                    {/* ALIAS PIATTO */}
-                                    <TableCell align="left" className="py-1 md:py-1.5">
-                                        <span className="text-base font-medium md:text-2xl text-gray-900">{row.alias}</span>
-                                    </TableCell>
-
-                                    {/* QUANTITA */}
-                                    <TableCell align="left" className="py-1 md:py-1.5">
-                                        <span className={`text-base md:text-2xl ${row.quantita > 0 ? 'font-black text-emerald-900' : 'font-bold text-gray-800'}`}>
-                                            {row.quantita}
-                                        </span>
-                                    </TableCell>
-
-                                    {/* TASTI AZIONE */}
-{/* TASTI AZIONE */}
-<TableCell align="left" className="py-1 md:py-1.5 px-1">
-    {/* DESKTOP (sm e superiori) */}
-    <div className="hidden sm:flex items-center">
-        <ButtonGroup>
-            <Button onClick={() => onRemove(row.id_piatto)} size="large" variant="outlined" startIcon={<RemoveCircleSharpIcon />} disabled={isCopertoDisabilitato} />
-            <Button onClick={() => onAdd(row.id_piatto)} size="large" variant="contained" startIcon={<AddCircleIcon />} disabled={isCopertoDisabilitato} />
-        </ButtonGroup>
-        &nbsp;&nbsp;&nbsp;
-        <ButtonGroup>
-            <Button onClick={() => onAdd10(row.id_piatto)} size="medium" variant="contained" startIcon={<Replay10Icon />} disabled={isCopertoDisabilitato} />
-        </ButtonGroup>
-        &nbsp;&nbsp;&nbsp;
-        <ButtonGroup>
-            <Button onClick={() => onSet(row.id_piatto)} size="medium" variant="outlined" color="secondary" startIcon={<EditIcon />} disabled={isCopertoDisabilitato} />
-        </ButtonGroup>
-    </div>
-
-    {/* MOBILE (xs) - 4 TASTI DISPOSTI SU 2 RIGHE (2 PER RIGA, PIÙ PICCOLI) */}
-    <div className="flex sm:hidden flex-col gap-1 items-center justify-center">
-        {/* Prima Riga: Meno e Più */}
-        <ButtonGroup size="small">
-            <Button onClick={() => onRemove(row.id_piatto)} variant="outlined" disabled={isCopertoDisabilitato} sx={{ minWidth: '32px', p: '2px 6px' }}>
-                <RemoveCircleSharpIcon fontSize="small" />
-            </Button>
-            <Button onClick={() => onAdd(row.id_piatto)} variant="contained" disabled={isCopertoDisabilitato} sx={{ minWidth: '32px', p: '2px 6px' }}>
-                <AddCircleIcon fontSize="small" />
-            </Button>
-        </ButtonGroup>
-
-        {/* Seconda Riga: Reset 10 e Matita Modifica */}
-        <ButtonGroup size="small">
-            <Button onClick={() => onAdd10(row.id_piatto)} variant="contained" color="primary" disabled={isCopertoDisabilitato} sx={{ minWidth: '32px', p: '2px 6px' }}>
-                <Replay10Icon fontSize="small" />
-            </Button>
-            <Button onClick={() => onSet(row.id_piatto)} variant="outlined" color="secondary" disabled={isCopertoDisabilitato} sx={{ minWidth: '32px', p: '2px 6px' }}>
-                <EditIcon fontSize="small" />
-            </Button>
-        </ButtonGroup>
-    </div>
-</TableCell>
-
-{/* PREZZO TOTALE COLONNA (Senza il simbolo € per risparmiare spazio) */}
-<TableCell align="right" className="py-1 md:py-1.5 pr-2">
-    <span className="text-sm font-bold md:text-2xl text-gray-900 whitespace-nowrap">
-        {(row.quantita * row.prezzo_unitario).toFixed(2)}
-    </span>
-</TableCell>
-                                </TableRow>
-                            );
-                        })}
-                    </TableBody>
-                </Table>
-            </TableContainer>
 
             {/* BARRA INFERIORE */}
             <div className="p-2 mt-2 mb-1 rounded-xl bg-blue-50 flex justify-between items-center shadow-sm">

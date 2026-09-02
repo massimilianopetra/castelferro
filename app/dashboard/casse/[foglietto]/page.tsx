@@ -130,6 +130,33 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     fetchData();
   }, [params.foglietto]);
 
+// vvv INCOLLA QUI IL NUOVO useEffect PER ASCOLTARE I TASTI vvv
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Esegui i comandi rapidi SOLO se siamo nello stato stampato
+      if (phase === 'stampato') {
+        if (e.key === 'F1') {
+          e.preventDefault(); // Evita l'apertura dell'Help del browser
+          handleFinalizzaChiusura(2); // POS
+        } else if (e.key === 'F2') {
+          e.preventDefault();
+          handleFinalizzaChiusura(1); // CONTANTI
+        } else if (e.key === 'F3') {
+          e.preventDefault();
+          setPhase('gratis');         // ALTRO
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Funzione di cleanup per rimuovere il listener quando si cambia pagina
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [phase, sagra, numeroFoglietto, copertipass]);
+  // ^^^ QUI FINISCE IL NUOVO useEffect PER ASCOLTARE I TASTI ^^^
+
   const handlechiamataunicaDB = () => setChiamataunicaDB(prev => !prev);
 
   const handleConfirmNewConto = () => {
@@ -224,30 +251,43 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     return true;
   };
   /* ------------------------------AGGIORNA CONSUMAZIONI------------------------------ */
-  const handleAggiorna = async () => {
+const handleAggiorna = async () => {
     // 1. Esegue l'aggiornamento e recupera la lista piatti aggiornata dal DB
     const prodottiAggiornati = await handleAggiornaOld();
 
-    // Se l'aggiornamento si è interrotto (es. conto vuoto), fermiamo la stampa
+    // Se l'aggiornamento si è interrotto (es. conto vuoto), fermiamo l'operazione
     if (!prodottiAggiornati) return;
-    // --- INIZIO BLOCCO STAMPA (Cancellabile per rollback) ---
+    
     const numFogl = Number(numeroFoglietto);
 
     // Calcola il totale sui prodotti AGGIORNATI
     const totale = prodottiAggiornati.reduce((acc, i) => acc + (i.quantita * i.prezzo_unitario), 0);
 
-    // 2. Aggiorna il conto sul DB con il totale esatto
+    // 2. Aggiorna SEMPRE il conto sul DB con il totale esatto (sia per < 9 che per >= 9)
     await aggiornaConto(numFogl, sagra.giornata, totale);
+
+    // --- CONTROLLO FOGLIETTI CAMERIERI (< 9) ---
+    if (numFogl < 9) {
+      // Aggiorna solo i log a schermo e si ferma. 
+      // (handleAggiornaOld ha già riportato la fase su 'aperto')
+      const logs = await getLastLog(sagra.giornata, 'Casse');
+      if (logs) setLastLog(logs);
+      return; // USCITA ANTICIPATA: non esegue la stampa
+    }
+
+    // --- INIZIO BLOCCO STAMPA (Solo per foglietti >= 9) ---
+    
+    // 3. Cambia stato del conto in 'stampato' sul DB
     await stampaConto(numFogl, sagra.giornata);
 
-    // 3. Log di stampa
+    // 4. Log di stampa
     await writeLog(numFogl, sagra.giornata, 'Casse', '', 'PRINT', 'Stampa conto');
 
-    // 4. Aggiorna log a schermo
+    // 5. Aggiorna log a schermo
     const logs = await getLastLog(sagra.giornata, 'Casse');
     if (logs) setLastLog(logs);
 
-    // 5. Stampa e cambio fase
+    // 6. Stampa e cambio fase per preparare un nuovo conto
     print();
     setPhase('iniziale_stampato');
     // --- FINE BLOCCO STAMPA ---
@@ -967,8 +1007,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             onClick={() => handleFinalizzaChiusura(2)}
             disabled={phase !== 'stampato'}
           >
-            POS
-          </Button>
+POS(F1)          </Button>
 
           <Button
             variant="contained"
@@ -979,7 +1018,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             onClick={() => handleFinalizzaChiusura(1)}
             disabled={phase !== 'stampato'}
           >
-            Contanti
+Contanti(F2)
           </Button>
 
           <Button
@@ -991,8 +1030,7 @@ export default function Page({ params }: { params: { foglietto: string } }) {
             onClick={() => setPhase('gratis')}
             disabled={phase !== 'stampato'}
           >
-            Altro
-          </Button>
+   Altro(F3)       </Button>
         </div>
       </div>
  

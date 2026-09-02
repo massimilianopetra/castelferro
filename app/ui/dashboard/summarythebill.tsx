@@ -89,7 +89,7 @@ const FooterBox = styled(Box)(({ theme }) => ({
 
 export default function Summarythebill({ item }: { item: DbConsumazioniPrezzo[] }) {
     const config = useConfig();
-    
+
     // Calcoli unificati in un unico ciclo
     let totale = 0;
     let coperti = 1;
@@ -105,23 +105,24 @@ export default function Summarythebill({ item }: { item: DbConsumazioniPrezzo[] 
 
     const subtotal = totale;
     const media = coperti !== 0 ? totale / coperti : 0;
-    const currentDate = new Date().toLocaleDateString('it-IT', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric' 
+    const currentDate = new Date().toLocaleString('it-IT', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
     });
-
     return (
         <ThemeProvider theme={denseTheme}>
             <CssBaseline />
             <ElegantContainer elevation={0}>
-                
+
                 {/* Intestazione 
                 <Box sx={{ mb: 1, textAlign: 'center' }}>*/}
-                    <Typography sx={{ fontSize: '15px', fontWeight: 'bold', textAlign: 'center' }}>
-                        {config.edizione}° Edizione dal {config.inizio} al {config.fine} {config.mese} {config.anno}
-                    </Typography>
-             {/*   </Box>*/}
+                <Typography sx={{ fontSize: '15px', fontWeight: 'bold', textAlign: 'center' }}>
+                    {config.edizione}° Edizione dal {config.inizio} al {config.fine} {config.mese} {config.anno}
+                </Typography>
+                {/*   </Box>*/}
 
                 <TableContainer component={Box}>
                     <Table size="small">
