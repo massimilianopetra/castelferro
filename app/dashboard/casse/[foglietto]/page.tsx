@@ -130,7 +130,6 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     fetchData();
   }, [params.foglietto]);
 
-// vvv INCOLLA QUI IL NUOVO useEffect PER ASCOLTARE I TASTI vvv
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Esegui i comandi rapidi SOLO se siamo nello stato stampato
@@ -150,12 +149,10 @@ export default function Page({ params }: { params: { foglietto: string } }) {
 
     window.addEventListener('keydown', handleKeyDown);
 
-    // Funzione di cleanup per rimuovere il listener quando si cambia pagina
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [phase, sagra, numeroFoglietto, copertipass]);
-  // ^^^ QUI FINISCE IL NUOVO useEffect PER ASCOLTARE I TASTI ^^^
 
   const handlechiamataunicaDB = () => setChiamataunicaDB(prev => !prev);
 
@@ -250,14 +247,15 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     }
     return true;
   };
+
   /* ------------------------------AGGIORNA CONSUMAZIONI------------------------------ */
-const handleAggiorna = async () => {
+  const handleAggiorna = async () => {
     // 1. Esegue l'aggiornamento e recupera la lista piatti aggiornata dal DB
     const prodottiAggiornati = await handleAggiornaOld();
 
     // Se l'aggiornamento si è interrotto (es. conto vuoto), fermiamo l'operazione
     if (!prodottiAggiornati) return;
-    
+
     const numFogl = Number(numeroFoglietto);
 
     // Calcola il totale sui prodotti AGGIORNATI
@@ -268,15 +266,16 @@ const handleAggiorna = async () => {
 
     // --- CONTROLLO FOGLIETTI CAMERIERI (< 9) ---
     if (numFogl < 9) {
-      // Aggiorna solo i log a schermo e si ferma. 
-      // (handleAggiornaOld ha già riportato la fase su 'aperto')
+      setSnackbarMessage("Non stampo i conti con numero foglietto <9 (handleAggiorna) ");
+      setOpenSnackbar(true); // <--- AGGIUNGI QUESTA RIGA
       const logs = await getLastLog(sagra.giornata, 'Casse');
       if (logs) setLastLog(logs);
-      return; // USCITA ANTICIPATA: non esegue la stampa
+      setPhase('iniziale_stampato');
+      return; // USCITA ANTICIPATA: non esegue cla stampa
     }
 
-    // --- INIZIO BLOCCO STAMPA (Solo per foglietti >= 9) ---
-    
+    // --- INIZIO BLOCCO STAMPA (Solo per foglietto >= 9) ---
+
     // 3. Cambia stato del conto in 'stampato' sul DB
     await stampaConto(numFogl, sagra.giornata);
 
@@ -287,8 +286,45 @@ const handleAggiorna = async () => {
     const logs = await getLastLog(sagra.giornata, 'Casse');
     if (logs) setLastLog(logs);
 
-    // 6. Stampa e cambio fase per preparare un nuovo conto
-    print();
+    // 6. INVIO ALLA STAMPANTE (Termica o Finestra Browser)
+    const printMode = localStorage.getItem('sagra_print_mode') || 'finestra';
+    const savedPrinterIp = localStorage.getItem('sagra_printer_ip');
+    if (!savedPrinterIp) {
+      setOpenPrinterWarning(true);
+    } else {
+      setIsPrinting(true);
+    }
+    if (printMode === 'termica') {
+      try {
+        await fetch('/api/print', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            numeroFoglietto,
+            coperti: copertipass,
+            giornata: sagra.giornata,
+            ipAddress: savedPrinterIp,
+            titolo: config.titolo,
+            edizione: config.edizione,
+            inizio: config.inizio,
+            fine: config.fine,
+            mese: config.mese,
+            anno: config.anno,
+            isConto: true,
+            prodotti: prodottiAggiornati.filter(p => p.quantita > 0)
+          }),
+        });
+      } catch (error) {
+        console.error("Errore invio stampa termica:", error);
+      } finally {
+        setIsPrinting(false);
+      }
+    } else {
+      // Stampa classica tramite popup/browser
+      print();
+    }
+
+    // 7. Cambio fase per preparare un nuovo conto
     setPhase('iniziale_stampato');
     // --- FINE BLOCCO STAMPA ---
   };
@@ -296,29 +332,25 @@ const handleAggiorna = async () => {
   const handleAggiornaOld = async () => {
     const haPortateValide = products.some(item => item.quantita > 0);
 
-    // NUOVO CONTROLLO: Se il conto è NUOVO (isNewConto === true) e non ha piatti (> 0),
-    // allora usciamo subito senza toccare il DB, pulendo solo la schermata.
     if (!haPortateValide && isNewConto) {
       setPhase('iniziale');
+      setSnackbarMessage("Errore qui!! ");
       setProducts([]);
       setIniProducts([]);
       return;
     }
 
-    // Impostiamo la fase di invio in corso per mostrare lo spinner
     setPhase('caricamento');
 
     try {
       const numFoglietto = Number(numeroFoglietto);
 
-      // 1. SCARICHIAMO I DATI FRESCHI DAL DB ADESSO
       const [consumazioniFresh, contoFresh] = await Promise.all([
         getConsumazioniCassa(numFoglietto, sagra.giornata),
         getConto(numFoglietto, sagra.giornata)
       ]);
 
       if (isNewConto && contoFresh) {
-        // Se nel frattempo un'altra cucina ha già aperto il conto
         setSnackbarMessage("ATTENZIONE: Un'altra postazione ha appena aperto questo conto. Operazione bloccata per evitare duplicati.");
         setOpenSnackbar(true);
         setPhase('iniziale');
@@ -333,22 +365,16 @@ const handleAggiorna = async () => {
         setIsNewConto(false);
       }
 
-      // 2. UNIAMO LE QUANTITÀ DELLO SCHERMO CON GLI ID DEL DATABASE APPENA SCARICATI
       const datiDaInviare: DbConsumazioni[] = [];
 
-      // Gestiamo prima i prodotti attualmente visibili a schermo
       products.forEach(itemSchermo => {
         const riscontroDb = consumazioniFresh?.find(dbItem => dbItem.id_piatto === itemSchermo.id_piatto);
         const orig = iniProducts.find(o => o.id_piatto === itemSchermo.id_piatto);
 
-        // Controlliamo se l'operatore ha modificato questo piatto rispetto a quando ha aperto la pagina
         const rigaModificataDallUtente = orig ? orig.quantita !== itemSchermo.quantita : itemSchermo.quantita > 0;
 
         let quantitaFinale = itemSchermo.quantita;
 
-        // Se l'utente NON ha toccato questo piatto, appartiene a un'altra cucina ed esiste già sul DB,
-        // allora preserviamo il valore fresco del DB (evita di sovrascrivere modifiche concorrenti).
-        // Se invece l'utente l'ha modificato (es. diminuito o azzerato), inviamo il suo nuovo valore.
         if (!rigaModificataDallUtente && itemSchermo.cucina !== 'Casse' && riscontroDb) {
           quantitaFinale = riscontroDb.quantita;
         }
@@ -360,24 +386,20 @@ const handleAggiorna = async () => {
         });
       });
 
-      // CORREZIONE CRUCIALE: Recuperiamo i piatti che erano nel DB ma sono stati COMPLETAMENTE CANCELLATI dall'array 'products'
       if (consumazioniFresh) {
         consumazioniFresh.forEach(dbItem => {
           const esisteInSchermo = products.some(itemSchermo => itemSchermo.id_piatto === dbItem.id_piatto);
           const eraNeiProdottiIniziali = iniProducts.some(o => o.id_piatto === dbItem.id_piatto);
 
-          // Se il piatto non c'è più a schermo è stato portato a 0, ma era presente all'inizio (o appartiene alle Casse), dobbiamo inviarlo con quantità 0 per rimuoverlo
           if (!esisteInSchermo && (eraNeiProdottiIniziali || dbItem.cucina === 'Casse')) {
             datiDaInviare.push({
               ...dbItem,
-              quantita: 0 // Comunica al backend di azzerare/eliminare la riga
+              quantita: 0
             });
           }
         });
       }
 
-      // 3. Generiamo i log basandoci su 'datiDaInviare' confrontati con i vecchi 'iniProducts'
-      // In questo modo intercettiamo correttamente anche i log di eliminazione totale dei piatti rimossi dallo stato
       const logPromises = datiDaInviare
         .map(item => {
           const orig = iniProducts.find(o => o.id_piatto === item.id_piatto);
@@ -394,43 +416,36 @@ const handleAggiorna = async () => {
         })
         .filter((p): p is Promise<any> => p !== null);
 
-      // 4. INVIAMO E ATTENDIAMO REALMENTE IL COMPLETAMENTO
       await Promise.all([
         ...logPromises,
         sendConsumazioni(datiDaInviare)
       ]);
 
-      // 5. OTTIMIZZAZIONE 2: Aggiornamento log, conto E CONSUMAZIONI fresche
-      const [logs, newCc, updatedConsumazioni] = await Promise.all([ // <-- Aggiunto updatedConsumazioni
+      const [logs, newCc, updatedConsumazioni] = await Promise.all([
         getLastLog(sagra.giornata, 'Casse'),
         getConto(numFoglietto, sagra.giornata),
-        getConsumazioniCassa(numFoglietto, sagra.giornata) // <-- Aggiunta interrogazione al DB
+        getConsumazioniCassa(numFoglietto, sagra.giornata)
       ]);
 
       if (logs) setLastLog(logs);
 
       setConto(newCc);
 
-      // --- INIZIO AGGIUNTA FONDAMENTALE ---
       if (updatedConsumazioni) {
         setProducts(updatedConsumazioni);
         setIniProducts(updatedConsumazioni);
-        // Ora il frontend ha i veri 'id' e la base di calcolo corretta per i log successivi!
       }
-      // --- FINE AGGIUNTA FONDAMENTALE ---
 
-      // Alla fine di handleAggiornaOld:
       setPhase('aperto');
-      return updatedConsumazioni || products; // <-- Aggiunto return
+      return updatedConsumazioni || products;
 
     } catch (error) {
       console.error("Errore nell'invio:", error);
-      setSnackbarMessage("Errore durante il salvataggio.");
+      setSnackbarMessage("Errore durante il salvataggio123.");
       setOpenSnackbar(true);
       setPhase('iniziale');
     }
   };
-
 
   const handleStampa = async () => {
     const canProceed = await checkAndSaveToDb();
@@ -440,10 +455,56 @@ const handleAggiorna = async () => {
     const numFogl = Number(numeroFoglietto);
     const totale = products.reduce((acc, i) => acc + (i.quantita * i.prezzo_unitario), 0);
 
+    const printMode = localStorage.getItem('sagra_print_mode') || 'finestra';
+    const savedPrinterIp = localStorage.getItem('sagra_printer_ip');
+
+    // --- CONTROLLO FOGLIETTI CAMERIERI (< 9) ---
+    if (numFogl < 9) {
+      setSnackbarMessage("Non stampo i conti con numero foglietto <9 (HandleStampa) ");
+      setOpenSnackbar(true); // <--- AGGIUNGI QUESTA RIGA
+      const logs = await getLastLog(sagra.giornata, 'Casse');
+      if (logs) setLastLog(logs);
+      setPhase('iniziale_stampato');
+      return; // USCITA ANTICIPATA: non esegue la stampa
+    }
+   
     try {
       await sendConsumazioni(products);
       await aggiornaConto(numFogl, sagra.giornata, totale);
       await stampaConto(numFogl, sagra.giornata);
+      if (printMode === 'termica') {
+      if (!savedPrinterIp) {
+        setOpenPrinterWarning(true);
+      } else {
+        setIsPrinting(true);
+      }
+    }
+      if (printMode === 'termica') {
+        try {
+          await fetch('/api/print', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              numeroFoglietto,
+              coperti: copertipass,
+              giornata: sagra.giornata,
+              ipAddress: savedPrinterIp,
+              titolo: config.titolo,
+              edizione: config.edizione,
+              inizio: config.inizio,
+              fine: config.fine,
+              mese: config.mese,
+              anno: config.anno,
+              isConto: true,
+              prodotti: products.filter(p => p.quantita > 0)
+            }),
+          });
+        } finally {
+          setIsPrinting(false);
+        }
+      } else {
+        print();
+      }
 
       await Promise.all([
         writeLog(numFogl, sagra.giornata, 'Casse', '', 'PRINT', 'Stampa conto'),
@@ -453,17 +514,14 @@ const handleAggiorna = async () => {
             const logs = await getLastLog(gg.giornata, 'Casse');
             if (logs) setLastLog(logs);
           }
-        })(),
-        new Promise<void>((resolve) => {
-          print();
-          resolve();
-        })
+        })()
       ]);
 
       setPhase('iniziale_stampato');
     } catch (error) {
-      console.error("Errore:", error);
+      console.error("Errore durante la stampa:", error);
       setPhase('aperto');
+      setIsPrinting(false);
     }
   };
 
@@ -474,7 +532,6 @@ const handleAggiorna = async () => {
       return;
     }
 
-    // 1. ESTRAZIONE COMPLETA DEI CSS ATTIVI (Sia Tailwind che Material-UI / Emotion)
     let cssCompilatoInLinea = "";
     try {
       Array.from(document.styleSheets).forEach((sheet) => {
@@ -499,10 +556,8 @@ const handleAggiorna = async () => {
     if (newWindow) {
       newWindow.document.write('<!DOCTYPE html><html><head><title>Stampa Conto</title>');
 
-      // INIETTIAMO IL CSS CLONATO
       newWindow.document.write(`<style>${cssCompilatoInLinea}</style>`);
 
-      // 2. AGGIUNGIAMO LE REGOLE "SALVA-TOTALE" PER L'ULTIMA RIGA
       newWindow.document.write(`
         <style>
           @page {
@@ -521,16 +576,11 @@ const handleAggiorna = async () => {
             print-color-adjust: exact !important;
             box-sizing: border-box !important;
           }
-
-
-          }
         </style>
       `);
 
       newWindow.document.write('</head><body>');
 
-      // 3. IL DOPPIO CONTENITORE CON LARGHEZZA OTTIMIZZATA
-      // Se vedi che l'ultima riga è ancora stretta, puoi alzare "max-width: 80mm" a "85mm" o "100%"
       newWindow.document.write(`
       <div style="
         width:100% !important;
@@ -548,7 +598,6 @@ const handleAggiorna = async () => {
         ">
       `);
 
-      // Inseriamo l'HTML del preconto
       newWindow.document.write(printArea.innerHTML);
 
       newWindow.document.write('</div></div>');
@@ -562,65 +611,6 @@ const handleAggiorna = async () => {
       }, 300);
     }
   };
-  /*
-    const print = () => {
-      const printArea = printRef.current;
-      if (!printArea) {
-        console.warn("ATTENZIONE: La stampa è fallita perché 'printRef.current' è NULL.");
-        return;
-      }
-      const newWindow = window.open("", "", "width=800,height=900");
-      if (newWindow) {
-        newWindow.document.write('<html><head><title>Stampa Conto</title>');
-  
-        document.querySelectorAll('link[rel="stylesheet"]').forEach(s => {
-          const href = s.getAttribute('href');
-          if (href && href.startsWith('/')) {
-            newWindow.document.write(`<link rel="stylesheet" href="${window.location.origin}${href}">`);
-          } else {
-            newWindow.document.write(s.outerHTML);
-          }
-        });
-  
-        document.querySelectorAll('style').forEach(s => newWindow.document.write(s.outerHTML));
-  
-        newWindow.document.write(`
-        <style>
-          html, body {
-            height: auto !important;
-            overflow: visible !important;
-            background-color: #ffffff !important;
-            margin: 0 !important;
-            padding: 0 !important;
-          }
-          @page {
-            size: auto;
-            margin: 4mm 6mm;
-          }
-          * {
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          .print-container {
-            width: 100% !important;
-            height: auto !important;
-            overflow: visible !important;
-          }
-        </style>
-      `);
-  
-        newWindow.document.write('</head><body><div class="print-container">');
-        newWindow.document.write(printArea.innerHTML);
-        newWindow.document.write('</div></body></html>');
-        newWindow.document.close();
-  
-        setTimeout(() => {
-          newWindow.focus();
-          newWindow.print();
-          newWindow.close();
-        }, 600);
-      }
-    };*/
 
   const handleFinalizzaChiusura = async (tipo: number, nota = '', importo = '', skipPrintWait = false) => {
     const savedPrinterIp = typeof window !== 'undefined' ? localStorage.getItem('sagra_printer_ip') : null;
@@ -739,6 +729,8 @@ const handleAggiorna = async () => {
     </div>
   );
 
+
+
   // 1. ROTELLA DI CARICAMENTO DURANTE L'INIZIALIZZAZIONE DELLA PAGINA
   if (isSagraLoading) {
     return (
@@ -747,11 +739,12 @@ const handleAggiorna = async () => {
           display: 'flex',
           flexDirection: 'column',
           height: '100vh',
-          width: '100%', // Evita scrollbar orizzontali indesiderate
+          width: '100%',
           alignItems: 'center',
           justifyContent: 'center'
         }}
-      >  <CircularProgress size="6rem" />
+      >
+        <CircularProgress size="6rem" />
         <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold', color: 'text.secondary' }}>
           Verifica stato apertura giornata sagra (CASSE)
         </Typography>
@@ -773,48 +766,6 @@ const handleAggiorna = async () => {
       <main><div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50 text-center">
         <span className="font-semibold">Violazione:</span> utente non autorizzato.
       </div></main>
-    );
-  }
-
-  if (isPrinting) {
-    const activePrinterIp = typeof window !== 'undefined' ? localStorage.getItem('sagra_printer_ip') : null;
-
-    return (
-      <Box sx={{
-        display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw',
-        alignItems: 'center', justifyContent: 'center', bgcolor: 'rgba(255,255,255,0.9)',
-        position: 'fixed', top: 0, left: 0, zIndex: 9999
-      }}>
-        <CircularProgress size="6rem" />
-        <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold' }}>Invio alla stampa in corso ...</Typography>
-
-        <Typography variant="body1" sx={{ mt: 1, fontFamily: 'monospace', color: activePrinterIp ? 'text.secondary' : 'error.main', fontWeight: activePrinterIp ? 'normal' : 'bold' }}>
-          {activePrinterIp ? `IP Stampante: ${activePrinterIp}` : 'Nessuna stampante configurata'}
-        </Typography>
-        <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}> Se annulli comunque i pass risulteranno  regolarmente distribuiti</Typography>
-
-        <Button variant="contained" color="error" size="large" sx={{ mt: 4, borderRadius: '9999px', px: 4 }}
-          onClick={() => { setIsPrinting(false); setPhase('chiuso'); }}>
-          Annulla attesa e prosegui
-        </Button>
-
-        <Dialog open={openPrinterWarning} onClose={() => setOpenPrinterWarning(false)}>
-          <DialogTitle sx={{ fontWeight: 'bold', color: '#d32f2f' }}>⚠️ Stampante Termica Non Configurata</DialogTitle>
-          <DialogContent>
-            <Typography variant="body1" sx={{ fontWeight: 'bold' }}>
-              Attenzione: l'IP della stampante termica non è impostato nelle impostazioni locali di questo browser.
-            </Typography>
-            <Typography variant="body2" sx={{ mt: 1, color: 'text.secondary' }}>
-              La chiusura del conto procederà comunque regolarmente sul database, ma la stampa fisica dei pass non verrà inviata.
-            </Typography>
-          </DialogContent>
-          <DialogActions sx={{ p: 2 }}>
-            <Button onClick={() => setOpenPrinterWarning(false)} variant="contained" color="error" sx={{ borderRadius: '9999px' }}>
-              Ho Capito, Continua
-            </Button>
-          </DialogActions>
-        </Dialog>
-      </Box>
     );
   }
 
@@ -860,10 +811,6 @@ const handleAggiorna = async () => {
               </div>
             );
 
-            {/* Sostituisci il blocco dei casi 'aperto', 'modificato', 'stampato' in page.tsx */ }
-
-            {/* Sostituisci il blocco dei casi 'aperto', 'modificato', 'stampato' in page.tsx */ }
-
           case 'aperto':
           case 'modificato':
           case 'stampato':
@@ -872,68 +819,92 @@ const handleAggiorna = async () => {
             return (
               <div className="container flex flex-col h-[calc(100vh-20px)] justify-between overflow-hidden">
 
-<header className="top-section mb-2 flex-none">
-  {/* HEADER PRINCIPALE ORIGINALE (Input foglietto + Ultime ricerche) */}
-  <div className="sez-sx">
-    {headerCasse}
-    {ultimiRicercati}
-  </div>
+                <header className="top-section mb-2 flex-none">
+                  <div className="sez-sx">
+                    {headerCasse}
+                    {ultimiRicercati}
+                  </div>
 
-  {/* 1. LAYOUT PER PC DESKTOP (Mostrato solo da schermi grandi in su: lg:flex) */}
-  <div className="sez-dx hidden lg:block">
-    {bottoniServizio}
-    <div className="text-base md:text-2xl py-2 text-end">
-      <p>Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}</span> {conto ? `(${deltanow(conto?.data_apertura)})` : "(Nuovo)"}</p>
-      <p>Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere || 'Casse'}</span></p>
-    </div>
-  </div>
+                  <div className="sez-dx hidden lg:block">
+                    {bottoniServizio}
+                    <div className="text-base md:text-2xl py-2 text-end">
+                      <p>Conto: <span className="font-extrabold text-blue-800">{numeroFoglietto}</span> {conto ? `(${deltanow(conto?.data_apertura)})` : "(Nuovo)"}</p>
+                      <p>Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere || 'Casse'}</span></p>
+                    </div>
+                  </div>
 
-  {/* 2. LAYOUT 2x2 COMPATTO PER MOBILE/TABLET (Nascosto su PC: lg:hidden) */}
-  <div className="grid grid-cols-2 items-center justify-between gap-2 my-2 w-full px-2 pt-2 border-t border-gray-200 lg:hidden">
-    
-    {/* COLONNA SX MOBILE: Tasti Asporto / Camerieri */}
-    <div className="flex flex-col gap-1.5 justify-start items-start">
-      <Button 
-        size="small" 
-        className="font-semibold w-full" 
-        variant="outlined" 
-        onClick={handleButtonClickCaricaAsporto} 
-        style={{ borderRadius: '9999px' }}
-      >
-        Asporto
-      </Button>
-      <Button 
-        size="small" 
-        color="secondary" 
-        className="font-semibold w-full" 
-        variant="outlined" 
-        onClick={handleButtonClickCaricaConto1} 
-        style={{ borderRadius: '9999px' }}
-      >
-        Camerieri
-      </Button>
-    </div>
+                  <div className="grid grid-cols-2 items-center justify-between gap-2 my-2 w-full px-2 pt-2 border-t border-gray-200 lg:hidden">
+                    <div className="flex flex-col gap-1.5 justify-start items-start">
+                      <Button
+                        size="small"
+                        className="font-semibold w-full"
+                        variant="outlined"
+                        onClick={handleButtonClickCaricaAsporto}
+                        style={{ borderRadius: '9999px' }}
+                      >
+                        Asporto
+                      </Button>
+                      <Button
+                        size="small"
+                        color="secondary"
+                        className="font-semibold w-full"
+                        variant="outlined"
+                        onClick={handleButtonClickCaricaConto1}
+                        style={{ borderRadius: '9999px' }}
+                      >
+                        Camerieri
+                      </Button>
+                    </div>
 
-    {/* COLONNA DX MOBILE: Conto / Cameriere */}
-    <div className="flex flex-col text-right justify-end items-end">
-      <p className="text-sm font-medium leading-tight">
-        Conto: <span className="font-extrabold text-blue-800 text-base">{numeroFoglietto}</span>{' '}
-        <span className="text-[10px] text-gray-500 block">{conto ? `(${deltanow(conto?.data_apertura)})` : "(Nuovo)"}</span>
-      </p>
-      <p className="text-xs text-gray-700 leading-tight mt-1">
-        Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere || 'Casse'}</span>
-      </p>
-    </div>
+                    <div className="flex flex-col text-right justify-end items-end">
+                      <p className="text-sm font-medium leading-tight">
+                        Conto: <span className="font-extrabold text-blue-800 text-base">{numeroFoglietto}</span>{' '}
+                        <span className="text-[10px] text-gray-500 block">{conto ? `(${deltanow(conto?.data_apertura)})` : "(Nuovo)"}</span>
+                      </p>
+                      <p className="text-xs text-gray-700 leading-tight mt-1">
+                        Cameriere: <span className="font-extrabold text-blue-800">{conto?.cameriere || 'Casse'}</span>
+                      </p>
+                    </div>
+                  </div>
+                </header>
 
-  </div>
-</header>
-                {/* PARTE CENTRALE CON TABELLA CHE SCROLLA SE SERVE */}
                 <main className="middle-section_XS flex-1 overflow-y-auto my-1">
                   {phase === 'caricamento' || phase === 'elaborazione' ? (
-                    <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px', width: '100%' }}>
-                      <CircularProgress size="4rem" />
-                    </Box>
+                    //1 & 2. SE È IN ELABORAZIONE  CARICAMENTO
+                    <div className="flex justify-center items-center h-[300px] w-full">
+                      {isPrinting ? (
+                        // Se sta stampando, mostra l'overlay a tutto schermo
+                        <Box sx={{
+                          display: 'flex', flexDirection: 'column', height: '100vh', width: '100vw',
+                          alignItems: 'center', justifyContent: 'center', bgcolor: 'rgba(255, 255, 255, 0.9)',
+                          position: 'fixed', top: 0, left: 0, zIndex: 9999
+                        }}>
+                          <CircularProgress size="6rem" />
+                          <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold' }}>Invio alla stampa in corso ...</Typography>
+                          <Typography variant="body1" sx={{ mt: 1, fontFamily: 'monospace', color: typeof window !== 'undefined' && localStorage.getItem('sagra_printer_ip') ? 'text.secondary' : 'error.main', fontWeight: 'bold' }}>
+                            {typeof window !== 'undefined' && localStorage.getItem('sagra_printer_ip') ? `IP Stampante: ${localStorage.getItem('sagra_printer_ip')}` : 'Nessuna stampante configurata'}
+                          </Typography>
+                          <Typography variant="body2" sx={{ color: 'text.secondary', mt: 1 }}> Se annulli comunque la stampa risulterà regolarmente inviata</Typography>
+                          <Button
+                            variant="contained" color="error" size="large"
+                            sx={{ mt: 4, borderRadius: '9999px', px: 4 }}
+                            onClick={() => setIsPrinting(false)}
+                          >
+                            Annulla attesa e prosegui
+                          </Button>
+                        </Box>
+                      ) : (
+                        // Se è in elaborazione ma NON sta stampando (es. sta solo salvando sul DB) mostra una rondella semplice
+                        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px', width: '100%' }}>
+                          <CircularProgress size="4rem" />        
+                          <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold', color: 'text.secondary' }}>
+                              Dati in caricamento/aggiornamento
+                           </Typography>
+                        </Box>
+                      )}
+                    </div>
                   ) : (
+                    // 3. ALTRIMENTI (il comportamento di default): mostro "quello che c'è", ovvero la TabellaConto
                     <TabellaConto
                       item={products}
                       onAdd10={(id) => handleAdd(id, 10)}
@@ -945,100 +916,94 @@ const handleAggiorna = async () => {
                     />
                   )}
                 </main>
-{/* FOOTER ADATTIVO - SU DUE RIGHE FINO A SCHERMI GRANDE (LG) */}
-<footer className="bottom-section flex-none pt-2 border-t border-gray-200">
-   <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 lg:gap-4 w-full">
 
-    {/* SEZIONE AZIONI CONTO */}
-    <div className="sez-sx-bassa flex items-center justify-between lg:justify-start gap-2 w-full lg:w-auto">
-      <Button
-        variant="contained"
-        size="large"
-        className="flex-1 lg:flex-none font-bold px-4 lg:px-6 py-2 shadow-sm text-sm lg:text-lg"
-        style={{ borderRadius: '9999px' }}
-        onClick={handleStampa}
-        disabled={phase === 'modificato' || phase === 'caricamento' || phase === 'elaborazione'}
-      >
-<span className="hidden lg:inline truncate">
-    Stampa Conto
-  </span>
+                <footer className="bottom-section flex-none pt-2 border-t border-gray-200">
+                  <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 lg:gap-4 w-full">
 
-  {/* Visibile solo su mobile (sotto lg), testo piccolissimo */}
-  <span className="inline lg:hidden leading-tight truncate">
-    Stampa
-  </span>
-      </Button>
+                    <div className="sez-sx-bassa flex items-center justify-between lg:justify-start gap-2 w-full lg:w-auto">
+                      <Button
+                        variant="contained"
+                        size="large"
+                        className="flex-1 lg:flex-none font-bold px-4 lg:px-6 py-2 shadow-sm text-sm lg:text-lg"
+                        style={{ borderRadius: '9999px' }}
+                        onClick={handleStampa}
+                        disabled={phase === 'modificato' || phase === 'caricamento' || phase === 'elaborazione'}
+                      >
+                        <span className="hidden lg:inline truncate">
+                          Stampa Conto
+                        </span>
+                        <span className="inline lg:hidden leading-tight truncate">
+                          Stampa
+                        </span>
+                      </Button>
 
-      <Button
-        variant="contained"
-        color="info"
-        size="large"
-        className="flex-1 lg:flex-none font-bold px-4 lg:px-6 py-2 shadow-sm text-sm lg:text-lg text-white"
-        style={{ borderRadius: '9999px', backgroundColor: phase === 'modificato' ? '#0284c7' : undefined }}
-        onClick={handleAggiorna}
-        disabled={phase !== 'modificato'}
-      >
-<span className="hidden lg:inline truncate">
-    Aggiorna & Stampa
-  </span>
+                      <Button
+                        variant="contained"
+                        color="info"
+                        size="large"
+                        className="flex-1 lg:flex-none font-bold px-4 lg:px-6 py-2 shadow-sm text-sm lg:text-lg text-white"
+                        style={{ borderRadius: '9999px', backgroundColor: phase === 'modificato' ? '#0284c7' : undefined }}
+                        onClick={handleAggiorna}
+                        disabled={phase !== 'modificato'}
+                      >
+                        <span className="hidden lg:inline truncate">
+                          Aggiorna & Stampa
+                        </span>
+                        <span className="inline lg:hidden leading-tight truncate">
+                          Aggiorna
+                        </span>
+                      </Button>
+                    </div>
 
-  {/* Visibile solo su mobile (sotto lg), testo piccolissimo */}
-  <span className="inline lg:hidden leading-tight truncate">
-    Aggiorna
-  </span>
-      </Button>
-    </div>
+                    <div className="sez-dx-bassa w-full lg:w-auto lg:flex-1 lg:max-w-2xl">
+                      <div className="flex items-center gap-2 lg:gap-3 p-2 lg:p-2.5 px-3 lg:px-4 border-2 lg:border-3 border-blue-600 bg-blue-100 rounded-full shadow-md w-full">
 
-    {/* SEZIONE CHIUDI CONTO */}
-    <div className="sez-dx-bassa w-full lg:w-auto lg:flex-1 lg:max-w-2xl">
-      <div className="flex items-center gap-2 lg:gap-3 p-2 lg:p-2.5 px-3 lg:px-4 border-2 lg:border-3 border-blue-600 bg-blue-100 rounded-full shadow-md w-full">
+                        <span className="text-blue-900 font-black text-sm lg:text-xl uppercase whitespace-nowrap pl-1">
+                          Chiudi:
+                        </span>
 
-        <span className="text-blue-900 font-black text-sm lg:text-xl uppercase whitespace-nowrap pl-1">
-          Chiudi:
-        </span>
+                        <div className="flex items-center gap-2 lg:gap-3 w-full">
+                          <Button
+                            variant="contained"
+                            color="primary"
+                            size="medium"
+                            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
+                            style={{ borderRadius: '9999px' }}
+                            onClick={() => handleFinalizzaChiusura(2)}
+                            disabled={phase !== 'stampato'}
+                          >
+                            POS(F1)
+                          </Button>
 
-        <div className="flex items-center gap-2 lg:gap-3 w-full">
-          <Button
-            variant="contained"
-            color="primary"
-            size="medium"
-            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
-            style={{ borderRadius: '9999px' }}
-            onClick={() => handleFinalizzaChiusura(2)}
-            disabled={phase !== 'stampato'}
-          >
-POS(F1)          </Button>
+                          <Button
+                            variant="contained"
+                            color="success"
+                            size="medium"
+                            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
+                            style={{ borderRadius: '9999px' }}
+                            onClick={() => handleFinalizzaChiusura(1)}
+                            disabled={phase !== 'stampato'}
+                          >
+                            Contanti(F2)
+                          </Button>
 
-          <Button
-            variant="contained"
-            color="success"
-            size="medium"
-            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
-            style={{ borderRadius: '9999px' }}
-            onClick={() => handleFinalizzaChiusura(1)}
-            disabled={phase !== 'stampato'}
-          >
-Contanti(F2)
-          </Button>
-
-          <Button
-            variant="contained"
-            color="secondary"
-            size="medium"
-            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
-            style={{ borderRadius: '9999px' }}
-            onClick={() => setPhase('gratis')}
-            disabled={phase !== 'stampato'}
-          >
-   Altro(F3)       </Button>
-        </div>
-      </div>
- 
-    </div>
-          <br/><br/><br/>
-
-  </div>
-</footer>
+                          <Button
+                            variant="contained"
+                            color="secondary"
+                            size="medium"
+                            className="flex-1 font-black text-xs lg:text-xl py-2 lg:py-2.5 min-w-0 px-2 lg:px-4 shadow-md"
+                            style={{ borderRadius: '9999px' }}
+                            onClick={() => setPhase('gratis')}
+                            disabled={phase !== 'stampato'}
+                          >
+                            Altro(F3)
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                    <br /><br /><br />
+                  </div>
+                </footer>
               </div>
             );
           case 'chiuso':
@@ -1083,7 +1048,16 @@ Contanti(F2)
             );
           default: return (
             <div className="container">
-              <header className="top-section"><div className="sez-sx">{headerCasse}{ultimiRicercati}</div>{bottoniServizio}</header>     <div className="text-center p-10"><CircularProgress /></div>
+              <header className="top-section">
+                <div className="sez-sx">{headerCasse}{ultimiRicercati}</div>
+                {bottoniServizio}
+              </header>     
+                <div className="text-center p-10">
+                  <CircularProgress />        
+                  <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold', color: 'text.secondary' }}>
+                    Return di default
+                  </Typography>
+                </div>
             </div>
           );
         }
@@ -1094,7 +1068,6 @@ Contanti(F2)
           item={products}
         />
       </div>
-
 
       <Dialog open={openConfirmDialog} onClose={handleCancelNewConto}>
         <DialogTitle sx={{ fontWeight: 'bold', color: '#1e3a8a' }}>Apertura Nuovo Conto</DialogTitle>

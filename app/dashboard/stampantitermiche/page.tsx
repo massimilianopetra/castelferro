@@ -3,58 +3,81 @@
 import { useState, useEffect } from 'react';
 import { useConfig } from '@/context/ConfigContext';
 import { useSession } from 'next-auth/react';
+import { Switch, FormControlLabel } from '@mui/material';
 
 export default function GestioneStampantePage() {
   const config = useConfig();
   const { data: session } = useSession();
   const [currentPrinter, setCurrentPrinter] = useState<string | null>(null);
+  const [printMode, setPrintMode] = useState<'finestra' | 'termica'>('finestra');
 
-  // Al caricamento, leggiamo se c'è già un IP salvato in questo browser
   useEffect(() => {
     const savedIp = localStorage.getItem('sagra_printer_ip');
-    if (savedIp) {
-      setCurrentPrinter(savedIp);
-    }
+    if (savedIp) setCurrentPrinter(savedIp);
+
+    const savedMode = localStorage.getItem('sagra_print_mode') as 'finestra' | 'termica';
+    if (savedMode) setPrintMode(savedMode);
   }, []);
 
-  // Funzione per salvare l'IP e renderlo persistente
   const setPrinter = (ip: string | undefined) => {
     if (!ip) return;
     localStorage.setItem('sagra_printer_ip', ip);
     setCurrentPrinter(ip);
   };
 
-  // Funzione per cancellare il "cookie" (localStorage) e resettare
   const clearPrinter = () => {
     localStorage.removeItem('sagra_printer_ip');
     setCurrentPrinter(null);
   };
 
-  // Creiamo una lista dinamica dalle variabili del layout/config
+  const handleModeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newMode = event.target.checked ? 'termica' : 'finestra';
+    localStorage.setItem('sagra_print_mode', newMode);
+    setPrintMode(newMode);
+  };
+
   const printers = [
     { label: "Cassa 1: " + config.stampante_uno, ip: config.stampante_uno },
     { label: "Cassa 2: " + config.stampante_due, ip: config.stampante_due },
     { label: "Cassa 3: " + config.stampante_tre, ip: config.stampante_tre },
     { label: "Cassa 4: " + config.stampante_quattro, ip: config.stampante_quattro },
     { label: "Wi-Fi: " + config.stampante_wifi, ip: config.stampante_wifi },
-  ].filter(p => p.ip); // Mostra solo quelle che hanno un IP configurato nel .env
+  ].filter(p => p.ip);
 
-  if ((session?.user?.name === "IngressoE") || (session?.user?.name === "Ingresso") || (session?.user?.name === "Casse") || (session?.user?.name === "SuperUser")) {
-
+  if (["IngressoE", "Ingresso", "Casse", "SuperUser"].includes(session?.user?.name || '')) {
     return (
-
       <div className="px-3 py-1.5 max-w-md mx-auto">
         <h1 className="text-2xl font-bold mb-6">Configurazione Postazione</h1>
 
-        {/* Stato Attuale */}
-        <div className="mb-8 px-3 py-1.5 rrounded-lg border bg-gray-50">
-          <p className="text-sm text-gray-500 uppercase font-semibold">Stato attuale:</p>
+        {/* Modalità di Stampa Conto */}
+        <div className="mb-6 px-4 py-3 rounded-lg border bg-white shadow-sm flex items-center justify-between">
+          <div>
+            <p className="font-bold text-gray-800">Modalità Stampa Conto</p>
+            <p className="text-xs text-gray-500">
+              {printMode === 'termica' ? 'Stampa diretta su Stampante Termica' : 'Apre la finestra di stampa del browser'}
+            </p>
+          </div>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={printMode === 'termica'}
+                onChange={handleModeChange}
+                color="primary"
+              />
+            }
+            label=""
+          />
+        </div>
+
+        {/* Stato Attuale Stampante Termica */}
+        <div className="mb-8 px-3 py-1.5 rounded-lg border bg-gray-50">
+          <p className="text-sm text-gray-500 uppercase font-semibold">Stato attuale stampante:</p>
           {currentPrinter ? (
-            <div className="mt-2">
+            <div className="mt-2 flex items-center justify-between">
               <span className="text-green-600 font-mono font-bold text-lg">{currentPrinter}</span>
               <button
                 onClick={clearPrinter}
-                className="ml-4 text-xs bg-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-200 transition"
+                className="text-xs bg-red-100 text-red-600 px-2 py-1 rounded hover:bg-red-200 transition"
               >
                 Rimuovi / Cambia
               </button>
@@ -64,17 +87,18 @@ export default function GestioneStampantePage() {
           )}
         </div>
 
-        {/* Selezione */}
+        {/* Selezione Stampante */}
         <div className="space-y-3">
           <p className="text-sm text-gray-600 mb-2">Seleziona la stampante per questa cassa:</p>
           {printers.map((p) => (
             <button
               key={p.label}
               onClick={() => setPrinter(p.ip)}
-              className={`w-full text-left px-3 py-1.5 rounded-xl border-2 transition-all ${currentPrinter === p.ip
-                ? 'border-blue-500 bg-blue-50 shadow-md'
-                : 'border-gray-200 hover:border-blue-300 bg-white'
-                }`}
+              className={`w-full text-left px-3 py-1.5 rounded-xl border-2 transition-all ${
+                currentPrinter === p.ip
+                  ? 'border-blue-500 bg-blue-50 shadow-md'
+                  : 'border-gray-200 hover:border-blue-300 bg-white'
+              }`}
             >
               <div className="font-bold text-gray-800">{p.label}</div>
               <div className="text-sm font-mono text-gray-500">{p.ip}</div>
@@ -83,23 +107,21 @@ export default function GestioneStampantePage() {
         </div>
 
         <p className="mt-8 text-xs text-gray-400 italic">
-          Nota: Questa impostazione è specifica per questo browser e rimarrà attiva anche se chiudi la pagina.
+          Nota: Queste impostazioni sono specifiche per questo browser e rimarranno salvate in memoria locale.
         </p>
       </div>
     );
-  } else {
+  }
 
-    return (
-      <main>
-        <div className="flex flex-wrap flex-col">
-          <div className='text-center '>
-            <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
-              <span className="text-xl font-semibold">Accesso Negato (STAMPANTI TERMICHE)</span>
-            </div>
+  return (
+    <main>
+      <div className="flex flex-wrap flex-col">
+        <div className='text-center '>
+          <div className="p-4 mb-4 text-xl text-red-800 rounded-lg bg-red-50" role="alert">
+            <span className="text-xl font-semibold">Accesso Negato (STAMPANTI TERMICHE)</span>
           </div>
         </div>
-      </main>
-
-    );
-  }
+      </div>
+    </main>
+  );
 }

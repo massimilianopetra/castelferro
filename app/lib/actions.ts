@@ -63,18 +63,20 @@ async function seedUsers() {
        password TEXT NOT NULL
      );
    `);
+
   console.log(`CREATED TABLE users`);
 
   const insertedUsers = await Promise.all(
     users.map(async (user) => {
       const hashedPassword = await bcrypt.hash(user.password, 10);
       try {
-        executeQuery(`
-           INSERT INTO users (id, name, email, password)
-           VALUES (${user.id}, '${user.name}', '${user.email}', '${hashedPassword}')
-           ON CONFLICT (id) DO NOTHING;
-        `);
+        await executeQuery(`
+     INSERT INTO users (id, name, email, password)
+     VALUES (${user.id}, '${user.name}', '${user.email}', '${hashedPassword}')
+     ON CONFLICT (id) DO NOTHING;
+  `);
         return "";
+
       } catch (error) {
         console.log(error);
         return "";
@@ -99,7 +101,7 @@ async function seedMenu() {
    `);
   console.log(`CREATED TABLE menus`);
 
- const insertedMenu = await Promise.all(
+  const insertedMenu = await Promise.all(
     menu.map(async (item) => {
       const prezzo = isNaN(item.prezzo) ? 0 : item.prezzo;
       const percentuale = isNaN(item.percentuale) ? 0 : item.percentuale;
@@ -248,7 +250,7 @@ export async function seedDatabase() {
     console.log('Database seed completed');
   } catch (error) {
     // Aggiungi questa riga per vedere gli errori futuri!
-    console.error('Errore fatale durante il seed del database:', error); 
+    console.error('Errore fatale durante il seed del database:', error);
   }
 }
 
@@ -306,24 +308,24 @@ export async function getUser(email: string): Promise<DbUser | undefined> {
 export async function getTickets(modo: string): Promise<DbTickets[] | undefined> {
   try {
     let query = `SELECT * FROM tickets`;
-    
+
     // Escludiamo sempre i ticket eliminati (caricato = 100)
     const whereClauses: string[] = ['caricato <> 100'];
 
     switch (modo) {
-      case 'all':      break;
-      case 'seduti':          whereClauses.push('seduto = 1');                  break;
-      case 'non-seduti':      whereClauses.push('seduto = 0');                  break;
-      case 'automatico':      whereClauses.push('caricato = 0');                break;
-      case 'manuale':         whereClauses.push('caricato = 1');                break;
-      case 'entrata-libera':  whereClauses.push('caricato = 2');                break;
-      case 'distribuiti':     whereClauses.push('data_distributo IS NOT NULL'); break;
-      default:         break;
+      case 'all': break;
+      case 'seduti': whereClauses.push('seduto = 1'); break;
+      case 'non-seduti': whereClauses.push('seduto = 0'); break;
+      case 'automatico': whereClauses.push('caricato = 0'); break;
+      case 'manuale': whereClauses.push('caricato = 1'); break;
+      case 'entrata-libera': whereClauses.push('caricato = 2'); break;
+      case 'distribuiti': whereClauses.push('data_distributo IS NOT NULL'); break;
+      default: break;
     }
 
     const whereString = `WHERE ${whereClauses.join(' AND ')}`;
     const tickets = await executeQuery<DbTickets>(`${query} ${whereString} ORDER BY id`);
-    
+
     return tickets;
   } catch (error) {
     console.error('Failed to fetch tickets:', error);
@@ -383,9 +385,9 @@ export async function getFirstFreeTicket(): Promise<number> {
       LEFT JOIN tickets t2 ON t1.id + 1 = t2.id AND t2.caricato != 100
       WHERE t2.id IS NULL AND t1.caricato != 100
     `);
-    
+
     let firstGap = result?.[0]?.freeId;
-    
+
     // 2. Verifica se il ticket 1 esiste ed è valido
     const checkOne = await executeQuery(`SELECT id FROM tickets WHERE id = 1 AND caricato != 100`);
     if (!checkOne || checkOne.length === 0) return 1;
@@ -446,7 +448,7 @@ export async function getPuntiGraficoAttesa() {
     return [];
   }
 }
- 
+
 export async function updateTicket(id: number, valoreCaricato: number) {
   try {
     return await executeQuery(`
@@ -551,13 +553,16 @@ export async function updatetMenu(record: DbMenu) {
 
 export async function overwriteMenu(record: DbMenu[]) {
   await executeQuery(`TRUNCATE TABLE menus;`);
-  record.map(async (item) => {
+
+  const queryPromises = record.map(async (item) => {
     return await executeQuery(`
        INSERT INTO menus (id, piatto, prezzo, cucina, disponibile, alias, percentuale)
        VALUES (${item.id}, '${item.piatto}', ${item.prezzo}, '${item.cucina}','${item.disponibile}','${item.alias}',${item.percentuale})
        ON CONFLICT (id) DO NOTHING;
     `);
   });
+
+  await Promise.all(queryPromises);
 }
 
 export async function setMenuAllAvailable() {
@@ -645,18 +650,18 @@ export async function sendConsumazioni(c: DbConsumazioni[]) {
 }*/
 export async function sendConsumazioni(c: DbConsumazioni[]) {
   const date_format_millis = Date.now();
-  
+
   // Usiamo Promise.all mappando le promesse delle query
   const queryPromises = c.map(async (item) => {
     if (item.id == -1) {
-   //   console.log(`INSERT item.piatto : id ${item.id} - ${item.piatto} (quantita: ${item.quantita})`);
+      //   console.log(`INSERT item.piatto : id ${item.id} - ${item.piatto} (quantita: ${item.quantita})`);
       return await executeQuery(`
          INSERT INTO consumazioni (id_comanda, id_piatto, piatto, quantita, cucina, giorno, data, alias)
          VALUES (${item.id_comanda}, ${item.id_piatto}, '${item.piatto}', ${item.quantita}, '${item.cucina}', ${item.giorno}, ${date_format_millis}, '${item.alias}')
          ON CONFLICT (id) DO NOTHING;
       `);
     } else {
-  //    console.log(`UPDATE item.piatto : id ${item.id} - ${item.piatto} (quantita: ${item.quantita})`);
+      //    console.log(`UPDATE item.piatto : id ${item.id} - ${item.piatto} (quantita: ${item.quantita})`);
       return await executeQuery(`UPDATE consumazioni SET quantita = ${item.quantita}, data = ${date_format_millis} WHERE id = ${item.id};`);
     }
   });
@@ -672,7 +677,7 @@ export async function updateTotaleConto(foglietto: number, giorno: number) {
     for (let i of consumazioni) {
       totale += i.quantita * i.prezzo_unitario;
     }
-    aggiornaConto(foglietto, giorno, totale);
+    await aggiornaConto(foglietto, giorno, totale);
   }
 }
 
@@ -710,7 +715,7 @@ export async function getCamerieri(foglietto: number): Promise<string | undefine
 export async function getClassificaCopertiCamerieri(giorno?: number): Promise<{ nome: string; coperti: number }[] | undefined> {
   try {
     const hasGiorno = giorno !== undefined && giorno > 0;
-    
+
     const res = await executeQuery<{ nome: string; coperti: number }>(`
       WITH ultimi_coperti AS (
         SELECT id_comanda, quantita, giorno,
@@ -733,7 +738,7 @@ export async function getClassificaCopertiCamerieri(giorno?: number): Promise<{ 
       GROUP BY LOWER(c.nome), c.nome
       ORDER BY coperti DESC
     `);
-    
+
     return res;
   } catch (error) {
     console.error('Failed to fetch classifica coperti:', error);
@@ -743,7 +748,7 @@ export async function getClassificaCopertiCamerieri(giorno?: number): Promise<{ 
 /* MODIFICATO: Include il calcolo automatico dei conti fatti nell'intervallo */
 export async function getListaCamerieri(): Promise<any[] | undefined> {
   try {
- //   console.log(`Get Lista Camerieri con Conteggio Conti Real-Time`);
+    //   console.log(`Get Lista Camerieri con Conteggio Conti Real-Time`);
 
     // Calcoliamo quanti record nella tabella "conti" hanno un "id_comanda" compreso nel range del cameriere
     const query = `
@@ -909,7 +914,7 @@ export async function updateCamerieri(c: DbCamerieri[]) {
 /* MODIFICATO: Controllo sovrapposizione real-time con messaggi d'errore contenenti il range bloccante */
 export async function addCamerieri(nome: string, foglietto_start: number, foglietto_end: number) {
   try {
-   // console.log("Add camerieri con controllo sovrapposizione");
+    // console.log("Add camerieri con controllo sovrapposizione");
 
     // 1. Cerchiamo se esiste già un intervallo che si sovrappone a quello inserito
     const conflictCheck = await executeQuery<{ foglietto_start: number; foglietto_end: number }>(`
@@ -922,9 +927,9 @@ export async function addCamerieri(nome: string, foglietto_start: number, foglie
     // Se troviamo un conflitto, blocchiamo l'inserimento e restituiamo l'intervallo esistente
     if (conflictCheck && conflictCheck.length > 0) {
       const esistente = conflictCheck[0];
-      return { 
-        error: true, 
-        message: `I foglietti inseriti si sovrappongono con l'intervallo già esistente ${esistente.foglietto_start}-${esistente.foglietto_end}!` 
+      return {
+        error: true,
+        message: `I foglietti inseriti si sovrappongono con l'intervallo già esistente ${esistente.foglietto_start}-${esistente.foglietto_end}!`
       };
     }
 
@@ -957,9 +962,9 @@ export async function updateCamerieri(c: DbCamerieri[]) {
       // Se la modifica va a collidere con un altro intervallo esistente
       if (conflictCheck && conflictCheck.length > 0) {
         const esistente = conflictCheck[0];
-        return { 
-          error: true, 
-          message: `Modifica fallita! Si sovrappone con l'intervallo ${esistente.foglietto_start}-${esistente.foglietto_end}!` 
+        return {
+          error: true,
+          message: `Modifica fallita! Si sovrappone con l'intervallo ${esistente.foglietto_start}-${esistente.foglietto_end}!`
         };
       }
 
@@ -992,7 +997,7 @@ export async function listConti(stato: string, giornata: number): Promise<DbCont
 }
 */
 export async function listConti(stato: string, giornata: number): Promise<DbConti[] | undefined> {
-  
+
   // 1. UPDATE massivo: colleghiamo le consumazioni al menu per prendere il prezzo reale
   const queryUpdateMassivo = `
     UPDATE conti c
@@ -1004,14 +1009,14 @@ export async function listConti(stato: string, giornata: number): Promise<DbCont
     )
     WHERE c.giorno = ${giornata} AND c.stato = 'APERTO';
   `;
-  
+
   // Eseguiamo l'aggiornamento solo se lo stato richiesto comprende i conti APERTI
   if (stato === '*' || stato === 'APERTO') {
     await executeQuery(queryUpdateMassivo);
   }
 
   // 2. Scarichiamo i conti aggiornati dal DB
-  const querySelect = stato === '*' 
+  const querySelect = stato === '*'
     ? `SELECT * FROM conti WHERE giorno = ${giornata} ORDER BY data_apertura`
     : `SELECT * FROM conti WHERE stato = '${stato}' AND giorno = ${giornata} ORDER BY data_apertura`;
 
@@ -1102,7 +1107,7 @@ export async function apriConto(foglietto: number, giorno: number, cameriere: st
 export async function stampaConto(foglietto: number, giorno: number) {
   const date_format_millis = Date.now();
   const current = await executeQuery<DbConti>(`SELECT * FROM conti WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`);
-  if (current) {
+  if (current && current.length > 0) {
     return await executeQuery(`UPDATE conti SET stato = 'STAMPATO', data = ${date_format_millis}, data_stampa = ${date_format_millis} WHERE id = ${current[0].id};`);
   }
 }
@@ -1110,15 +1115,16 @@ export async function stampaConto(foglietto: number, giorno: number) {
 export async function aggiornaConto(foglietto: number, giorno: number, totale: number) {
   const date_format_millis = Date.now();
   const current = await executeQuery<DbConti>(`SELECT * FROM conti WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`);
-  if (current) {
+  if (current && current.length > 0) {
     return await executeQuery(`UPDATE conti SET totale = ${totale}, data = ${date_format_millis}, stato = 'APERTO' WHERE id = ${current[0].id};`);
   }
+
 }
 
 export async function riapriConto(foglietto: number, giorno: number) {
   const date_format_millis = Date.now();
   const current = await executeQuery<DbConti>(`SELECT * FROM conti WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`);
-  if (current) {
+  if (current && current.length > 0) {
     return await executeQuery(`UPDATE conti SET data = ${date_format_millis}, stato = 'APERTO' WHERE id = ${current[0].id};`);
   }
 }
@@ -1126,7 +1132,7 @@ export async function riapriConto(foglietto: number, giorno: number) {
 export async function chiudiConto(foglietto: number, giorno: number, mode: Number = 1, note: string = "", totale: string = "0.0") {
   const date_format_millis = Date.now();
   const current = await executeQuery<DbConti>(`SELECT * FROM conti WHERE id_comanda = ${foglietto} AND giorno = ${giorno}`);
-  if (current) {
+  if (current && current.length > 0) {
     if (mode == 2) {
       return await executeQuery(`UPDATE conti SET stato = 'CHIUSOPOS', data_chiusura = ${date_format_millis} WHERE id = ${current[0].id};`);
     } else if (mode == 3) {
@@ -1200,10 +1206,10 @@ export async function getInizializzazioneCassa(num: number) {
   ]);
 
   // Restituiamo un array vuoto se log è undefined
-  return { gg, log: log || [], cc, c }; 
+  return { gg, log: log || [], cc, c };
 }
 
- 
+
 export async function getCopertiCheStannoServendo(giornata: number, cucinaAttuale: string) {
   try {
     const cucinaLower = cucinaAttuale.trim().toLowerCase();
