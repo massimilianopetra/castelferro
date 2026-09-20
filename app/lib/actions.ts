@@ -1208,7 +1208,23 @@ export async function getInizializzazioneCassa(num: number) {
   // Restituiamo un array vuoto se log è undefined
   return { gg, log: log || [], cc, c };
 }
-
+export async function checkFogliettoGiaUsato(foglietto: number, giornataAttuale: number): Promise<number | null> {
+  try {
+    // Cerca se esiste un conto con questo foglietto in un giorno diverso da quello attuale, ottenendo il numero del giorno
+    const res = await executeQuery<{ giorno: number }>(
+      `SELECT giorno FROM conti WHERE id_comanda = ${foglietto} AND giorno != ${giornataAttuale} LIMIT 1`
+    );
+    
+    if (res !== undefined && res.length > 0) {
+      return res[0].giorno; // Restituisce il giorno in cui è stato trovato
+    }
+    
+    return null; // Non è stato trovato, quindi non è usato
+  } catch (error) {
+    console.error("Errore controllo foglietto:", error);
+    return null;
+  }
+}
 
 export async function getCopertiCheStannoServendo(giornata: number, cucinaAttuale: string) {
   try {

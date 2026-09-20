@@ -14,7 +14,7 @@ import type { DbConsumazioni, DbConsumazioniPrezzo, DbFiera, DbConti, DbLog } fr
 import {
   getConsumazioniCassa, sendConsumazioni, getConto, chiudiConto,
   aggiornaConto, stampaConto, riapriConto, apriConto, getContoPiuAlto,
-  writeLog, getGiornoSagra, getLastLog,
+  writeLog, getGiornoSagra, getLastLog, checkFogliettoGiaUsato,
   getInizializzazioneCassa
 } from '@/app/lib/actions';
 import { deltanow, milltodatestring } from '@/app/lib/utils';
@@ -99,6 +99,18 @@ export default function Page({ params }: { params: { foglietto: string } }) {
         }
 
         if (!cc || !cc.stato || cc.stato === 'NUOVO') {
+          // ---> INIZIO NUOVO CONTROLLO <---
+          if (num >= 9) {
+            const giornoUsato = await checkFogliettoGiaUsato(num, gg.giornata);
+            if (giornoUsato !== null) { // Se è diverso da null, significa che è stato trovato
+              setSnackbarMessage(`Errore: Il foglietto ${num} è già stato utilizzato nel giorno ${giornoUsato}!`);
+              setOpenSnackbar(true);
+              setIsSagraLoading(false);
+              setPhase('inizialegiabruciato');
+              return;
+            }
+          }
+          // ---> FINE NUOVO CONTROLLO <---
           setIsNewConto(true);
           setOpenConfirmDialog(true);
           setIsSagraLoading(false);
@@ -277,10 +289,11 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     // --- INIZIO BLOCCO STAMPA (Solo per foglietto >= 9) ---
 
     // 3. Cambia stato del conto in 'stampato' sul DB
-    await stampaConto(numFogl, sagra.giornata);
-
     // 4. Log di stampa
-    await writeLog(numFogl, sagra.giornata, 'Casse', '', 'PRINT', 'Stampa conto');
+    await Promise.all([
+      stampaConto(numFogl, sagra.giornata),
+      writeLog(numFogl, sagra.giornata, 'Casse', '', 'PRINT', 'Stampa conto')
+    ]);
 
     // 5. Aggiorna log a schermo
     const logs = await getLastLog(sagra.giornata, 'Casse');
@@ -467,18 +480,18 @@ export default function Page({ params }: { params: { foglietto: string } }) {
       setPhase('iniziale_stampato');
       return; // USCITA ANTICIPATA: non esegue la stampa
     }
-   
+
     try {
       await sendConsumazioni(products);
       await aggiornaConto(numFogl, sagra.giornata, totale);
       await stampaConto(numFogl, sagra.giornata);
       if (printMode === 'termica') {
-      if (!savedPrinterIp) {
-        setOpenPrinterWarning(true);
-      } else {
-        setIsPrinting(true);
+        if (!savedPrinterIp) {
+          setOpenPrinterWarning(true);
+        } else {
+          setIsPrinting(true);
+        }
       }
-    }
       if (printMode === 'termica') {
         try {
           await fetch('/api/print', {
@@ -773,6 +786,18 @@ export default function Page({ params }: { params: { foglietto: string } }) {
     <main>
       {(() => {
         switch (phase) {
+          case 'inizialegiabruciato':
+            return (
+              <div className="container">
+                <header className="top-section"><div className="sez-sx">{headerCasse}{ultimiRicercati}</div>{bottoniServizio}</header>      
+                 <main className="middle-section"><br />
+                  <p className="text-2xl md:text-5xl py-4 text-center text-blue-800">
+                   Conto già utilizzato in giornate precedenti.<br></br>Verificare numero foglietto. 
+                  </p>
+                </main>
+              </div>
+            );
+
           case 'iniziale':
             return (
               <div className="container">
@@ -896,10 +921,10 @@ export default function Page({ params }: { params: { foglietto: string } }) {
                       ) : (
                         // Se è in elaborazione ma NON sta stampando (es. sta solo salvando sul DB) mostra una rondella semplice
                         <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '300px', width: '100%' }}>
-                          <CircularProgress size="4rem" />        
+                          <CircularProgress size="4rem" />
                           <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold', color: 'text.secondary' }}>
-                              Dati in caricamento/aggiornamento
-                           </Typography>
+                            Dati in caricamento/aggiornamento
+                          </Typography>
                         </Box>
                       )}
                     </div>
@@ -1051,13 +1076,13 @@ export default function Page({ params }: { params: { foglietto: string } }) {
               <header className="top-section">
                 <div className="sez-sx">{headerCasse}{ultimiRicercati}</div>
                 {bottoniServizio}
-              </header>     
-                <div className="text-center p-10">
-                  <CircularProgress />        
-                  <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold', color: 'text.secondary' }}>
-                    Return di default
-                  </Typography>
-                </div>
+              </header>
+              <div className="text-center p-10">
+                <CircularProgress />
+                <Typography variant="h5" sx={{ mt: 2, fontWeight: 'bold', color: 'text.secondary' }}>
+                  Return di default
+                </Typography>
+              </div>
             </div>
           );
         }

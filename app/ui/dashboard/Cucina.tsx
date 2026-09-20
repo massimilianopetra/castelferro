@@ -20,7 +20,8 @@ import {
     getMenu,
     getTickets,
     listConsumazioni,
-    getCopertiCheStannoServendo
+    getCopertiCheStannoServendo,
+    checkFogliettoGiaUsato
 } from '@/app/lib/actions';
 
 import TabellaCucina from '@/app/ui/dashboard/TabellaCucina';
@@ -155,11 +156,25 @@ export default function Cucina({ nomeCucina: nomeOriginale }: { nomeCucina: stri
 
             await writeLog(num, sagra.giornata, nomeCucina, '', 'OPEN', '');
             const logs = await getLastLog(sagra.giornata, nomeCucina);
+            
             if (logs) setLastLog(logs);
 
             setPhase('caricato');
         } else {
-            const cameriere = await getCamerieri(num);
+
+            const [giornoUsato, cameriere] = await Promise.all([
+            checkFogliettoGiaUsato(num, sagra.giornata),
+            getCamerieri(num)
+        ]);
+            if (num >= 9) {
+                  if (giornoUsato !== null) { // Se è diverso da null, significa che è stato trovato
+                    setSnackbarMessage(`Errore: Il foglietto ${num} è già stato utilizzato nel giorno ${giornoUsato}!`);
+                    setOpenSnackbar(true);
+                    setPhase('inizialegiabruciato');
+                    return;
+                }
+            }
+
             if (!cameriere || cameriere === 'Sconosciuto') {
                 setPhase('sconosciuto');
                 return;
@@ -470,7 +485,27 @@ const caricaStatistiche = async () => {
  
                 </div>
             );
-
+        if (phase === 'inizialegiabruciato')
+            return (
+                <div className='text-center'>
+                                      <p className="text-2xl md:text-5xl py-4 text-center text-blue-800">
+                   Conto già utilizzato in giornate precedenti.<br></br> Verificare e caricare numero foglietto disponibile. 
+                  </p>
+                   
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        onClick={handleToggleView}
+                        sx={{ mt: 3, borderRadius: '9999px' }}
+                    >
+                        {showAlternateView
+                            ? 'Disattiva Visualizzazione Elementare'
+                            : 'Attiva Visualizzazione Elementare'}
+                    </Button>
+ 
+                </div>
+            );
+ 
         if (phase === 'caricamento')
             return (
                 <div className='text-center'>
